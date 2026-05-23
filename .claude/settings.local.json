@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node node_modules/next/dist/bin/next build 2>&1)"
+    ]
+  }
+}

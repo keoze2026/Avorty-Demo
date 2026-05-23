@@ -1,0 +1,48 @@
+/**
+ * Brand and product-wide constants.
+ * Single source of truth — change here, propagate everywhere.
+ */
+
+export const BRAND = {
+  name: "Vortyx",
+  tagline: "The next generation of call intelligence.",
+  description:
+    "A real-time call tracking, routing, and analytics platform built for modern pay-per-call marketers.",
+  domain: "vortyx.io",
+  email: "hello@vortyx.io",
+} as const;
+
+/** Routes — keep paths centralized so renames are safe. */
+export const ROUTES = {
+  home: "/",
+  pricing: "/pricing",
+
+  // Auth
+  login: "/login",
+  signup: "/signup",
+  forgotPassword: "/forgot-password",
+
+  // App
+  dashboard: "/dashboard",
+  live: "/live",
+  campaigns: "/campaigns",
+  numbers: "/numbers",
+  routing: "/routing",
+  buyers: "/buyers",
+  publishers: "/publishers",
+  calls: "/calls",
+  reports: "/reports",
+  marketplace: "/marketplace",
+  insights: "/insights",
+  integrations: "/integrations",
+  billing: "/billing",
+  settings: "/settings",
+} as const;
+
+/** Brand color stops (mirrors CSS vars; use for inline JS gradients). */
+export const VORTYX_COLORS = {
+  deep: "#1656d6",
+  mid: "#3bb6ff",
+  bright: "#7de1ff",
+  ultra: "#bff2ff",
+} as const;
