@@ -17,7 +17,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <SidebarInset>
           <Topbar />
           <div className="flex-1 overflow-auto">
-            <div className="mx-auto w-full max-w-7xl space-y-8 p-4 sm:p-6 lg:p-8">
+            {/* @container/main lets children respond to the actual content-area
+                width (which depends on whether the sidebar is open) instead of
+                the viewport width. Use `@<bp>/main:` utilities on children. */}
+            <div className="@container/main mx-auto w-full max-w-7xl space-y-8 p-4 sm:p-6 lg:p-8">
               {children}
             </div>
           </div>

@@ -53,7 +53,7 @@ export function ListingsGrid({
   }, [listings, tab, query]);
 
   return (
-    <section className="space-y-3">
+    <section className="@container/listings space-y-3">
       <header className="flex flex-wrap items-center gap-2">
         <h3 className="font-sans text-base font-semibold">Open listings</h3>
         <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
@@ -100,10 +100,12 @@ export function ListingsGrid({
         ))}
       </div>
 
-      {/* Inner card grid responds to its own track:
-           - 1 col mobile · 2 col sm+ · 3 col only at 2xl where the
-             marketplace bento's 2/3 column finally has enough room. */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+      {/* Card grid measures its own track via @container/listings:
+            ≥ 28rem (448 px)  → 2 cols
+            ≥ 56rem (896 px)  → 3 cols
+          So the grid only goes wider when the listings cell itself has room,
+          regardless of viewport size or sidebar state. */}
+      <div className="grid grid-cols-1 gap-3 @md/listings:grid-cols-2 @4xl/listings:grid-cols-3">
         <AnimatePresence>
           {filtered.map((l) => (
             <ListingCard

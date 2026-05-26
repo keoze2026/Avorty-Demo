@@ -64,7 +64,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.32 }}
-      className="relative overflow-hidden rounded-2xl border border-border bg-card p-6"
+      className="@container/featured relative overflow-hidden rounded-2xl border border-border bg-card p-6"
     >
       {/* Premium ambient glow + faint dot grid */}
       <div
@@ -80,7 +80,9 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
         style={{ background: `color-mix(in oklab, ${palette.line} 40%, transparent)` }}
       />
 
-      <div className="relative flex flex-col gap-6 lg:flex-row">
+      {/* @3xl/featured = 768px featured card width — only then do we
+          side-by-side the details + bid panel. */}
+      <div className="relative flex flex-col gap-6 @3xl/featured:flex-row">
         {/* Left: details */}
         <div className="min-w-0 flex-1 space-y-5">
           <header className="flex flex-wrap items-center gap-2">
@@ -144,7 +146,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
         </div>
 
         {/* Right: bid panel */}
-        <div className="w-full shrink-0 space-y-4 rounded-2xl border border-accent/40 bg-card/80 p-5 shadow-xl shadow-accent/10 backdrop-blur sm:max-w-sm lg:w-72 xl:w-80">
+        <div className="w-full shrink-0 space-y-4 rounded-2xl border border-accent/40 bg-card/80 p-5 shadow-xl shadow-accent/10 backdrop-blur sm:max-w-sm @3xl/featured:w-72 @4xl/featured:w-80">
           <header className="flex items-center gap-2">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-accent">
               <Gavel className="h-3.5 w-3.5" />

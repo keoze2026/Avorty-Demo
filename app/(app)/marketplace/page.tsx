@@ -91,7 +91,8 @@ export default function MarketplacePage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* 4-up at @2xl/main (672px container), 2-up below */}
+      <div className="grid grid-cols-2 gap-3 @2xl/main:grid-cols-4">
         <FloorStat label="Open listings" value={formatCompact(listings.length)} accent="text-accent" />
         <FloorStat
           label="Closing < 15s"
@@ -112,11 +113,12 @@ export default function MarketplacePage() {
 
       <MarketplaceTicker />
 
-      {/* NOTE: split only at xl (1280+) — at lg the sidebar leaves
-          <1024px of usable space so a 3-col bento would squeeze the
-          featured auction's bid panel and the positions list. */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="min-w-0 xl:col-span-2">
+      {/* Container-query bento — fires only when the content area itself is
+          wide enough (@6xl/main = 1152px container). On a 1366px viewport
+          with the sidebar open the container is ~1078px, so the layout
+          correctly stays stacked. */}
+      <div className="grid grid-cols-1 gap-4 @6xl/main:grid-cols-3">
+        <div className="min-w-0 @6xl/main:col-span-2">
           <FeaturedAuction listing={featured} />
         </div>
         <div className="min-w-0">
@@ -126,11 +128,11 @@ export default function MarketplacePage() {
 
       <VerticalHeat />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="min-w-0 xl:col-span-2">
+      <div className="grid grid-cols-1 gap-4 @6xl/main:grid-cols-3">
+        <div className="min-w-0 @6xl/main:col-span-2">
           <ListingsGrid featuredId={featuredId} onFocus={setFeatured} />
         </div>
-        <div className="min-w-0 xl:sticky xl:top-[5.5rem] xl:self-start">
+        <div className="min-w-0 @6xl/main:sticky @6xl/main:top-[5.5rem] @6xl/main:self-start">
           <BidTape />
         </div>
       </div>

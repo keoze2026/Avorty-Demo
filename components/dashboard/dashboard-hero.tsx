@@ -65,11 +65,14 @@ export function DashboardHero({
       <Crosshair className="left-3 bottom-3" />
       <Crosshair className="right-3 bottom-3" />
 
-      <div className="relative grid grid-cols-1 gap-0 xl:grid-cols-12">
+      {/* Use container queries against the shell's `@container/main` so the
+          7/5 split only fires when the *content area* (not the viewport) is
+          wide enough. @5xl/main = 1024px container. */}
+      <div className="relative grid grid-cols-1 gap-0 @5xl/main:grid-cols-12">
         {/* Primary KPI — Revenue today.
-            Below xl the satellites flow underneath as a 3-up grid so neither
-            side gets squeezed when the sidebar eats horizontal space. */}
-        <div className="relative flex flex-col justify-between p-7 xl:col-span-7 xl:border-r xl:border-border/60">
+            Below @5xl the satellites flow underneath as a 3-up grid so
+            neither side gets squeezed when the sidebar eats horizontal space. */}
+        <div className="relative flex flex-col justify-between p-7 @5xl/main:col-span-7 @5xl/main:border-r @5xl/main:border-border/60">
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] font-semibold tracking-[0.22em] text-accent">
               00 / TODAY
@@ -128,9 +131,10 @@ export function DashboardHero({
           </div>
         </div>
 
-        {/* Satellite KPIs — 3-up grid below the primary KPI on small screens,
-            stacked vertically on the right at xl+ */}
-        <div className="grid grid-cols-1 divide-y divide-border/60 sm:grid-cols-3 sm:divide-x sm:divide-y-0 xl:col-span-5 xl:grid-cols-1 xl:divide-x-0 xl:divide-y">
+        {/* Satellite KPIs — single-col mobile; 3-up horizontal as soon as the
+            container has 28rem; flips to a vertical 1-col stack on the right
+            once the outer 7/5 split kicks in. */}
+        <div className="grid grid-cols-1 divide-y divide-border/60 @md/main:grid-cols-3 @md/main:divide-x @md/main:divide-y-0 @5xl/main:col-span-5 @5xl/main:grid-cols-1 @5xl/main:divide-x-0 @5xl/main:divide-y">
           <SatKpi
             icon={PhoneCall}
             label="Calls today"

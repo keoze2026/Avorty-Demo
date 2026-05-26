@@ -50,27 +50,29 @@ export default function DashboardPage() {
         avgDurationSec={avgDurationSec}
       />
 
-      {/* Bento grid — 1col (mobile) · 2col (lg) · 12col asymmetric (xl+).
-          NOTE: keep the multi-column bento at `xl:` (1280+) so it doesn't
-          activate when the open sidebar leaves <1024px of real estate. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-12">
+      {/* Container-query bento. Breakpoints respond to the actual content
+          area (open sidebar shrinks it), not the viewport:
+          - default               : 1 col stack
+          - @3xl/main (≥768px)    : 2 col paired
+          - @6xl/main (≥1152px)   : full 12-col asymmetric bento */}
+      <div className="grid grid-cols-1 gap-4 @3xl/main:grid-cols-2 @6xl/main:grid-cols-12">
         {/* Row 1 — Revenue (7) / Geo (5) */}
-        <div className="min-w-0 xl:col-span-7">
+        <div className="min-w-0 @6xl/main:col-span-7">
           <RevenueStream />
         </div>
-        <div className="min-w-0 xl:col-span-5">
+        <div className="min-w-0 @6xl/main:col-span-5">
           <GeoPulse />
         </div>
 
-        {/* Row 2 — at lg: Hour | Leaderboard, AI full-width.
-                    at xl: 5 / 4 / 3 */}
-        <div className="min-w-0 xl:col-span-5">
+        {/* Row 2 — at @3xl: Hour | Leaderboard, AI full-width.
+                    at @6xl: 5 / 4 / 3 */}
+        <div className="min-w-0 @6xl/main:col-span-5">
           <HourRhythm />
         </div>
-        <div className="min-w-0 xl:col-span-4">
+        <div className="min-w-0 @6xl/main:col-span-4">
           <Leaderboard />
         </div>
-        <div className="min-w-0 lg:col-span-2 xl:col-span-3">
+        <div className="min-w-0 @3xl/main:col-span-2 @6xl/main:col-span-3">
           <AiSignals />
         </div>
       </div>
