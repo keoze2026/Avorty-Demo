@@ -51,9 +51,16 @@ export function RoutingPalette({ className, inboundExists = false }: RoutingPale
               <div
                 draggable={!disabled}
                 onDragStart={(e) => !disabled && onDragStart(e, kind)}
+                role="button"
+                tabIndex={disabled ? -1 : 0}
                 aria-disabled={disabled}
+                aria-label={
+                  disabled
+                    ? `${meta.label} node — already on canvas`
+                    : `${meta.label} node — drag onto canvas to add`
+                }
                 className={cn(
-                  "group flex cursor-grab items-start gap-2.5 rounded-lg border border-border bg-card p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing",
+                  "group flex cursor-grab items-start gap-2.5 rounded-lg border border-border bg-card p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                   disabled && "cursor-not-allowed opacity-50 hover:translate-y-0 hover:shadow-none",
                 )}
               >

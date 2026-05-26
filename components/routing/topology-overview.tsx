@@ -53,7 +53,7 @@ export function TopologyOverview({ plans }: TopologyOverviewProps) {
       {/* Ambient + texture */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full blur-3xl"
+        className="pointer-events-none absolute -left-32 -top-32 h-72 w-72 rounded-full blur-3xl sm:h-96 sm:w-96 lg:h-[420px] lg:w-[420px]"
         style={{ background: "var(--vortyx-glow)" }}
       />
       <div

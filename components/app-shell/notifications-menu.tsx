@@ -215,7 +215,7 @@ export function NotificationsMenu() {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-[420px] overflow-hidden border-border bg-card p-0"
+        className="w-[min(420px,calc(100vw-1rem))] overflow-hidden border-border bg-card p-0"
       >
         {/* ─── Header ─── */}
         <header className="relative overflow-hidden border-b border-border/70">

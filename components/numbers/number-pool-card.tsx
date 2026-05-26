@@ -52,7 +52,7 @@ export function NumberPoolCard({ pool }: { pool: NumberPool }) {
           <Badge variant={pool.active ? "success" : "outline"}>{pool.active ? "Active" : "Paused"}</Badge>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Number pool actions">
                 <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
