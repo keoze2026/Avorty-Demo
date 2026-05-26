@@ -1,0 +1,164 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { GitFork } from "lucide-react";
+
+import { RoutingCanvas } from "@/components/routing/routing-canvas";
+import { RoutingInspector } from "@/components/routing/routing-inspector";
+import { RoutingPalette } from "@/components/routing/routing-palette";
+import { RoutingToolbar } from "@/components/routing/routing-toolbar";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
+import { useRoutingStore } from "@/lib/store/routing-store";
+import type { RoutingEdge, RoutingNode, RoutingNodeData } from "@/lib/types";
+import { ROUTES } from "@/lib/constants";
+
+export default function RoutingEditorPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const plan = useRoutingStore((s) => s.getById(params.id));
+  const setGraph = useRoutingStore((s) => s.setGraph);
+  const setStatus = useRoutingStore((s) => s.setStatus);
+  const remove = useRoutingStore((s) => s.remove);
+  const patchNodeData = useRoutingStore((s) => s.patchNodeData);
+
+  useBreadcrumbOverride(plan?.name);
+
+  // Working copy held in the canvas; we sync to the store on Save.
+  const [workingNodes, setWorkingNodes] = useState<RoutingNode[]>(plan?.nodes ?? []);
+  const [workingEdges, setWorkingEdges] = useState<RoutingEdge[]>(plan?.edges ?? []);
+  const [selected, setSelected] = useState<RoutingNode | null>(null);
+  const [saving, setSaving] = useState(false);
+  const initialSyncRef = useRef(false);
+
+  // Track patches pushed into the canvas (inspector edits).
+  const [patchVersion, setPatchVersion] = useState(0);
+  const [patchedNode, setPatchedNode] = useState<{ id: string; data: Partial<RoutingNodeData> } | null>(null);
+
+  // When the plan id changes (route nav), reset the working copy.
+  useEffect(() => {
+    if (!plan) return;
+    if (initialSyncRef.current && (workingNodes === plan.nodes || workingEdges === plan.edges)) return;
+    setWorkingNodes(plan.nodes);
+    setWorkingEdges(plan.edges);
+    initialSyncRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
+
+  const dirty = useMemo(() => {
+    if (!plan) return false;
+    return (
+      JSON.stringify(workingNodes) !== JSON.stringify(plan.nodes) ||
+      JSON.stringify(workingEdges) !== JSON.stringify(plan.edges)
+    );
+  }, [plan, workingNodes, workingEdges]);
+
+  if (!plan) {
+    return (
+      <div className="p-6">
+        <EmptyState
+          icon={GitFork}
+          tone="amber"
+          title="Plan not found"
+          description="It may have been deleted. Sending you back to the routing list…"
+        />
+      </div>
+    );
+  }
+
+  const inboundOnCanvas = workingNodes.some((n) => n.type === "inbound");
+
+  const onSelectNode = (n: RoutingNode | null) => setSelected(n);
+
+  const onPatch = (patch: Partial<RoutingNodeData>) => {
+    if (!selected) return;
+    setPatchedNode({ id: selected.id, data: patch });
+    setPatchVersion((v) => v + 1);
+    setSelected((s) => (s ? { ...s, data: { ...s.data, ...patch } } : s));
+  };
+
+  const onDeleteNode = () => {
+    if (!selected) return;
+    setWorkingNodes((ns) => ns.filter((n) => n.id !== selected.id));
+    setWorkingEdges((es) =>
+      es.filter((e) => e.source !== selected.id && e.target !== selected.id),
+    );
+    setSelected(null);
+  };
+
+  const onSave = async () => {
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 300));
+    setGraph(plan.id, workingNodes, workingEdges);
+    setSaving(false);
+    toast.success("Plan saved");
+  };
+
+  const onPublishToggle = () => {
+    const next = plan.status === "published" ? "draft" : "published";
+    setStatus(plan.id, next);
+    toast.success(next === "published" ? "Plan published" : "Plan unpublished");
+  };
+
+  const onDelete = () => {
+    remove(plan.id);
+    toast.success(`${plan.name} deleted`);
+    router.replace(ROUTES.routing);
+  };
+
+  const onTest = () => {
+    toast.info("Test caller is on the roadmap", {
+      description: "It will simulate an inbound call walking through your graph live.",
+    });
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col p-4 sm:p-6">
+      <div className="mb-3">
+        <RoutingToolbar
+          plan={plan}
+          dirty={dirty}
+          saving={saving}
+          onSave={onSave}
+          onPublishToggle={onPublishToggle}
+          onDelete={onDelete}
+          onTest={onTest}
+        />
+      </div>
+
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[14rem_minmax(0,1fr)_18rem]">
+        {/* Palette */}
+        <div className="rounded-xl border border-border bg-card p-3 lg:overflow-hidden">
+          <RoutingPalette inboundExists={inboundOnCanvas} />
+        </div>
+
+        {/* Canvas */}
+        <div className="relative min-h-[500px] overflow-hidden rounded-xl border border-border bg-background">
+          {/* Patch the canvas only when patches actually exist; otherwise pass null */}
+          {plan && (
+            <RoutingCanvas
+              key={plan.id}
+              initialNodes={plan.nodes}
+              initialEdges={plan.edges}
+              onChange={(ns, es) => {
+                setWorkingNodes(ns);
+                setWorkingEdges(es);
+              }}
+              onSelectNode={onSelectNode}
+              patchVersion={patchVersion}
+              patchedNode={patchedNode}
+              className="h-full w-full"
+            />
+          )}
+        </div>
+
+        {/* Inspector */}
+        <div className="rounded-xl border border-border bg-card p-3 lg:overflow-hidden">
+          <RoutingInspector selected={selected} onPatch={onPatch} onDelete={onDeleteNode} />
+        </div>
+      </div>
+    </div>
+  );
+}

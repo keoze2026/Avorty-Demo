@@ -1,24 +1,51 @@
-import type { Metadata } from "next";
-import { Settings } from "lucide-react";
+"use client";
 
-import { EmptyState } from "@/components/shared/empty-state";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+import { ApiKeysSection } from "@/components/settings/api-keys-section";
+import { NotificationsSection } from "@/components/settings/notifications-section";
+import { ProfileSection } from "@/components/settings/profile-section";
+import { SessionsSection } from "@/components/settings/sessions-section";
+import { SettingsRail, type SettingsSection } from "@/components/settings/settings-rail";
+import { TeamSection } from "@/components/settings/team-section";
+import { WorkspaceSection } from "@/components/settings/workspace-section";
 import { PageHeader } from "@/components/shared/page-header";
 
-export const metadata: Metadata = { title: "Settings" };
-
 export default function SettingsPage() {
+  const [section, setSection] = useState<SettingsSection>("profile");
+
   return (
     <>
       <PageHeader
         title="Settings"
         description="Workspace, team & permissions, API keys, and personal preferences."
       />
-      <EmptyState
-        icon={Settings}
-        tone="amber"
-        title="Settings module arrives in Phase 8"
-        description="Account & workspace, team & RBAC permission matrix, API keys, and notification preferences."
-      />
+
+      <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <div className="lg:sticky lg:top-[5.5rem] lg:self-start">
+          <SettingsRail active={section} onSelect={setSection} />
+        </div>
+
+        <div className="min-w-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={section}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              {section === "profile" && <ProfileSection />}
+              {section === "workspace" && <WorkspaceSection />}
+              {section === "team" && <TeamSection />}
+              {section === "api-keys" && <ApiKeysSection />}
+              {section === "notifications" && <NotificationsSection />}
+              {section === "sessions" && <SessionsSection />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
     </>
   );
 }

@@ -1,31 +1,35 @@
 "use client";
 
-import { Building2, Plus } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Building2, Plus } from "lucide-react";
 
+import { PartnerStatusBadge } from "@/components/network/partner-status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { ROUTES } from "@/lib/constants";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { useBuyersStore } from "@/lib/store/buyers-store";
 
 /**
- * Mock association: first N buyers belong to this campaign.
- * In a real backend this would be a join via campaign-buyer mapping.
+ * Buyers attached to a campaign — driven by the live buyers store
+ * (each buyer carries the campaignIds it's wired into).
  */
-export function CampaignBuyersTab({ buyersCount }: { buyersCount: number }) {
-  const buyers = MOCK_BUYERS.slice(0, Math.max(1, buyersCount || 0));
+export function CampaignBuyersTab({ campaignId }: { campaignId: string }) {
+  const buyers = useBuyersStore((s) =>
+    s.buyers.filter((b) => b.campaignIds.includes(campaignId)),
+  );
 
-  if (buyersCount === 0) {
+  if (buyers.length === 0) {
     return (
       <EmptyState
         icon={Building2}
         tone="emerald"
         title="No buyers attached"
-        description="Invite buyers to receive calls from this campaign."
+        description="Invite buyers and attach them to this campaign to start routing calls."
         actions={
           <Button size="sm">
-            <Plus className="h-4 w-4" /> Invite buyer
+            <Plus className="h-4 w-4" /> Attach buyer
           </Button>
         }
       />
@@ -35,20 +39,24 @@ export function CampaignBuyersTab({ buyersCount }: { buyersCount: number }) {
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {buyers.map((b) => (
-        <Card key={b.id} className="overflow-hidden">
+        <Card
+          key={b.id}
+          className="overflow-hidden transition-all hover:-translate-y-0.5 hover:border-accent/40"
+        >
           <CardContent className="flex items-start gap-3 p-4">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[oklch(0.74_0.18_155)]/10 text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
               <Building2 className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="truncate text-sm font-semibold">{b.name}</h3>
-                <Badge
-                  variant={b.status === "active" ? "success" : b.status === "capped" ? "warning" : "outline"}
-                  className="capitalize"
+                <Link
+                  href={`${ROUTES.buyers}/${b.id}`}
+                  className="inline-flex items-center gap-1 truncate text-sm font-semibold transition-colors hover:text-accent"
                 >
-                  {b.status}
-                </Badge>
+                  {b.name}
+                  <ArrowUpRight className="h-3 w-3" />
+                </Link>
+                <PartnerStatusBadge status={b.status} />
               </div>
               <p className="truncate text-[11px] text-muted-foreground">{b.organization}</p>
               <dl className="mt-3 grid grid-cols-3 gap-1 text-xs">
@@ -59,7 +67,7 @@ export function CampaignBuyersTab({ buyersCount }: { buyersCount: number }) {
                 <div>
                   <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Calls</dt>
                   <dd className="font-mono">
-                    {formatNumber(b.callsToday)} / {formatNumber(b.dailyCap)}
+                    {formatNumber(b.callsToday)} / {b.dailyCap === 0 ? "∞" : formatNumber(b.dailyCap)}
                   </dd>
                 </div>
                 <div>

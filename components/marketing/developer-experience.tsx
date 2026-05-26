@@ -1,89 +1,69 @@
-﻿"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Check, AppWindow } from "lucide-react"
+import { useEffect, useRef, useState } from "react";
+import { Check, Radio } from "lucide-react";
 
 const features = [
-  "Instant environment provisioning",
-  "Live preview and hot reload",
-  "Built-in terminal and Git integration",
-  "Team-ready collaboration tools",
-]
+  "Real-time routing in under 150ms",
+  "Per-buyer caps, concurrency, schedules",
+  "Time-zone aware filters and dayparting",
+  "Test caller built into every plan",
+];
 
 export function DeveloperExperience() {
-  const [displayedText, setDisplayedText] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
-  const [hasAnimated, setHasAnimated] = useState(false)
-  const [visibleChecks, setVisibleChecks] = useState<number[]>([])
-  const sectionRef = useRef<HTMLElement>(null)
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const [visibleChecks, setVisibleChecks] = useState<number[]>([]);
+  const sectionRef = useRef<HTMLElement>(null);
 
-  const fullText = `$ Vortyx start
+  const fullText = `$ vortyx campaigns activate health-tier-1
 
-âœ“ Environment ready in 1.2s
-âœ“ Hot reload enabled
-âœ“ Preview: https://preview.Vortyx.app
+✓ Campaign live: Health Insurance — Tier 1
+✓ 124 numbers attached · 8 buyers receiving
+✓ Routing 312 calls/hr at $42.50 avg payout
 
-Ready for development â–¸`
+Streaming events ▸`;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated) {
-            setHasAnimated(true)
-          }
-        })
+          if (entry.isIntersecting && !hasAnimated) setHasAnimated(true);
+        });
       },
       { threshold: 0.3 },
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
+    );
+    if (sectionRef.current) observer.observe(sectionRef.current);
     return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current)
-      }
-    }
-  }, [hasAnimated])
+      if (sectionRef.current) observer.unobserve(sectionRef.current);
+    };
+  }, [hasAnimated]);
 
   useEffect(() => {
-    if (!hasAnimated) return
-
-    setDisplayedText("")
-    setIsTyping(true)
-
-    let currentIndex = 0
-    const typingSpeed = 8
-
-    const typeInterval = setInterval(() => {
-      if (currentIndex < fullText.length) {
-        setDisplayedText(fullText.slice(0, currentIndex + 1))
-        currentIndex++
+    if (!hasAnimated) return;
+    setDisplayedText("");
+    setIsTyping(true);
+    let i = 0;
+    const id = setInterval(() => {
+      if (i < fullText.length) {
+        setDisplayedText(fullText.slice(0, i + 1));
+        i++;
       } else {
-        clearInterval(typeInterval)
-        setIsTyping(false)
+        clearInterval(id);
+        setIsTyping(false);
       }
-    }, typingSpeed)
-
-    return () => clearInterval(typeInterval)
-  }, [fullText, hasAnimated])
+    }, 8);
+    return () => clearInterval(id);
+  }, [fullText, hasAnimated]);
 
   useEffect(() => {
-    if (!hasAnimated) return
-
-    setVisibleChecks([])
-
+    if (!hasAnimated) return;
+    setVisibleChecks([]);
     features.forEach((_, index) => {
-      setTimeout(
-        () => {
-          setVisibleChecks((prev) => [...prev, index])
-        },
-        1000 + index * 150,
-      )
-    })
-  }, [hasAnimated])
+      setTimeout(() => setVisibleChecks((prev) => [...prev, index]), 1000 + index * 150);
+    });
+  }, [hasAnimated]);
 
   return (
     <section ref={sectionRef} id="developer-experience" className="border-y border-border/40 bg-card/30 py-24 sm:py-24">
@@ -91,17 +71,17 @@ Ready for development â–¸`
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div>
             <div className="flex items-center gap-2">
-              <AppWindow className="h-4 w-4 text-accent" />
+              <Radio className="h-4 w-4 text-accent" />
               <p className="font-mono text-sm font-medium uppercase tracking-wider text-accent">
-                Developer Experience First
+                Built for operators
               </p>
             </div>
             <h2 className="mt-2 font-mono text-3xl font-bold tracking-tight sm:text-4xl text-balance">
-              Designed around how developers actually work
+              Live, observable, in your hands
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Vortyx adapts to your workflow â€” not the other way around. Build once. Run anywhere. Collaborate
-              instantly.
+              Vortyx is built for the people running campaigns at 2am when the network's hot. Flip a campaign,
+              raise a cap, tune a rule — and watch the change land instantly in the live monitor.
             </p>
             <ul className="mt-8 space-y-4">
               {features.map((feature, index) => (
@@ -120,28 +100,34 @@ Ready for development â–¸`
           </div>
 
           <div className="relative">
+            {/* Soft glow behind the terminal */}
             <div
-              className="aspect-video overflow-hidden rounded-2xl border border-border/60 flex flex-col"
-              style={{ backgroundColor: "#141414" }}
+              aria-hidden
+              className="pointer-events-none absolute -inset-6 rounded-3xl blur-3xl"
+              style={{ background: "radial-gradient(closest-side, var(--vortyx-glow), transparent 70%)" }}
+            />
+            <div
+              className="relative aspect-video overflow-hidden rounded-2xl border border-border/60 flex flex-col"
+              style={{ backgroundColor: "#111827" }}
             >
               <div
                 className="flex h-8 items-center gap-2 border-b border-border/60 px-4 shrink-0"
-                style={{ backgroundColor: "#1a1a1a" }}
+                style={{ backgroundColor: "#1F2937" }}
               >
                 <div className="h-3 w-3 rounded-full bg-red-500/80" />
                 <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
                 <div className="h-3 w-3 rounded-full bg-green-500/80" />
-                <span className="ml-2 text-xs text-muted-foreground">Terminal</span>
+                <span className="ml-2 text-xs text-muted-foreground font-mono">vortyx — operations</span>
               </div>
-              <div className="p-4 font-mono text-sm flex-1" style={{ backgroundColor: "#0d0d0d" }}>
+              <div className="p-4 font-mono text-sm flex-1" style={{ backgroundColor: "#0A0F1C" }}>
                 <code className="text-muted-foreground">
                   {displayedText.split("\n").map((line, i) => (
                     <span key={i} className="block">
                       {line.startsWith("$") ? (
                         <span className="text-accent">{line}</span>
-                      ) : line.startsWith("âœ“") ? (
+                      ) : line.startsWith("✓") ? (
                         <span className="text-green-400">{line}</span>
-                      ) : line.includes("Ready for development") ? (
+                      ) : line.includes("Streaming") ? (
                         <span className="text-accent">{line}</span>
                       ) : (
                         <span>{line}</span>
@@ -156,5 +142,5 @@ Ready for development â–¸`
         </div>
       </div>
     </section>
-  )
+  );
 }

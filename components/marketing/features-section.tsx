@@ -1,113 +1,121 @@
-﻿"use client"
+"use client";
 
-import type React from "react"
-
-import { Cloud, Zap, Shield, GitBranch, Globe, Cpu, Database, Layers, Sparkles } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  BarChart3,
+  Building2,
+  GitFork,
+  Hash,
+  Plug,
+  Radio,
+  Shield,
+  Sparkles,
+  Store,
+} from "lucide-react";
 
 const features = [
   {
-    icon: Cloud,
-    title: "Zero-config cloud environments",
-    description: "Spin up isolated, production-ready environments in seconds without any configuration.",
+    icon: Radio,
+    title: "Live call monitoring",
+    description:
+      "Watch every call land, route, and settle — sub-second decisions visible on a single screen.",
   },
   {
-    icon: Zap,
-    title: "Optimized for modern frameworks",
-    description: "Native support for React, Next.js, and other modern frontend frameworks out of the box.",
+    icon: GitFork,
+    title: "Visual routing builder",
+    description:
+      "Drag-and-drop ring trees with conditional filters, weighted splits, caps, and fallbacks.",
+  },
+  {
+    icon: Store,
+    title: "Real-time marketplace",
+    description:
+      "Connect buyers and publishers in a live auction. Watch bids settle and inventory clear in real time.",
+  },
+  {
+    icon: Sparkles,
+    title: "AI optimization",
+    description:
+      "Vortyx learns your network and suggests where to scale, pause, rebalance, or alert — automatically.",
+  },
+  {
+    icon: Hash,
+    title: "Numbers on demand",
+    description:
+      "Provision local and toll-free DIDs in bulk, organize them into pools, rotate via weighted strategies.",
+  },
+  {
+    icon: Building2,
+    title: "Multi-role RBAC",
+    description:
+      "Admin, buyer, and publisher roles out of the box — every screen filters to what each user should see.",
+  },
+  {
+    icon: BarChart3,
+    title: "Sub-second analytics",
+    description:
+      "Filter call-detail records by hour, geo, publisher, buyer, or tag — and drill all the way down.",
+  },
+  {
+    icon: Plug,
+    title: "Webhooks & integrations",
+    description:
+      "Every event streams to your CRM, postback, or warehouse. Retry, dedupe, and replay built in.",
   },
   {
     icon: Shield,
-    title: "Secure & isolated setups",
-    description: "Every environment is fully isolated with enterprise-grade security built in.",
+    title: "Compliance ready",
+    description:
+      "Caller consent capture, TCPA-aware routing, HIPAA-tier isolation, and full audit trails.",
   },
-  {
-    icon: GitBranch,
-    title: "Git-native workflows",
-    description: "Seamless integration with your Git workflow. Branch previews and automated deployments.",
-  },
-  {
-    icon: Globe,
-    title: "Global edge network",
-    description: "Deploy to 100+ edge locations worldwide for ultra-low latency and blazing fast responses.",
-  },
-  {
-    icon: Cpu,
-    title: "Serverless compute",
-    description: "Auto-scaling serverless functions that handle any load without managing infrastructure.",
-  },
-  {
-    icon: Database,
-    title: "Integrated databases",
-    description: "One-click database provisioning with automatic backups and edge replication.",
-  },
-  {
-    icon: Layers,
-    title: "Multi-environment staging",
-    description: "Create unlimited staging environments that mirror production perfectly.",
-  },
-]
+];
 
 export function FeaturesSection() {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [isPaused, setIsPaused] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current
-    if (!scrollContainer) return
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
 
-    let animationId: number
-    let scrollPosition = scrollContainer.scrollLeft
+    let animationId: number;
+    let scrollPosition = scrollContainer.scrollLeft;
 
     const animate = () => {
       if (!isPaused && !isDragging && scrollContainer) {
-        scrollPosition += 0.5
-        if (scrollPosition >= scrollContainer.scrollWidth / 2) {
-          scrollPosition = 0
-        }
-        scrollContainer.scrollLeft = scrollPosition
+        scrollPosition += 0.5;
+        if (scrollPosition >= scrollContainer.scrollWidth / 2) scrollPosition = 0;
+        scrollContainer.scrollLeft = scrollPosition;
       } else if (scrollContainer) {
-        scrollPosition = scrollContainer.scrollLeft
+        scrollPosition = scrollContainer.scrollLeft;
       }
-      animationId = requestAnimationFrame(animate)
-    }
-
-    animationId = requestAnimationFrame(animate)
-
-    return () => cancelAnimationFrame(animationId)
-  }, [isPaused, isDragging])
+      animationId = requestAnimationFrame(animate);
+    };
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [isPaused, isDragging]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    const scrollContainer = scrollRef.current
-    if (!scrollContainer) return
-    setIsDragging(true)
-    setStartX(e.pageX - scrollContainer.offsetLeft)
-    setScrollLeft(scrollContainer.scrollLeft)
-  }
-
+    const c = scrollRef.current;
+    if (!c) return;
+    setIsDragging(true);
+    setStartX(e.pageX - c.offsetLeft);
+    setScrollLeft(c.scrollLeft);
+  };
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return
-    e.preventDefault()
-    const scrollContainer = scrollRef.current
-    if (!scrollContainer) return
-    const x = e.pageX - scrollContainer.offsetLeft
-    const walk = (x - startX) * 2
-    scrollContainer.scrollLeft = scrollLeft - walk
-  }
+    if (!isDragging) return;
+    e.preventDefault();
+    const c = scrollRef.current;
+    if (!c) return;
+    const x = e.pageX - c.offsetLeft;
+    c.scrollLeft = scrollLeft - (x - startX) * 2;
+  };
 
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleMouseLeave = () => {
-    setIsDragging(false)
-    setIsPaused(false)
-  }
-
-  const duplicatedFeatures = [...features, ...features]
+  const duplicated = [...features, ...features];
 
   return (
     <section id="features" className="py-24 sm:py-24">
@@ -115,13 +123,14 @@ export function FeaturesSection() {
         <div className="mx-auto max-w-2xl lg:text-center">
           <div className="flex items-center justify-center gap-2 text-sm text-accent">
             <Sparkles className="h-4 w-4" />
-            <span className="font-mono uppercase tracking-wider">Built for Modern Development</span>
+            <span className="font-mono uppercase tracking-wider">The platform</span>
           </div>
           <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl text-balance">
-            A platform designed for real-world workflows
+            Every call. Every decision. Every dollar.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Vortyx removes complexity from development environments so teams can focus on building great products.
+            Vortyx replaces a stack of legacy call-tracking tools with a single, real-time control plane —
+            from inbound ring to buyer settlement.
           </p>
         </div>
 
@@ -134,28 +143,36 @@ export function FeaturesSection() {
             className={`flex gap-6 overflow-x-auto scrollbar-hide select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={handleMouseLeave}
+            onMouseLeave={() => {
+              setIsDragging(false);
+              setIsPaused(false);
+            }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onMouseUp={() => setIsDragging(false)}
             onTouchStart={() => setIsPaused(true)}
             onTouchEnd={() => setIsPaused(false)}
           >
-            {duplicatedFeatures.map((feature, index) => (
+            {duplicated.map((feature, index) => (
               <div
                 key={index}
-                className="group relative flex-shrink-0 w-[320px] rounded-2xl border border-border/60 bg-card/50 p-8 transition-all hover:border-border hover:bg-card"
+                className="group relative flex-shrink-0 w-[320px] overflow-hidden rounded-2xl border border-border/60 bg-card/50 p-7 transition-all hover:-translate-y-1 hover:border-accent/40 hover:bg-card hover:shadow-lg hover:shadow-accent/10"
               >
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-                  <feature.icon className="h-6 w-6 text-foreground" />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full blur-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ background: "rgba(59, 182, 255, 0.22)" }}
+                />
+                <div className="relative mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <feature.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-mono text-lg font-semibold">{feature.title}</h3>
-                <p className="mt-2 text-muted-foreground text-sm">{feature.description}</p>
+                <h3 className="relative font-mono text-lg font-semibold">{feature.title}</h3>
+                <p className="relative mt-2 text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -1,73 +1,94 @@
-﻿"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Blocks } from "lucide-react"
+import { useEffect, useState } from "react";
+import { Blocks } from "lucide-react";
 
 const codeExamples = {
-  framework: `$ Vortyx init
-
-âœ“ Detected: Next.js 14 (App Router)
-âœ“ Found: TypeScript configuration
-âœ“ Found: Tailwind CSS
-âœ“ Ready! Run 'Vortyx dev' to start`,
-
-  ssr: `// pages/api/data.ts
-
-export async function getServerSideProps() {
-  const data = await Vortyx.fetch('/api')
-  return { props: { data }, revalidate: 60 }
+  webhook: `// Receive every call event in real time
+POST /api/vortyx/events
+{
+  "type": "call.completed",
+  "id": "call_94ab2",
+  "campaign": "health-tier-1",
+  "buyer": "apex-insurance",
+  "durationSec": 213,
+  "payout": 42.50,
+  "geo": { "state": "TX", "city": "Austin" }
 }
 
-âœ“ Deployed to edge in 23 regions`,
+✓ Delivered in 38ms`,
 
-  env: `$ Vortyx env pull
+  sdk: `import { createClient } from '@vortyx/sdk'
 
-âœ“ Pulled 12 variables from production
-âœ“ Encrypted with AES-256
+const vortyx = createClient({
+  apiKey: process.env.VORTYX_API_KEY!,
+  workspace: 'tier-one-health',
+})
 
-$ Vortyx env push --preview
-âœ“ Synced to all preview deployments`,
+// Route an inbound call to the best buyer
+const decision = await vortyx.route({
+  callerNumber: '+1 (512) 555-0184',
+  campaign: 'health-tier-1',
+  tags: { source: 'facebook' }
+})`,
 
-  cache: `$ Vortyx build
+  routing: `// Programmatic plan creation
+await vortyx.plans.create({
+  name: 'Health Q3 push',
+  campaign: 'c_health_001',
+  nodes: [
+    { kind: 'inbound' },
+    { kind: 'hoursFilter', days: [1,2,3,4,5], start: 8, end: 20 },
+    { kind: 'geoFilter', mode: 'allow', states: ['TX','CA','FL'] },
+    { kind: 'priority', primary: 'b_apex', fallback: 'b_solar' },
+  ]
+})
 
-âœ“ 847 modules cached (98.2% hit rate)
-âœ“ Only 15 modules rebuilt
+✓ Plan published as v3 — live in 142ms`,
 
-Build completed in 2.3s (95% faster)`,
-}
+  reporting: `// Query call records by anything
+const rows = await vortyx.calls.list({
+  status: 'completed',
+  campaign: 'health-tier-1',
+  since: '24h',
+  groupBy: ['publisher', 'geo.state']
+})
+
+// Export to your warehouse
+await vortyx.exports.create({
+  destination: 'snowflake',
+  cron: '*/15 * * * *'
+})`,
+};
 
 const features = [
-  { key: "framework", label: "Automatic framework detection" },
-  { key: "ssr", label: "Server-side rendering support" },
-  { key: "env", label: "Environment variables management" },
-  { key: "cache", label: "Smart caching and fast rebuilds" },
-] as const
+  { key: "webhook", label: "Webhooks · real-time events" },
+  { key: "sdk", label: "TypeScript SDK" },
+  { key: "routing", label: "Routing API" },
+  { key: "reporting", label: "Reporting & exports" },
+] as const;
 
 export function CodeSection() {
-  const [activeFeature, setActiveFeature] = useState<keyof typeof codeExamples>("framework")
-  const [displayedText, setDisplayedText] = useState("")
-  const [isTyping, setIsTyping] = useState(true)
+  const [activeFeature, setActiveFeature] = useState<keyof typeof codeExamples>("webhook");
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
 
   useEffect(() => {
-    const fullText = codeExamples[activeFeature]
-    setDisplayedText("")
-    setIsTyping(true)
-
-    let currentIndex = 0
-    const typingSpeed = 8 // milliseconds per character
-
-    const typeInterval = setInterval(() => {
-      if (currentIndex < fullText.length) {
-        setDisplayedText(fullText.slice(0, currentIndex + 1))
-        currentIndex++
+    const fullText = codeExamples[activeFeature];
+    setDisplayedText("");
+    setIsTyping(true);
+    let i = 0;
+    const id = setInterval(() => {
+      if (i < fullText.length) {
+        setDisplayedText(fullText.slice(0, i + 1));
+        i++;
       } else {
-        clearInterval(typeInterval)
-        setIsTyping(false)
+        clearInterval(id);
+        setIsTyping(false);
       }
-    }, typingSpeed)
-
-    return () => clearInterval(typeInterval)
-  }, [activeFeature])
+    }, 6);
+    return () => clearInterval(id);
+  }, [activeFeature]);
 
   return (
     <section id="built-for-react" className="py-24 sm:py-24">
@@ -75,21 +96,22 @@ export function CodeSection() {
         <div className="mx-auto max-w-2xl lg:text-center">
           <div className="flex items-center justify-center gap-2">
             <Blocks className="h-4 w-4 text-accent" />
-            <p className="text-sm font-medium uppercase tracking-wider text-accent">Built for React & Next.js</p>
+            <p className="text-sm font-medium uppercase tracking-wider text-accent font-mono">
+              Built for your stack
+            </p>
           </div>
           <h2 className="mt-2 font-mono text-3xl font-bold tracking-tight sm:text-4xl text-balance">
-            Native performance for modern stacks
+            One API, everything streamable
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Vortyx is optimized specifically for modern frontend development with automatic framework detection,
-            server-side rendering support, and smart caching.
+            Every Vortyx capability is reachable from a single typed SDK — and every event lands on your webhook
+            within milliseconds of happening.
           </p>
         </div>
 
         <div className="mx-auto mt-16 max-w-4xl">
           <div className="flex flex-col-reverse md:flex-row md:gap-8">
-            {/* Menu buttons - left side on tablet+ */}
-            <div className="mt-8 md:mt-0 md:w-48 flex flex-col gap-3">
+            <div className="mt-8 md:mt-0 md:w-56 flex flex-col gap-3">
               {features.map((feature) => (
                 <button
                   key={feature.key}
@@ -105,32 +127,38 @@ export function CodeSection() {
               ))}
             </div>
 
-            {/* Terminal - right side on tablet+ */}
             <div
               className="flex-1 overflow-hidden rounded-2xl border border-border/60"
-              style={{ backgroundColor: "#141414" }}
+              style={{ backgroundColor: "#111827" }}
             >
               <div
                 className="flex h-10 items-center gap-2 border-b border-border/60 px-4"
-                style={{ backgroundColor: "#1a1a1a" }}
+                style={{ backgroundColor: "#1F2937" }}
               >
                 <div className="h-3 w-3 rounded-full bg-red-500/80" />
                 <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
                 <div className="h-3 w-3 rounded-full bg-green-500/80" />
-                <span className="ml-2 text-xs text-muted-foreground">terminal</span>
+                <span className="ml-2 text-xs text-muted-foreground font-mono">terminal · vortyx-cli</span>
               </div>
-              <pre className="overflow-x-auto overflow-y-auto p-6 h-[200px]" style={{ backgroundColor: "#0d0d0d" }}>
+              <pre
+                className="overflow-x-auto overflow-y-auto p-6 h-[300px]"
+                style={{ backgroundColor: "#0A0F1C" }}
+              >
                 <code className="font-mono text-sm text-muted-foreground">
                   {displayedText.split("\n").map((line, i) => (
                     <span key={i} className="block">
                       {line.startsWith("//") ? (
                         <span className="text-muted-foreground/60">{line}</span>
-                      ) : line.startsWith("$") ? (
+                      ) : line.startsWith("$") || line.startsWith("POST") || line.startsWith("GET") ? (
                         <span className="text-accent">{line}</span>
-                      ) : line.startsWith("âœ“") ? (
+                      ) : line.startsWith("✓") ? (
                         <span className="text-green-400">{line}</span>
-                      ) : line.includes(":") && !line.includes("//") ? (
+                      ) : line.match(/^\s+"[^"]+":/) ? (
                         <span className="text-foreground">{line}</span>
+                      ) : line.includes("await") || line.includes("async") ? (
+                        <span className="text-amber-300">{line}</span>
+                      ) : line.includes("import") || line.includes("const") ? (
+                        <span className="text-purple-300">{line}</span>
                       ) : (
                         <span className="text-foreground/80">{line}</span>
                       )}
@@ -144,5 +172,5 @@ export function CodeSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -1,0 +1,279 @@
+"use client";
+
+/**
+ * Webhook endpoints + their last-24h delivery log.
+ * Each webhook gets its own card with the URL, event list, status, success rate,
+ * and a peek at recent deliveries.
+ */
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { CheckCircle2, Loader2, MoreVertical, Plug2, Plus, Trash2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+
+import { WebhookDialog, type WebhookDraft } from "./webhook-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { formatPercent, formatRelativeTime } from "@/lib/format";
+import { MOCK_DELIVERIES, MOCK_WEBHOOKS } from "@/lib/mock/integrations";
+import type { Webhook, WebhookStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+const STATUS_VARIANT: Record<WebhookStatus, React.ComponentProps<typeof Badge>["variant"]> = {
+  active: "success",
+  paused: "outline",
+  failing: "destructive",
+};
+
+const STATUS_LABEL: Record<WebhookStatus, string> = {
+  active: "Active",
+  paused: "Paused",
+  failing: "Failing",
+};
+
+export function WebhooksSection() {
+  const [hooks, setHooks] = useState<Webhook[]>(MOCK_WEBHOOKS);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editing, setEditing] = useState<Webhook | null>(null);
+
+  const remove = (id: string) => {
+    setHooks((h) => h.filter((x) => x.id !== id));
+    toast.success("Webhook removed");
+  };
+
+  const openCreate = () => {
+    setEditing(null);
+    setEditorOpen(true);
+  };
+  const openEdit = (h: Webhook) => {
+    setEditing(h);
+    setEditorOpen(true);
+  };
+
+  const onSave = (draft: WebhookDraft, originalId?: string) => {
+    if (originalId) {
+      setHooks((hs) =>
+        hs.map((h) =>
+          h.id === originalId
+            ? { ...h, name: draft.name, url: draft.url, events: draft.events, status: "active" as const }
+            : h,
+        ),
+      );
+    } else {
+      const id = `wh_${Math.random().toString(36).slice(2, 8)}`;
+      setHooks((hs) => [
+        {
+          id,
+          name: draft.name,
+          url: draft.url,
+          events: draft.events,
+          status: "active",
+          createdAt: Date.now(),
+          lastDeliveryAt: undefined,
+          successRate24h: 1,
+        },
+        ...hs,
+      ]);
+    }
+  };
+
+  return (
+    <section className="space-y-3">
+      <header className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="font-sans text-base font-semibold">Webhooks</h3>
+          <p className="text-[11px] text-muted-foreground">
+            {hooks.filter((h) => h.status === "active").length} active ·{" "}
+            {hooks.filter((h) => h.status === "failing").length} failing
+          </p>
+        </div>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="h-3.5 w-3.5" /> Add webhook
+        </Button>
+      </header>
+
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {hooks.map((h, i) => (
+          <motion.div
+            key={h.id}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04, duration: 0.22 }}
+          >
+            <Card
+              className={cn(
+                "overflow-hidden transition-all hover:border-accent/40",
+                h.status === "failing" && "border-destructive/40 shadow-md shadow-destructive/10",
+              )}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "inline-flex h-9 w-9 items-center justify-center rounded-lg",
+                        h.status === "failing"
+                          ? "bg-destructive/15 text-destructive"
+                          : "bg-accent/10 text-accent",
+                      )}
+                    >
+                      <Plug2 className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="truncate text-sm font-semibold">{h.name}</h4>
+                        <Badge variant={STATUS_VARIANT[h.status]}>{STATUS_LABEL[h.status]}</Badge>
+                      </div>
+                      <code className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">
+                        {h.url}
+                      </code>
+                    </div>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <MoreVertical className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => toast.success("Test event sent")}>
+                        Send test event
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => openEdit(h)}>
+                        Configure
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => remove(h.id)}
+                      >
+                        <Trash2 className="h-4 w-4" /> Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {/* Subscribed events */}
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {h.events.map((ev) => (
+                    <span
+                      key={ev}
+                      className="rounded-md border border-border bg-secondary/40 px-1.5 py-0.5 font-mono text-[10px]"
+                    >
+                      {ev}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Stats row */}
+                <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/40 pt-3 text-center">
+                  <Stat label="Success" value={formatPercent(h.successRate24h * 100, 1)} />
+                  <Stat label="Events" value={h.events.length.toString()} />
+                  <Stat label="Last delivery" value={h.lastDeliveryAt ? formatRelativeTime(h.lastDeliveryAt) : "—"} />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Delivery log */}
+      <DeliveryLog />
+
+      <WebhookDialog
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        initial={editing}
+        onSave={onSave}
+      />
+    </section>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="font-mono text-xs font-semibold">{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+const DELIVERY_ICON = {
+  delivered: CheckCircle2,
+  retrying: Loader2,
+  failed: XCircle,
+} as const;
+
+function DeliveryLog() {
+  const deliveries = MOCK_DELIVERIES.slice(0, 14);
+  const hooksById = new Map(MOCK_WEBHOOKS.map((h) => [h.id, h]));
+
+  return (
+    <Card className="mt-3">
+      <CardContent className="p-0">
+        <div className="border-b border-border/60 bg-secondary/30 px-4 py-2.5">
+          <h4 className="text-sm font-semibold">Recent deliveries</h4>
+          <p className="text-[10px] text-muted-foreground">Last 14 events across all webhooks</p>
+        </div>
+        <ul className="divide-y divide-border/60">
+          {deliveries.map((d, i) => {
+            const Icon = DELIVERY_ICON[d.status];
+            const hook = hooksById.get(d.webhookId);
+            const tone =
+              d.status === "delivered"
+                ? "text-[color:var(--success)]"
+                : d.status === "retrying"
+                  ? "text-[color:var(--warning)]"
+                  : "text-destructive";
+            return (
+              <motion.li
+                key={d.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.02, duration: 0.2 }}
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 text-xs"
+              >
+                <Icon
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    tone,
+                    d.status === "retrying" && "animate-spin",
+                  )}
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono">{d.event}</span>
+                    {hook && (
+                      <span className="text-muted-foreground/60">→ {hook.name}</span>
+                    )}
+                  </div>
+                  <div className="font-mono text-[10px] text-muted-foreground/80">
+                    {d.responseCode ?? "—"} · {d.responseTimeMs}ms · {formatRelativeTime(d.at)}
+                  </div>
+                </div>
+                <span
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider",
+                    d.status === "delivered" && "border-[color:var(--success)]/40 bg-[color:var(--success)]/10 text-[color:var(--success)]",
+                    d.status === "retrying" && "border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 text-[color:var(--warning)]",
+                    d.status === "failed" && "border-destructive/40 bg-destructive/10 text-destructive",
+                  )}
+                >
+                  {d.status}
+                </span>
+              </motion.li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}

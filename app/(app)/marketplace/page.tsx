@@ -1,26 +1,158 @@
-import type { Metadata } from "next";
-import { Store } from "lucide-react";
+"use client";
 
-import { EmptyState } from "@/components/shared/empty-state";
-import { LiveBadge } from "@/components/shared/live-badge";
+import { useEffect, useMemo } from "react";
+import { Activity, Gavel, Pause, Play } from "lucide-react";
+
+import { BidTape } from "@/components/marketplace/bid-tape";
+import { FeaturedAuction } from "@/components/marketplace/featured-auction";
+import { ListingsGrid } from "@/components/marketplace/listings-grid";
+import { MarketplaceTicker } from "@/components/marketplace/marketplace-ticker";
+import { MyPositions } from "@/components/marketplace/my-positions";
+import { VerticalHeat } from "@/components/marketplace/vertical-heat";
 import { PageHeader } from "@/components/shared/page-header";
-
-export const metadata: Metadata = { title: "Marketplace" };
+import { Button } from "@/components/ui/button";
+import { useMarketplaceStream } from "@/hooks/use-marketplace-stream";
+import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { formatCompact, formatCurrency } from "@/lib/format";
 
 export default function MarketplacePage() {
+  // Boot the live simulation
+  useMarketplaceStream();
+
+  const listings = useMarketplaceStore((s) => s.listings);
+  const featuredId = useMarketplaceStore((s) => s.featuredId);
+  const setFeatured = useMarketplaceStore((s) => s.setFeatured);
+  const paused = useMarketplaceStore((s) => s.paused);
+  const setPaused = useMarketplaceStore((s) => s.setPaused);
+  const bidCount = useMarketplaceStore((s) => s.bidCount);
+  const ticker = useMarketplaceStore((s) => s.ticker);
+
+  // Auto-pick a featured listing if none chosen
+  useEffect(() => {
+    if (!featuredId && listings.length > 0) {
+      const next = [...listings]
+        .filter((l) => l.endsAt > Date.now() + 5_000)
+        .sort((a, b) => {
+          if (a.hot !== b.hot) return a.hot ? -1 : 1;
+          return b.bidderCount - a.bidderCount;
+        })[0];
+      if (next) setFeatured(next.id);
+    }
+  }, [featuredId, listings, setFeatured]);
+
+  // If the featured listing retires, pick another
+  useEffect(() => {
+    if (featuredId && !listings.find((l) => l.id === featuredId)) {
+      setFeatured(null);
+    }
+  }, [featuredId, listings, setFeatured]);
+
+  const featured = useMemo(
+    () => (featuredId ? listings.find((l) => l.id === featuredId) ?? null : null),
+    [featuredId, listings],
+  );
+
+  // Top-of-page mini stats
+  const stats = useMemo(() => {
+    const totalVolume = ticker.reduce((s, b) => s + b.amount, 0);
+    const hot = listings.filter((l) => l.hot).length;
+    const closingSoon = listings.filter((l) => l.endsAt - Date.now() < 15_000).length;
+    return { totalVolume, hot, closingSoon };
+  }, [ticker, listings]);
+
   return (
     <>
       <PageHeader
         title="Marketplace"
-        description="Real-time bidding for the verticals you sell into."
-        actions={<LiveBadge label="Bidding" />}
+        description="The Vortyx trading floor — real-time bidding on inbound calls."
+        actions={
+          <div className="flex items-center gap-2">
+            <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground backdrop-blur sm:inline-flex">
+              <Activity className="h-3 w-3 text-accent" />
+              {formatCompact(bidCount)} bids · session
+            </span>
+            <Button
+              size="sm"
+              variant={paused ? "default" : "outline"}
+              onClick={() => setPaused(!paused)}
+              className="gap-1.5"
+            >
+              {paused ? (
+                <>
+                  <Play className="h-3.5 w-3.5" /> Resume
+                </>
+              ) : (
+                <>
+                  <Pause className="h-3.5 w-3.5" /> Pause floor
+                </>
+              )}
+            </Button>
+          </div>
+        }
       />
-      <EmptyState
-        icon={Store}
-        tone="amber"
-        title="Marketplace arrives in Phase 7"
-        description="Live listings, animated bid ticker, and a bid-placement flow with per-vertical pricing."
-      />
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <FloorStat label="Open listings" value={formatCompact(listings.length)} accent="text-accent" />
+        <FloorStat
+          label="Closing < 15s"
+          value={formatCompact(stats.closingSoon)}
+          accent="text-destructive"
+        />
+        <FloorStat
+          label="Hot listings"
+          value={formatCompact(stats.hot)}
+          accent="text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)]"
+        />
+        <FloorStat
+          label="Tape volume (session)"
+          value={formatCurrency(stats.totalVolume)}
+          accent="text-[color:var(--success)]"
+        />
+      </div>
+
+      <MarketplaceTicker />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <FeaturedAuction listing={featured} />
+        </div>
+        <div>
+          <MyPositions />
+        </div>
+      </div>
+
+      <VerticalHeat />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ListingsGrid featuredId={featuredId} onFocus={setFeatured} />
+        </div>
+        <div className="lg:sticky lg:top-[5.5rem] lg:self-start">
+          <BidTape />
+        </div>
+      </div>
+
+      <p className="-mt-2 flex items-center justify-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70">
+        <Gavel className="h-3 w-3" />
+        Vortyx trading floor — simulated bids stream every ~1.2s
+      </p>
     </>
+  );
+}
+
+function FloorStat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4">
+      <div className={`font-mono text-2xl font-semibold tabular-nums ${accent}`}>{value}</div>
+      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
   );
 }

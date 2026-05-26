@@ -1,44 +1,60 @@
-﻿import { Book, Code2, FileText, Terminal, Zap, GitBranch, Layers, Shield } from "lucide-react"
-import Link from "next/link"
+import {
+  Book,
+  Building2,
+  FileText,
+  GitFork,
+  Hash,
+  Plug,
+  Shield,
+  Sparkles,
+  TerminalSquare,
+} from "lucide-react";
+import Link from "next/link";
 
 const docCategories = [
   {
-    icon: Zap,
-    title: "Getting Started",
-    description: "Quick start guide to deploy your first app in minutes",
-    links: ["Installation", "Quick Start", "First Deployment"],
+    icon: Sparkles,
+    title: "Getting started",
+    description: "From signup to your first live campaign in under 15 minutes.",
+    links: ["Quickstart", "Concepts", "First campaign"],
   },
   {
-    icon: Code2,
-    title: "Framework Guides",
-    description: "Detailed guides for React, Next.js, Vue, and more",
-    links: ["Next.js", "React", "Vue.js", "Svelte"],
+    icon: GitFork,
+    title: "Routing concepts",
+    description: "Ring trees, filters, splits, caps, fallbacks — the building blocks.",
+    links: ["Ring trees", "Filters & caps", "Weighted splits"],
   },
   {
-    icon: Terminal,
-    title: "CLI Reference",
-    description: "Complete command reference for the Vortyx CLI",
-    links: ["Commands", "Configuration", "Plugins"],
+    icon: Hash,
+    title: "Numbers & pools",
+    description: "Provision DIDs, organize them into pools, rotate them on a strategy.",
+    links: ["Provisioning", "Pool strategies", "Geo routing"],
   },
   {
-    icon: GitBranch,
-    title: "Git Integration",
-    description: "Connect your repositories for automatic deployments",
-    links: ["GitHub", "GitLab", "Bitbucket"],
+    icon: Building2,
+    title: "Buyers & publishers",
+    description: "Invite partners, configure bids, set caps, audit performance.",
+    links: ["Buyer setup", "Publisher payouts", "Caps & pacing"],
   },
   {
-    icon: Layers,
-    title: "API Reference",
-    description: "REST and GraphQL APIs for programmatic access",
-    links: ["REST API", "GraphQL", "Webhooks"],
+    icon: TerminalSquare,
+    title: "API reference",
+    description: "Typed SDK, REST routes, and the webhook event catalog.",
+    links: ["SDK", "REST API", "Webhooks"],
+  },
+  {
+    icon: Plug,
+    title: "Integrations",
+    description: "Salesforce, HubSpot, GHL, Twilio, postbacks — pre-built and well-tested.",
+    links: ["CRM postbacks", "Data exports", "BYO carrier"],
   },
   {
     icon: Shield,
-    title: "Security",
-    description: "Best practices for securing your applications",
-    links: ["SSL/TLS", "Environment Variables", "Access Control"],
+    title: "Security & compliance",
+    description: "TCPA, HIPAA, SOC 2 — the controls and disclosures auditors ask about.",
+    links: ["TCPA toolkit", "HIPAA tier", "Audit logs"],
   },
-]
+];
 
 export function DocsSection() {
   return (
@@ -49,9 +65,11 @@ export function DocsSection() {
             <Book className="h-4 w-4" />
             <span className="font-mono uppercase tracking-wider">Documentation</span>
           </div>
-          <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl">Everything you need to know</h2>
+          <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl">
+            Built for people learning the network
+          </h2>
           <p className="mt-4 text-muted-foreground">
-            Comprehensive documentation to help you get started and master every feature of Vortyx.
+            Every concept, knob, and webhook — explained with examples that run.
           </p>
         </div>
 
@@ -59,7 +77,7 @@ export function DocsSection() {
           {docCategories.map((category, index) => (
             <div
               key={index}
-              className="group relative rounded-xl border border-border/60 bg-[#141414] p-6 transition-all duration-300 hover:border-accent/40 hover:bg-[#1a1a1a] scale-100 hover:scale-105"
+              className="group relative rounded-xl border border-border/60 bg-[#111827] p-6 transition-all duration-300 hover:border-accent/40 hover:bg-[#1F2937] hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/10"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <category.icon className="h-5 w-5" />
@@ -85,11 +103,11 @@ export function DocsSection() {
 
         <div className="mt-12 text-center">
           <Link href="#" className="inline-flex items-center gap-2 font-mono text-sm text-accent hover:underline">
-            View full documentation
-            <span>â†’</span>
+            Read the full docs
+            <span>→</span>
           </Link>
         </div>
       </div>
     </section>
-  )
+  );
 }

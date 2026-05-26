@@ -1,7 +1,7 @@
 /**
  * Vortyx logo — vector mark (inline SVG).
- * Uses currentColor where possible so it inherits from text color contexts;
- * the gradient/glow stays brand-fixed.
+ * Uses a teal → cyan gradient to match the 2026 brand palette while keeping
+ * the vortex feel of the original asset.
  */
 
 import { cn } from "@/lib/utils";
@@ -29,14 +29,14 @@ export function Logo({ className, animated = false, uid = "root" }: LogoProps) {
     >
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9EEBFF" />
-          <stop offset="55%" stopColor="#3BB6FF" />
-          <stop offset="100%" stopColor="#1656D6" />
+          <stop offset="0%" stopColor="#00E6B8" />
+          <stop offset="55%" stopColor="#22D3EE" />
+          <stop offset="100%" stopColor="#0A4E6C" />
         </linearGradient>
         <radialGradient id={coreId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#BFF2FF" stopOpacity="1" />
-          <stop offset="60%" stopColor="#3BB6FF" stopOpacity="0.65" />
-          <stop offset="100%" stopColor="#1656D6" stopOpacity="0" />
+          <stop offset="0%" stopColor="#D4FAFF" stopOpacity="1" />
+          <stop offset="60%" stopColor="#22D3EE" stopOpacity="0.65" />
+          <stop offset="100%" stopColor="#00E6B8" stopOpacity="0" />
         </radialGradient>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="0.9" result="b" />
@@ -73,7 +73,7 @@ export function Logo({ className, animated = false, uid = "root" }: LogoProps) {
         opacity="0.9"
       />
 
-      <circle cx="32" cy="32" r="1.6" fill="#BFF2FF" filter={`url(#${glowId})`} />
+      <circle cx="32" cy="32" r="1.6" fill="#D4FAFF" filter={`url(#${glowId})`} />
     </svg>
   );
 }

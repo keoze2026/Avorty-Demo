@@ -1,6 +1,7 @@
 /**
  * Vortyx wordmark — logo + product name lock-up.
- * Use in navbars, footers, sidebars. Sizes scale uniformly.
+ * The product name uses a teal → cyan gradient when `gradient` is enabled —
+ * gives the navbar / hero a memorable signature flourish.
  */
 
 import Link from "next/link";
@@ -16,13 +17,15 @@ interface WordmarkProps {
   size?: "sm" | "md" | "lg";
   /** Hide the product name (logo-only) */
   iconOnly?: boolean;
+  /** Apply the brand gradient on the wordmark text (default true). */
+  gradient?: boolean;
   uid?: string;
 }
 
 const SIZE = {
-  sm: { logo: "h-6 w-6", text: "text-sm" },
-  md: { logo: "h-8 w-8", text: "text-lg" },
-  lg: { logo: "h-10 w-10", text: "text-xl" },
+  sm: { logo: "h-6 w-6", text: "text-sm tracking-tight" },
+  md: { logo: "h-8 w-8", text: "text-xl tracking-tight" },
+  lg: { logo: "h-10 w-10", text: "text-2xl tracking-tight" },
 } as const;
 
 export function Wordmark({
@@ -30,14 +33,32 @@ export function Wordmark({
   href = ROUTES.home,
   size = "md",
   iconOnly = false,
+  gradient = true,
   uid,
 }: WordmarkProps) {
   const s = SIZE[size];
+
   const content = (
     <span className={cn("flex items-center gap-2", className)}>
       <Logo className={s.logo} uid={uid} />
       {!iconOnly && (
-        <span className={cn("font-mono font-semibold tracking-tight", s.text)}>{BRAND.name}</span>
+        <span
+          className={cn("font-bold", s.text)}
+          style={
+            gradient
+              ? {
+                  background:
+                    "linear-gradient(120deg, #00E6B8 10%, #22D3EE 60%, #7DE1FF 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  color: "transparent",
+                }
+              : undefined
+          }
+        >
+          {BRAND.name}
+        </span>
       )}
     </span>
   );

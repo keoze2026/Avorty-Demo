@@ -103,10 +103,6 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => toast.info("Settings tab will open here in Phase 8.")}>
-                <SettingsIcon className="h-4 w-4" /> Edit settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={onArchive}
                 className="text-destructive focus:text-destructive"

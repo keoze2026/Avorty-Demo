@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 
-import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
+import { Navbar } from "@/components/marketing/navbar";
+import { StickyCTA } from "@/components/marketing/sticky-cta";
 
 /**
- * Marketing layout — public navbar + footer wrapper.
+ * Marketing layout — public navbar + footer wrapper + floating sticky CTA.
  * Lives at /, /pricing, etc.
  */
 export default function MarketingLayout({ children }: { children: ReactNode }) {
@@ -16,6 +17,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
       <Navbar />
       <main>{children}</main>
       <Footer />
+      <StickyCTA />
     </div>
   );
 }

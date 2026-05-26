@@ -1,42 +1,133 @@
+/**
+ * MOCK_CALLS — deterministic call-detail-record fixtures.
+ *
+ * ~500 records spread over the last 30 days, weighted toward business hours
+ * and recent days. Linked to the existing campaign / buyer / publisher fixtures
+ * so cross-cutting analytics (leaderboards, funnels) line up with the rest
+ * of the demo state.
+ */
+
 import type { Call, CallStatus } from "@/lib/types";
+import { MOCK_BUYERS } from "./buyers";
 import { MOCK_CAMPAIGNS } from "./campaigns";
+import { MOCK_PUBLISHERS } from "./publishers";
 
-const STATUSES: CallStatus[] = ["completed", "completed", "completed", "in-progress", "missed", "rejected"];
-const STATES = ["TX", "CA", "FL", "NY", "PA", "OH", "IL", "GA", "NC", "MI"];
-const CITIES = ["Austin", "Los Angeles", "Miami", "Brooklyn", "Pittsburgh", "Cleveland", "Chicago", "Atlanta", "Charlotte", "Detroit"];
+const STATES = [
+  { code: "TX", city: "Austin" },
+  { code: "CA", city: "Los Angeles" },
+  { code: "FL", city: "Miami" },
+  { code: "NY", city: "Brooklyn" },
+  { code: "PA", city: "Pittsburgh" },
+  { code: "OH", city: "Cleveland" },
+  { code: "IL", city: "Chicago" },
+  { code: "GA", city: "Atlanta" },
+  { code: "NC", city: "Charlotte" },
+  { code: "MI", city: "Detroit" },
+] as const;
 
-function pad(n: number, w = 3) {
+const TAG_OPTIONS = ["facebook", "google", "organic", "tiktok", "radio", "email"] as const;
+
+const DAY = 1000 * 60 * 60 * 24;
+const NOW = Date.now();
+const TOTAL = 520;
+
+/** Tiny LCG so the fixtures are stable across SSR / hydration. */
+function rng(seed: number) {
+  return ((seed * 9301 + 49297) % 233280) / 233280;
+}
+
+function pad(n: number, w = 4) {
   return n.toString().padStart(w, "0");
 }
 
-function randomNumber(seed: number) {
-  // Deterministic-ish caller numbers for nicer logs
-  const area = 200 + (seed * 31) % 700;
-  const prefix = 200 + (seed * 17) % 700;
-  const line = 1000 + (seed * 7) % 8999;
+function fmtNumber(seed: number) {
+  const area = 200 + Math.floor(rng(seed) * 700);
+  const prefix = 200 + Math.floor(rng(seed + 1) * 700);
+  const line = 1000 + Math.floor(rng(seed + 2) * 8999);
   return `+1 (${area}) ${prefix}-${line}`;
 }
 
-export const MOCK_CALLS: Call[] = Array.from({ length: 80 }).map((_, i) => {
+/**
+ * Recency-weighted timestamp inside the last 30 days, biased toward
+ * business hours (8:00–20:00 local) and toward recent days.
+ */
+function startedAt(seed: number): number {
+  const r = rng(seed);
+  // Day offset: heavily skewed toward the last 7 days
+  let daysAgo: number;
+  if (r < 0.45) daysAgo = Math.floor(rng(seed + 10) * 1);       // today
+  else if (r < 0.75) daysAgo = 1 + Math.floor(rng(seed + 11) * 6); // 1–6 days
+  else if (r < 0.92) daysAgo = 7 + Math.floor(rng(seed + 12) * 7); // 7–13 days
+  else daysAgo = 14 + Math.floor(rng(seed + 13) * 16);             // 14–30 days
+
+  // Hour within the day — bell-shape-ish around mid-day
+  const hour = 8 + Math.floor(rng(seed + 14) * 13); // 8–20
+  const minute = Math.floor(rng(seed + 15) * 60);
+  const second = Math.floor(rng(seed + 16) * 60);
+
+  const d = new Date(NOW - daysAgo * DAY);
+  d.setHours(hour, minute, second, 0);
+  return d.getTime();
+}
+
+function statusFor(seed: number, daysOld: number): CallStatus {
+  // Mostly completed; some misses/rejects; a few are actively in-flight
+  // (only for very recent calls).
+  const r = rng(seed + 23);
+  if (daysOld < 0.01 && r < 0.08) return "in-progress";
+  if (daysOld < 0.01 && r < 0.12) return "ringing";
+  if (r < 0.62) return "completed";
+  if (r < 0.78) return "missed";
+  if (r < 0.9) return "rejected";
+  return "failed";
+}
+
+export const MOCK_CALLS: Call[] = Array.from({ length: TOTAL }).map((_, i): Call => {
+  const seed = i * 17 + 3;
+  const ts = startedAt(seed);
+  const daysOld = (NOW - ts) / DAY;
   const campaign = MOCK_CAMPAIGNS[i % MOCK_CAMPAIGNS.length];
-  const status = STATUSES[i % STATUSES.length];
-  const duration = status === "missed" || status === "rejected" ? 0 : 30 + ((i * 13) % 540);
-  const stateIdx = i % STATES.length;
+  const publisher = MOCK_PUBLISHERS[i % MOCK_PUBLISHERS.length];
+  const state = STATES[i % STATES.length];
+  const status = statusFor(seed, daysOld);
+
+  const baseDuration =
+    status === "in-progress"
+      ? 5 + Math.floor(rng(seed + 30) * 60)
+      : status === "ringing"
+        ? Math.floor(rng(seed + 30) * 6)
+        : status === "missed" || status === "rejected" || status === "failed"
+          ? 0
+          : 60 + Math.floor(rng(seed + 30) * 600);
+
+  // Buyer is only attached for completed calls (the only path that pays).
+  const buyer =
+    status === "completed" ? MOCK_BUYERS[i % MOCK_BUYERS.length] : undefined;
+
+  const payout = status === "completed" ? campaign.payout : 0;
+  const revenue = status === "completed" ? payout * 1.18 : 0;
+
+  const tagPick = rng(seed + 40) < 0.7 ? TAG_OPTIONS[Math.floor(rng(seed + 41) * TAG_OPTIONS.length)] : undefined;
+
   return {
     id: `call_${pad(i + 1, 4)}`,
     campaignId: campaign.id,
     campaignName: campaign.name,
-    buyerId: status === "completed" ? `b_${pad((i % 6) + 1)}` : undefined,
-    buyerName: status === "completed" ? `Buyer ${(i % 6) + 1}` : undefined,
-    publisherId: `p_${pad((i % 4) + 1)}`,
-    publisherName: `Publisher ${(i % 4) + 1}`,
-    callerNumber: randomNumber(i + 1),
-    destinationNumber: randomNumber(i + 100),
-    startedAt: Date.now() - i * 1000 * 60 * 3,
-    durationSec: duration,
+    buyerId: buyer?.id,
+    buyerName: buyer?.name,
+    publisherId: publisher.id,
+    publisherName: publisher.name,
+    callerNumber: fmtNumber(seed + 50),
+    destinationNumber: fmtNumber(seed + 60),
+    startedAt: ts,
+    durationSec: baseDuration,
     status,
-    payout: status === "completed" ? campaign.payout : 0,
-    revenue: status === "completed" ? campaign.payout * 1.18 : 0,
-    geo: { country: "US", state: STATES[stateIdx], city: CITIES[stateIdx] },
+    payout,
+    revenue,
+    geo: { country: "US", state: state.code, city: state.city },
+    ...(tagPick && { recordingUrl: undefined }), // placeholder for tag wiring later
   };
 });
+
+// Sort so the most recent calls are first — simplifies the call-log default view.
+MOCK_CALLS.sort((a, b) => b.startedAt - a.startedAt);

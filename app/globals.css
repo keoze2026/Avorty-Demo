@@ -4,126 +4,127 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================================
-   Vortyx — Light theme (default) + Dark theme override
-   Accent: vortex cyan (matches the logo) in both modes,
-   tuned per mode for contrast.
+   Vortyx — Premium 2026 dark palette
+   Deep navy base + vivid teal/cyan duotone accent.
+   Mirrors the brand brief: #0A0F1C → #00E6B8 → #22D3EE.
    ========================================================= */
 :root {
-  /* Surfaces */
-  --background: oklch(0.99 0.002 230);
-  --foreground: oklch(0.18 0.01 230);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 230);
+  /* Light-mode surfaces (kept ready for the future light toggle) */
+  --background: oklch(0.985 0.005 240);                      /* #F8FAFC */
+  --foreground: oklch(0.18 0.03 245);                        /* #0F172A */
+  --card: oklch(1 0 0);                                      /* #FFFFFF */
+  --card-foreground: oklch(0.18 0.03 245);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 230);
+  --popover-foreground: oklch(0.18 0.03 245);
 
-  /* Primary text-button colorway */
-  --primary: oklch(0.2 0.01 230);
+  --primary: oklch(0.2 0.025 245);
   --primary-foreground: oklch(0.99 0 0);
 
-  /* Secondary surfaces */
-  --secondary: oklch(0.95 0.005 230);
-  --secondary-foreground: oklch(0.2 0.01 230);
-  --muted: oklch(0.95 0.005 230);
-  --muted-foreground: oklch(0.5 0.01 230);
+  --secondary: oklch(0.95 0.008 240);
+  --secondary-foreground: oklch(0.2 0.025 245);
+  --muted: oklch(0.95 0.008 240);
+  --muted-foreground: oklch(0.5 0.02 240);
 
-  /* Brand accent — slightly darker for white-bg contrast */
-  --accent: oklch(0.6 0.18 230);
+  /* Brand accent — vivid teal (darker on light for contrast) */
+  --accent: oklch(0.65 0.15 168);                            /* ~#00C99F */
   --accent-foreground: oklch(0.99 0 0);
 
-  /* Status colors */
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.55 0.18 155);
+  --success: oklch(0.62 0.16 162);
   --warning: oklch(0.68 0.18 75);
 
-  /* Form / outline */
-  --border: oklch(0.9 0.003 230);
-  --input: oklch(0.96 0.003 230);
-  --ring: oklch(0.6 0.18 230);
+  --border: oklch(0.9 0.008 240);
+  --input: oklch(0.96 0.005 240);
+  --ring: oklch(0.65 0.15 168);
 
-  /* Charts (blue spectrum + supporting hues) */
-  --chart-1: oklch(0.6 0.18 230);
-  --chart-2: oklch(0.5 0.2 260);
-  --chart-3: oklch(0.65 0.17 195);
-  --chart-4: oklch(0.55 0.18 155);
-  --chart-5: oklch(0.68 0.18 75);
+  --chart-1: oklch(0.65 0.15 168);                           /* teal */
+  --chart-2: oklch(0.7 0.13 200);                            /* cyan */
+  --chart-3: oklch(0.55 0.18 240);                           /* blue */
+  --chart-4: oklch(0.62 0.16 162);                           /* success green */
+  --chart-5: oklch(0.68 0.18 75);                            /* amber */
 
   --radius: 0.625rem;
 
-  /* Sidebar */
-  --sidebar: oklch(0.97 0.003 230);
-  --sidebar-foreground: oklch(0.18 0.01 230);
-  --sidebar-primary: oklch(0.6 0.18 230);
+  --sidebar: oklch(0.97 0.005 240);
+  --sidebar-foreground: oklch(0.18 0.03 245);
+  --sidebar-primary: oklch(0.65 0.15 168);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.93 0.006 230);
-  --sidebar-accent-foreground: oklch(0.2 0.01 230);
-  --sidebar-border: oklch(0.9 0.003 230);
-  --sidebar-ring: oklch(0.6 0.18 230);
+  --sidebar-accent: oklch(0.93 0.008 240);
+  --sidebar-accent-foreground: oklch(0.2 0.025 245);
+  --sidebar-border: oklch(0.9 0.008 240);
+  --sidebar-ring: oklch(0.65 0.15 168);
 
-  /* Grid + scrollbar (theme-aware) */
-  --grid-line: oklch(0.93 0.004 230);
-  --scrollbar-thumb: oklch(0.85 0.004 230);
-  --scrollbar-thumb-hover: oklch(0.75 0.005 230);
+  --grid-line: oklch(0.93 0.005 240);
+  --scrollbar-thumb: oklch(0.85 0.008 240);
+  --scrollbar-thumb-hover: oklch(0.75 0.008 240);
 
-  /* Raw Vortyx brand stops (gradients / canvas particles) */
-  --vortyx-deep: #1656d6;
-  --vortyx-mid: #3bb6ff;
+  /* Vortyx brand stops — used for gradients, logo, glows */
+  --vortyx-teal: #00e6b8;
+  --vortyx-cyan: #22d3ee;
+  --vortyx-deep: #0a4e6c;
   --vortyx-bright: #7de1ff;
   --vortyx-ultra: #bff2ff;
-  --vortyx-glow: rgba(59, 182, 255, 0.22);
-  --vortyx-particle: rgba(22, 86, 214, 0.65);
+  --vortyx-glow: rgba(0, 230, 184, 0.18);
+  --vortyx-particle: rgba(0, 230, 184, 0.55);
 }
 
 .dark {
-  --background: oklch(0.09 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.12 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.98 0 0);
+  /* === The 2026 premium dark palette === */
+  --background: hsl(215 40% 6%);                             /* #0A0F1C */
+  --foreground: hsl(210 20% 95%);                            /* #F1F5F9 */
+  --card: hsl(215 25% 12%);                                  /* #111827 */
+  --card-foreground: hsl(210 20% 95%);
+  --popover: hsl(215 25% 12%);
+  --popover-foreground: hsl(210 20% 95%);
 
-  --primary: oklch(0.98 0 0);
-  --primary-foreground: oklch(0.09 0 0);
+  --primary: hsl(210 20% 95%);
+  --primary-foreground: hsl(215 40% 6%);
 
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.62 0 0);
+  --secondary: hsl(215 20% 18%);                             /* #1F2937 — elevated surfaces */
+  --secondary-foreground: hsl(210 20% 95%);
+  --muted: hsl(215 20% 18%);
+  --muted-foreground: hsl(215 15% 75%);                      /* #CBD5E1 — body */
 
-  --accent: oklch(0.78 0.15 230);
-  --accent-foreground: oklch(0.1 0.02 230);
+  /* The signature accent: vibrant teal */
+  --accent: hsl(165 100% 45%);                               /* #00E6B8 */
+  --accent-foreground: hsl(215 40% 6%);                      /* near-black on teal */
 
-  --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --success: oklch(0.74 0.18 155);
-  --warning: oklch(0.78 0.16 80);
+  --destructive: hsl(0 75% 60%);
+  --destructive-foreground: hsl(210 20% 95%);
+  --success: hsl(160 80% 45%);                               /* #34D399 — live calls */
+  --warning: hsl(38 92% 60%);
 
-  --border: oklch(0.22 0 0);
-  --input: oklch(0.18 0 0);
-  --ring: oklch(0.78 0.15 230);
+  --border: hsl(215 20% 25%);                                /* #334155 */
+  --input: hsl(215 20% 18%);
+  --ring: hsl(165 100% 45%);
 
-  --chart-1: oklch(0.78 0.15 230);
-  --chart-2: oklch(0.6 0.17 250);
-  --chart-3: oklch(0.7 0.17 195);
-  --chart-4: oklch(0.74 0.18 155);
-  --chart-5: oklch(0.78 0.16 80);
+  --chart-1: hsl(165 100% 45%);                              /* teal — primary */
+  --chart-2: hsl(190 95% 55%);                               /* cyan — secondary */
+  --chart-3: hsl(220 90% 65%);                               /* blue */
+  --chart-4: hsl(160 80% 45%);                               /* success green */
+  --chart-5: hsl(38 92% 60%);                                /* amber */
 
-  --sidebar: oklch(0.11 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.78 0.15 230);
-  --sidebar-primary-foreground: oklch(0.1 0.02 230);
-  --sidebar-accent: oklch(0.16 0 0);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.2 0 0);
-  --sidebar-ring: oklch(0.78 0.15 230);
+  --sidebar: hsl(215 30% 9%);
+  --sidebar-foreground: hsl(210 20% 95%);
+  --sidebar-primary: hsl(165 100% 45%);
+  --sidebar-primary-foreground: hsl(215 40% 6%);
+  --sidebar-accent: hsl(215 25% 15%);
+  --sidebar-accent-foreground: hsl(210 20% 95%);
+  --sidebar-border: hsl(215 20% 22%);
+  --sidebar-ring: hsl(165 100% 45%);
 
-  --grid-line: oklch(0.18 0 0);
-  --scrollbar-thumb: oklch(0.22 0 0);
-  --scrollbar-thumb-hover: oklch(0.3 0 0);
+  --grid-line: hsl(215 20% 18%);
+  --scrollbar-thumb: hsl(215 20% 22%);
+  --scrollbar-thumb-hover: hsl(215 20% 30%);
 
-  --vortyx-glow: rgba(59, 182, 255, 0.35);
-  --vortyx-particle: rgba(125, 225, 255, 0.55);
+  --vortyx-teal: #00e6b8;
+  --vortyx-cyan: #22d3ee;
+  --vortyx-bright: #7de1ff;
+  --vortyx-deep: #0a4e6c;
+  --vortyx-ultra: #d4faff;
+  --vortyx-glow: rgba(0, 230, 184, 0.32);
+  --vortyx-particle: rgba(0, 230, 184, 0.55);
 }
 
 @theme inline {
@@ -194,6 +195,35 @@
   ::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-thumb-hover);
   }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+
+/* =========================================================
+   Reusable utilities
+   ========================================================= */
+/** Premium glassmorphic surface — pair with `bg-card/70`. */
+.glass {
+  background: color-mix(in oklab, var(--card) 75%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+}
+
+/** Subtle dotted background grid — paired with mask gradients. */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, var(--grid-line) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/** Lined background grid */
+.bg-line-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 3rem 3rem;
 }
 
 /* =========================================================
@@ -231,18 +261,10 @@
   animation: shimmer 2.4s linear infinite;
 }
 
-/* Marketing sections are crafted for the dark hero treatment.
-   Force them dark regardless of the user's app-level theme choice. */
+/* Marketing surfaces are crafted for dark-mode; force dark on them. */
 .force-dark {
   color-scheme: dark;
 }
 
-/* Hide scrollbar utility (preserves scrolling) */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
-
-/* Subtle dotted texture utility (paired with mask gradients) */
-.bg-dot-grid {
-  background-image: radial-gradient(circle, var(--grid-line) 1px, transparent 1px);
-  background-size: 16px 16px;
-}

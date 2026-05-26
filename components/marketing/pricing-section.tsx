@@ -1,56 +1,60 @@
-﻿import { Check, DollarSign } from "lucide-react"
-import { Button } from "@/components/ui/button"
+﻿"use client";
+
+import { motion } from "framer-motion";
+import { Check, DollarSign, Sparkles } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Hobby",
+    name: "Starter",
     price: "Free",
-    description: "Perfect for side projects and experiments",
+    description: "For solo operators kicking the tires on a single campaign.",
     features: [
-      "Unlimited deployments",
-      "100GB bandwidth/month",
-      "Automatic HTTPS",
-      "Git integration",
+      "2,000 calls / month",
+      "Up to 3 campaigns",
+      "Up to 20 tracking numbers",
+      "Visual routing builder",
+      "Live monitor",
       "Community support",
     ],
-    cta: "Start for Free",
+    cta: "Start free",
     popular: false,
   },
   {
-    name: "Pro",
-    price: "$20",
+    name: "Growth",
+    price: "$499",
     period: "/month",
-    description: "For professional developers and small teams",
+    description: "For networks scaling buyers, publishers, and call volume.",
     features: [
-      "Everything in Hobby",
-      "1TB bandwidth/month",
-      "Advanced analytics",
-      "Team collaboration",
+      "50,000 calls / month included",
+      "Unlimited campaigns & buyers",
+      "Unlimited numbers + pools",
+      "Real-time marketplace",
+      "AI optimization & alerts",
+      "Webhooks & integrations",
       "Priority support",
-      "Custom domains",
-      "Password protection",
     ],
-    cta: "Start Free Trial",
+    cta: "Start 14-day trial",
     popular: true,
   },
   {
-    name: "Team",
-    price: "$50",
-    period: "/user/month",
-    description: "For growing teams that need more power",
+    name: "Scale",
+    price: "Custom",
+    description: "For enterprise networks with compliance and uptime stakes.",
     features: [
-      "Everything in Pro",
-      "Unlimited bandwidth",
-      "SSO/SAML",
-      "Audit logs",
-      "Role-based access",
-      "SLA guarantee",
-      "Dedicated support",
+      "Volume-based pricing",
+      "Multi-tenant RBAC + SSO",
+      "TCPA, HIPAA, SOC 2 toolkit",
+      "BYO carrier / numbering",
+      "Dedicated success manager",
+      "99.99% uptime SLA",
+      "On-prem & private cloud",
     ],
-    cta: "Contact Sales",
+    cta: "Talk to sales",
     popular: false,
   },
-]
+];
 
 export function PricingSection() {
   return (
@@ -61,25 +65,53 @@ export function PricingSection() {
             <DollarSign className="h-4 w-4" />
             <span className="font-mono uppercase tracking-wider">Pricing</span>
           </div>
-          <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl">Simple, transparent pricing</h2>
-          <p className="mt-4 text-muted-foreground">Start free and scale as you grow. No hidden fees, no surprises.</p>
+          <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl">
+            Pay for calls that close, not seats
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Volume-based pricing with predictable overage. No per-user nickel-and-diming.
+          </p>
         </div>
 
         <div className="mx-auto mt-16 grid max-w-5xl gap-8 lg:grid-cols-3">
           {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`relative rounded-xl border p-8 border-transparent ${
-                plan.popular ? "border-accent bg-[#141414] shadow-lg shadow-accent/10" : "border-border/60 bg-[#0f0f0f]"
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+              className={`relative rounded-2xl border p-8 ${
+                plan.popular
+                  ? "border-accent bg-[#111827] shadow-2xl shadow-accent/10"
+                  : "border-border/60 bg-[#0A0F1C]"
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="rounded-full px-3 py-1 text-xs font-medium text-accent-foreground bg-accent">
-                    Most Popular
-                  </span>
-                </div>
+                <>
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-px rounded-2xl"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--vortyx-bright), transparent 40%, var(--vortyx-deep))",
+                      opacity: 0.25,
+                      mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                      WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                      maskComposite: "exclude",
+                      WebkitMaskComposite: "xor",
+                      padding: 1,
+                    }}
+                  />
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-accent-foreground bg-accent shadow-lg shadow-accent/30">
+                      <Sparkles className="h-3 w-3" />
+                      Most popular
+                    </span>
+                  </div>
+                </>
               )}
+
               <div className="text-center">
                 <h3 className="font-mono text-lg font-semibold">{plan.name}</h3>
                 <div className="mt-4 flex items-baseline justify-center gap-1">
@@ -89,9 +121,9 @@ export function PricingSection() {
                 <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
               </div>
               <ul className="mt-8 space-y-3">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-center gap-3 text-sm">
-                    <Check className="h-4 w-4 text-accent" />
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                     <span className="text-muted-foreground">{feature}</span>
                   </li>
                 ))}
@@ -104,10 +136,14 @@ export function PricingSection() {
                   {plan.cta}
                 </Button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
+
+        <p className="mt-10 text-center text-xs text-muted-foreground">
+          Volume discounts kick in automatically. Overage billed per-call, not per-seat.
+        </p>
       </div>
     </section>
-  )
+  );
 }

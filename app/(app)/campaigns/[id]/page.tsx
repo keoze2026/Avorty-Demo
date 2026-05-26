@@ -9,6 +9,8 @@ import { CampaignDetailHeader } from "@/components/campaigns/campaign-detail-hea
 import { CampaignNumbersTab } from "@/components/campaigns/campaign-numbers-tab";
 import { CampaignOverviewTab } from "@/components/campaigns/campaign-overview-tab";
 import { CampaignPublishersTab } from "@/components/campaigns/campaign-publishers-tab";
+import { CampaignRoutingTab } from "@/components/campaigns/campaign-routing-tab";
+import { CampaignSettingsTab } from "@/components/campaigns/campaign-settings-tab";
 import { CampaignStatsRow } from "@/components/campaigns/campaign-stats-row";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -77,18 +79,13 @@ export default function CampaignDetailPage() {
           <CampaignNumbersTab campaignId={campaign.id} />
         </TabsContent>
         <TabsContent value="buyers">
-          <CampaignBuyersTab buyersCount={campaign.buyersCount} />
+          <CampaignBuyersTab campaignId={campaign.id} />
         </TabsContent>
         <TabsContent value="publishers">
-          <CampaignPublishersTab publishersCount={campaign.publishersCount} />
+          <CampaignPublishersTab campaignId={campaign.id} />
         </TabsContent>
-        <TabsContent value="routing">
-          <EmptyState
-            icon={GitFork}
-            tone="amber"
-            title="Routing builder arrives in Phase 4"
-            description="A node-graph editor (React Flow) for this campaign's ring tree will live here."
-          />
+        <TabsContent value="routing" className="space-y-4">
+          <CampaignRoutingTab campaignId={campaign.id} />
         </TabsContent>
         <TabsContent value="performance">
           <EmptyState
@@ -99,12 +96,7 @@ export default function CampaignDetailPage() {
           />
         </TabsContent>
         <TabsContent value="settings">
-          <EmptyState
-            icon={SettingsIcon}
-            tone="amber"
-            title="Settings panel arrives in Phase 8"
-            description="Editable campaign metadata, schedule, caps, and webhook configuration."
-          />
+          <CampaignSettingsTab campaign={campaign} />
         </TabsContent>
       </Tabs>
     </>
