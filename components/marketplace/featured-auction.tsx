@@ -47,7 +47,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
 
   const submit = (amount: number) => {
     if (amount <= listing.topBid) {
-      toast.error("Bid must beat the current top.");
+      toast.error("Bid must beat the current top");
       return;
     }
     placeBid(listing, amount);

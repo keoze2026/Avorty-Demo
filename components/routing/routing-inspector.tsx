@@ -170,7 +170,7 @@ function HoursForm({ data, onPatch }: FormProps) {
                 type="button"
                 onClick={() => toggleDay(d.id)}
                 className={cn(
-                  "h-8 rounded text-[10px] font-mono transition-colors",
+                  "h-8 rounded text-[10px] font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card",
                   active ? "border border-accent bg-accent/10 text-accent" : "border border-border text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -244,7 +244,7 @@ function GeoForm({ data, onPatch }: FormProps) {
                 type="button"
                 onClick={() => toggleState(s)}
                 className={cn(
-                  "h-7 w-9 rounded border text-[10px] font-mono transition-colors",
+                  "h-7 w-9 rounded border text-[10px] font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card",
                   active
                     ? "border-accent bg-accent/10 text-accent"
                     : "border-border text-muted-foreground hover:text-foreground",

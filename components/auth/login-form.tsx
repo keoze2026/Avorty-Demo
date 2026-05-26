@@ -35,10 +35,10 @@ export function LoginForm() {
     setPending(true);
     try {
       await login(email, password, role);
-      toast.success("Welcome back to Vortyx.");
+      toast.success("Welcome back to Vortyx");
       router.push(params.get("from") || ROUTES.dashboard);
     } catch {
-      toast.error("Sign in failed. Try again.");
+      toast.error("Sign in failed — try again");
     } finally {
       setPending(false);
     }

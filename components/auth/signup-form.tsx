@@ -25,7 +25,7 @@ export function SignupForm() {
     e.preventDefault();
     if (pending) return;
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+      toast.error("Password must be at least 8 characters");
       return;
     }
     setPending(true);
@@ -34,7 +34,7 @@ export function SignupForm() {
       toast.success(`Welcome, ${name.split(" ")[0]}. Your workspace is ready.`);
       router.push(ROUTES.dashboard);
     } catch {
-      toast.error("Couldn't create account. Try again.");
+      toast.error("Couldn't create account — try again");
     } finally {
       setPending(false);
     }

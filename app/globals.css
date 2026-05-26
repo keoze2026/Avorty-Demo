@@ -342,3 +342,21 @@
   50% { opacity: 1; }
 }
 .animate-count-tick { animation: count-tick 1.6s ease-in-out infinite; }
+
+/* =========================================================
+   Reduced-motion guard — disable looping decorative animations
+   for users who prefer reduced motion.
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .animate-blink,
+  .animate-floor,
+  .animate-vortyx-spin,
+  .animate-vortyx-pulse,
+  .animate-shimmer,
+  .animate-radar-sweep,
+  .animate-radar-pulse,
+  .animate-ticker,
+  .animate-count-tick {
+    animation: none !important;
+  }
+}

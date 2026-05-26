@@ -38,7 +38,7 @@ export function RevenueChart() {
               key={r.id}
               onClick={() => setRange(r.id)}
               className={cn(
-                "rounded px-2 py-1 text-xs font-mono transition-colors",
+                "rounded px-2 py-1 text-xs font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
                 range === r.id
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",

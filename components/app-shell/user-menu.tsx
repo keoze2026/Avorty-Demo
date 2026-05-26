@@ -35,14 +35,19 @@ export function UserMenu() {
 
   const onLogout = () => {
     logout();
-    toast.success("Signed out.");
+    toast.success("Signed out");
     router.push(ROUTES.login);
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label={`Account menu for ${user.name}`}
+        >
           <Avatar className="h-8 w-8 border border-border">
             <AvatarFallback className="bg-accent/15 text-accent text-xs">
               {initials(user.name)}

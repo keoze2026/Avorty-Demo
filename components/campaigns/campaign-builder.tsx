@@ -340,7 +340,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                             type="button"
                             onClick={() => toggleDay(d.id)}
                             className={cn(
-                              "h-9 w-12 rounded-md border text-xs font-mono transition-colors",
+                              "h-9 w-12 rounded-md border text-xs font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                               active
                                 ? "border-accent bg-accent/10 text-accent"
                                 : "border-border text-muted-foreground hover:text-foreground",

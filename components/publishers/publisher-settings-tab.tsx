@@ -55,7 +55,7 @@ export function PublisherSettingsTab({ publisher }: { publisher: Publisher }) {
 
   const onSave = async () => {
     if (hasErrors) {
-      toast.error("Please fix the highlighted fields first.");
+      toast.error("Please fix the highlighted fields first");
       return;
     }
     setSubmitting(true);

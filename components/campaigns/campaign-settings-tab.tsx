@@ -104,7 +104,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
 
   const onSave = async () => {
     if (hasErrors) {
-      toast.error("Please fix the highlighted fields first.");
+      toast.error("Please fix the highlighted fields first");
       return;
     }
     setSubmitting(true);

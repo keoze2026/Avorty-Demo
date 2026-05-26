@@ -128,8 +128,8 @@ export default function RoutingEditorPage() {
   };
 
   const onTest = () => {
-    toast.info("Test caller is on the roadmap", {
-      description: "It will simulate an inbound call walking through your graph live.",
+    toast.info("Test caller — coming soon", {
+      description: "Will simulate an inbound call walking through your graph in real time.",
     });
   };
 

@@ -50,8 +50,9 @@ export function BuyerCapsTab({ buyer }: { buyer: Buyer }) {
           </dl>
 
           <p className="mt-6 rounded-md border border-dashed border-border/60 bg-secondary/30 p-3 text-[11px] text-muted-foreground">
-            Inline cap editing is on the <span className="font-mono text-foreground">roadmap</span>.
-            Today, values come from the buyer&apos;s onboarding configuration.
+            Cap values are sourced from the buyer&apos;s onboarding configuration. To
+            change them, edit the buyer profile in{" "}
+            <span className="font-mono text-foreground">Settings → Buyers</span>.
           </p>
         </CardContent>
       </Card>

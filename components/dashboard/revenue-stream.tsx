@@ -45,7 +45,7 @@ export function RevenueStream() {
                 key={r.id}
                 onClick={() => setRange(r.id)}
                 className={cn(
-                  "rounded px-2 py-1 font-mono text-[10px] tracking-wider transition-colors",
+                  "rounded px-2 py-1 font-mono text-[10px] tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card",
                   range === r.id
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",

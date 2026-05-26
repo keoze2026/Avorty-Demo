@@ -100,7 +100,7 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
 
   const onTest = async () => {
     if (!canSubmit) {
-      toast.error("Add a valid URL + at least one event first.");
+      toast.error("Add a valid URL + at least one event first");
       return;
     }
     setTesting(true);
