@@ -112,22 +112,25 @@ export default function MarketplacePage() {
 
       <MarketplaceTicker />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* NOTE: split only at xl (1280+) — at lg the sidebar leaves
+          <1024px of usable space so a 3-col bento would squeeze the
+          featured auction's bid panel and the positions list. */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="min-w-0 xl:col-span-2">
           <FeaturedAuction listing={featured} />
         </div>
-        <div>
+        <div className="min-w-0">
           <MyPositions />
         </div>
       </div>
 
       <VerticalHeat />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="min-w-0 xl:col-span-2">
           <ListingsGrid featuredId={featuredId} onFocus={setFeatured} />
         </div>
-        <div className="lg:sticky lg:top-[5.5rem] lg:self-start">
+        <div className="min-w-0 xl:sticky xl:top-[5.5rem] xl:self-start">
           <BidTape />
         </div>
       </div>

@@ -38,11 +38,16 @@ export function DepthSpark({ series, vertical, width = 120, height = 28, classNa
   const color = VERTICAL_PALETTE[vertical].line;
   const id = `spark-fill-${vertical.toLowerCase()}`;
 
+  // When a `className` is supplied (e.g. `h-12 w-full`), drop the explicit
+  // width/height attributes so the SVG can fluidly fill its container.
+  // The viewBox keeps the drawing's internal coordinate system intact.
+  const sizingProps = className ? {} : { width, height };
+
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
+      preserveAspectRatio="none"
+      {...sizingProps}
       className={className}
       aria-hidden
     >

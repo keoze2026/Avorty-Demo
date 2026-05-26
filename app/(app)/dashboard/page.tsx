@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { Sparkles } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 
-import { AiRecommendations } from "@/components/dashboard/ai-recommendations";
-import { CallVolumeChart } from "@/components/dashboard/call-volume-chart";
-import { GeoDistribution } from "@/components/dashboard/geo-distribution";
-import { KpiRow } from "@/components/dashboard/kpi-row";
-import { RecentCallsFeed } from "@/components/dashboard/recent-calls-feed";
-import { RevenueChart } from "@/components/dashboard/revenue-chart";
-import { TopCampaignsTable } from "@/components/dashboard/top-campaigns-table";
-import { LiveBadge } from "@/components/shared/live-badge";
+import { ActivityTicker } from "@/components/dashboard/activity-ticker";
+import { AiSignals } from "@/components/dashboard/ai-signals";
+import { DashboardHero } from "@/components/dashboard/dashboard-hero";
+import { GeoPulse } from "@/components/dashboard/geo-pulse";
+import { HourRhythm } from "@/components/dashboard/hour-rhythm";
+import { Leaderboard } from "@/components/dashboard/leaderboard";
+import { RevenueStream } from "@/components/dashboard/revenue-stream";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { MOCK_CALLS } from "@/lib/mock/calls";
+import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -30,10 +29,12 @@ export default function DashboardPage() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Today's calls, revenue, and what's trending across your network."
+        description="Mission control for every call, dollar, and signal across your network."
         actions={
           <>
-            <LiveBadge label="Live" className="hidden sm:inline-flex" />
+            <Button variant="ghost" size="sm">
+              <Download className="h-4 w-4" /> Export
+            </Button>
             <Button variant="outline" size="sm">
               <Sparkles className="h-4 w-4" /> AI summary
             </Button>
@@ -41,39 +42,41 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Headline KPIs */}
-      <KpiRow
+      {/* Mission-control hero */}
+      <DashboardHero
         callsToday={callsToday}
         revenueToday={revenueToday}
         conversionRate={conversionRate}
         avgDurationSec={avgDurationSec}
       />
 
-      {/* Revenue (wide) + Geo (narrow) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RevenueChart />
+      {/* Bento grid — 1col (mobile) · 2col (lg) · 12col asymmetric (xl+).
+          NOTE: keep the multi-column bento at `xl:` (1280+) so it doesn't
+          activate when the open sidebar leaves <1024px of real estate. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-12">
+        {/* Row 1 — Revenue (7) / Geo (5) */}
+        <div className="min-w-0 xl:col-span-7">
+          <RevenueStream />
         </div>
-        <div>
-          <GeoDistribution />
+        <div className="min-w-0 xl:col-span-5">
+          <GeoPulse />
+        </div>
+
+        {/* Row 2 — at lg: Hour | Leaderboard, AI full-width.
+                    at xl: 5 / 4 / 3 */}
+        <div className="min-w-0 xl:col-span-5">
+          <HourRhythm />
+        </div>
+        <div className="min-w-0 xl:col-span-4">
+          <Leaderboard />
+        </div>
+        <div className="min-w-0 lg:col-span-2 xl:col-span-3">
+          <AiSignals />
         </div>
       </div>
 
-      {/* Volume + Top campaigns */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <CallVolumeChart />
-        </div>
-        <div>
-          <TopCampaignsTable />
-        </div>
-      </div>
-
-      {/* AI strip */}
-      <AiRecommendations />
-
-      {/* Recent calls full-width */}
-      <RecentCallsFeed />
+      {/* Live activity tape */}
+      <ActivityTicker />
     </>
   );
 }

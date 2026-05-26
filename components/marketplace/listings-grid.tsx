@@ -60,13 +60,13 @@ export function ListingsGrid({
           {filtered.length} active
         </span>
 
-        <div className="relative ml-auto">
+        <div className="relative ml-auto w-full max-w-xs sm:w-64">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter by campaign, state, vertical…"
-            className="h-8 w-64 pl-8 text-xs"
+            className="h-8 w-full pl-8 text-xs"
           />
           {query && (
             <button
@@ -100,7 +100,10 @@ export function ListingsGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {/* Inner card grid responds to its own track:
+           - 1 col mobile · 2 col sm+ · 3 col only at 2xl where the
+             marketplace bento's 2/3 column finally has enough room. */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
         <AnimatePresence>
           {filtered.map((l) => (
             <ListingCard

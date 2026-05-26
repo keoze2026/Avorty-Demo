@@ -268,3 +268,77 @@
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* =========================================================
+   Geometric primitives — 2026 premium dashboard
+   ========================================================= */
+
+/** Tight micro-grid (8px) used inside bracket-cards / hero panels. */
+.bg-micro-grid {
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+/** Diagonal stripe pattern — used as the "axis" texture on hero panels. */
+.bg-diagonal {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in oklab, var(--border) 60%, transparent) 0 1px,
+    transparent 1px 8px
+  );
+}
+
+/** Faint hex-dot motif — sized so it tiles invisibly behind glow. */
+.bg-hex-dot {
+  background-image:
+    radial-gradient(circle at 25% 25%, var(--grid-line) 1px, transparent 1.5px),
+    radial-gradient(circle at 75% 75%, var(--grid-line) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/** Concentric ring grid — Live Monitor radar background. */
+.bg-radar-rings {
+  background:
+    radial-gradient(circle at center, transparent 0 22%, color-mix(in oklab, var(--accent) 18%, transparent) 22.2% 22.6%, transparent 22.6% 38%, color-mix(in oklab, var(--accent) 14%, transparent) 38.2% 38.6%, transparent 38.6% 56%, color-mix(in oklab, var(--accent) 10%, transparent) 56.2% 56.6%, transparent 56.6% 76%, color-mix(in oklab, var(--accent) 7%, transparent) 76.2% 76.6%, transparent 76.6% 100%),
+    radial-gradient(circle at center, color-mix(in oklab, var(--accent) 12%, transparent) 0%, transparent 60%);
+}
+
+/** Soft top-edge accent rule — used at top of bracket cards. */
+.edge-rule-top {
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--accent) 60%, transparent) 50%,
+    transparent
+  );
+}
+
+/* =========================================================
+   Animations (additions)
+   ========================================================= */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.animate-radar-sweep { animation: radar-sweep 5.5s linear infinite; }
+
+@keyframes radar-pulse {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-radar-pulse { animation: radar-pulse 2.6s ease-out infinite; }
+
+@keyframes ticker-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-ticker { animation: ticker-marquee 38s linear infinite; }
+
+@keyframes count-tick {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.animate-count-tick { animation: count-tick 1.6s ease-in-out infinite; }

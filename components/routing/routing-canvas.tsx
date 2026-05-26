@@ -107,6 +107,7 @@ function RoutingCanvasInner({
   const [nodes, setNodes] = useState<FlowNode[]>(() => initialNodes.map(toFlowNode));
   const [edges, setEdges] = useState<FlowEdge[]>(() => initialEdges.map(toFlowEdge));
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const lastSelectedId = useRef<string | null>(null);
   const { screenToFlowPosition } = useReactFlow();
 
   // Sync up to the parent whenever the graph mutates locally.
@@ -181,7 +182,15 @@ function RoutingCanvasInner({
 
   const onSelectionChange = useCallback(
     ({ nodes: selected }: { nodes: FlowNode[] }) => {
-      onSelectNode(selected[0] ? fromFlowNode(selected[0]) : null);
+      const first = selected[0];
+      const nextId = first?.id ?? null;
+      // De-dupe: if the same node id is reported again, don't fire upward.
+      // React Flow can re-emit this when the callback identity changes,
+      // and `fromFlowNode` produces a new object each time, which previously
+      // cascaded into an infinite render loop (React error #185).
+      if (nextId === lastSelectedId.current) return;
+      lastSelectedId.current = nextId;
+      onSelectNode(first ? fromFlowNode(first) : null);
     },
     [onSelectNode],
   );

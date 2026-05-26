@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { CampaignBuilder } from "@/components/campaigns/campaign-builder";
 import { CampaignCard } from "@/components/campaigns/campaign-card";
+import { CampaignsOverview } from "@/components/campaigns/campaigns-overview";
 import { CampaignsTable } from "@/components/campaigns/campaigns-table";
 import { CampaignsToolbar, type StatusFilter } from "@/components/campaigns/campaigns-toolbar";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -63,6 +64,8 @@ export default function CampaignsPage() {
           </Button>
         }
       />
+
+      <CampaignsOverview campaigns={all} />
 
       <CampaignsToolbar
         query={query}

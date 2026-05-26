@@ -82,7 +82,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
 
       <div className="relative flex flex-col gap-6 lg:flex-row">
         {/* Left: details */}
-        <div className="flex-1 space-y-5">
+        <div className="min-w-0 flex-1 space-y-5">
           <header className="flex flex-wrap items-center gap-2">
             <span
               className={cn(
@@ -144,7 +144,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
         </div>
 
         {/* Right: bid panel */}
-        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-accent/40 bg-card/80 p-5 shadow-xl shadow-accent/10 backdrop-blur lg:w-80">
+        <div className="w-full shrink-0 space-y-4 rounded-2xl border border-accent/40 bg-card/80 p-5 shadow-xl shadow-accent/10 backdrop-blur sm:max-w-sm lg:w-72 xl:w-80">
           <header className="flex items-center gap-2">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-accent">
               <Gavel className="h-3.5 w-3.5" />
@@ -232,8 +232,8 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
       </div>
 
       {/* Bottom sparkline strip */}
-      <div className="relative mt-6 flex items-center justify-between rounded-lg border border-border/60 bg-secondary/30 p-3">
-        <div>
+      <div className="relative mt-6 flex flex-col gap-3 rounded-lg border border-border/60 bg-secondary/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
             Price trajectory
           </p>
@@ -250,7 +250,16 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
             <span className="text-muted-foreground">from floor</span>
           </p>
         </div>
-        <DepthSpark series={listing.bidHistory} vertical={listing.vertical} width={280} height={48} />
+        {/* Fluid sparkline — fills the remaining track on narrow viewports */}
+        <div className="w-full max-w-[280px] sm:w-48 md:w-60 xl:w-[280px]">
+          <DepthSpark
+            series={listing.bidHistory}
+            vertical={listing.vertical}
+            width={280}
+            height={48}
+            className="h-12 w-full"
+          />
+        </div>
       </div>
     </motion.section>
   );

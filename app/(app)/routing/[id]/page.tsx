@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { GitFork } from "lucide-react";
@@ -70,23 +70,42 @@ export default function RoutingEditorPage() {
 
   const inboundOnCanvas = workingNodes.some((n) => n.type === "inbound");
 
-  const onSelectNode = (n: RoutingNode | null) => setSelected(n);
+  // NOTE — these MUST be stable across renders. React Flow watches the
+  // `onSelectionChange` callback identity inside the canvas; if these change
+  // every render, the canvas re-fires the handler → setSelected → new render
+  // → new handler → infinite loop (React error #185).
+  const onSelectNode = useCallback((n: RoutingNode | null) => setSelected(n), []);
 
-  const onPatch = (patch: Partial<RoutingNodeData>) => {
-    if (!selected) return;
-    setPatchedNode({ id: selected.id, data: patch });
-    setPatchVersion((v) => v + 1);
-    setSelected((s) => (s ? { ...s, data: { ...s.data, ...patch } } : s));
-  };
+  const onChange = useCallback(
+    (ns: RoutingNode[], es: RoutingEdge[]) => {
+      setWorkingNodes(ns);
+      setWorkingEdges(es);
+    },
+    [],
+  );
 
-  const onDeleteNode = () => {
-    if (!selected) return;
-    setWorkingNodes((ns) => ns.filter((n) => n.id !== selected.id));
-    setWorkingEdges((es) =>
-      es.filter((e) => e.source !== selected.id && e.target !== selected.id),
-    );
-    setSelected(null);
-  };
+  const onPatch = useCallback(
+    (patch: Partial<RoutingNodeData>) => {
+      setSelected((s) => {
+        if (!s) return s;
+        setPatchedNode({ id: s.id, data: patch });
+        setPatchVersion((v) => v + 1);
+        return { ...s, data: { ...s.data, ...patch } };
+      });
+    },
+    [],
+  );
+
+  const onDeleteNode = useCallback(() => {
+    setSelected((s) => {
+      if (!s) return s;
+      setWorkingNodes((ns) => ns.filter((n) => n.id !== s.id));
+      setWorkingEdges((es) =>
+        es.filter((e) => e.source !== s.id && e.target !== s.id),
+      );
+      return null;
+    });
+  }, []);
 
   const onSave = async () => {
     setSaving(true);
@@ -142,10 +161,7 @@ export default function RoutingEditorPage() {
               key={plan.id}
               initialNodes={plan.nodes}
               initialEdges={plan.edges}
-              onChange={(ns, es) => {
-                setWorkingNodes(ns);
-                setWorkingEdges(es);
-              }}
+              onChange={onChange}
               onSelectNode={onSelectNode}
               patchVersion={patchVersion}
               patchedNode={patchedNode}
