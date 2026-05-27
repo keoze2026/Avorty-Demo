@@ -1,0 +1,255 @@
+"use client";
+
+import * as React from "react";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
+import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
+import type { Call } from "@/lib/types";
+import { formatCurrency, formatNumber } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+type Grain = "H" | "D" | "M";
+
+const GRAINS: Array<{ id: Grain; label: string }> = [
+  { id: "H", label: "H" },
+  { id: "D", label: "D" },
+  { id: "M", label: "M" },
+];
+
+const COLOR_CONVERTED = DASHBOARD_PALETTE[2]; // indigo
+const COLOR_NOTCONV = DASHBOARD_PALETTE[3]; // amber
+const COLOR_NOANS = "var(--destructive)";
+const COLOR_REVENUE = DASHBOARD_PALETTE[0]; // teal
+
+interface HourlyDistributionProps {
+  calls: Call[];
+}
+
+interface Bucket {
+  label: string;
+  converted: number;
+  notConverted: number;
+  noAnswer: number;
+  revenue: number;
+}
+
+function classify(c: Call): "converted" | "notConverted" | "noAnswer" {
+  if (c.status === "missed") return "noAnswer";
+  if (c.status === "completed" && c.payout > 0) return "converted";
+  return "notConverted";
+}
+
+function bucketize(calls: Call[], grain: Grain): Bucket[] {
+  const now = new Date();
+  const day = 24 * 60 * 60 * 1000;
+
+  if (grain === "H") {
+    // Today's calls grouped by hour 0..23
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const slots: Bucket[] = Array.from({ length: 24 }, (_, h) => ({
+      label: `${h.toString().padStart(2, "0")}:00`,
+      converted: 0,
+      notConverted: 0,
+      noAnswer: 0,
+      revenue: 0,
+    }));
+    for (const c of calls) {
+      if (c.startedAt < startOfDay.getTime()) continue;
+      const h = new Date(c.startedAt).getHours();
+      const k = classify(c);
+      slots[h][k] += 1;
+      slots[h].revenue += c.revenue;
+    }
+    return slots;
+  }
+
+  if (grain === "D") {
+    // Last 14 days
+    const days = 14;
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const slots: Bucket[] = Array.from({ length: days }, (_, i) => {
+      const d = new Date(start.getTime() - (days - 1 - i) * day);
+      return {
+        label: `${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`,
+        converted: 0,
+        notConverted: 0,
+        noAnswer: 0,
+        revenue: 0,
+      };
+    });
+    for (const c of calls) {
+      const d = new Date(c.startedAt);
+      d.setHours(0, 0, 0, 0);
+      const offsetDays = Math.round((start.getTime() - d.getTime()) / day);
+      if (offsetDays < 0 || offsetDays >= days) continue;
+      const idx = days - 1 - offsetDays;
+      const k = classify(c);
+      slots[idx][k] += 1;
+      slots[idx].revenue += c.revenue;
+    }
+    return slots;
+  }
+
+  // M: last 30 days grouped into 5 weekly buckets
+  const weeks = 5;
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const slots: Bucket[] = Array.from({ length: weeks }, (_, i) => {
+    const d = new Date(start.getTime() - (weeks - 1 - i) * 7 * day);
+    return {
+      label: `${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`,
+      converted: 0,
+      notConverted: 0,
+      noAnswer: 0,
+      revenue: 0,
+    };
+  });
+  for (const c of calls) {
+    const offsetDays = Math.round((start.getTime() - c.startedAt) / day);
+    if (offsetDays < 0 || offsetDays >= weeks * 7) continue;
+    const weekFromOldest = weeks - 1 - Math.floor(offsetDays / 7);
+    const k = classify(c);
+    slots[weekFromOldest][k] += 1;
+    slots[weekFromOldest].revenue += c.revenue;
+  }
+  return slots;
+}
+
+export function HourlyDistribution({ calls }: HourlyDistributionProps) {
+  const [grain, setGrain] = React.useState<Grain>("H");
+  const data = React.useMemo(() => bucketize(calls, grain), [calls, grain]);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-0.5">
+          {GRAINS.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => setGrain(g.id)}
+              className={cn(
+                "h-7 w-7 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                grain === g.id
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex-1 text-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+          Calls by: {grain === "H" ? "hour" : grain === "D" ? "day" : "month"}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={data} margin={{ top: 12, right: 16, left: -8, bottom: 0 }}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                minTickGap={16}
+                tickMargin={8}
+              />
+              <YAxis
+                yAxisId="count"
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                width={32}
+                allowDecimals={false}
+              />
+              <YAxis
+                yAxisId="rev"
+                orientation="right"
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => `$${Math.round(v)}`}
+                width={48}
+              />
+              <Tooltip
+                {...CHART_TOOLTIP_PROPS}
+                cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
+                formatter={(value: number, name) => {
+                  if (name === "revenue") return [formatCurrency(value, true), "Revenue"];
+                  return [
+                    formatNumber(value),
+                    name === "converted"
+                      ? "Converted"
+                      : name === "notConverted"
+                        ? "Not converted"
+                        : "No answer",
+                  ];
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                iconSize={8}
+                formatter={(v) =>
+                  v === "converted"
+                    ? "Converted"
+                    : v === "notConverted"
+                      ? "Not converted"
+                      : v === "noAnswer"
+                        ? "No answer"
+                        : "Revenue"
+                }
+              />
+              <Bar
+                yAxisId="count"
+                dataKey="converted"
+                stackId="calls"
+                fill={COLOR_CONVERTED}
+                radius={[0, 0, 0, 0]}
+              />
+              <Bar
+                yAxisId="count"
+                dataKey="notConverted"
+                stackId="calls"
+                fill={COLOR_NOTCONV}
+                radius={[0, 0, 0, 0]}
+              />
+              <Bar
+                yAxisId="count"
+                dataKey="noAnswer"
+                stackId="calls"
+                fill={COLOR_NOANS}
+                radius={[3, 3, 0, 0]}
+              />
+              <Line
+                yAxisId="rev"
+                type="monotone"
+                dataKey="revenue"
+                stroke={COLOR_REVENUE}
+                strokeWidth={2}
+                dot={{ r: 2, stroke: COLOR_REVENUE, strokeWidth: 1.5, fill: "var(--card)" }}
+                activeDot={{ r: 4, stroke: COLOR_REVENUE, strokeWidth: 2, fill: "var(--card)" }}
+                isAnimationActive
+                animationDuration={500}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

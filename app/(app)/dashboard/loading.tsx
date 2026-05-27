@@ -6,7 +6,7 @@ export default function DashboardLoading() {
     <>
       <PageHeaderSkeleton width="9rem" />
 
-      {/* Row 1 — Revenue (left) + KPIs over donut (right) */}
+      {/* Row 1 — Calls chart (left) + KPIs over donut (right) */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Skeleton className="h-96 rounded-xl lg:col-span-2" />
         <div className="flex flex-col gap-4">
@@ -15,7 +15,7 @@ export default function DashboardLoading() {
         </div>
       </div>
 
-      {/* Row 2 — Bars */}
+      {/* Row 2 — Top campaigns + Revenue */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Skeleton className="h-96 rounded-xl" />
         <Skeleton className="h-96 rounded-xl" />

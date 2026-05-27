@@ -7,6 +7,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -68,17 +69,11 @@ export function TopCampaignsBars() {
             <BarChart
               data={data}
               layout="vertical"
-              margin={{ top: 4, right: 36, left: 4, bottom: 4 }}
-              barCategoryGap={10}
+              margin={{ top: 4, right: 72, left: 4, bottom: 4 }}
+              barCategoryGap={12}
             >
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
-              />
+              <XAxis type="number" hide />
               <YAxis
                 type="category"
                 dataKey="name"
@@ -93,10 +88,24 @@ export function TopCampaignsBars() {
                 cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
                 formatter={(v: number) => [formatCurrency(v), "Revenue"]}
               />
-              <Bar dataKey="revenue" radius={[0, 4, 4, 0]} isAnimationActive animationDuration={500}>
+              <Bar
+                dataKey="revenue"
+                radius={[0, 4, 4, 0]}
+                isAnimationActive
+                animationDuration={500}
+                background={{ fill: "var(--muted)", radius: 4, opacity: 0.5 }}
+              >
                 {data.map((d) => (
                   <Cell key={d.id} fill={d.fill} />
                 ))}
+                <LabelList
+                  dataKey="revenue"
+                  position="right"
+                  formatter={(value: number) => formatCurrency(value)}
+                  fill="var(--muted-foreground)"
+                  fontSize={11}
+                  className="tabular-nums"
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

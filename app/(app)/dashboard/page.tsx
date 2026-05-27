@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Download } from "lucide-react";
 
-import { CallVolumeChart } from "@/components/dashboard/call-volume-chart";
+import { CallsChart } from "@/components/dashboard/calls-chart";
 import { KpiRow } from "@/components/dashboard/kpi-row";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
@@ -34,10 +34,10 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Row 1 — Revenue chart on the left, slim KPI block + donut stacked on the right */}
+      {/* Row 1 — Hourly CALLS chart (primary), KPIs + donut stacked on the right */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <RevenueChart />
+          <CallsChart />
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <KpiRow
@@ -50,10 +50,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Row 2 — Horizontal bars + vertical bars */}
+      {/* Row 2 — Top campaigns + Revenue trend (secondary) */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TopCampaignsBars />
-        <CallVolumeChart />
+        <RevenueChart />
       </div>
     </>
   );

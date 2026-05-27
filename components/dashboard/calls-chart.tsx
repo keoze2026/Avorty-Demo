@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -14,8 +15,9 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
+import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { LAST_14_DAYS, TODAY_HOURLY } from "@/lib/mock/timeseries";
-import { formatCurrency } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Range = "24h" | "14d";
@@ -25,28 +27,35 @@ const RANGES: Array<{ id: Range; label: string }> = [
   { id: "14d", label: "14 days" },
 ];
 
-export function RevenueChart() {
+const PRIMARY = DASHBOARD_PALETTE[1]; // azure — base
+const PEAK = DASHBOARD_PALETTE[0]; // teal — emphasis for the peak bar
+
+export function CallsChart() {
   const [range, setRange] = React.useState<Range>("24h");
   const data =
     range === "24h"
-      ? TODAY_HOURLY.map((p) => ({ x: p.label, revenue: p.revenue }))
-      : LAST_14_DAYS.map((p) => ({ x: p.label, revenue: p.revenue }));
+      ? TODAY_HOURLY.map((p) => ({ x: p.label.slice(0, 2), calls: p.calls, full: p.label }))
+      : LAST_14_DAYS.map((p) => ({ x: p.label, calls: p.calls, full: p.label }));
 
-  const total = data.reduce((s, p) => s + p.revenue, 0);
-  const peak = Math.max(...data.map((p) => p.revenue));
+  const total = data.reduce((s, p) => s + p.calls, 0);
+  const peak = Math.max(...data.map((p) => p.calls));
   const avg = Math.round(total / Math.max(data.length, 1));
+  const peakPoint = data.find((p) => p.calls === peak);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-base">Revenue</CardTitle>
+          <CardTitle className="text-base">Calls</CardTitle>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-semibold tracking-tight tabular-nums">
-              {formatCurrency(total)}
+              {formatNumber(total)}
             </span>
             <span className="text-xs text-muted-foreground">
-              peak {formatCurrency(peak)} · avg {formatCurrency(avg)}
+              peak {formatNumber(peak)}
+              {range === "24h" && peakPoint ? ` at ${peakPoint.full}` : null}
+              {" · avg "}
+              {formatNumber(avg)}
             </span>
           </div>
         </div>
@@ -70,11 +79,21 @@ export function RevenueChart() {
       <CardContent>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
+            <BarChart
+              data={data}
+              margin={{ top: 12, right: 8, left: -12, bottom: 0 }}
+              barCategoryGap={range === "24h" ? "18%" : "26%"}
+            >
               <defs>
-                <linearGradient id="rev-step-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
+                <linearGradient id="calls-bar-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={PRIMARY} stopOpacity={0.95} />
+                  <stop offset="80%" stopColor={PRIMARY} stopOpacity={0.18} />
+                  <stop offset="100%" stopColor={PRIMARY} stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="calls-peak-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={PEAK} stopOpacity={1} />
+                  <stop offset="80%" stopColor={PEAK} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={PEAK} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
@@ -83,15 +102,15 @@ export function RevenueChart() {
                 tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                minTickGap={24}
+                interval={range === "24h" ? 2 : 0}
                 tickMargin={8}
               />
               <YAxis
                 tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
-                width={48}
+                width={36}
+                allowDecimals={false}
               />
               <ReferenceLine
                 y={avg}
@@ -99,7 +118,7 @@ export function RevenueChart() {
                 strokeDasharray="4 4"
                 strokeOpacity={0.55}
                 label={{
-                  value: `avg`,
+                  value: `avg ${avg}`,
                   position: "insideTopRight",
                   fontSize: 10,
                   fill: "var(--muted-foreground)",
@@ -107,31 +126,24 @@ export function RevenueChart() {
               />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
-                cursor={{ stroke: "var(--chart-1)", strokeOpacity: 0.4, strokeWidth: 1 }}
-                formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                cursor={{ fill: "var(--muted)", fillOpacity: 0.4 }}
+                formatter={(value: number) => [formatNumber(value), "Calls"]}
+                labelFormatter={(_, payload) => payload?.[0]?.payload?.full ?? ""}
               />
-              <Area
-                type="stepAfter"
-                dataKey="revenue"
-                stroke="var(--chart-1)"
-                strokeWidth={2}
-                fill="url(#rev-step-grad)"
-                dot={{
-                  r: 2.5,
-                  stroke: "var(--chart-1)",
-                  strokeWidth: 1.5,
-                  fill: "var(--card)",
-                }}
-                activeDot={{
-                  r: 4,
-                  stroke: "var(--chart-1)",
-                  strokeWidth: 2,
-                  fill: "var(--card)",
-                }}
+              <Bar
+                dataKey="calls"
+                radius={[4, 4, 0, 0]}
                 isAnimationActive
                 animationDuration={500}
-              />
-            </AreaChart>
+              >
+                {data.map((d) => (
+                  <Cell
+                    key={d.x}
+                    fill={d.calls === peak ? "url(#calls-peak-grad)" : "url(#calls-bar-grad)"}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

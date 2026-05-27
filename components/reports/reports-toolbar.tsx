@@ -1,98 +1,193 @@
 "use client";
 
-import { Download, RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  Calendar as CalendarIcon,
+  ChevronDown,
+  Eye,
+  Filter,
+  Globe,
+  RefreshCw,
+} from "lucide-react";
+import type { DateRange } from "react-day-picker";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { DateRange } from "@/lib/analytics";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const RANGES: Array<{ id: DateRange; label: string }> = [
-  { id: "today", label: "Today" },
-  { id: "7d", label: "7d" },
-  { id: "14d", label: "14d" },
-  { id: "30d", label: "30d" },
-];
+const TIMEZONES = [
+  "(UTC−05:00) Eastern Time (US & Canada)",
+  "(UTC−06:00) Central Time (US & Canada)",
+  "(UTC−07:00) Mountain Time (US & Canada)",
+  "(UTC−08:00) Pacific Time (US & Canada)",
+  "(UTC+00:00) UTC",
+] as const;
 
-interface Props {
-  range: DateRange;
-  onRange: (r: DateRange) => void;
-  campaignFilter: string;
-  onCampaign: (id: string) => void;
-  campaigns: Array<{ id: string; name: string }>;
+const REFRESH_OPTIONS = [
+  "Off",
+  "Auto refresh",
+  "Every 30 s",
+  "Every 1 min",
+  "Every 5 min",
+] as const;
+
+/**
+ * Subtle hover override used on every outline button in the toolbar.
+ *
+ * shadcn's outline variant default is `hover:bg-accent hover:text-accent-foreground`,
+ * which on Vortyx's dark theme flashes the button to bright teal + near-black
+ * text — readable in isolation but jarring here, and easy to mistake for
+ * disabled. Swap for a muted background that keeps `--foreground` text.
+ */
+const TOOLBAR_BTN_HOVER =
+  "hover:bg-muted hover:text-foreground dark:hover:bg-muted/70";
+
+function formatYMD(d: Date) {
+  return `${d.getFullYear()}-${(d.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+}
+
+interface ReportsToolbarProps {
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
   onRefresh: () => void;
-  onExport: () => void;
 }
 
 export function ReportsToolbar({
-  range,
-  onRange,
-  campaignFilter,
-  onCampaign,
-  campaigns,
+  dateRange,
+  onDateRangeChange,
   onRefresh,
-  onExport,
-}: Props) {
+}: ReportsToolbarProps) {
+  const [tz, setTz] = useState<(typeof TIMEZONES)[number]>(TIMEZONES[0]);
+  const [refresh, setRefresh] = useState<(typeof REFRESH_OPTIONS)[number]>(
+    "Auto refresh",
+  );
+
+  const dateLabel = useMemo(() => {
+    if (!dateRange?.from) return "Select date range";
+    const from = formatYMD(dateRange.from);
+    const to = dateRange.to ? formatYMD(dateRange.to) : from;
+    return `${from} — ${to}`;
+  }, [dateRange]);
+
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
-      <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
-        Range
-      </span>
-      <div className="flex gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
-        {RANGES.map((r) => {
-          const active = r.id === range;
-          return (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => onRange(r.id)}
-              className={cn(
-                "h-7 rounded px-2.5 text-xs font-mono transition-colors",
-                active
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        className={cn("gap-1.5 px-2.5", TOOLBAR_BTN_HOVER)}
+        aria-label="View settings"
+      >
+        <Eye className="h-4 w-4" />
+        <ChevronDown className="h-3 w-3 opacity-60" />
+      </Button>
+
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn("gap-2", TOOLBAR_BTN_HOVER)}
             >
-              {r.label}
-            </button>
-          );
-        })}
-      </div>
+              <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="truncate max-w-[18rem]">{tz}</span>
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            {TIMEZONES.map((t) => (
+              <DropdownMenuItem
+                key={t}
+                onSelect={() => setTz(t)}
+                className={cn(tz === t && "text-accent")}
+              >
+                {t}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <div className="mx-1 h-5 w-px bg-border" />
+        {/* Real date-range picker — Popover + react-day-picker in range mode */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn("gap-2", TOOLBAR_BTN_HOVER)}
+            >
+              <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{dateLabel}</span>
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-auto p-0">
+            <Calendar
+              mode="range"
+              selected={dateRange}
+              onSelect={onDateRangeChange}
+              numberOfMonths={2}
+              defaultMonth={dateRange?.from}
+            />
+          </PopoverContent>
+        </Popover>
 
-      <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
-        Campaign
-      </span>
-      <Select value={campaignFilter} onValueChange={onCampaign}>
-        <SelectTrigger size="sm" className="h-8 w-52">
-          <SelectValue placeholder="All campaigns" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All campaigns</SelectItem>
-          {campaigns.map((c) => (
-            <SelectItem key={c.id} value={c.id}>
-              {c.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <div className="ml-auto flex items-center gap-1.5">
-        <Button variant="ghost" size="sm" className="h-8 gap-1.5" onClick={onRefresh}>
-          <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn("h-9 w-9", TOOLBAR_BTN_HOVER)}
+          aria-label="Filters"
+          onClick={() => toast.info("Filters — coming soon")}
+        >
+          <Filter className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={onExport}>
-          <Download className="h-3.5 w-3.5" />
-          Export
+
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn("h-9 w-9", TOOLBAR_BTN_HOVER)}
+          aria-label="Refresh"
+          onClick={onRefresh}
+        >
+          <RefreshCw className="h-4 w-4" />
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn("gap-2", TOOLBAR_BTN_HOVER)}
+            >
+              {refresh}
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {REFRESH_OPTIONS.map((r) => (
+              <DropdownMenuItem
+                key={r}
+                onSelect={() => setRefresh(r)}
+                className={cn(refresh === r && "text-accent")}
+              >
+                {r}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
