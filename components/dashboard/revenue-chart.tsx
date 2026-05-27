@@ -14,8 +14,10 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
+import { bucketDaily, bucketHourly } from "@/lib/dashboard-buckets";
 import { LAST_14_DAYS, TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatCurrency } from "@/lib/format";
+import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Range = "24h" | "14d";
@@ -25,12 +27,25 @@ const RANGES: Array<{ id: Range; label: string }> = [
   { id: "14d", label: "14 days" },
 ];
 
-export function RevenueChart() {
+interface RevenueChartProps {
+  /** When provided, the chart buckets from these calls instead of TODAY_HOURLY/LAST_14_DAYS. */
+  calls?: Call[];
+}
+
+export function RevenueChart({ calls }: RevenueChartProps = {}) {
   const [range, setRange] = React.useState<Range>("24h");
+  const hourly = React.useMemo(
+    () => (calls ? bucketHourly(calls) : TODAY_HOURLY),
+    [calls],
+  );
+  const daily = React.useMemo(
+    () => (calls ? bucketDaily(calls, 14) : LAST_14_DAYS),
+    [calls],
+  );
   const data =
     range === "24h"
-      ? TODAY_HOURLY.map((p) => ({ x: p.label, revenue: p.revenue }))
-      : LAST_14_DAYS.map((p) => ({ x: p.label, revenue: p.revenue }));
+      ? hourly.map((p) => ({ x: p.label, revenue: p.revenue }))
+      : daily.map((p) => ({ x: p.label, revenue: p.revenue }));
 
   const total = data.reduce((s, p) => s + p.revenue, 0);
   const peak = Math.max(...data.map((p) => p.revenue));

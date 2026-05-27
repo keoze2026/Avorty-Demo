@@ -15,9 +15,11 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
+import { bucketDaily, bucketHourly } from "@/lib/dashboard-buckets";
 import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { LAST_14_DAYS, TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatNumber } from "@/lib/format";
+import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Range = "24h" | "14d";
@@ -30,12 +32,25 @@ const RANGES: Array<{ id: Range; label: string }> = [
 const PRIMARY = DASHBOARD_PALETTE[1]; // azure — base
 const PEAK = DASHBOARD_PALETTE[0]; // teal — emphasis for the peak bar
 
-export function CallsChart() {
+interface CallsChartProps {
+  /** When provided, the chart buckets from these calls instead of TODAY_HOURLY/LAST_14_DAYS. */
+  calls?: Call[];
+}
+
+export function CallsChart({ calls }: CallsChartProps = {}) {
   const [range, setRange] = React.useState<Range>("24h");
+  const hourly = React.useMemo(
+    () => (calls ? bucketHourly(calls) : TODAY_HOURLY),
+    [calls],
+  );
+  const daily = React.useMemo(
+    () => (calls ? bucketDaily(calls, 14) : LAST_14_DAYS),
+    [calls],
+  );
   const data =
     range === "24h"
-      ? TODAY_HOURLY.map((p) => ({ x: p.label.slice(0, 2), calls: p.calls, full: p.label }))
-      : LAST_14_DAYS.map((p) => ({ x: p.label, calls: p.calls, full: p.label }));
+      ? hourly.map((p) => ({ x: p.label.slice(0, 2), calls: p.calls, full: p.label }))
+      : daily.map((p) => ({ x: p.label, calls: p.calls, full: p.label }));
 
   const total = data.reduce((s, p) => s + p.calls, 0);
   const peak = Math.max(...data.map((p) => p.calls));

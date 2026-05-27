@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import {
@@ -21,32 +22,75 @@ import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { formatCurrency } from "@/lib/format";
 import { topCampaignsByRevenue } from "@/lib/mock/timeseries";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
+import type { Call } from "@/lib/types";
 
-export function TopCampaignsBars() {
-  // Map vertical → palette slot so the bar color here matches the donut slice.
-  const verticalsByVolume = (() => {
-    const m = new Map<string, number>();
-    for (const c of MOCK_CAMPAIGNS) {
-      m.set(c.vertical, (m.get(c.vertical) ?? 0) + c.callsToday);
+interface Row {
+  id: string;
+  name: string;
+  revenue: number;
+  vertical: string;
+  fill: string;
+}
+
+interface TopCampaignsBarsProps {
+  /** When provided, top-6 are computed from these calls' revenue (per campaign). */
+  calls?: Call[];
+}
+
+export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
+  const data = useMemo<Row[]>(() => {
+    // Map vertical → palette slot so the bar color here matches the donut slice.
+    const verticalsByVolume = (() => {
+      const m = new Map<string, number>();
+      for (const c of MOCK_CAMPAIGNS) {
+        m.set(c.vertical, (m.get(c.vertical) ?? 0) + c.callsToday);
+      }
+      return Array.from(m.entries())
+        .filter(([, v]) => v > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name]) => name);
+    })();
+    const colorFor = (vertical: string) => {
+      const idx = verticalsByVolume.indexOf(vertical);
+      return DASHBOARD_PALETTE[(idx >= 0 ? idx : 0) % DASHBOARD_PALETTE.length];
+    };
+
+    if (calls) {
+      // Re-aggregate revenue per campaign from the filtered call set.
+      const campaignById = new Map<string, (typeof MOCK_CAMPAIGNS)[number]>();
+      for (const c of MOCK_CAMPAIGNS) campaignById.set(c.id, c);
+
+      const m = new Map<string, Row>();
+      for (const call of calls) {
+        const camp = campaignById.get(call.campaignId);
+        if (!camp) continue;
+        let row = m.get(camp.id);
+        if (!row) {
+          row = {
+            id: camp.id,
+            name: camp.name,
+            vertical: camp.vertical,
+            revenue: 0,
+            fill: colorFor(camp.vertical),
+          };
+          m.set(camp.id, row);
+        }
+        row.revenue += call.revenue;
+      }
+      return Array.from(m.values())
+        .filter((r) => r.revenue > 0)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 6);
     }
-    return Array.from(m.entries())
-      .filter(([, v]) => v > 0)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name]) => name);
-  })();
 
-  const colorFor = (vertical: string) => {
-    const idx = verticalsByVolume.indexOf(vertical);
-    return DASHBOARD_PALETTE[(idx >= 0 ? idx : 0) % DASHBOARD_PALETTE.length];
-  };
-
-  const data = topCampaignsByRevenue(6).map((c) => ({
-    id: c.id,
-    name: c.name,
-    revenue: c.revenueToday,
-    vertical: c.vertical,
-    fill: colorFor(c.vertical),
-  }));
+    return topCampaignsByRevenue(6).map((c) => ({
+      id: c.id,
+      name: c.name,
+      revenue: c.revenueToday,
+      vertical: c.vertical,
+      fill: colorFor(c.vertical),
+    }));
+  }, [calls]);
 
   // Recharts BarChart with layout="vertical" renders horizontal bars (y = category, x = value).
   return (

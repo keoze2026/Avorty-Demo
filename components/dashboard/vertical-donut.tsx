@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { formatNumber } from "@/lib/format";
+import type { Call } from "@/lib/types";
 
 interface Slice {
   name: string;
@@ -14,11 +16,30 @@ interface Slice {
   color: string;
 }
 
-function buildSlices(): Slice[] {
+/** Default aggregation: today's calls per vertical via campaign.callsToday. */
+function buildFromCampaigns(): Slice[] {
   const byVertical = new Map<string, number>();
   for (const c of MOCK_CAMPAIGNS) {
     byVertical.set(c.vertical, (byVertical.get(c.vertical) ?? 0) + c.callsToday);
   }
+  return finalize(byVertical);
+}
+
+/** Filtered aggregation: count provided calls, looking up each call's campaign vertical. */
+function buildFromCalls(calls: Call[]): Slice[] {
+  const verticalById = new Map<string, string>();
+  for (const c of MOCK_CAMPAIGNS) verticalById.set(c.id, c.vertical);
+
+  const byVertical = new Map<string, number>();
+  for (const call of calls) {
+    const vertical = verticalById.get(call.campaignId);
+    if (!vertical) continue;
+    byVertical.set(vertical, (byVertical.get(vertical) ?? 0) + 1);
+  }
+  return finalize(byVertical);
+}
+
+function finalize(byVertical: Map<string, number>): Slice[] {
   return Array.from(byVertical.entries())
     .filter(([, calls]) => calls > 0)
     .sort((a, b) => b[1] - a[1])
@@ -29,8 +50,16 @@ function buildSlices(): Slice[] {
     }));
 }
 
-export function VerticalDonut() {
-  const slices = buildSlices();
+interface VerticalDonutProps {
+  /** When provided, the donut counts these calls per vertical instead of using campaign.callsToday. */
+  calls?: Call[];
+}
+
+export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
+  const slices = useMemo(
+    () => (calls ? buildFromCalls(calls) : buildFromCampaigns()),
+    [calls],
+  );
   const total = slices.reduce((s, x) => s + x.calls, 0);
 
   return (

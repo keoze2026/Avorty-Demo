@@ -10,6 +10,7 @@
 import type { Call, CallStatus } from "@/lib/types";
 import { MOCK_BUYERS } from "./buyers";
 import { MOCK_CAMPAIGNS } from "./campaigns";
+import { ROUTABLE_DESTINATIONS } from "./destinations";
 import { MOCK_PUBLISHERS } from "./publishers";
 
 const STATES = [
@@ -91,6 +92,11 @@ export const MOCK_CALLS: Call[] = Array.from({ length: TOTAL }).map((_, i): Call
   const state = STATES[i % STATES.length];
   const status = statusFor(seed, daysOld);
 
+  // Pick a routable destination. The destination's buyer is the call's buyer
+  // when the call completes — keeps destination/buyer/payout coherent.
+  const destination = ROUTABLE_DESTINATIONS[i % ROUTABLE_DESTINATIONS.length];
+  const destBuyer = MOCK_BUYERS.find((b) => b.id === destination.buyerId);
+
   const baseDuration =
     status === "in-progress"
       ? 5 + Math.floor(rng(seed + 30) * 60)
@@ -101,8 +107,7 @@ export const MOCK_CALLS: Call[] = Array.from({ length: TOTAL }).map((_, i): Call
           : 60 + Math.floor(rng(seed + 30) * 600);
 
   // Buyer is only attached for completed calls (the only path that pays).
-  const buyer =
-    status === "completed" ? MOCK_BUYERS[i % MOCK_BUYERS.length] : undefined;
+  const buyer = status === "completed" ? destBuyer : undefined;
 
   const payout = status === "completed" ? campaign.payout : 0;
   const revenue = status === "completed" ? payout * 1.18 : 0;
@@ -118,7 +123,7 @@ export const MOCK_CALLS: Call[] = Array.from({ length: TOTAL }).map((_, i): Call
     publisherId: publisher.id,
     publisherName: publisher.name,
     callerNumber: fmtNumber(seed + 50),
-    destinationNumber: fmtNumber(seed + 60),
+    destinationNumber: destination.tfn,
     startedAt: ts,
     durationSec: baseDuration,
     status,
