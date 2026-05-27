@@ -2,10 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Building2, Gauge, LayoutDashboard, Megaphone, Settings as SettingsIcon } from "lucide-react";
+import { Building2, Gauge, LayoutDashboard, Megaphone, Settings as SettingsIcon, Target } from "lucide-react";
 
 import { BuyerCampaignsTab } from "@/components/buyers/buyer-campaigns-tab";
 import { BuyerCapsTab } from "@/components/buyers/buyer-caps-tab";
+import { BuyerDestinationsTab } from "@/components/buyers/buyer-destinations-tab";
 import { BuyerDetailHeader } from "@/components/buyers/buyer-detail-header";
 import { BuyerOverviewTab } from "@/components/buyers/buyer-overview-tab";
 import { BuyerSettingsTab } from "@/components/buyers/buyer-settings-tab";
@@ -53,6 +54,9 @@ export default function BuyerDetailPage() {
           <TabsTrigger value="campaigns">
             <Megaphone className="h-3.5 w-3.5" /> Campaigns
           </TabsTrigger>
+          <TabsTrigger value="destinations">
+            <Target className="h-3.5 w-3.5" /> Destinations
+          </TabsTrigger>
           <TabsTrigger value="caps">
             <Gauge className="h-3.5 w-3.5" /> Caps &amp; pacing
           </TabsTrigger>
@@ -66,6 +70,9 @@ export default function BuyerDetailPage() {
         </TabsContent>
         <TabsContent value="campaigns">
           <BuyerCampaignsTab campaignIds={buyer.campaignIds} />
+        </TabsContent>
+        <TabsContent value="destinations">
+          <BuyerDestinationsTab buyer={buyer} />
         </TabsContent>
         <TabsContent value="caps">
           <BuyerCapsTab buyer={buyer} />

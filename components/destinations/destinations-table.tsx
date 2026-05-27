@@ -2,10 +2,19 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { MoreVertical, Pause, Pencil, Play, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -17,15 +26,15 @@ import {
 import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
-import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { Buyer, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-interface DestinationSummaryTableProps {
-  /** When set, only render the destination matching this TFN. */
-  destinationFilter?: string;
-  limit?: number;
+interface DestinationsTableProps {
+  destinations: Destination[];
+  onToggle?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 interface Row {
@@ -37,16 +46,11 @@ interface Row {
   capPct: number;
 }
 
-function buildRows(
-  destinations: Destination[],
-  filter: string | undefined,
-  limit: number,
-): Row[] {
+function buildRows(destinations: Destination[]): Row[] {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const startMs = startOfToday.getTime();
 
-  // Pre-compute per-destination (keyed by TFN) call aggregates from MOCK_CALLS.
   const callsByTfn = new Map<string, number>();
   const revenueByTfn = new Map<string, number>();
   const ccByTfn = new Map<string, number>();
@@ -66,68 +70,55 @@ function buildRows(
   const buyerById = new Map<string, Buyer>();
   for (const b of MOCK_BUYERS) buyerById.set(b.id, b);
 
-  return destinations
-    .filter((d) => !filter || d.tfn === filter)
-    .map<Row>((destination) => {
-      const callsToday = callsByTfn.get(destination.tfn) ?? 0;
-      const cap = destination.dailyCap;
-      return {
-        destination,
-        buyer: buyerById.get(destination.buyerId),
-        cc: ccByTfn.get(destination.tfn) ?? 0,
-        callsToday,
-        revenueToday: revenueByTfn.get(destination.tfn) ?? 0,
-        capPct: cap > 0 ? Math.min(100, (callsToday / cap) * 100) : 0,
-      };
-    })
-    .sort((a, b) => b.revenueToday - a.revenueToday)
-    .slice(0, limit);
+  return destinations.map<Row>((destination) => {
+    const callsToday = callsByTfn.get(destination.tfn) ?? 0;
+    const cap = destination.dailyCap;
+    return {
+      destination,
+      buyer: buyerById.get(destination.buyerId),
+      cc: ccByTfn.get(destination.tfn) ?? 0,
+      callsToday,
+      revenueToday: revenueByTfn.get(destination.tfn) ?? 0,
+      capPct: cap > 0 ? Math.min(100, (callsToday / cap) * 100) : 0,
+    };
+  });
 }
 
-export function DestinationSummaryTable({
-  destinationFilter,
-  limit = 12,
-}: DestinationSummaryTableProps) {
-  const destinations = useDestinationsStore((s) => s.destinations);
-  const rows = useMemo(
-    () => buildRows(destinations, destinationFilter, limit),
-    [destinations, destinationFilter, limit],
-  );
+export function DestinationsTable({
+  destinations,
+  onToggle,
+  onEdit,
+  onDelete,
+}: DestinationsTableProps) {
+  const router = useRouter();
+  const rows = useMemo(() => buildRows(destinations), [destinations]);
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="flex items-center justify-between gap-2 border-b border-border px-6 py-4">
-        <div>
-          <h3 className="text-base font-semibold">Destinations</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Each TFN with its own concurrent-call ceiling and daily cap usage.
-          </p>
-        </div>
-        <Link
-          href={ROUTES.buyers}
-          className="inline-flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Manage buyers <ArrowUpRight className="h-3 w-3" />
-        </Link>
-      </div>
-
       <div className="overflow-x-auto">
-        <Table className="min-w-[1000px]">
+        <Table className="min-w-[1100px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-6">Destination</TableHead>
               <TableHead>Buyer</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">CC</TableHead>
               <TableHead>Cap (today)</TableHead>
+              <TableHead className="text-right">Daily cap</TableHead>
+              <TableHead className="text-right">Monthly cap</TableHead>
               <TableHead className="text-right">Calls today</TableHead>
-              <TableHead className="pr-6 text-right">Revenue today</TableHead>
+              <TableHead className="text-right">Revenue today</TableHead>
+              <TableHead className="w-12 pr-6" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={6} className="pl-6 py-8 text-center text-sm text-muted-foreground">
-                  No destinations.
+                <TableCell
+                  colSpan={10}
+                  className="pl-6 py-10 text-center text-sm text-muted-foreground"
+                >
+                  No destinations match the current filters.
                 </TableCell>
               </TableRow>
             ) : (
@@ -144,10 +135,20 @@ export function DestinationSummaryTable({
                   capPct >= 70 ? "bg-[color:var(--warning)]" :
                   "bg-accent";
                 return (
-                  <TableRow key={destination.id}>
+                  <TableRow
+                    key={destination.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`${ROUTES.destinations}/${destination.id}`)}
+                  >
                     <TableCell className="pl-6">
-                      <div className="font-medium">{destination.name}</div>
-                      <div className="mt-0.5 font-mono text-xs text-muted-foreground">
+                      <Link
+                        href={`${ROUTES.destinations}/${destination.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="block font-medium transition-colors hover:text-accent"
+                      >
+                        {destination.name}
+                      </Link>
+                      <div className="mt-0.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
                         {destination.tfn}
                       </div>
                     </TableCell>
@@ -155,6 +156,7 @@ export function DestinationSummaryTable({
                       {buyer ? (
                         <Link
                           href={`${ROUTES.buyers}/${buyer.id}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="text-sm transition-colors hover:text-accent"
                         >
                           {buyer.name}
@@ -162,13 +164,15 @@ export function DestinationSummaryTable({
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
-                      {!destination.enabled && (
-                        <Badge variant="outline" className="ml-2 text-[10px]">
-                          Disabled
-                        </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {destination.enabled ? (
+                        <Badge variant="success">Active</Badge>
+                      ) : (
+                        <Badge variant="outline">Disabled</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right tabular-nums whitespace-nowrap">
                       <span className={cn("font-medium", cc > 0 ? ccColor : "text-muted-foreground")}>
                         {cc > 0 && (
                           <span
@@ -201,10 +205,53 @@ export function DestinationSummaryTable({
                       )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
+                      {destination.dailyCap > 0 ? formatNumber(destination.dailyCap) : "∞"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {destination.monthlyCap > 0 ? formatNumber(destination.monthlyCap) : "∞"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
                       {formatNumber(callsToday)}
                     </TableCell>
-                    <TableCell className="pr-6 text-right font-medium tabular-nums">
+                    <TableCell className="text-right font-medium tabular-nums">
                       {formatCurrency(revenueToday)}
+                    </TableCell>
+                    <TableCell className="pr-6" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            aria-label="Destination actions"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => onEdit?.(destination.id)}>
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => onToggle?.(destination.id)}>
+                            {destination.enabled ? (
+                              <>
+                                <Pause className="h-3.5 w-3.5" /> Pause
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-3.5 w-3.5" /> Enable
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => onDelete?.(destination.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );

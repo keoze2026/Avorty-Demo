@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
-import { MOCK_DESTINATIONS } from "@/lib/mock/destinations";
+import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 
 const ALL_DEST = "all";
@@ -41,6 +41,7 @@ const CALLS_TODAY_BY_TFN = (() => {
 })();
 
 export default function DashboardPage() {
+  const destinations = useDestinationsStore((s) => s.destinations);
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
 
@@ -92,7 +93,7 @@ export default function DashboardPage() {
               </SelectTrigger>
               <SelectContent align="end" className="max-h-80">
                 <SelectItem value={ALL_DEST}>All destinations</SelectItem>
-                {MOCK_DESTINATIONS.map((d) => {
+                {destinations.map((d) => {
                   const buyer = BUYER_BY_ID.get(d.buyerId);
                   const calls = CALLS_TODAY_BY_TFN.get(d.tfn) ?? 0;
                   return (

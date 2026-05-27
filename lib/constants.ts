@@ -29,6 +29,7 @@ export const ROUTES = {
   numbers: "/numbers",
   routing: "/routing",
   buyers: "/buyers",
+  destinations: "/destinations",
   publishers: "/publishers",
   calls: "/calls",
   reports: "/reports",

@@ -1,0 +1,278 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Loader2, Target } from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { useDestinationsStore } from "@/lib/store/destinations-store";
+import type { Destination } from "@/lib/types";
+
+interface DestinationBuilderProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** When set, the dialog opens in edit mode for this destination. */
+  editId?: string;
+}
+
+interface FormState {
+  name: string;
+  tfn: string;
+  buyerId: string;
+  concurrencyCap: number;
+  dailyCap: number;
+  monthlyCap: number;
+  enabled: boolean;
+}
+
+const EMPTY: FormState = {
+  name: "",
+  tfn: "",
+  buyerId: MOCK_BUYERS[0]?.id ?? "",
+  concurrencyCap: 10,
+  dailyCap: 100,
+  monthlyCap: 2500,
+  enabled: true,
+};
+
+/**
+ * Loose TFN check — accepts the formats we generate elsewhere (e.g.
+ * "+1 (555) 123-4567") plus pasted variants. Anything with at least 7 digits
+ * passes; the form normalizes by trim only.
+ */
+function isValidTfn(s: string) {
+  return (s.match(/\d/g)?.length ?? 0) >= 7;
+}
+
+export function DestinationBuilder({
+  open,
+  onOpenChange,
+  editId,
+}: DestinationBuilderProps) {
+  const add = useDestinationsStore((s) => s.add);
+  const update = useDestinationsStore((s) => s.update);
+  const existing = useDestinationsStore((s) =>
+    editId ? s.destinations.find((d) => d.id === editId) : undefined,
+  );
+
+  const isEdit = !!existing;
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Seed form when the dialog opens (and when switching between create/edit).
+  useEffect(() => {
+    if (!open) return;
+    if (existing) {
+      setForm({
+        name: existing.name,
+        tfn: existing.tfn,
+        buyerId: existing.buyerId,
+        concurrencyCap: existing.concurrencyCap,
+        dailyCap: existing.dailyCap,
+        monthlyCap: existing.monthlyCap,
+        enabled: existing.enabled,
+      });
+    } else {
+      setForm(EMPTY);
+    }
+  }, [open, existing]);
+
+  const canSubmit =
+    form.name.trim().length >= 2 &&
+    isValidTfn(form.tfn) &&
+    !!form.buyerId &&
+    form.concurrencyCap > 0;
+
+  const onSubmit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    await new Promise((r) => setTimeout(r, 400));
+
+    const payload: Omit<Destination, "id"> = {
+      name: form.name.trim(),
+      tfn: form.tfn.trim(),
+      buyerId: form.buyerId,
+      concurrencyCap: form.concurrencyCap,
+      dailyCap: form.dailyCap,
+      monthlyCap: form.monthlyCap,
+      enabled: form.enabled,
+    };
+
+    if (existing) {
+      update(existing.id, payload);
+      toast.success(`Updated ${payload.name}`);
+    } else {
+      const created = add(payload);
+      toast.success(`Created ${created.name}`);
+    }
+    setSubmitting(false);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent">
+              <Target className="h-4 w-4" />
+            </span>
+            {isEdit ? "Edit destination" : "New destination"}
+          </DialogTitle>
+          <DialogDescription>
+            One TFN with its own concurrency and cap limits. The router uses these to
+            decide whether to dial this destination next.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="dest-name">Name</Label>
+            <Input
+              id="dest-name"
+              placeholder="Tier-1 ACA Inbound"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="dest-tfn">Toll-free number (TFN)</Label>
+            <Input
+              id="dest-tfn"
+              placeholder="+1 (555) 123-4567"
+              value={form.tfn}
+              onChange={(e) => setForm((f) => ({ ...f, tfn: e.target.value }))}
+              className="font-mono"
+            />
+            {form.tfn.length > 0 && !isValidTfn(form.tfn) && (
+              <p className="text-xs text-destructive">
+                Needs at least 7 digits.
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="dest-buyer">Buyer</Label>
+            <Select
+              value={form.buyerId}
+              onValueChange={(v) => setForm((f) => ({ ...f, buyerId: v }))}
+            >
+              <SelectTrigger id="dest-buyer">
+                <SelectValue placeholder="Pick a buyer" />
+              </SelectTrigger>
+              <SelectContent>
+                {MOCK_BUYERS.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="dest-cc">Concurrency cap</Label>
+              <Input
+                id="dest-cc"
+                type="number"
+                min={1}
+                value={form.concurrencyCap}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    concurrencyCap: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dest-daily">Daily cap</Label>
+              <Input
+                id="dest-daily"
+                type="number"
+                min={0}
+                value={form.dailyCap}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    dailyCap: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="dest-monthly">Monthly cap</Label>
+              <Input
+                id="dest-monthly"
+                type="number"
+                min={0}
+                value={form.monthlyCap}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    monthlyCap: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Use <span className="font-mono">0</span> on daily / monthly cap to mean unlimited.
+          </p>
+
+          <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 p-3">
+            <div>
+              <div className="text-sm font-medium">Enabled</div>
+              <div className="text-xs text-muted-foreground">
+                When off, the router skips this destination.
+              </div>
+            </div>
+            <Switch
+              checked={form.enabled}
+              onCheckedChange={(v) => setForm((f) => ({ ...f, enabled: v }))}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={!canSubmit || submitting}>
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {isEdit ? "Saving…" : "Creating…"}
+              </>
+            ) : isEdit ? (
+              "Save changes"
+            ) : (
+              "Create destination"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

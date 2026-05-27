@@ -11,6 +11,7 @@ import {
   Hash,
   GitFork,
   Building2,
+  Target,
   Users,
   PhoneCall,
   BarChart3,
@@ -60,6 +61,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Network",
     items: [
       { label: "Buyers", href: ROUTES.buyers, icon: Building2, roles: ["admin", "buyer"] },
+      { label: "Destinations", href: ROUTES.destinations, icon: Target, roles: ["admin", "buyer"] },
       { label: "Publishers", href: ROUTES.publishers, icon: Users, roles: ["admin", "publisher"] },
     ],
   },
