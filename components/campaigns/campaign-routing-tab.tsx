@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { GitFork, Plus } from "lucide-react";
 
 import { NewPlanDialog } from "@/components/routing/new-plan-dialog";
@@ -14,7 +14,13 @@ import { useRoutingStore } from "@/lib/store/routing-store";
  * this campaign and links into the visual editor.
  */
 export function CampaignRoutingTab({ campaignId }: { campaignId: string }) {
-  const plans = useRoutingStore((s) => s.plans.filter((p) => p.campaignId === campaignId));
+  // See campaign-buyers-tab — filtering inside the selector triggers React
+  // error #185 (Zustand v5 + new-reference selector + useSyncExternalStore).
+  const allPlans = useRoutingStore((s) => s.plans);
+  const plans = useMemo(
+    () => (allPlans ?? []).filter((p) => p.campaignId === campaignId),
+    [allPlans, campaignId],
+  );
   const [open, setOpen] = useState(false);
 
   if (plans.length === 0) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Plus, Users } from "lucide-react";
 
@@ -12,8 +13,12 @@ import { formatCurrency, formatNumber, formatPercent } from "@/lib/format";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 
 export function CampaignPublishersTab({ campaignId }: { campaignId: string }) {
-  const publishers = usePublishersStore((s) =>
-    s.publishers.filter((p) => p.campaignIds.includes(campaignId)),
+  // See campaign-buyers-tab for why we filter outside the selector.
+  const allPublishers = usePublishersStore((s) => s.publishers);
+  const publishers = useMemo(
+    () =>
+      (allPublishers ?? []).filter((p) => (p.campaignIds ?? []).includes(campaignId)),
+    [allPublishers, campaignId],
   );
 
   if (publishers.length === 0) {

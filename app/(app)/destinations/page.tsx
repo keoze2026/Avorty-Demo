@@ -8,7 +8,6 @@ import { DestinationBuilder } from "@/components/destinations/destination-builde
 import { DestinationsTable } from "@/components/destinations/destinations-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -19,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
-import { formatNumber } from "@/lib/format";
 
 type StatusFilter = "all" | "active" | "disabled";
 
@@ -49,14 +47,6 @@ export default function DestinationsPage() {
       return true;
     });
   }, [destinations, query, statusFilter, buyerFilter]);
-
-  const stats = useMemo(() => {
-    const active = destinations.filter((d) => d.enabled).length;
-    const disabled = destinations.length - active;
-    const totalCC = destinations.reduce((s, d) => s + d.concurrencyCap, 0);
-    const totalCap = destinations.reduce((s, d) => s + d.dailyCap, 0);
-    return { active, disabled, totalCC, totalCap };
-  }, [destinations]);
 
   const openCreate = () => {
     setEditId(undefined);
@@ -93,14 +83,6 @@ export default function DestinationsPage() {
           </Button>
         }
       />
-
-      {/* Tiny stats strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Total destinations" value={formatNumber(destinations.length)} />
-        <Stat label="Active" value={formatNumber(stats.active)} tone="text-[color:var(--success)]" />
-        <Stat label="Total CC ceiling" value={formatNumber(stats.totalCC)} />
-        <Stat label="Total daily cap" value={formatNumber(stats.totalCap)} />
-      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
@@ -157,26 +139,5 @@ export default function DestinationsPage() {
         editId={editId}
       />
     </>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className={`text-2xl font-semibold tabular-nums ${tone ?? ""}`}>{value}</div>
-        <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-          {label}
-        </div>
-      </CardContent>
-    </Card>
   );
 }

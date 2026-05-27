@@ -151,7 +151,7 @@ function BrandHeader({
               className="font-bold tracking-tight text-base"
               style={{
                 background:
-                  "linear-gradient(120deg, #00E6B8 10%, #22D3EE 60%, #7DE1FF 100%)",
+                  "linear-gradient(120deg, #7064F2 10%, #9182F8 60%, #D2C8FE 100%)",
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 WebkitTextFillColor: "transparent",

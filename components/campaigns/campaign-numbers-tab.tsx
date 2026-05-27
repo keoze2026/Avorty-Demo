@@ -1,6 +1,7 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { useMemo } from "react";
+import { Hash, Plus } from "lucide-react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import { formatCompact, formatPercent, formatRelativeTime } from "@/lib/format";
-import { Hash } from "lucide-react";
 
 export function CampaignNumbersTab({ campaignId }: { campaignId: string }) {
-  const numbers = useNumbersStore((s) => s.numbers.filter((n) => n.campaignId === campaignId));
+  // See campaign-buyers-tab — filtering inside the Zustand selector returns a
+  // fresh array on every render and causes React error #185 (infinite loop).
+  const allNumbers = useNumbersStore((s) => s.numbers);
+  const numbers = useMemo(
+    () => (allNumbers ?? []).filter((n) => n.campaignId === campaignId),
+    [allNumbers, campaignId],
+  );
 
   if (numbers.length === 0) {
     return (

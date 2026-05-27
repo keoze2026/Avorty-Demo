@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Building2, Plus } from "lucide-react";
 
@@ -16,8 +17,14 @@ import { useBuyersStore } from "@/lib/store/buyers-store";
  * (each buyer carries the campaignIds it's wired into).
  */
 export function CampaignBuyersTab({ campaignId }: { campaignId: string }) {
-  const buyers = useBuyersStore((s) =>
-    s.buyers.filter((b) => b.campaignIds.includes(campaignId)),
+  // Select the stable array reference from the store, then filter outside the
+  // selector. Inline `.filter` inside the selector returns a new array every
+  // call → Zustand v5's useSyncExternalStore sees "new" data every render →
+  // React error #185 infinite loop. Defensive null guards retained.
+  const allBuyers = useBuyersStore((s) => s.buyers);
+  const buyers = useMemo(
+    () => (allBuyers ?? []).filter((b) => (b.campaignIds ?? []).includes(campaignId)),
+    [allBuyers, campaignId],
   );
 
   if (buyers.length === 0) {

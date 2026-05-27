@@ -47,6 +47,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard, roles: ALL_ROLES },
       { label: "Live Monitor", href: ROUTES.live, icon: Radio, roles: ALL_ROLES, badge: "Live" },
+      { label: "Reports", href: ROUTES.reports, icon: BarChart3, roles: ALL_ROLES },
     ],
   },
   {
@@ -69,7 +70,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Insights",
     items: [
       { label: "Call Logs", href: ROUTES.calls, icon: PhoneCall, roles: ALL_ROLES },
-      { label: "Reports", href: ROUTES.reports, icon: BarChart3, roles: ALL_ROLES },
       { label: "Marketplace", href: ROUTES.marketplace, icon: Store, roles: ["admin", "buyer"] },
       { label: "AI Insights", href: ROUTES.insights, icon: Sparkles, roles: ["admin"], badge: "AI" },
     ],

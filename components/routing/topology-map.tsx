@@ -34,8 +34,8 @@ export function TopologyMap({ plan, className }: TopologyMapProps) {
   const H = 130;
   const PAD = 16;
 
-  // Empty / single-node plans
-  if (plan.nodes.length === 0) {
+  // Empty / single-node plans (defensive null guard for stale persisted state).
+  if ((plan.nodes ?? []).length === 0) {
     return (
       <div
         className={cn(

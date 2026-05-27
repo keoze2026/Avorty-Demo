@@ -307,7 +307,7 @@ export function HeroSection() {
                   <span className="inline-block w-[3px] h-[0.85em] bg-accent ml-1 align-middle animate-pulse" />
                 )}
               </span>
-              <span className="text-balance bg-gradient-to-r from-[#00E6B8] via-[#22D3EE] to-[#7DE1FF] bg-clip-text text-transparent">
+              <span className="text-balance bg-gradient-to-r from-[#7064F2] via-[#9182F8] to-[#D2C8FE] bg-clip-text text-transparent">
                 {displayedText2}
                 {displayedText2 !== "" && (
                   <span

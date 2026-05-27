@@ -3,78 +3,49 @@
 import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
+import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
 
-interface Slice {
-  name: string;
-  calls: number;
-  color: string;
-}
-
-/** Default aggregation: today's calls per vertical via campaign.callsToday. */
-function buildFromCampaigns(): Slice[] {
-  const byVertical = new Map<string, number>();
-  for (const c of MOCK_CAMPAIGNS) {
-    byVertical.set(c.vertical, (byVertical.get(c.vertical) ?? 0) + c.callsToday);
-  }
-  return finalize(byVertical);
-}
-
-/** Filtered aggregation: count provided calls, looking up each call's campaign vertical. */
-function buildFromCalls(calls: Call[]): Slice[] {
-  const verticalById = new Map<string, string>();
-  for (const c of MOCK_CAMPAIGNS) verticalById.set(c.id, c.vertical);
-
-  const byVertical = new Map<string, number>();
-  for (const call of calls) {
-    const vertical = verticalById.get(call.campaignId);
-    if (!vertical) continue;
-    byVertical.set(vertical, (byVertical.get(vertical) ?? 0) + 1);
-  }
-  return finalize(byVertical);
-}
-
-function finalize(byVertical: Map<string, number>): Slice[] {
-  return Array.from(byVertical.entries())
-    .filter(([, calls]) => calls > 0)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, calls], i) => ({
-      name,
-      calls,
-      color: DASHBOARD_PALETTE[i % DASHBOARD_PALETTE.length],
-    }));
-}
-
 interface VerticalDonutProps {
-  /** When provided, the donut counts these calls per vertical instead of using campaign.callsToday. */
+  /** When provided, success vs drop is counted from these calls. Otherwise the
+   *  numbers come from TODAY_HOURLY (matching the default-mode KPI block). */
   calls?: Call[];
 }
 
+const SUCCESS_COLOR = DASHBOARD_PALETTE[0]; // teal
+const DROP_COLOR = "var(--destructive)"; // red
+
 export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
-  const slices = useMemo(
-    () => (calls ? buildFromCalls(calls) : buildFromCampaigns()),
-    [calls],
-  );
-  const total = slices.reduce((s, x) => s + x.calls, 0);
+  const { total, completed, dropped } = useMemo(() => {
+    if (calls) {
+      const all = calls.length;
+      const ok = calls.filter((c) => c.status === "completed").length;
+      return { total: all, completed: ok, dropped: Math.max(0, all - ok) };
+    }
+    const all = TODAY_HOURLY.reduce((s, p) => s + p.calls, 0);
+    const ok = TODAY_HOURLY.reduce((s, p) => s + p.conversions, 0);
+    return { total: all, completed: ok, dropped: Math.max(0, all - ok) };
+  }, [calls]);
+
+  const slices = [
+    { key: "completed", label: "Completed", count: completed, color: SUCCESS_COLOR },
+    { key: "dropped", label: "Drop calls", count: dropped, color: DROP_COLOR },
+  ].filter((s) => s.count > 0);
 
   return (
-    <Card>
-      <CardHeader className="space-y-0 pb-1">
-        <CardTitle className="text-sm">By vertical</CardTitle>
-      </CardHeader>
-      <CardContent className="flex items-center justify-center pb-4 pt-1">
-        <div className="relative h-56 w-56">
+    <Card className="flex h-full flex-col">
+      <CardContent className="flex flex-1 flex-col items-center justify-center gap-5 p-6">
+        <div className="relative h-44 w-44">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={slices}
-                dataKey="calls"
-                nameKey="name"
+                dataKey="count"
+                nameKey="label"
                 cx="50%"
                 cy="50%"
                 innerRadius="62%"
@@ -86,7 +57,7 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
                 animationDuration={500}
               >
                 {slices.map((s) => (
-                  <Cell key={s.name} fill={s.color} />
+                  <Cell key={s.key} fill={s.color} />
                 ))}
               </Pie>
               <Tooltip
@@ -99,11 +70,35 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</span>
-            <span className="text-2xl font-semibold tabular-nums">{formatNumber(total)}</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">calls</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Total
+            </span>
+            <span className="text-2xl font-semibold tabular-nums">
+              {formatNumber(total)}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              calls
+            </span>
           </div>
         </div>
+
+        {/* Legend — Total calls and Drop calls inline; drop in red */}
+        <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+          <li className="inline-flex items-center gap-2">
+            <span
+              aria-hidden
+              className="h-2.5 w-2.5 rounded-sm"
+              style={{ background: SUCCESS_COLOR }}
+            />
+            <span>Total calls</span>
+            <span className="font-medium tabular-nums">{formatNumber(total)}</span>
+          </li>
+          <li className="inline-flex items-center gap-2 text-destructive">
+            <span aria-hidden className="h-2.5 w-2.5 rounded-sm bg-destructive" />
+            <span>Drop calls</span>
+            <span className="font-medium tabular-nums">{formatNumber(dropped)}</span>
+          </li>
+        </ul>
       </CardContent>
     </Card>
   );

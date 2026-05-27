@@ -3,18 +3,10 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Pause, Pencil, Play, Trash2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -26,7 +18,7 @@ import {
 import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import type { Buyer, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -40,55 +32,77 @@ interface DestinationsTableProps {
 interface Row {
   destination: Destination;
   buyer: Buyer | undefined;
-  cc: number;
-  callsToday: number;
-  revenueToday: number;
-  capPct: number;
+  live: number;
+  hourly: number;
+  daily: number;
+  monthly: number;
+  global: number;
 }
 
+/**
+ * Counts calls per destination TFN at five different windows:
+ *   live    — currently ringing or in-progress (any time)
+ *   hourly  — calls started in the current hour
+ *   daily   — calls started today (since 00:00 local)
+ *   monthly — calls started this month (since the 1st)
+ *   global  — all calls ever recorded for this TFN
+ */
 function buildRows(destinations: Destination[]): Row[] {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const startMs = startOfToday.getTime();
+  const now = new Date();
+  const startOfHour = new Date(now);
+  startOfHour.setMinutes(0, 0, 0);
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const startOfDayMs = startOfDay.getTime();
+  const startOfHourMs = startOfHour.getTime();
 
-  const callsByTfn = new Map<string, number>();
-  const revenueByTfn = new Map<string, number>();
-  const ccByTfn = new Map<string, number>();
+  const live = new Map<string, number>();
+  const hourly = new Map<string, number>();
+  const daily = new Map<string, number>();
+  const monthly = new Map<string, number>();
+  const global = new Map<string, number>();
+
   for (const c of MOCK_CALLS) {
-    if (c.startedAt >= startMs) {
-      callsByTfn.set(c.destinationNumber, (callsByTfn.get(c.destinationNumber) ?? 0) + 1);
-      revenueByTfn.set(
-        c.destinationNumber,
-        (revenueByTfn.get(c.destinationNumber) ?? 0) + c.revenue,
-      );
-    }
+    const tfn = c.destinationNumber;
+    global.set(tfn, (global.get(tfn) ?? 0) + 1);
+    if (c.startedAt >= startOfMonth) monthly.set(tfn, (monthly.get(tfn) ?? 0) + 1);
+    if (c.startedAt >= startOfDayMs) daily.set(tfn, (daily.get(tfn) ?? 0) + 1);
+    if (c.startedAt >= startOfHourMs) hourly.set(tfn, (hourly.get(tfn) ?? 0) + 1);
     if (c.status === "ringing" || c.status === "in-progress") {
-      ccByTfn.set(c.destinationNumber, (ccByTfn.get(c.destinationNumber) ?? 0) + 1);
+      live.set(tfn, (live.get(tfn) ?? 0) + 1);
     }
   }
 
   const buyerById = new Map<string, Buyer>();
   for (const b of MOCK_BUYERS) buyerById.set(b.id, b);
 
-  return destinations.map<Row>((destination) => {
-    const callsToday = callsByTfn.get(destination.tfn) ?? 0;
-    const cap = destination.dailyCap;
-    return {
-      destination,
-      buyer: buyerById.get(destination.buyerId),
-      cc: ccByTfn.get(destination.tfn) ?? 0,
-      callsToday,
-      revenueToday: revenueByTfn.get(destination.tfn) ?? 0,
-      capPct: cap > 0 ? Math.min(100, (callsToday / cap) * 100) : 0,
-    };
-  });
+  return destinations.map<Row>((destination) => ({
+    destination,
+    buyer: buyerById.get(destination.buyerId),
+    live: live.get(destination.tfn) ?? 0,
+    hourly: hourly.get(destination.tfn) ?? 0,
+    daily: daily.get(destination.tfn) ?? 0,
+    monthly: monthly.get(destination.tfn) ?? 0,
+    global: global.get(destination.tfn) ?? 0,
+  }));
+}
+
+/** "+1 (213) 217-2017" → "12132172017"; Ringba's compact dial-string form. */
+function compactTfn(tfn: string) {
+  return tfn.replace(/\D/g, "");
+}
+
+/** Color a cell based on the fraction used (0..1). */
+function pacingTone(pct: number): string {
+  if (pct >= 1) return "text-destructive";
+  if (pct >= 0.85) return "text-[color:var(--warning)]";
+  return "";
 }
 
 export function DestinationsTable({
   destinations,
   onToggle,
-  onEdit,
-  onDelete,
 }: DestinationsTableProps) {
   const router = useRouter();
   const rows = useMemo(() => buildRows(destinations), [destinations]);
@@ -96,62 +110,86 @@ export function DestinationsTable({
   return (
     <Card className="overflow-hidden p-0">
       <div className="overflow-x-auto">
-        <Table className="min-w-[1100px]">
+        <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6">Destination</TableHead>
-              <TableHead>Buyer</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">CC</TableHead>
-              <TableHead>Cap (today)</TableHead>
-              <TableHead className="text-right">Daily cap</TableHead>
-              <TableHead className="text-right">Monthly cap</TableHead>
-              <TableHead className="text-right">Calls today</TableHead>
-              <TableHead className="text-right">Revenue today</TableHead>
-              <TableHead className="w-12 pr-6" />
+              <TableHead className="pl-6 uppercase tracking-wider text-[11px]">
+                Name
+              </TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">
+                Buyer
+              </TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">
+                Destination
+              </TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">
+                Live
+              </TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">
+                Hourly
+              </TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">
+                Daily
+              </TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">
+                Monthly
+              </TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">
+                Global
+              </TableHead>
+              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">
+                Status
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={10}
+                  colSpan={9}
                   className="pl-6 py-10 text-center text-sm text-muted-foreground"
                 >
                   No destinations match the current filters.
                 </TableCell>
               </TableRow>
             ) : (
-              rows.map(({ destination, buyer, cc, callsToday, revenueToday, capPct }) => {
-                const ccPct = destination.concurrencyCap > 0
-                  ? (cc / destination.concurrencyCap) * 100
-                  : 0;
-                const ccColor =
-                  ccPct >= 90 ? "text-destructive" :
-                  ccPct >= 70 ? "text-[color:var(--warning)]" :
-                  "text-accent";
-                const capColor =
-                  capPct >= 90 ? "bg-destructive" :
-                  capPct >= 70 ? "bg-[color:var(--warning)]" :
-                  "bg-accent";
+              rows.map(({ destination, buyer, live, hourly, daily, monthly, global }) => {
+                const livePct =
+                  destination.concurrencyCap > 0
+                    ? live / destination.concurrencyCap
+                    : 0;
+                const dailyPct =
+                  destination.dailyCap > 0 ? daily / destination.dailyCap : 0;
+                const monthlyPct =
+                  destination.monthlyCap > 0 ? monthly / destination.monthlyCap : 0;
+                const atCap = dailyPct >= 1 || livePct >= 1;
+
                 return (
                   <TableRow
                     key={destination.id}
                     className="cursor-pointer"
-                    onClick={() => router.push(`${ROUTES.destinations}/${destination.id}`)}
+                    onClick={() =>
+                      router.push(`${ROUTES.destinations}/${destination.id}`)
+                    }
                   >
+                    {/* NAME */}
                     <TableCell className="pl-6">
                       <Link
                         href={`${ROUTES.destinations}/${destination.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="block font-medium transition-colors hover:text-accent"
+                        className="inline-flex items-center gap-2 font-medium transition-colors hover:text-accent"
                       >
-                        {destination.name}
+                        <span className="truncate max-w-[14rem]">{destination.name}</span>
+                        {atCap && (
+                          <AlertTriangle
+                            className="h-3.5 w-3.5 text-[color:var(--warning)]"
+                            aria-label="At cap"
+                          />
+                        )}
                       </Link>
-                      <div className="mt-0.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                        {destination.tfn}
-                      </div>
                     </TableCell>
+
+                    {/* BUYER */}
                     <TableCell>
                       {buyer ? (
                         <Link
@@ -165,93 +203,77 @@ export function DestinationsTable({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      {destination.enabled ? (
-                        <Badge variant="success">Active</Badge>
-                      ) : (
-                        <Badge variant="outline">Disabled</Badge>
-                      )}
+
+                    {/* DESTINATION (TFN, compact dial-string form) */}
+                    <TableCell className="font-mono text-xs tabular-nums text-muted-foreground">
+                      {compactTfn(destination.tfn)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums whitespace-nowrap">
-                      <span className={cn("font-medium", cc > 0 ? ccColor : "text-muted-foreground")}>
-                        {cc > 0 && (
-                          <span
-                            aria-hidden
-                            className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current align-middle animate-pulse"
-                          />
+
+                    {/* LIVE — current concurrent / max */}
+                    <TableCell className="text-center">
+                      <span
+                        className={cn(
+                          "inline-flex min-w-[3.5rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
+                          pacingTone(livePct),
                         )}
-                        {cc}
+                      >
+                        {live} / {destination.concurrencyCap}
                       </span>
-                      <span className="text-muted-foreground"> / {destination.concurrencyCap}</span>
                     </TableCell>
-                    <TableCell>
-                      {destination.dailyCap > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-baseline justify-between gap-2 text-xs tabular-nums">
-                            <span className="font-medium">
-                              {formatNumber(callsToday)} / {formatNumber(destination.dailyCap)}
-                            </span>
-                            <span className="text-muted-foreground">{Math.round(capPct)}%</span>
-                          </div>
-                          <div className="h-1 w-32 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className={cn("h-full rounded-full transition-[width]", capColor)}
-                              style={{ width: `${capPct}%` }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Unlimited</span>
-                      )}
+
+                    {/* HOURLY — just the count */}
+                    <TableCell className="text-center">
+                      <span className="inline-flex min-w-[3rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums">
+                        {formatNumber(hourly)}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {destination.dailyCap > 0 ? formatNumber(destination.dailyCap) : "∞"}
+
+                    {/* DAILY — count or count/cap when capped */}
+                    <TableCell className="text-center">
+                      <span
+                        className={cn(
+                          "inline-flex min-w-[3rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
+                          pacingTone(dailyPct),
+                        )}
+                      >
+                        {destination.dailyCap > 0
+                          ? `${formatNumber(daily)} / ${formatNumber(destination.dailyCap)}`
+                          : formatNumber(daily)}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {destination.monthlyCap > 0 ? formatNumber(destination.monthlyCap) : "∞"}
+
+                    {/* MONTHLY — count or count/cap when capped */}
+                    <TableCell className="text-center">
+                      <span
+                        className={cn(
+                          "inline-flex min-w-[3rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
+                          pacingTone(monthlyPct),
+                        )}
+                      >
+                        {destination.monthlyCap > 0
+                          ? `${formatNumber(monthly)} / ${formatNumber(destination.monthlyCap)}`
+                          : formatNumber(monthly)}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(callsToday)}
+
+                    {/* GLOBAL — lifetime count */}
+                    <TableCell className="text-center">
+                      <span className="inline-flex min-w-[3rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums">
+                        {formatNumber(global)}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {formatCurrency(revenueToday)}
-                    </TableCell>
-                    <TableCell className="pr-6" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            aria-label="Destination actions"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => onEdit?.(destination.id)}>
-                            <Pencil className="h-3.5 w-3.5" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => onToggle?.(destination.id)}>
-                            {destination.enabled ? (
-                              <>
-                                <Pause className="h-3.5 w-3.5" /> Pause
-                              </>
-                            ) : (
-                              <>
-                                <Play className="h-3.5 w-3.5" /> Enable
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onSelect={() => onDelete?.(destination.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+
+                    {/* STATUS — switch */}
+                    <TableCell className="pr-6 text-center" onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        checked={destination.enabled}
+                        onCheckedChange={() => onToggle?.(destination.id)}
+                        aria-label={
+                          destination.enabled
+                            ? `Disable ${destination.name}`
+                            : `Enable ${destination.name}`
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 );

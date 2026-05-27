@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { Megaphone, Plus } from "lucide-react";
 
@@ -12,7 +13,12 @@ import { formatCompact, formatCurrency } from "@/lib/format";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 export function BuyerCampaignsTab({ campaignIds }: { campaignIds: string[] }) {
-  const campaigns = useCampaignsStore((s) => s.campaigns.filter((c) => campaignIds.includes(c.id)));
+  // Stable selector + useMemo filter — see campaign-buyers-tab for rationale.
+  const allCampaigns = useCampaignsStore((s) => s.campaigns);
+  const campaigns = useMemo(
+    () => allCampaigns.filter((c) => campaignIds.includes(c.id)),
+    [allCampaigns, campaignIds],
+  );
 
   if (campaigns.length === 0) {
     return (

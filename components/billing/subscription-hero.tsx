@@ -117,8 +117,8 @@ function UsageRing({ pct, used, included }: { pct: number; used: number; include
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#00e6b8" />
-            <stop offset="100%" stopColor="#22d3ee" />
+            <stop offset="0%" stopColor="#7064F2" />
+            <stop offset="100%" stopColor="#9182F8" />
           </linearGradient>
         </defs>
         {/* Track */}

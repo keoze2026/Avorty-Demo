@@ -8,9 +8,10 @@ import { CampaignBuyersTab } from "@/components/campaigns/campaign-buyers-tab";
 import { CampaignDetailHeader } from "@/components/campaigns/campaign-detail-header";
 import { CampaignNumbersTab } from "@/components/campaigns/campaign-numbers-tab";
 import { CampaignOverviewTab } from "@/components/campaigns/campaign-overview-tab";
+import { CampaignPerformanceTab } from "@/components/campaigns/campaign-performance-tab";
 import { CampaignPublishersTab } from "@/components/campaigns/campaign-publishers-tab";
 import { CampaignRoutingTab } from "@/components/campaigns/campaign-routing-tab";
-import { CampaignSettingsTab } from "@/components/campaigns/campaign-settings-tab";
+import { CampaignSettingsView } from "@/components/campaigns/settings/campaign-settings-view";
 import { CampaignStatsRow } from "@/components/campaigns/campaign-stats-row";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -88,15 +89,10 @@ export default function CampaignDetailPage() {
           <CampaignRoutingTab campaignId={campaign.id} />
         </TabsContent>
         <TabsContent value="performance">
-          <EmptyState
-            icon={BarChart3}
-            tone="emerald"
-            title="Performance dive arrives in Phase 6"
-            description="Cross-filter analytics scoped to this campaign — by hour, geo, publisher, buyer."
-          />
+          <CampaignPerformanceTab campaignId={campaign.id} />
         </TabsContent>
         <TabsContent value="settings">
-          <CampaignSettingsTab campaign={campaign} />
+          <CampaignSettingsView campaign={campaign} />
         </TabsContent>
       </Tabs>
     </>

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(node node_modules/next/dist/bin/next build 2>&1)"
+      "PowerShell(node node_modules/next/dist/bin/next build 2>&1)",
+      "Bash(node node_modules/next/dist/bin/next build)"
     ]
   }
 }

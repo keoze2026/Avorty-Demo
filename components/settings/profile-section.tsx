@@ -42,7 +42,7 @@ export function ProfileSection() {
           <div className="relative">
             <div
               className="flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-bold text-background shadow-lg"
-              style={{ background: "linear-gradient(135deg, #00e6b8, #22d3ee, #1656d6)" }}
+              style={{ background: "linear-gradient(135deg, #7064F2, #5048E5, #32358B)" }}
             >
               {initials}
             </div>

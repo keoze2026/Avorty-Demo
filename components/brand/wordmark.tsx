@@ -1,7 +1,7 @@
 /**
  * Vortyx wordmark — logo + product name lock-up.
- * The product name uses a teal → cyan gradient when `gradient` is enabled —
- * gives the navbar / hero a memorable signature flourish.
+ * The product name uses an indigo gradient when `gradient` is enabled — gives
+ * the navbar / hero a memorable signature flourish that matches the brand.
  */
 
 import Link from "next/link";
@@ -48,7 +48,7 @@ export function Wordmark({
             gradient
               ? {
                   background:
-                    "linear-gradient(120deg, #00E6B8 10%, #22D3EE 60%, #7DE1FF 100%)",
+                    "linear-gradient(120deg, #7064F2 10%, #9182F8 60%, #D2C8FE 100%)",
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   WebkitTextFillColor: "transparent",

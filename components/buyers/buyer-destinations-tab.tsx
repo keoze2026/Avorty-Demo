@@ -21,8 +21,12 @@ interface BuyerDestinationsTabProps {
 }
 
 export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
-  const destinations = useDestinationsStore((s) =>
-    s.destinations.filter((d) => d.buyerId === buyer.id),
+  // Select the stable array, filter outside the selector to avoid Zustand v5's
+  // useSyncExternalStore infinite-render trap (React error #185).
+  const allDestinations = useDestinationsStore((s) => s.destinations);
+  const destinations = useMemo(
+    () => allDestinations.filter((d) => d.buyerId === buyer.id),
+    [allDestinations, buyer.id],
   );
   const [builderOpen, setBuilderOpen] = useState(false);
 

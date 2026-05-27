@@ -6,13 +6,6 @@ export default function DestinationsLoading() {
     <>
       <PageHeaderSkeleton width="11rem" />
 
-      {/* Stats strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
-        ))}
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <Skeleton className="h-9 w-72" />
