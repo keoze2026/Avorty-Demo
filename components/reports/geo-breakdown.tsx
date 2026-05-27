@@ -5,6 +5,7 @@ import { Globe2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { GroupAggregate } from "@/lib/analytics";
+import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { formatCurrency } from "@/lib/format";
 
 export function GeoBreakdown({ rows }: { rows: GroupAggregate[] }) {
@@ -37,14 +38,8 @@ export function GeoBreakdown({ rows }: { rows: GroupAggregate[] }) {
                 width={32}
               />
               <Tooltip
+                {...CHART_TOOLTIP_PROPS}
                 cursor={{ fill: "var(--accent)", fillOpacity: 0.06 }}
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  color: "var(--popover-foreground)",
-                }}
                 formatter={(v: number, n) =>
                   n === "revenue" ? [formatCurrency(v), "Revenue"] : [v, "Calls"]
                 }

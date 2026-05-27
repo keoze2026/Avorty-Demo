@@ -4,6 +4,7 @@ import { Area, AreaChart, CartesianGrid, Legend, Line, ResponsiveContainer, Tool
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DayPoint } from "@/lib/analytics";
+import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { formatCurrency } from "@/lib/format";
 
 export function RevenueTimeline({ data }: { data: DayPoint[] }) {
@@ -49,14 +50,8 @@ export function RevenueTimeline({ data }: { data: DayPoint[] }) {
                 width={32}
               />
               <Tooltip
+                {...CHART_TOOLTIP_PROPS}
                 cursor={{ stroke: "var(--accent)", strokeOpacity: 0.4 }}
-                contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  color: "var(--popover-foreground)",
-                }}
                 formatter={(value: number, name) =>
                   name === "revenue" ? [formatCurrency(value), "Revenue"] : [value, "Calls"]
                 }
