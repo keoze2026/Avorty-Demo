@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Download } from "lucide-react";
 
 import { CallsChart } from "@/components/dashboard/calls-chart";
+import { CampaignSummaryTable } from "@/components/dashboard/campaign-summary-table";
 import { KpiRow } from "@/components/dashboard/kpi-row";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
@@ -9,6 +10,7 @@ import { VerticalDonut } from "@/components/dashboard/vertical-donut";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { MOCK_CALLS } from "@/lib/mock/calls";
+import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -55,6 +57,9 @@ export default function DashboardPage() {
         <TopCampaignsBars />
         <RevenueChart />
       </div>
+
+      {/* Row 3 — Campaign summary with Destination / CC / Cap columns */}
+      <CampaignSummaryTable campaigns={MOCK_CAMPAIGNS} />
     </>
   );
 }

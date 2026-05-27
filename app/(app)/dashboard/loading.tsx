@@ -20,6 +20,17 @@ export default function DashboardLoading() {
         <Skeleton className="h-96 rounded-xl" />
         <Skeleton className="h-96 rounded-xl" />
       </div>
+
+      {/* Row 3 — Campaign summary table */}
+      <div className="overflow-hidden rounded-xl border border-border">
+        <Skeleton className="h-16 w-full rounded-none" />
+        <Skeleton className="h-12 w-full rounded-none" />
+        <div className="space-y-px">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full rounded-none" />
+          ))}
+        </div>
+      </div>
     </>
   );
 }
