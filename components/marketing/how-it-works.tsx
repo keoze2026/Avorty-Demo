@@ -2,12 +2,11 @@
 
 /**
  * How it works — 4-step visual flow.
- * Numbered cards arranged horizontally on desktop with a connecting
- * gradient line. On mobile they stack as a vertical timeline.
+ * Numbered cards arranged horizontally. Quiet, no glow, no per-card hover lift.
  */
 
 import { motion } from "framer-motion";
-import { Building2, GitFork, Hash, Radio, Workflow } from "lucide-react";
+import { Building2, GitFork, Hash, Radio } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface Step {
@@ -46,70 +45,39 @@ const STEPS: Step[] = [
 
 export function HowItWorks() {
   return (
-    <section className="relative overflow-hidden py-24 sm:py-24">
-      {/* Background flourish */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-[28rem]"
-        style={{
-          background:
-            "radial-gradient(ellipse 50% 100% at 50% 50%, var(--vortyx-glow), transparent 70%)",
-          opacity: 0.4,
-        }}
-      />
-
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-24 sm:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground backdrop-blur">
-            <Workflow className="h-3 w-3 text-accent" />
-            How it works
-          </span>
-          <h2 className="mt-4 font-sans text-3xl font-bold tracking-tight text-balance sm:text-5xl">
+          <h2 className="text-balance text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             Live in your network by lunch.
           </h2>
-          <p className="mt-4 text-balance text-lg text-muted-foreground">
-            Four steps from "we just signed" to "calls are routing." No deployment, no implementation team.
+          <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
+            Four steps from &quot;we just signed&quot; to &quot;calls are routing.&quot; No deployment,
+            no implementation team.
           </p>
         </div>
 
-        <div className="relative mx-auto mt-16 max-w-6xl">
-          {/* Desktop connector line */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-0 right-0 top-[2.75rem] hidden h-px lg:block"
-            style={{
-              background:
-                "linear-gradient(to right, transparent, var(--accent) 10%, var(--accent) 90%, transparent)",
-              opacity: 0.4,
-            }}
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-16 max-w-6xl">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => {
               const Icon = step.icon;
               return (
                 <motion.div
                   key={step.num}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  transition={{ delay: i * 0.08, duration: 0.4, ease: "easeOut" }}
-                  className="group relative"
+                  transition={{ delay: i * 0.06, duration: 0.4, ease: "easeOut" }}
+                  className="rounded-2xl border border-border/60 bg-card/40 p-6"
                 >
-                  {/* Numbered badge sits on the connector line */}
-                  <div className="relative z-10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card shadow-lg transition-all group-hover:-translate-y-0.5 group-hover:border-accent/50 group-hover:shadow-accent/20">
-                    <Icon className="h-5 w-5 text-accent" />
-                    <span className="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[10px] font-mono font-bold text-accent-foreground shadow">
-                      {step.num}
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-secondary/60 text-muted-foreground">
+                      <Icon className="h-4 w-4" />
                     </span>
+                    <span className="text-xs tabular-nums text-muted-foreground">{step.num}</span>
                   </div>
-
-                  <div className="rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-md transition-all group-hover:border-accent/40 group-hover:bg-card group-hover:shadow-xl group-hover:shadow-accent/10">
-                    <h3 className="text-balance font-sans text-lg font-semibold leading-snug">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{step.body}</p>
-                  </div>
+                  <h3 className="mt-4 text-base font-medium text-foreground">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
                 </motion.div>
               );
             })}

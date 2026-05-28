@@ -167,9 +167,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
   return (
     <Card className="overflow-hidden p-0">
       {/* Section title */}
-      <div className="px-6 pt-5 text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
-        Call summary
-      </div>
+      <div className="px-6 pt-5 text-sm font-semibold text-foreground">Call summary</div>
 
       {/* Tabs + right actions */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-4">
@@ -179,7 +177,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={cn(
-                "relative px-3 py-3 text-xs font-medium uppercase tracking-wider transition-colors focus-visible:outline-none",
+                "relative px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
                 tab === t.id ? "text-accent" : "text-muted-foreground hover:text-foreground",
               )}
             >

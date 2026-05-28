@@ -87,7 +87,7 @@ export function FeaturesSection() {
 
     const animate = () => {
       if (!isPaused && !isDragging && scrollContainer) {
-        scrollPosition += 0.5;
+        scrollPosition += 0.4;
         if (scrollPosition >= scrollContainer.scrollWidth / 2) scrollPosition = 0;
         scrollContainer.scrollLeft = scrollPosition;
       } else if (scrollContainer) {
@@ -118,29 +118,25 @@ export function FeaturesSection() {
   const duplicated = [...features, ...features];
 
   return (
-    <section id="features" className="py-24 sm:py-24">
+    <section id="features" className="py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center">
-          <div className="flex items-center justify-center gap-2 text-sm text-accent">
-            <Sparkles className="h-4 w-4" />
-            <span className="font-mono uppercase tracking-wider">The platform</span>
-          </div>
-          <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl text-balance">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-balance text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             Every call. Every decision. Every dollar.
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Vortyx replaces a stack of legacy call-tracking tools with a single, real-time control plane —
-            from inbound ring to buyer settlement.
+          <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
+            Vortyx replaces a stack of legacy call-tracking tools with a single, real-time control
+            plane — from inbound ring to buyer settlement.
           </p>
         </div>
 
-        <div className="mt-16 relative">
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+        <div className="relative mt-16">
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-r from-background to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 bg-gradient-to-l from-background to-transparent" />
 
           <div
             ref={scrollRef}
-            className={`flex gap-6 overflow-x-auto scrollbar-hide select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+            className={`flex gap-4 overflow-x-auto scrollbar-hide select-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => {
@@ -156,18 +152,15 @@ export function FeaturesSection() {
             {duplicated.map((feature, index) => (
               <div
                 key={index}
-                className="group relative flex-shrink-0 w-[320px] overflow-hidden rounded-2xl border border-border/60 bg-card/50 p-7 transition-all hover:-translate-y-1 hover:border-accent/40 hover:bg-card hover:shadow-lg hover:shadow-accent/10"
+                className="w-[300px] flex-shrink-0 rounded-2xl border border-border/60 bg-card/40 p-6 transition-colors hover:bg-card"
               >
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full blur-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: "rgba(59, 182, 255, 0.22)" }}
-                />
-                <div className="relative mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                  <feature.icon className="h-5 w-5" />
-                </div>
-                <h3 className="relative font-mono text-lg font-semibold">{feature.title}</h3>
-                <p className="relative mt-2 text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary/60 text-muted-foreground">
+                  <feature.icon className="h-4 w-4" />
+                </span>
+                <h3 className="mt-4 text-base font-medium text-foreground">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>

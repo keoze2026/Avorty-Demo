@@ -56,7 +56,7 @@ export function KpiRow({ callsToday, revenueToday, conversionRate, avgDurationSe
           <div
             key={k.label}
             className={cn(
-              "px-3 py-3",
+              "px-5 py-5",
               i % 2 === 1 && "border-l border-border",
               i >= 2 && "border-t border-border",
               "lg:border-t-0",
@@ -76,18 +76,22 @@ function KpiSection({ label, value, format, delta }: KpiConfig) {
   const positive = delta >= 0;
   return (
     <div className="min-w-0">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground truncate">
+      <div className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground/80 truncate">
         {label}
       </div>
-      <div className="mt-1 flex items-baseline justify-between gap-1.5">
-        <span className="truncate text-lg font-semibold tabular-nums">{format(animated)}</span>
+      <div className="mt-2 flex items-baseline justify-between gap-2">
+        <span className="truncate text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          {format(animated)}
+        </span>
         <span
           className={cn(
-            "inline-flex shrink-0 items-center gap-0.5 text-[10px] font-medium tabular-nums",
-            positive ? "text-[color:var(--success)]" : "text-destructive",
+            "inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+            positive
+              ? "bg-[color:var(--success)]/12 text-[color:var(--success)]"
+              : "bg-destructive/12 text-destructive",
           )}
         >
-          {positive ? <TrendingUp className="h-2.5 w-2.5" /> : <TrendingDown className="h-2.5 w-2.5" />}
+          {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
           {positive ? "+" : ""}
           {delta.toFixed(1)}%
         </span>

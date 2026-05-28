@@ -36,22 +36,22 @@ export function RecommendationDeck() {
     <section className="space-y-3">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h3 className="font-sans text-base font-semibold">Recommendations</h3>
-          <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent">
-            <Sparkles className="h-2.5 w-2.5" />
+          <h3 className="text-base font-semibold">Recommendations</h3>
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent/12 px-2 py-0.5 text-xs font-medium text-accent">
+            <Sparkles className="h-3 w-3" />
             {open.length} open
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 p-0.5">
-          <Filter className="ml-1.5 h-3 w-3 text-muted-foreground" />
+        <div className="flex items-center gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
+          <Filter className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" />
           {FILTERS.map((f) => (
             <button
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
               className={cn(
-                "h-6 rounded px-1.5 text-[11px] font-mono transition-colors",
+                "h-7 rounded px-2 text-xs font-medium transition-colors",
                 filter === f.id
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",

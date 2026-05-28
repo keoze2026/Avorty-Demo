@@ -77,26 +77,19 @@ export function AiBriefingHero() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="relative overflow-hidden rounded-2xl border border-accent/30 p-6 sm:p-8"
+      className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8"
       style={{
         background:
-          "radial-gradient(ellipse 80% 100% at 80% 0%, color-mix(in oklab, var(--accent) 25%, transparent), transparent 60%), linear-gradient(135deg, var(--card) 0%, color-mix(in oklab, var(--accent) 6%, var(--card)) 100%)",
+          "linear-gradient(135deg, var(--card) 0%, color-mix(in oklab, var(--accent) 10%, var(--card)) 100%)",
       }}
     >
-      {/* Dotted texture */}
+      {/* Soft halo behind the logo — single subtle accent glow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50 bg-dot-grid"
-        style={{ maskImage: "radial-gradient(ellipse 70% 80% at 30% 0%, #000 30%, transparent 75%)" }}
-      />
-
-      {/* Pulsing halo behind the logo */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-12 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full blur-3xl"
+        className="pointer-events-none absolute -left-12 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full blur-3xl opacity-40"
         style={{
-          background: "radial-gradient(circle, color-mix(in oklab, var(--accent) 35%, transparent), transparent 70%)",
-          opacity: 0.6,
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--accent) 30%, transparent), transparent 70%)",
         }}
       />
 
@@ -121,8 +114,8 @@ export function AiBriefingHero() {
 
         {/* Greeting copy */}
         <div className="min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent">
-            <Activity className="h-2.5 w-2.5" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/15 px-2.5 py-0.5 text-[11px] font-medium text-accent">
+            <Activity className="h-3 w-3" />
             Vortyx co-pilot
           </span>
           <h2 className="mt-2 font-sans text-3xl font-bold tracking-tight sm:text-4xl">
@@ -151,10 +144,10 @@ export function AiBriefingHero() {
                   <Icon className="h-3.5 w-3.5" />
                 </span>
                 <div className="min-w-0">
-                  <div className="font-mono text-sm font-semibold tabular-nums">{h.value}</div>
-                  <div className="flex items-center gap-1 text-[10px]">
+                  <div className="text-sm font-semibold tabular-nums">{h.value}</div>
+                  <div className="flex items-center gap-1 text-[11px]">
                     <span className="text-muted-foreground">{h.label}</span>
-                    {h.delta && <span className={`font-mono ${t.chip}`}>· {h.delta}</span>}
+                    {h.delta && <span className={t.chip}>· {h.delta}</span>}
                   </div>
                 </div>
               </motion.div>

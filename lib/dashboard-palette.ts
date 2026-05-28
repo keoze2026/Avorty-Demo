@@ -1,23 +1,23 @@
 /**
- * Dashboard chart palette — leads with the brand indigo (#7064f2 ≈ 280°),
- * then spreads ~90° around the hue wheel for distinct-but-harmonious series.
+ * Chart palette — strict two-color binary.
  *
- *   indigo  280° ─┐
- *   azure   230°  │  L ≈ 0.62–0.78
- *   pink    330°  │  C ≈ 0.16–0.22
- *   amber    75° ─┤
- *   teal    165° ─┘
+ *   indigo (slot 0) → positive / highlighted outcomes
+ *   red    (slot 1) → negative / failure outcomes
  *
- * Order is deterministic — map verticals/series to slots by index so the
- * same series shows the same color across every chart on the page.
+ * Lighter intensity variants (slots 2-4) ride the same two hues at reduced
+ * opacity so adjacent series stay distinguishable inside the binary system.
+ *
+ * Use `var(--accent)` / `var(--destructive)` from CSS variables when possible;
+ * this array exists for places that need a literal color string (Recharts
+ * <Cell> fills, gradient stops, SVG strokes).
  */
 
 export const DASHBOARD_PALETTE = [
-  "oklch(0.62 0.22 280)", // indigo — brand (slot 0)
-  "oklch(0.68 0.18 230)", // azure  — slot 1
-  "oklch(0.70 0.20 330)", // pink   — slot 2
-  "oklch(0.78 0.16 75)",  // amber  — slot 3
-  "oklch(0.72 0.15 165)", // teal   — slot 4
+  "var(--accent)",            // indigo — positive (slot 0)
+  "var(--destructive)",       // red — negative (slot 1)
+  "color-mix(in oklab, var(--accent) 70%, transparent)",      // softened indigo
+  "color-mix(in oklab, var(--destructive) 60%, transparent)", // softened red
+  "var(--muted-foreground)",  // neutral fallback
 ] as const;
 
 export function paletteAt(i: number) {

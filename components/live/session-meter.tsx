@@ -64,10 +64,8 @@ function Dial({ value }: { value: number }) {
       />
       <div className="absolute inset-1.5 rounded-full bg-card" />
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-lg font-bold tabular-nums">{pct.toFixed(0)}%</span>
-        <span className="font-mono text-[8px] uppercase tracking-wider text-muted-foreground">
-          conv
-        </span>
+        <span className="text-lg font-bold tabular-nums tracking-tight">{pct.toFixed(0)}%</span>
+        <span className="text-[10px] text-muted-foreground">conversion</span>
       </div>
     </div>
   );
@@ -86,14 +84,14 @@ function RailRow({
 }) {
   const tones: Record<"accent" | "amber" | "emerald", string> = {
     accent: "bg-accent",
-    amber: "bg-[oklch(0.6_0.16_75)]",
-    emerald: "bg-[oklch(0.6_0.18_155)]",
+    amber: "bg-[color:var(--warning)]",
+    emerald: "bg-[color:var(--success)]",
   };
   return (
     <div>
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{label}</span>
-        <span className="text-foreground">{display ?? `${value.toFixed(1)}%`}</span>
+        <span className="font-medium text-foreground tabular-nums">{display ?? `${value.toFixed(1)}%`}</span>
       </div>
       <div className="mt-1 h-1 overflow-hidden rounded-full bg-secondary/60">
         <motion.div
@@ -109,10 +107,8 @@ function RailRow({
 function Cell({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-md border border-border bg-secondary/30 py-2">
-      <div className="font-mono text-sm font-semibold tabular-nums">{value}</div>
-      <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
+      <div className="text-sm font-semibold tabular-nums">{value}</div>
+      <div className="text-[10px] text-muted-foreground">{label}</div>
     </div>
   );
 }

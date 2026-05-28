@@ -85,9 +85,7 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
     <Card className="overflow-hidden p-0">
       {/* Section title */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-6 py-4">
-        <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
-          Call log
-        </div>
+        <div className="text-sm font-semibold text-foreground">Call log</div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

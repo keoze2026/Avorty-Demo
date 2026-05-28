@@ -69,11 +69,11 @@ const KIND_META: Record<
     icon: Scale,
     label: "Rebalance",
     tone: {
-      text: "text-[oklch(0.55_0.2_290)] dark:text-[oklch(0.72_0.2_290)]",
-      bg: "bg-[oklch(0.6_0.2_290)]/12",
-      ring: "ring-[oklch(0.6_0.2_290)]/30",
-      border: "border-[oklch(0.6_0.2_290)]/30",
-      line: "oklch(0.6 0.2 290)",
+      text: "text-[color:var(--chart-3)]",
+      bg: "bg-[color:var(--chart-3)]/12",
+      ring: "ring-[color:var(--chart-3)]/30",
+      border: "border-[color:var(--chart-3)]/30",
+      line: "var(--chart-3)",
     },
   },
   alert: {
@@ -135,16 +135,13 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={cn(
-        "group relative overflow-hidden rounded-2xl border bg-card transition-all hover:-translate-y-0.5 hover:shadow-lg",
-        meta.tone.border,
-      )}
+      className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-lg"
     >
       {/* Ambient tint */}
       <div
         aria-hidden
         className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: `color-mix(in oklab, ${meta.tone.line} 35%, transparent)` }}
+        style={{ background: `color-mix(in oklab, ${meta.tone.line} 30%, transparent)` }}
       />
 
       <div className="relative p-5">
@@ -156,10 +153,10 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className={cn("rounded-full border px-1.5 py-0 text-[9px] font-mono uppercase tracking-wider", meta.tone.border, meta.tone.text)}>
+                <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.tone.bg, meta.tone.text)}>
                   {meta.label}
                 </span>
-                <span className="text-[10px] font-mono text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {r.scope.type} · {r.scope.name}
                 </span>
               </div>
@@ -188,25 +185,25 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            <ChevronDown className={cn("h-3 w-3 transition-transform", expanded && "rotate-180")} />
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
             {expanded ? "Hide rationale" : "Why this?"}
           </button>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
               {formatRelativeTime(r.createdAt)}
             </span>
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={dismiss}>
-              <X className="h-3 w-3" /> Dismiss
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={dismiss}>
+              <X className="h-3.5 w-3.5" /> Dismiss
             </Button>
-            <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={snooze}>
-              <Clock className="h-3 w-3" /> Snooze
+            <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={snooze}>
+              <Clock className="h-3.5 w-3.5" /> Snooze
             </Button>
-            <Button size="sm" className="h-7 px-3 text-xs" onClick={apply}>
-              <Check className="h-3 w-3" /> Apply
+            <Button size="sm" className="h-8 px-3 text-xs" onClick={apply}>
+              <Check className="h-3.5 w-3.5" /> Apply
             </Button>
           </div>
         </div>
@@ -267,10 +264,8 @@ function ConfidenceRing({ value, tone }: { value: number; tone: string }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-        <span className="font-mono text-xs font-bold tabular-nums">{Math.round(value * 100)}</span>
-        <span className="text-[8px] font-mono uppercase tracking-wider text-muted-foreground">
-          conf
-        </span>
+        <span className="text-sm font-bold tabular-nums">{Math.round(value * 100)}</span>
+        <span className="text-[9px] text-muted-foreground">conf</span>
       </div>
     </div>
   );
@@ -290,10 +285,8 @@ function ImpactStat({
   const Arrow = direction === "up" ? ArrowUp : ArrowDown;
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-3">
-      <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={cn("mt-0.5 flex items-baseline gap-1 font-mono text-2xl font-bold tabular-nums", tone.text)}>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={cn("mt-0.5 flex items-baseline gap-1 text-2xl font-bold tabular-nums tracking-tight", tone.text)}>
         <Arrow className="h-4 w-4" strokeWidth={3} />
         {value}
       </div>

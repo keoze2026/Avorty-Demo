@@ -61,29 +61,15 @@ export default function NumbersPage() {
       {/* Tiny inventory summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Total inventory", value: formatCompact(stats.total), tone: "border-accent/30" },
-          {
-            label: "Active",
-            value: formatCompact(stats.active),
-            tone: "border-[oklch(0.6_0.18_155)]/40",
-          },
-          {
-            label: "Pending",
-            value: formatCompact(stats.pending),
-            tone: "border-[oklch(0.6_0.16_75)]/40",
-          },
-          {
-            label: "Monthly cost",
-            value: formatCurrency(stats.cost, true),
-            tone: "border-[oklch(0.6_0.2_290)]/40",
-          },
+          { label: "Total inventory", value: formatCompact(stats.total) },
+          { label: "Active", value: formatCompact(stats.active) },
+          { label: "Pending", value: formatCompact(stats.pending) },
+          { label: "Monthly cost", value: formatCurrency(stats.cost, true) },
         ].map((s) => (
-          <Card key={s.label} className={s.tone}>
+          <Card key={s.label}>
             <CardContent className="p-4">
-              <div className="font-mono text-2xl font-semibold">{s.value}</div>
-              <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {s.label}
-              </div>
+              <div className="text-2xl font-bold tabular-nums tracking-tight">{s.value}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
             </CardContent>
           </Card>
         ))}

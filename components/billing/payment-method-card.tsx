@@ -40,7 +40,7 @@ export function PaymentMethodCard() {
           className="relative aspect-[1.6/1] w-full max-w-md overflow-hidden rounded-2xl p-5 text-white shadow-2xl"
           style={{
             background:
-              "linear-gradient(135deg, #050608 0%, #32358B 35%, #5048E5 80%, #7064F2 110%)",
+              "linear-gradient(135deg, #050608 0%, #2A3499 35%, #3A4BC4 75%, #5266E0 110%)",
           }}
         >
           {/* Texture / highlight */}

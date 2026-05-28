@@ -54,12 +54,12 @@ export function AutopilotCard() {
             <Bot className="h-3.5 w-3.5" />
           </span>
           Autopilot
-          <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent">
-            <Check className="h-2.5 w-2.5" />
+          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-accent">
+            <Check className="h-3 w-3" />
             {enabledCount} active
           </span>
         </CardTitle>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Let the co-pilot act on its own for things you trust. Off by default.
         </p>
       </CardHeader>
@@ -82,11 +82,11 @@ export function AutopilotCard() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{r.label}</span>
-                  <span className={cn("rounded-full border px-1.5 py-0 text-[9px] font-mono uppercase tracking-wider", t.chip)}>
+                  <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium capitalize", t.chip)}>
                     {r.tone}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{r.description}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{r.description}</p>
               </div>
               <Switch checked={r.enabled} onCheckedChange={() => toggle(r.id)} />
             </motion.div>

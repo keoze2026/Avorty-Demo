@@ -1,19 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { EditPublisherDialog } from "@/components/publishers/edit-publisher-dialog";
 import { InvitePublisherDialog } from "@/components/publishers/invite-publisher-dialog";
-import { PublisherCard } from "@/components/publishers/publisher-card";
 import { PublishersTable } from "@/components/publishers/publishers-table";
 import { PublishersToolbar, type PublisherStatusFilter } from "@/components/publishers/publishers-toolbar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { type ViewMode } from "@/components/shared/view-toggle";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 
@@ -25,10 +23,10 @@ export default function PublishersPage() {
   const remove = usePublishersStore((s) => s.remove);
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [status, setStatusFilter] = useState<PublisherStatusFilter>("all");
   const [sort, setSort] = useState<SortKey>("revenue");
-  const [view, setView] = useState<ViewMode>("grid");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -93,10 +91,8 @@ export default function PublishersPage() {
         ].map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4">
-              <div className="font-mono text-2xl font-semibold">{s.value}</div>
-              <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {s.label}
-              </div>
+              <div className="text-2xl font-bold tabular-nums tracking-tight">{s.value}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
             </CardContent>
           </Card>
         ))}
@@ -109,8 +105,6 @@ export default function PublishersPage() {
         onStatus={setStatusFilter}
         sort={sort}
         onSort={setSort}
-        view={view}
-        onView={setView}
         count={filtered.length}
         total={publishers.length}
       />
@@ -122,30 +116,20 @@ export default function PublishersPage() {
           title="No publishers match"
           description="Try clearing the search box or relaxing your status filter."
         />
-      ) : view === "grid" ? (
-        <motion.div
-          initial="initial"
-          animate="animate"
-          variants={{ animate: { transition: { staggerChildren: 0.04 } } }}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {filtered.map((p) => (
-            <motion.div
-              key={p.id}
-              variants={{
-                initial: { opacity: 0, y: 8 },
-                animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-              }}
-            >
-              <PublisherCard publisher={p} onToggle={onToggle} onArchive={onArchive} />
-            </motion.div>
-          ))}
-        </motion.div>
       ) : (
-        <PublishersTable publishers={filtered} onToggle={onToggle} onArchive={onArchive} />
+        <PublishersTable
+          publishers={filtered}
+          onToggle={onToggle}
+          onArchive={onArchive}
+          onEdit={setEditId}
+        />
       )}
 
       <InvitePublisherDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+      <EditPublisherDialog
+        publisherId={editId}
+        onOpenChange={(open) => !open && setEditId(null)}
+      />
     </>
   );
 }

@@ -48,7 +48,7 @@ export function Wordmark({
             gradient
               ? {
                   background:
-                    "linear-gradient(120deg, #7064F2 10%, #9182F8 60%, #D2C8FE 100%)",
+                    "linear-gradient(120deg, #3A4BC4 0%, #5266E0 50%, #818CF8 100%)",
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   WebkitTextFillColor: "transparent",

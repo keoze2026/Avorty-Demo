@@ -15,7 +15,6 @@ import {
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
-import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import type { Call } from "@/lib/types";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -28,10 +27,14 @@ const GRAINS: Array<{ id: Grain; label: string }> = [
   { id: "M", label: "M" },
 ];
 
-const COLOR_CONVERTED = DASHBOARD_PALETTE[2]; // indigo
-const COLOR_NOTCONV = DASHBOARD_PALETTE[3]; // amber
+// Strict two-color binary: indigo for the positive outcome, red for the rest.
+// "Not converted" and "No answer" both ride the destructive red so the chart
+// reads as good-vs-bad at a glance; "No answer" sits at full strength while
+// "Not converted" steps down in opacity to keep them distinguishable.
+const COLOR_CONVERTED = "var(--accent)";
+const COLOR_NOTCONV = "var(--destructive)";
 const COLOR_NOANS = "var(--destructive)";
-const COLOR_REVENUE = DASHBOARD_PALETTE[0]; // teal
+const COLOR_REVENUE = "var(--accent)";
 
 interface HourlyDistributionProps {
   calls: Call[];
@@ -152,8 +155,8 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
             </button>
           ))}
         </div>
-        <div className="flex-1 text-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
-          Calls by: {grain === "H" ? "hour" : grain === "D" ? "day" : "month"}
+        <div className="flex-1 text-center text-xs text-muted-foreground">
+          Calls by {grain === "H" ? "hour" : grain === "D" ? "day" : "month"}
         </div>
       </CardHeader>
       <CardContent>
@@ -226,6 +229,7 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 dataKey="notConverted"
                 stackId="calls"
                 fill={COLOR_NOTCONV}
+                fillOpacity={0.55}
                 radius={[0, 0, 0, 0]}
               />
               <Bar

@@ -4,129 +4,140 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =========================================================
-   Vortyx — Featurebase-inspired dark palette
-   Near-black canvas (#050608) + blue-grey neutrals + single
-   indigo accent (#7064F2). Inter font, 12 px corner radius,
-   flat surfaces with hairline borders (#2b3040).
+   Vortyx — Calm indigo on slate.
+   Single brand accent (indigo #5B6FE6) over cool-slate neutrals.
+   Designed for long reading sessions: low-saturation surfaces,
+   well-spaced contrast steps, semantic colors reserved for signal.
+   Both modes share the same hue family so the brand feels coherent
+   on either canvas.
    ========================================================= */
 :root {
-  /* Light-mode surfaces. Indigo accent (#7064f2) matches the dark mode. */
+  /* Light mode — bright white canvas, paper-thin slate cards.
+     Eye-comfort target: low chroma on surfaces, accent only on
+     interactive / important elements. */
   --background: hsl(0 0% 100%);
-  --foreground: hsl(228 30% 8%);                             /* near-black w/ blue tint */
+  --foreground: hsl(222 20% 11%);                            /* near-black slate */
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(228 30% 8%);
+  --card-foreground: hsl(222 20% 11%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(228 30% 8%);
+  --popover-foreground: hsl(222 20% 11%);
 
-  --primary: hsl(228 30% 12%);
+  --primary: hsl(222 20% 14%);
   --primary-foreground: hsl(0 0% 100%);
 
-  --secondary: hsl(228 20% 96%);
-  --secondary-foreground: hsl(228 30% 12%);
-  --muted: hsl(228 20% 96%);
-  --muted-foreground: hsl(228 14% 45%);
+  --secondary: hsl(220 14% 96%);                             /* faintest slate fill */
+  --secondary-foreground: hsl(222 20% 14%);
+  --muted: hsl(220 14% 96%);
+  --muted-foreground: hsl(220 9% 46%);                       /* WCAG-comfortable secondary text */
 
-  /* Featurebase indigo */
-  --accent: hsl(244 84% 67%);                                /* #7064f2 */
+  /* Indigo — the single brand accent */
+  --accent: hsl(231 70% 58%);                                /* #5266E0 */
   --accent-foreground: hsl(0 0% 100%);
 
-  --destructive: hsl(0 75% 55%);
+  /* Signal colors — desaturated for comfort */
+  --destructive: hsl(0 72% 51%);
   --destructive-foreground: hsl(0 0% 100%);
   --success: hsl(160 70% 38%);
   --warning: hsl(38 92% 50%);
 
-  --border: hsl(228 16% 90%);
-  --input: hsl(228 20% 96%);
-  --ring: hsl(244 84% 67%);
+  --border: hsl(220 13% 91%);
+  --input: hsl(220 14% 96%);
+  --ring: hsl(231 70% 58%);
 
-  --chart-1: hsl(244 84% 67%);                               /* indigo brand */
-  --chart-2: hsl(200 90% 55%);                               /* cyan */
-  --chart-3: hsl(280 70% 60%);                               /* violet */
-  --chart-4: hsl(160 70% 45%);                               /* green */
-  --chart-5: hsl(38 92% 55%);                                /* amber */
+  /* Chart palette — five distinct hues at similar luminance so no
+     series visually dominates. Indigo leads, supporting hues are
+     all calm/desaturated relative to typical Tailwind defaults. */
+  --chart-1: hsl(231 70% 58%);                               /* indigo brand */
+  --chart-2: hsl(174 60% 46%);                               /* teal */
+  --chart-3: hsl(38 92% 56%);                                /* amber */
+  --chart-4: hsl(340 70% 58%);                               /* rose */
+  --chart-5: hsl(160 60% 45%);                               /* emerald */
 
-  --radius: 0.75rem;                                         /* 12 px — Featurebase canon */
+  --radius: 0.75rem;
 
-  --sidebar: hsl(228 20% 97%);
-  --sidebar-foreground: hsl(228 30% 12%);
-  --sidebar-primary: hsl(244 84% 67%);
+  --sidebar: hsl(220 14% 98%);
+  --sidebar-foreground: hsl(222 20% 14%);
+  --sidebar-primary: hsl(231 70% 58%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(228 20% 93%);
-  --sidebar-accent-foreground: hsl(228 30% 12%);
-  --sidebar-border: hsl(228 16% 90%);
-  --sidebar-ring: hsl(244 84% 67%);
+  --sidebar-accent: hsl(220 14% 93%);
+  --sidebar-accent-foreground: hsl(222 20% 14%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(231 70% 58%);
 
-  --grid-line: hsl(228 16% 93%);
-  --scrollbar-thumb: hsl(228 12% 80%);
-  --scrollbar-thumb-hover: hsl(228 12% 65%);
+  --grid-line: hsl(220 14% 93%);
+  --scrollbar-thumb: hsl(220 13% 80%);
+  --scrollbar-thumb-hover: hsl(220 9% 60%);
 
-  /* Brand stops (now indigo). */
-  --vortyx-teal: #7064f2;
-  --vortyx-cyan: #5048e5;
-  --vortyx-deep: #32358b;
-  --vortyx-bright: #9182f8;
-  --vortyx-ultra: #d2c8fe;
-  --vortyx-glow: rgba(112, 100, 242, 0.18);
-  --vortyx-particle: rgba(112, 100, 242, 0.55);
+  /* Brand ramp — single-hue indigo (deep → bright).
+     Legacy variable names retained so existing consumers keep working. */
+  --vortyx-teal: #5266E0;     /* indigo (legacy slot — name kept for compat) */
+  --vortyx-cyan: #818CF8;     /* lighter indigo (was cyan) */
+  --vortyx-deep: #3A4BC4;     /* deep indigo */
+  --vortyx-bright: #818CF8;   /* bright indigo */
+  --vortyx-ultra: #C7D2FE;    /* near-white indigo */
+  --vortyx-glow: rgba(82, 102, 224, 0.16);
+  --vortyx-particle: rgba(82, 102, 224, 0.45);
 }
 
 .dark {
-  /* Featurebase-inspired palette: near-black canvas, blue-grey neutrals,
-     single indigo accent (#7064f2). Flat surfaces, hairline borders. */
-  --background: hsl(225 22% 3%);                             /* #050608 */
-  --foreground: hsl(228 22% 95%);                            /* #f8f9fc */
-  --card: hsl(227 23% 11%);                                  /* #151822 */
-  --card-foreground: hsl(228 22% 95%);
-  --popover: hsl(226 22% 10%);                               /* #13161f */
-  --popover-foreground: hsl(228 22% 95%);
+  /* Dark mode — deep slate canvas (not pure black, gentler on eyes),
+     slightly lighter cards, slate borders. Brand stays the same indigo
+     hue but lifts in luminance so it pops on dark backgrounds. */
+  --background: hsl(222 24% 7%);                             /* #0E1219 */
+  --foreground: hsl(220 14% 96%);                            /* #F1F2F5 */
+  --card: hsl(222 22% 10%);                                  /* #14171F */
+  --card-foreground: hsl(220 14% 96%);
+  --popover: hsl(222 22% 11%);                               /* #161A23 */
+  --popover-foreground: hsl(220 14% 96%);
 
-  --primary: hsl(228 22% 95%);
-  --primary-foreground: hsl(225 22% 3%);
+  --primary: hsl(220 14% 96%);
+  --primary-foreground: hsl(222 24% 7%);
 
-  --secondary: hsl(228 19% 18%);                             /* #242837 */
-  --secondary-foreground: hsl(228 22% 90%);
-  --muted: hsl(228 19% 14%);
-  --muted-foreground: hsl(228 16% 47%);                      /* #5d6890 */
+  --secondary: hsl(222 18% 16%);                             /* elevated surface */
+  --secondary-foreground: hsl(220 14% 92%);
+  --muted: hsl(222 18% 14%);
+  --muted-foreground: hsl(220 10% 64%);                      /* readable secondary text */
 
-  /* Featurebase indigo. */
-  --accent: hsl(244 84% 67%);                                /* #7064f2 */
+  /* Indigo accent — slightly brighter than light mode to lift off dark */
+  --accent: hsl(231 80% 66%);                                /* #6B7EE9 */
   --accent-foreground: hsl(0 0% 100%);
 
-  --destructive: hsl(0 75% 60%);
+  --destructive: hsl(0 72% 60%);
   --destructive-foreground: hsl(0 0% 100%);
-  --success: hsl(160 80% 45%);
+  --success: hsl(160 65% 50%);
   --warning: hsl(38 92% 60%);
 
-  --border: hsl(225 19% 21%);                                /* #2b3040 — hairline */
-  --input: hsl(228 19% 18%);
-  --ring: hsl(244 84% 67%);
+  --border: hsl(222 16% 20%);                                /* soft slate hairline */
+  --input: hsl(222 18% 16%);
+  --ring: hsl(231 80% 66%);
 
-  --chart-1: hsl(244 84% 67%);                               /* indigo — primary */
-  --chart-2: hsl(190 95% 55%);                               /* cyan */
-  --chart-3: hsl(280 80% 70%);                               /* violet */
-  --chart-4: hsl(160 80% 45%);                               /* green */
-  --chart-5: hsl(38 92% 60%);                                /* amber */
+  /* Chart palette — same hues, lifted in luminance for dark canvas */
+  --chart-1: hsl(231 80% 66%);                               /* indigo brand */
+  --chart-2: hsl(174 60% 56%);                               /* teal */
+  --chart-3: hsl(38 92% 62%);                                /* amber */
+  --chart-4: hsl(340 75% 68%);                               /* rose */
+  --chart-5: hsl(160 60% 55%);                               /* emerald */
 
-  --sidebar: hsl(225 22% 4%);
-  --sidebar-foreground: hsl(228 22% 90%);
-  --sidebar-primary: hsl(244 84% 67%);
+  --sidebar: hsl(222 24% 6%);                                /* slightly deeper than canvas */
+  --sidebar-foreground: hsl(220 14% 92%);
+  --sidebar-primary: hsl(231 80% 66%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(227 23% 11%);
-  --sidebar-accent-foreground: hsl(228 22% 95%);
-  --sidebar-border: hsl(225 19% 18%);
-  --sidebar-ring: hsl(244 84% 67%);
+  --sidebar-accent: hsl(222 22% 12%);
+  --sidebar-accent-foreground: hsl(220 14% 96%);
+  --sidebar-border: hsl(222 16% 18%);
+  --sidebar-ring: hsl(231 80% 66%);
 
-  --grid-line: hsl(228 19% 14%);
-  --scrollbar-thumb: hsl(225 19% 21%);
-  --scrollbar-thumb-hover: hsl(225 19% 28%);
+  --grid-line: hsl(222 16% 16%);
+  --scrollbar-thumb: hsl(222 16% 22%);
+  --scrollbar-thumb-hover: hsl(222 16% 32%);
 
-  --vortyx-teal: #7064f2;
-  --vortyx-cyan: #5048e5;
-  --vortyx-bright: #9182f8;
-  --vortyx-deep: #32358b;
-  --vortyx-ultra: #d2c8fe;
-  --vortyx-glow: rgba(112, 100, 242, 0.28);
-  --vortyx-particle: rgba(112, 100, 242, 0.55);
+  --vortyx-teal: #6B7EE9;                                    /* indigo (legacy slot) */
+  --vortyx-cyan: #93A3F5;                                    /* lighter indigo */
+  --vortyx-bright: #93A3F5;
+  --vortyx-deep: #3A4BC4;
+  --vortyx-ultra: #DBE0FB;
+  --vortyx-glow: rgba(107, 126, 233, 0.20);
+  --vortyx-particle: rgba(107, 126, 233, 0.50);
 }
 
 @theme inline {
@@ -206,6 +217,22 @@
 /* =========================================================
    Reusable utilities
    ========================================================= */
+/**
+ * Ambient canvas wash — a single restrained indigo glow at the top-left to
+ * give the canvas a faint sense of depth without competing for attention.
+ * Pair with `!bg-transparent` on the SidebarInset so the body's solid
+ * `--background` shows through underneath. Fixed to viewport.
+ */
+.app-canvas {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(82, 102, 224, 0.05), transparent 70%);
+  background-attachment: fixed;
+}
+.dark .app-canvas {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(107, 126, 233, 0.10), transparent 70%);
+}
+
 /** Premium glassmorphic surface — pair with `bg-card/70`. */
 .glass {
   background: color-mix(in oklab, var(--card) 75%, transparent);

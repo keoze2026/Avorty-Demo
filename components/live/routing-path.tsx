@@ -30,7 +30,7 @@ export function RoutingPath({ call }: { call: Call | null }) {
         meta={call ? call.callerNumber.slice(-7) : "—"}
       />
       {!call ? (
-        <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border/60 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+        <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
           Awaiting in-flight call
         </div>
       ) : (
@@ -68,12 +68,12 @@ export function RoutingPath({ call }: { call: Call | null }) {
               >
                 <span
                   className={cn(
-                    "relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border",
+                    "relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md",
                     isCurrent
-                      ? "border-accent/60 bg-accent/15 text-accent"
+                      ? "bg-accent/15 text-accent"
                       : isDone
-                        ? "border-[oklch(0.74_0.18_155)]/40 bg-[oklch(0.74_0.18_155)]/10 text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]"
-                        : "border-border bg-secondary/50 text-muted-foreground",
+                        ? "bg-[color:var(--success)]/12 text-[color:var(--success)]"
+                        : "bg-secondary/50 text-muted-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -82,27 +82,20 @@ export function RoutingPath({ call }: { call: Call | null }) {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] tracking-[0.2em] text-accent">
-                      {(i + 1).toString().padStart(2, "0")}
-                    </span>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {s.label}
-                    </span>
-                  </div>
+                  <span className="text-[11px] text-muted-foreground">{s.label}</span>
                   <p className="truncate text-sm font-medium">{value}</p>
                 </div>
                 <span
                   className={cn(
-                    "font-mono text-[10px] uppercase tracking-wider",
+                    "text-[11px] font-medium",
                     isCurrent
                       ? "text-accent"
                       : isDone
-                        ? "text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]"
-                        : "text-muted-foreground/50",
+                        ? "text-[color:var(--success)]"
+                        : "text-muted-foreground/60",
                   )}
                 >
-                  {isCurrent ? "active" : isDone ? "ok" : "wait"}
+                  {isCurrent ? "Active" : isDone ? "Done" : "Waiting"}
                 </span>
               </motion.li>
             );

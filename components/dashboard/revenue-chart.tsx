@@ -87,9 +87,10 @@ export function RevenueChart({ calls }: RevenueChartProps = {}) {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
               <defs>
-                <linearGradient id="rev-step-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
+                {/* Fill — single indigo fading to transparent */}
+                <linearGradient id="rev-step-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.40} />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
@@ -122,24 +123,24 @@ export function RevenueChart({ calls }: RevenueChartProps = {}) {
               />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
-                cursor={{ stroke: "var(--chart-1)", strokeOpacity: 0.4, strokeWidth: 1 }}
+                cursor={{ stroke: "var(--accent)", strokeOpacity: 0.4, strokeWidth: 1 }}
                 formatter={(value: number) => [formatCurrency(value), "Revenue"]}
               />
               <Area
                 type="stepAfter"
                 dataKey="revenue"
-                stroke="var(--chart-1)"
-                strokeWidth={2}
-                fill="url(#rev-step-grad)"
+                stroke="var(--accent)"
+                strokeWidth={2.5}
+                fill="url(#rev-step-fill)"
                 dot={{
                   r: 2.5,
-                  stroke: "var(--chart-1)",
+                  stroke: "var(--accent)",
                   strokeWidth: 1.5,
                   fill: "var(--card)",
                 }}
                 activeDot={{
                   r: 4,
-                  stroke: "var(--chart-1)",
+                  stroke: "var(--accent)",
                   strokeWidth: 2,
                   fill: "var(--card)",
                 }}

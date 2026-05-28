@@ -31,23 +31,6 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-card">
-      {/* Ambient glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full blur-3xl"
-        style={{ background: "var(--vortyx-glow)" }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-hex-dot opacity-40"
-      />
-
-      {/* Corner crosshairs */}
-      <Crosshair className="left-3 top-3" />
-      <Crosshair className="right-3 top-3" />
-      <Crosshair className="left-3 bottom-3" />
-      <Crosshair className="right-3 bottom-3" />
-
       <div className="relative grid grid-cols-1 lg:grid-cols-12">
         {/* RADAR DISC */}
         <div className="relative flex h-[320px] items-center justify-center border-b border-border/60 p-6 lg:col-span-5 lg:h-auto lg:border-b-0 lg:border-r">
@@ -95,15 +78,13 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
 
             {/* Center display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
-                in-flight
+              <span className="text-xs font-medium uppercase tracking-wider text-accent">
+                In-flight
               </span>
-              <span className="mt-1 font-mono text-6xl font-bold tabular-nums leading-none">
+              <span className="mt-1 text-6xl font-bold tabular-nums leading-none tracking-tight">
                 {Math.round(animated)}
               </span>
-              <span className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                active calls
-              </span>
+              <span className="mt-1 text-xs text-muted-foreground">active calls</span>
             </div>
           </div>
 
@@ -117,21 +98,18 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
         {/* Right side — session stats + featured */}
         <div className="relative flex flex-col gap-4 p-6 lg:col-span-7">
           <header className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-accent">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
                 <Radar className="h-4 w-4" />
               </span>
               <div>
-                <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
-                  Live Radar
-                </h2>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  All routes · all geos
-                </p>
+                <h2 className="text-sm font-semibold">Live Radar</h2>
+                <p className="text-xs text-muted-foreground">All routes · all geos</p>
               </div>
             </div>
-            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              session · {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            <span className="text-xs text-muted-foreground">
+              Session ·{" "}
+              {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           </header>
 
@@ -146,17 +124,15 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
           {/* Featured call */}
           <div className="rounded-xl border border-border bg-secondary/30 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
-                ▣ FEATURED · longest active
-              </span>
-              <span className="font-mono text-[10px] text-muted-foreground">
+              <span className="text-xs font-medium text-accent">Featured · longest active</span>
+              <span className="font-mono text-[11px] text-muted-foreground">
                 {featured ? featured.id.slice(-6).toUpperCase() : "—"}
               </span>
             </div>
             {featured ? (
               <LiveCallCard call={featured} isLive={inFlight.includes(featured)} />
             ) : (
-              <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-border/60 font-mono text-[11px] text-muted-foreground">
+              <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
                 Awaiting first call…
               </div>
             )}
@@ -164,20 +140,6 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
         </div>
       </div>
     </section>
-  );
-}
-
-function Crosshair({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "pointer-events-none absolute h-2.5 w-2.5",
-        "before:absolute before:left-1/2 before:top-0 before:h-full before:w-px before:-translate-x-1/2 before:bg-accent/55",
-        "after:absolute after:left-0 after:top-1/2 after:h-px after:w-full after:-translate-y-1/2 after:bg-accent/55",
-        className,
-      )}
-    />
   );
 }
 
@@ -210,9 +172,9 @@ function Telemetry({ icon: Icon, label, value, tone, money = false }: TelemetryP
     : formatNumber(Math.round(animated));
 
   const tones: Record<TelemetryProps["tone"], string> = {
-    accent: "text-accent border-accent/30",
-    emerald: "text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)] border-[oklch(0.6_0.18_155)]/30",
-    amber: "text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)] border-[oklch(0.6_0.16_75)]/30",
+    accent: "text-accent bg-accent/12",
+    emerald: "text-[color:var(--success)] bg-[color:var(--success)]/12",
+    amber: "text-[color:var(--warning)] bg-[color:var(--warning)]/12",
   };
 
   return (
@@ -222,14 +184,12 @@ function Telemetry({ icon: Icon, label, value, tone, money = false }: TelemetryP
       className="relative overflow-hidden rounded-lg border border-border bg-card p-3"
     >
       <div className="flex items-center justify-between">
-        <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-md border", tones[tone])}>
-          <Icon className="h-3 w-3" />
+        <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-md", tones[tone])}>
+          <Icon className="h-3.5 w-3.5" />
         </span>
-        <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
+        <span className="text-[11px] text-muted-foreground">{label}</span>
       </div>
-      <div className="mt-2 font-mono text-xl font-bold tabular-nums">{display}</div>
+      <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight">{display}</div>
     </motion.div>
   );
 }

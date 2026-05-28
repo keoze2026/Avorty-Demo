@@ -40,10 +40,11 @@ export const ROUTES = {
   settings: "/settings",
 } as const;
 
-/** Brand color stops (mirrors CSS vars; use for inline JS gradients). */
+/** Brand color stops — single-hue indigo ramp.
+ *  Mirrors CSS vars; use for inline JS gradients. */
 export const VORTYX_COLORS = {
-  deep: "#1656d6",
-  mid: "#3bb6ff",
-  bright: "#7de1ff",
-  ultra: "#bff2ff",
+  deep: "#3A4BC4",
+  mid: "#5266E0",
+  bright: "#818CF8",
+  ultra: "#C7D2FE",
 } as const;

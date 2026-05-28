@@ -67,7 +67,7 @@ export default function MarketplacePage() {
         description="The Vortyx trading floor — real-time bidding on inbound calls."
         actions={
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground backdrop-blur sm:inline-flex">
+            <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur sm:inline-flex">
               <Activity className="h-3 w-3 text-accent" />
               {formatCompact(bidCount)} bids · session
             </span>
@@ -102,7 +102,7 @@ export default function MarketplacePage() {
         <FloorStat
           label="Hot listings"
           value={formatCompact(stats.hot)}
-          accent="text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)]"
+          accent="text-[color:var(--warning)]"
         />
         <FloorStat
           label="Tape volume (session)"
@@ -137,9 +137,9 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      <p className="-mt-2 flex items-center justify-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/70">
+      <p className="-mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70">
         <Gavel className="h-3 w-3" />
-        Vortyx trading floor — simulated bids stream every ~1.2s
+        Simulated bids stream every ~1.2s
       </p>
     </>
   );
@@ -156,8 +156,8 @@ function FloorStat({
 }) {
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4">
-      <div className={`font-mono text-2xl font-semibold tabular-nums ${accent}`}>{value}</div>
-      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`text-2xl font-bold tabular-nums tracking-tight ${accent}`}>{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{label}</div>
     </div>
   );
 }

@@ -46,10 +46,10 @@ export function MarketplaceTicker() {
       )}
     >
       {/* Live label */}
-      <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center gap-1.5 bg-gradient-to-r from-background via-background/95 to-transparent pl-3 pr-6 text-[10px] font-mono uppercase tracking-wider">
+      <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center gap-1.5 bg-gradient-to-r from-background via-background/95 to-transparent pl-3 pr-6 text-xs font-medium">
         <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--vortyx-teal)] opacity-70" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--vortyx-teal)]" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
         </span>
         <span className="text-foreground/80">Live tape</span>
       </div>
@@ -68,13 +68,13 @@ export function MarketplaceTicker() {
           return (
             <span
               key={`${b.id}-${i}`}
-              className="inline-flex items-center gap-1.5 text-[12px] font-mono"
+              className="inline-flex items-center gap-1.5 text-[12px]"
             >
               {palette && <span className={cn("inline-block h-1.5 w-1.5 rounded-full", palette.dot)} />}
               <span className={b.mine ? "text-accent font-semibold" : "text-muted-foreground"}>
                 {b.buyerName}
               </span>
-              <span className="text-foreground">${b.amount.toFixed(2)}</span>
+              <span className="font-medium tabular-nums text-foreground">${b.amount.toFixed(2)}</span>
               {v && <span className="text-muted-foreground/70">{v}</span>}
             </span>
           );

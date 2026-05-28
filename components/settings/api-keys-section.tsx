@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 
 const SCOPE_TONE: Record<ApiScope, string> = {
   read: "border-accent/30 bg-accent/10 text-accent",
-  write: "border-[oklch(0.6_0.16_75)]/40 bg-[oklch(0.6_0.16_75)]/10 text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)]",
+  write: "border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 text-[color:var(--warning)]",
   admin: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 

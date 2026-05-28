@@ -73,7 +73,7 @@ export function SignupForm() {
           required
           minLength={8}
         />
-        <p className="text-[10px] text-muted-foreground">Minimum 8 characters.</p>
+        <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
       </div>
 
       <Button type="submit" className="w-full" disabled={pending}>

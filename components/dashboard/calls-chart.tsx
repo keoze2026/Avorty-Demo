@@ -16,7 +16,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { bucketDaily, bucketHourly } from "@/lib/dashboard-buckets";
-import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { LAST_14_DAYS, TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
@@ -29,8 +28,11 @@ const RANGES: Array<{ id: Range; label: string }> = [
   { id: "14d", label: "14 days" },
 ];
 
-const PRIMARY = DASHBOARD_PALETTE[1]; // azure — base
-const PEAK = DASHBOARD_PALETTE[0]; // teal — emphasis for the peak bar
+/* Bars use a single indigo brand color with a soft top→bottom fade.
+   The peak bar shifts to the bright variant so it stands out without
+   introducing a second hue. */
+const BAR_COLOR = "var(--accent)";
+const PEAK_COLOR = "#818CF8"; // bright indigo (matches --vortyx-bright)
 
 interface CallsChartProps {
   /** When provided, the chart buckets from these calls instead of TODAY_HOURLY/LAST_14_DAYS. */
@@ -100,15 +102,15 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
               barCategoryGap={range === "24h" ? "18%" : "26%"}
             >
               <defs>
+                {/* Standard bar — single indigo with a soft top→bottom fade */}
                 <linearGradient id="calls-bar-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={PRIMARY} stopOpacity={0.95} />
-                  <stop offset="80%" stopColor={PRIMARY} stopOpacity={0.18} />
-                  <stop offset="100%" stopColor={PRIMARY} stopOpacity={0.05} />
+                  <stop offset="0%" stopColor={BAR_COLOR} stopOpacity={0.95} />
+                  <stop offset="100%" stopColor={BAR_COLOR} stopOpacity={0.55} />
                 </linearGradient>
+                {/* Peak bar — brighter indigo variant for emphasis */}
                 <linearGradient id="calls-peak-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={PEAK} stopOpacity={1} />
-                  <stop offset="80%" stopColor={PEAK} stopOpacity={0.22} />
-                  <stop offset="100%" stopColor={PEAK} stopOpacity={0.05} />
+                  <stop offset="0%" stopColor={PEAK_COLOR} stopOpacity={1} />
+                  <stop offset="100%" stopColor={PEAK_COLOR} stopOpacity={0.7} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />

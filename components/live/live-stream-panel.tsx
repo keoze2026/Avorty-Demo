@@ -28,9 +28,9 @@ export function LiveStreamPanel({ inFlight, history }: LiveStreamPanelProps) {
           title="In-flight"
           meta={`${inFlight.length} active`}
           action={
-            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-accent">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-count-tick" />
-              streaming
+              Streaming
             </span>
           }
         />
@@ -38,9 +38,7 @@ export function LiveStreamPanel({ inFlight, history }: LiveStreamPanelProps) {
           {inFlight.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 py-10 text-center text-muted-foreground">
               <Inbox className="h-5 w-5" />
-              <p className="font-mono text-[11px] uppercase tracking-wider">
-                Waiting for the next call…
-              </p>
+              <p className="text-xs">Waiting for the next call…</p>
             </div>
           )}
           <div className="space-y-2">

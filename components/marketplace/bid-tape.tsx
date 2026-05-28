@@ -33,10 +33,10 @@ export function BidTape() {
           <Activity className="h-4 w-4 text-accent" />
           Bid tape
         </CardTitle>
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--vortyx-teal)] opacity-70" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--vortyx-teal)]" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
           </span>
           {ticker.length} live
         </span>
@@ -51,11 +51,11 @@ export function BidTape() {
                 <motion.div
                   key={b.id}
                   layout
-                  initial={{ opacity: 0, y: -8, backgroundColor: "rgba(0, 230, 184, 0.10)" }}
+                  initial={{ opacity: 0, y: -8, backgroundColor: "rgba(82, 102, 224, 0.12)" }}
                   animate={{
                     opacity: 1,
                     y: 0,
-                    backgroundColor: i === 0 ? "rgba(0, 230, 184, 0.05)" : "rgba(0, 0, 0, 0)",
+                    backgroundColor: i === 0 ? "rgba(82, 102, 224, 0.06)" : "rgba(0, 0, 0, 0)",
                   }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.35 }}

@@ -5,7 +5,6 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
-import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
@@ -16,8 +15,12 @@ interface VerticalDonutProps {
   calls?: Call[];
 }
 
-const SUCCESS_COLOR = DASHBOARD_PALETTE[0]; // teal
-const DROP_COLOR = "var(--destructive)"; // red
+// Completed slice rides a soft single-hue indigo gradient (deep → bright).
+// Drop slice uses the destructive red.
+const SUCCESS_FILL = "url(#donut-success-grad)";
+const DROP_FILL = "var(--destructive)";
+const SUCCESS_SWATCH = "var(--accent)";
+const DROP_SWATCH = "var(--destructive)";
 
 export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
   const { total, completed, dropped } = useMemo(() => {
@@ -32,8 +35,8 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
   }, [calls]);
 
   const slices = [
-    { key: "completed", label: "Completed", count: completed, color: SUCCESS_COLOR },
-    { key: "dropped", label: "Drop calls", count: dropped, color: DROP_COLOR },
+    { key: "completed", label: "Completed", count: completed, fill: SUCCESS_FILL },
+    { key: "dropped", label: "Not connected", count: dropped, fill: DROP_FILL },
   ].filter((s) => s.count > 0);
 
   return (
@@ -42,6 +45,14 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
         <div className="relative h-44 w-44">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              <defs>
+                {/* Soft single-hue indigo gradient across the completed arc */}
+                <linearGradient id="donut-success-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#3A4BC4" />
+                  <stop offset="50%" stopColor="#5266E0" />
+                  <stop offset="100%" stopColor="#818CF8" />
+                </linearGradient>
+              </defs>
               <Pie
                 data={slices}
                 dataKey="count"
@@ -57,7 +68,7 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
                 animationDuration={500}
               >
                 {slices.map((s) => (
-                  <Cell key={s.key} fill={s.color} />
+                  <Cell key={s.key} fill={s.fill} />
                 ))}
               </Pie>
               <Tooltip
@@ -82,20 +93,24 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
           </div>
         </div>
 
-        {/* Legend — Total calls and Drop calls inline; drop in red */}
+        {/* Legend — gradient swatch for completed, solid for drop */}
         <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
           <li className="inline-flex items-center gap-2">
             <span
               aria-hidden
               className="h-2.5 w-2.5 rounded-sm"
-              style={{ background: SUCCESS_COLOR }}
+              style={{ background: SUCCESS_SWATCH }}
             />
             <span>Total calls</span>
             <span className="font-medium tabular-nums">{formatNumber(total)}</span>
           </li>
           <li className="inline-flex items-center gap-2 text-destructive">
-            <span aria-hidden className="h-2.5 w-2.5 rounded-sm bg-destructive" />
-            <span>Drop calls</span>
+            <span
+              aria-hidden
+              className="h-2.5 w-2.5 rounded-sm"
+              style={{ background: DROP_SWATCH }}
+            />
+            <span>Not connected</span>
             <span className="font-medium tabular-nums">{formatNumber(dropped)}</span>
           </li>
         </ul>

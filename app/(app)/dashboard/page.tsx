@@ -5,7 +5,6 @@ import { Download } from "lucide-react";
 
 import { CallsChart } from "@/components/dashboard/calls-chart";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
-import { KpiRow } from "@/components/dashboard/kpi-row";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
 import { VerticalDonut } from "@/components/dashboard/vertical-donut";
@@ -21,7 +20,6 @@ import {
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
-import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 
 const ALL_DEST = "all";
 
@@ -52,33 +50,6 @@ export default function DashboardPage() {
     if (allSelected) return undefined;
     return MOCK_CALLS.filter((c) => c.destinationNumber === destinationTfn);
   }, [destinationTfn, allSelected]);
-
-  const kpis = useMemo(() => {
-    if (!scopedCalls) {
-      const callsToday = TODAY_HOURLY.reduce((s, p) => s + p.calls, 0);
-      const revenueToday = TODAY_HOURLY.reduce((s, p) => s + p.revenue, 0);
-      const conversions = TODAY_HOURLY.reduce((s, p) => s + p.conversions, 0);
-      const conversionRate = conversions / Math.max(callsToday, 1);
-      const completedCalls = MOCK_CALLS.filter((c) => c.status === "completed");
-      const avgDurationSec =
-        completedCalls.reduce((s, c) => s + c.durationSec, 0) /
-        Math.max(completedCalls.length, 1);
-      return { callsToday, revenueToday, conversionRate, avgDurationSec };
-    }
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const todays = scopedCalls.filter((c) => c.startedAt >= startOfToday.getTime());
-    const completed = scopedCalls.filter((c) => c.status === "completed");
-    const callsToday = todays.length;
-    const revenueToday = todays.reduce((s, c) => s + c.revenue, 0);
-    const conversions = todays.filter((c) => c.status === "completed").length;
-    const conversionRate = conversions / Math.max(callsToday, 1);
-    const avgDurationSec =
-      completed.length > 0
-        ? completed.reduce((s, c) => s + c.durationSec, 0) / completed.length
-        : 0;
-    return { callsToday, revenueToday, conversionRate, avgDurationSec };
-  }, [scopedCalls]);
 
   return (
     <>
@@ -119,13 +90,12 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Row 1 — Hourly CALLS chart (primary), KPIs + donut stacked on the right */}
+      {/* Row 1 — Hourly CALLS chart (primary) + donut on the right */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <CallsChart calls={scopedCalls} />
         </div>
         <div className="flex min-w-0 flex-col gap-4">
-          <KpiRow {...kpis} />
           <VerticalDonut calls={scopedCalls} />
         </div>
       </div>

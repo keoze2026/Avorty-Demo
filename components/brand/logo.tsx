@@ -1,7 +1,7 @@
 /**
  * Vortyx logo — vector mark (inline SVG).
- * Uses an indigo gradient (#7064F2 → #5048E5 → #32358B) that matches the
- * Featurebase-aligned brand palette while keeping the vortex feel.
+ * Indigo gradient (#818CF8 → #5266E0 → #3A4BC4) matching the brand palette.
+ * Single-hue ramp gives the vortex depth without competing with other colors.
  */
 
 import { cn } from "@/lib/utils";
@@ -29,14 +29,14 @@ export function Logo({ className, animated = false, uid = "root" }: LogoProps) {
     >
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7064F2" />
-          <stop offset="55%" stopColor="#5048E5" />
-          <stop offset="100%" stopColor="#32358B" />
+          <stop offset="0%" stopColor="#818CF8" />
+          <stop offset="55%" stopColor="#5266E0" />
+          <stop offset="100%" stopColor="#3A4BC4" />
         </linearGradient>
         <radialGradient id={coreId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#F4F0FF" stopOpacity="1" />
-          <stop offset="60%" stopColor="#9182F8" stopOpacity="0.65" />
-          <stop offset="100%" stopColor="#7064F2" stopOpacity="0" />
+          <stop offset="0%" stopColor="#EEF1FE" stopOpacity="1" />
+          <stop offset="60%" stopColor="#818CF8" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#5266E0" stopOpacity="0" />
         </radialGradient>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="0.9" result="b" />
@@ -73,7 +73,7 @@ export function Logo({ className, animated = false, uid = "root" }: LogoProps) {
         opacity="0.9"
       />
 
-      <circle cx="32" cy="32" r="1.6" fill="#F4F0FF" filter={`url(#${glowId})`} />
+      <circle cx="32" cy="32" r="1.6" fill="#EEF1FE" filter={`url(#${glowId})`} />
     </svg>
   );
 }

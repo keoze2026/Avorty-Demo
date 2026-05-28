@@ -2,9 +2,8 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
-import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
 
@@ -17,6 +16,8 @@ interface Slice {
   label: string;
   count: number;
   color: string;
+  /** Optional alpha used to keep the two red slices distinguishable. */
+  alpha?: number;
 }
 
 function classify(c: Call): Slice["key"] {
@@ -29,9 +30,12 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
   const counts = { converted: 0, notConverted: 0, noAnswer: 0 };
   for (const c of calls) counts[classify(c)] += 1;
 
+  // Strict 2-color: indigo for the positive outcome, red for the rest.
+  // Not-converted rides red at reduced opacity so it stays distinguishable
+  // from no-answer without breaking the binary.
   const slices: Slice[] = [
-    { key: "converted", label: "Converted", count: counts.converted, color: DASHBOARD_PALETTE[2] },
-    { key: "notConverted", label: "Not converted", count: counts.notConverted, color: DASHBOARD_PALETTE[3] },
+    { key: "converted", label: "Converted", count: counts.converted, color: "var(--accent)" },
+    { key: "notConverted", label: "Not converted", count: counts.notConverted, color: "var(--destructive)", alpha: 0.55 },
     { key: "noAnswer", label: "No answer", count: counts.noAnswer, color: "var(--destructive)" },
   ];
   const total = slices.reduce((s, x) => s + x.count, 0);
@@ -57,7 +61,7 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
                 animationDuration={500}
               >
                 {slices.map((s) => (
-                  <Cell key={s.key} fill={s.color} />
+                  <Cell key={s.key} fill={s.color} fillOpacity={s.alpha ?? 1} />
                 ))}
               </Pie>
               <Tooltip
@@ -78,7 +82,7 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
               <span
                 aria-hidden
                 className="h-2 w-2 rounded-sm"
-                style={{ background: s.color }}
+                style={{ background: s.color, opacity: s.alpha ?? 1 }}
               />
               <span className="text-muted-foreground">{s.label}</span>
             </li>

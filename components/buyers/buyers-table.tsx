@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreVertical, Pause, Play } from "lucide-react";
+import { MoreVertical, Pause, Pencil, Play } from "lucide-react";
 
 import { PartnerStatusBadge } from "@/components/network/partner-status-badge";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,10 @@ interface BuyersTableProps {
   buyers: Buyer[];
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
-export function BuyersTable({ buyers, onToggle, onArchive }: BuyersTableProps) {
+export function BuyersTable({ buyers, onToggle, onArchive, onEdit }: BuyersTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <Table>
@@ -100,6 +101,9 @@ export function BuyersTable({ buyers, onToggle, onArchive }: BuyersTableProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => onEdit(b.id)}>
+                        <Pencil className="h-4 w-4" /> Edit
+                      </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onToggle(b.id)}>
                         {isActive ? (
                           <>

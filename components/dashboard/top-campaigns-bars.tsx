@@ -18,7 +18,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { ROUTES } from "@/lib/constants";
-import { DASHBOARD_PALETTE } from "@/lib/dashboard-palette";
 import { formatCurrency } from "@/lib/format";
 import { topCampaignsByRevenue } from "@/lib/mock/timeseries";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
@@ -29,7 +28,6 @@ interface Row {
   name: string;
   revenue: number;
   vertical: string;
-  fill: string;
 }
 
 interface TopCampaignsBarsProps {
@@ -39,22 +37,6 @@ interface TopCampaignsBarsProps {
 
 export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
   const data = useMemo<Row[]>(() => {
-    // Map vertical → palette slot so the bar color here matches the donut slice.
-    const verticalsByVolume = (() => {
-      const m = new Map<string, number>();
-      for (const c of MOCK_CAMPAIGNS) {
-        m.set(c.vertical, (m.get(c.vertical) ?? 0) + c.callsToday);
-      }
-      return Array.from(m.entries())
-        .filter(([, v]) => v > 0)
-        .sort((a, b) => b[1] - a[1])
-        .map(([name]) => name);
-    })();
-    const colorFor = (vertical: string) => {
-      const idx = verticalsByVolume.indexOf(vertical);
-      return DASHBOARD_PALETTE[(idx >= 0 ? idx : 0) % DASHBOARD_PALETTE.length];
-    };
-
     if (calls) {
       // Re-aggregate revenue per campaign from the filtered call set.
       const campaignById = new Map<string, (typeof MOCK_CAMPAIGNS)[number]>();
@@ -71,7 +53,6 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
             name: camp.name,
             vertical: camp.vertical,
             revenue: 0,
-            fill: colorFor(camp.vertical),
           };
           m.set(camp.id, row);
         }
@@ -88,7 +69,6 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
       name: c.name,
       revenue: c.revenueToday,
       vertical: c.vertical,
-      fill: colorFor(c.vertical),
     }));
   }, [calls]);
 
@@ -139,8 +119,14 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
                 animationDuration={500}
                 background={{ fill: "var(--muted)", radius: 4, opacity: 0.5 }}
               >
-                {data.map((d) => (
-                  <Cell key={d.id} fill={d.fill} />
+                {/* Top bar gets the brand accent at full strength, others fade
+                    slightly so the ranking reads at a glance — single hue only. */}
+                {data.map((d, i) => (
+                  <Cell
+                    key={d.id}
+                    fill="var(--accent)"
+                    fillOpacity={1 - i * 0.10}
+                  />
                 ))}
                 <LabelList
                   dataKey="revenue"

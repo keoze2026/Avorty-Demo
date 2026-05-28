@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreVertical, Pause, Play } from "lucide-react";
+import { MoreVertical, Pause, Pencil, Play } from "lucide-react";
 
 import { PartnerStatusBadge } from "@/components/network/partner-status-badge";
 import { Button } from "@/components/ui/button";
@@ -28,10 +28,12 @@ export function PublishersTable({
   publishers,
   onToggle,
   onArchive,
+  onEdit,
 }: {
   publishers: Publisher[];
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
@@ -86,6 +88,9 @@ export function PublishersTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => onEdit(p.id)}>
+                        <Pencil className="h-4 w-4" /> Edit
+                      </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onToggle(p.id)}>
                         {isActive ? (
                           <>

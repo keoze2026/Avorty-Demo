@@ -63,9 +63,9 @@ export function AnomalyStream() {
         <CardTitle className="flex items-center gap-2 text-base">
           <Bell className="h-4 w-4 text-accent" />
           Anomaly stream
-          <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            <Sigma className="h-2.5 w-2.5" />
-            last 24h · {MOCK_ANOMALIES.length} detected
+          <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-muted-foreground">
+            <Sigma className="h-3 w-3" />
+            Last 24h · {MOCK_ANOMALIES.length} detected
           </span>
         </CardTitle>
       </CardHeader>
@@ -99,38 +99,38 @@ export function AnomalyStream() {
                 {/* Body */}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={cn("rounded-full border px-1.5 py-0 text-[9px] font-mono uppercase tracking-wider", sev.chip)}>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", sev.chip)}>
                       {sev.label}
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {a.scope.type} · {a.scope.name}
                     </span>
                   </div>
                   <div className="mt-1 text-sm font-medium">{a.title}</div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">{a.body}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{a.body}</p>
                 </div>
 
                 {/* Delta + relative time */}
                 <div className="flex flex-col items-end gap-1">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[11px]",
+                      "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
                       sev.chip,
                     )}
                   >
                     <Arrow className="h-3 w-3" strokeWidth={3} />
                     {Math.abs(a.delta.pct)}%
                   </span>
-                  <span className="text-[10px] font-mono text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground">
                     {formatRelativeTime(a.detectedAt)}
                   </span>
                   {href && (
                     <Link
                       href={href}
-                      className="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground hover:text-accent"
+                      className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-accent"
                     >
                       Investigate
-                      <ExternalLink className="h-2.5 w-2.5" />
+                      <ExternalLink className="h-3 w-3" />
                     </Link>
                   )}
                 </div>

@@ -17,7 +17,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import {
@@ -42,42 +41,33 @@ function isVisibleForRole(item: NavItem, role: Role | undefined) {
 export function AppSidebar() {
   const pathname = usePathname();
   const role = useAuthStore((s) => s.user?.role);
-  const { toggleSidebar, state } = useSidebar();
+  const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" className="!bg-sidebar">
       {/* Header — brand lockup */}
       <SidebarHeader className="border-b border-sidebar-border p-0">
-        <BrandHeader collapsed={collapsed} onCollapse={toggleSidebar} />
+        <BrandHeader collapsed={collapsed} />
       </SidebarHeader>
 
-      {/* Content — numbered group sections */}
-      <SidebarContent className="gap-0 px-2 py-3 group-data-[collapsible=icon]:px-1">
-        {NAV_GROUPS.map((group, gi) => {
+      {/* Content — clean grouped sections without numeric prefixes */}
+      <SidebarContent className="gap-0 px-3 py-4 group-data-[collapsible=icon]:px-1">
+        {NAV_GROUPS.map((group) => {
           const visible = group.items.filter((i) => isVisibleForRole(i, role));
           if (visible.length === 0) return null;
-          const idx = gi.toString().padStart(2, "0");
           return (
-            <section key={group.label} className="mb-1">
-              {/* Group label */}
+            <section key={group.label} className="mb-3">
+              {/* Group label — subtle, just the name */}
               <div
                 className={cn(
-                  "mb-1 flex items-center gap-2 px-2 pt-3 pb-1.5",
+                  "mb-2 px-2 pt-2",
                   "group-data-[collapsible=icon]:hidden",
                 )}
               >
-                <span className="font-mono text-[10px] font-semibold tracking-[0.2em] text-accent">
-                  {idx}
-                </span>
-                <span aria-hidden className="h-2.5 w-px bg-sidebar-border" />
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/85">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
                   {group.label}
                 </span>
-                <span
-                  aria-hidden
-                  className="ml-auto h-px flex-1 bg-gradient-to-r from-sidebar-border to-transparent"
-                />
               </div>
 
               {/* Collapsed-mode group separator */}
@@ -90,7 +80,7 @@ export function AppSidebar() {
               />
 
               {/* Items */}
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {visible.map((item) => {
                   const active =
                     pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -121,68 +111,31 @@ export function AppSidebar() {
 
 /* ─────────────────────────────────────────────────────────────────── */
 
-function BrandHeader({
-  collapsed,
-  onCollapse,
-}: {
-  collapsed: boolean;
-  onCollapse: () => void;
-}) {
+function BrandHeader({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className="relative flex items-center gap-2 overflow-hidden px-3 py-3">
-      {/* Ambient glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full blur-3xl opacity-70"
-        style={{ background: "var(--vortyx-glow)" }}
-      />
-
+    <div className="flex h-16 items-center px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
       <Link
         href="/dashboard"
         aria-label={BRAND.name}
-        className="relative z-10 flex items-center gap-2.5"
+        className="flex min-w-0 items-center gap-2.5"
       >
-        <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-md border border-accent/40 bg-accent/10">
-          <Logo className="h-5 w-5" />
-        </span>
+        <Logo className="h-8 w-8 shrink-0" />
         {!collapsed && (
-          <span className="flex items-baseline gap-1.5">
-            <span
-              className="font-bold tracking-tight text-base"
-              style={{
-                background:
-                  "linear-gradient(120deg, #7064F2 10%, #9182F8 60%, #D2C8FE 100%)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "transparent",
-              }}
-            >
-              {BRAND.name}
-            </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
-              v0.1
-            </span>
+          <span
+            className="truncate text-xl font-bold tracking-tight"
+            style={{
+              background:
+                "linear-gradient(120deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+            }}
+          >
+            {BRAND.name}
           </span>
         )}
       </Link>
-
-      {!collapsed && (
-        <button
-          type="button"
-          onClick={onCollapse}
-          aria-label="Collapse sidebar"
-          className="relative z-10 ml-auto inline-flex h-7 w-7 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:border-accent/40 hover:bg-sidebar-accent hover:text-foreground"
-        >
-          <ChevronsLeft className="h-3.5 w-3.5" />
-        </button>
-      )}
-
-      {/* Bottom accent rule */}
-      <div
-        aria-hidden
-        className="absolute inset-x-3 bottom-0 h-px edge-rule-top"
-      />
     </div>
   );
 }
@@ -206,42 +159,21 @@ function SidebarItem({
         href={item.href}
         title={collapsed ? item.label : undefined}
         className={cn(
-          "group/item relative flex h-9 items-center gap-2.5 rounded-md px-2 transition-all",
-          "group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+          "group/item relative flex h-11 items-center gap-3 rounded-lg px-3 transition-all",
+          "group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
           active
-            ? "bg-sidebar-accent/80 text-foreground"
-            : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+            ? "bg-accent text-accent-foreground shadow-[0_4px_16px_rgba(82,102,224,0.30)]"
+            : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
         )}
       >
-        {/* Active accent rail */}
-        {active && (
-          <span
-            aria-hidden
-            className={cn(
-              "absolute inset-y-1 left-0 w-[2px] rounded-full bg-accent shadow-[0_0_8px_var(--accent)]",
-              "group-data-[collapsible=icon]:hidden",
-            )}
-          />
-        )}
-
-        {/* Icon chip */}
-        <span
-          className={cn(
-            "relative inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors",
-            active
-              ? "border border-accent/45 bg-accent/15 text-accent"
-              : "border border-transparent bg-secondary/30 text-muted-foreground group-hover/item:border-sidebar-border group-hover/item:text-foreground",
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-        </span>
+        {/* Icon */}
+        <Icon className={cn("h-[18px] w-[18px] shrink-0", active ? "" : "opacity-80")} />
 
         {/* Label */}
         <span
           className={cn(
-            "flex-1 truncate text-[13px] font-medium",
+            "flex-1 truncate text-[14px] font-medium",
             "group-data-[collapsible=icon]:hidden",
-            active && "text-foreground",
           )}
         >
           {item.label}
@@ -251,11 +183,13 @@ function SidebarItem({
         {item.badge && (
           <span
             className={cn(
-              "shrink-0 rounded-full border px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.18em]",
+              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
               "group-data-[collapsible=icon]:hidden",
-              item.badge === "Live"
-                ? "border-accent/45 bg-accent/15 text-accent"
-                : "border-[oklch(0.6_0.2_290)]/45 bg-[oklch(0.6_0.2_290)]/10 text-[oklch(0.55_0.2_290)] dark:text-[oklch(0.78_0.2_290)]",
+              active
+                ? "bg-accent-foreground/20 text-accent-foreground"
+                : item.badge === "Live"
+                  ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                  : "bg-accent/15 text-accent",
             )}
           >
             {item.badge === "Live" && (
@@ -264,16 +198,6 @@ function SidebarItem({
             {item.badge}
           </span>
         )}
-
-        {/* Hover bracket — top/right only, subtle */}
-        <span
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute right-1 top-1 h-1.5 w-1.5 border-t border-r border-accent/0 transition-colors",
-            "group-hover/item:border-accent/60",
-            "group-data-[collapsible=icon]:hidden",
-          )}
-        />
       </Link>
     </li>
   );

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
-import { Check, DollarSign, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -58,80 +58,65 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-24 border-t border-border/40 sm:py-24">
+    <section id="pricing" className="border-t border-border/40 py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <div className="flex items-center justify-center gap-2 text-sm text-accent">
-            <DollarSign className="h-4 w-4" />
-            <span className="font-mono uppercase tracking-wider">Pricing</span>
-          </div>
-          <h2 className="mt-4 font-mono text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="text-balance text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             Pay for calls that close, not seats
           </h2>
-          <p className="mt-4 text-muted-foreground">
+          <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
             Volume-based pricing with predictable overage. No per-user nickel-and-diming.
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-5xl gap-8 lg:grid-cols-3">
+        <div className="mx-auto mt-16 grid max-w-5xl gap-4 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
-              className={`relative rounded-2xl border p-8 ${
-                plan.popular
-                  ? "border-accent bg-[#111827] shadow-2xl shadow-accent/10"
-                  : "border-border/60 bg-[#0A0F1C]"
+              transition={{ delay: index * 0.06, duration: 0.4, ease: "easeOut" }}
+              className={`relative rounded-2xl border p-7 ${
+                plan.popular ? "border-accent/50 bg-card" : "border-border/60 bg-card/40"
               }`}
             >
               {plan.popular && (
-                <>
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute -inset-px rounded-2xl"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, var(--vortyx-bright), transparent 40%, var(--vortyx-deep))",
-                      opacity: 0.25,
-                      mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                      WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                      maskComposite: "exclude",
-                      WebkitMaskComposite: "xor",
-                      padding: 1,
-                    }}
-                  />
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-accent-foreground bg-accent shadow-lg shadow-accent/30">
-                      <Sparkles className="h-3 w-3" />
-                      Most popular
-                    </span>
-                  </div>
-                </>
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+                    Most popular
+                  </span>
+                </div>
               )}
 
-              <div className="text-center">
-                <h3 className="font-mono text-lg font-semibold">{plan.name}</h3>
-                <div className="mt-4 flex items-baseline justify-center gap-1">
-                  <span className="font-mono text-4xl font-bold">{plan.price}</span>
-                  {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
+              <div>
+                <h3 className="text-base font-medium text-foreground">{plan.name}</h3>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-medium tracking-tight text-foreground">
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                  )}
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {plan.description}
+                </p>
               </div>
-              <ul className="mt-8 space-y-3">
+
+              <ul className="mt-6 space-y-2.5 border-t border-border/40 pt-6">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm">
+                  <li key={feature} className="flex items-start gap-2.5 text-sm">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                    <span className="text-muted-foreground">{feature}</span>
+                    <span className="text-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
+
               <div className="mt-8">
                 <Button
-                  className={`w-full ${plan.popular ? "" : "bg-secondary text-foreground hover:bg-secondary/80"}`}
-                  variant={plan.popular ? "default" : "secondary"}
+                  className="w-full"
+                  variant={plan.popular ? "default" : "outline"}
                 >
                   {plan.cta}
                 </Button>

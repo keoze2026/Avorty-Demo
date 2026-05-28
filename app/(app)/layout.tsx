@@ -14,7 +14,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <AuthGuard>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="app-canvas !bg-transparent">
           <Topbar />
           <div className="flex-1 overflow-auto">
             {/* @container/main lets children respond to the actual content-area

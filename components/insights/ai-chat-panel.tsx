@@ -90,12 +90,12 @@ export function AiChatPanel() {
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-accent" />
           Vortyx Copilot
-          <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-accent">
-            <span className="h-1 w-1 animate-pulse rounded-full bg-current" />
-            online
+          <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-accent">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+            Online
           </span>
         </CardTitle>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Ask about performance, anomalies, or what to do next.
         </p>
       </CardHeader>
@@ -122,7 +122,7 @@ export function AiChatPanel() {
               type="button"
               onClick={() => ask(s.question)}
               disabled={thinking}
-              className="rounded-full border border-border bg-secondary/30 px-2.5 py-1 text-[10px] text-muted-foreground transition-colors hover:border-accent/40 hover:text-foreground disabled:opacity-50"
+              className="rounded-full border border-border bg-secondary/30 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-accent/40 hover:text-foreground disabled:opacity-50"
             >
               {s.question}
             </button>
@@ -141,8 +141,8 @@ export function AiChatPanel() {
             <ArrowUp className="h-4 w-4" strokeWidth={3} />
           </Button>
         </form>
-        <p className="text-center text-[9px] font-mono uppercase tracking-wider text-muted-foreground/70">
-          Co-pilot answers are simulated in this demo
+        <p className="text-center text-[11px] text-muted-foreground/70">
+          Co-pilot answers are simulated in this demo.
         </p>
       </CardContent>
     </Card>
@@ -252,7 +252,7 @@ function renderInline(text: string): React.ReactNode {
       parts.push(text.slice(last, m.index));
     }
     parts.push(
-      <span key={`b-${i++}`} className="font-mono font-semibold text-foreground">
+      <span key={`b-${i++}`} className="font-semibold text-foreground">
         {m[1]}
       </span>,
     );

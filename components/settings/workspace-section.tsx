@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const ACCENT_OPTIONS = [
-  { id: "indigo", label: "Indigo · default", color: "linear-gradient(135deg, #7064F2, #5048E5)" },
+  { id: "indigo", label: "Indigo · default", color: "linear-gradient(135deg, #5266E0, #3A4BC4)" },
   { id: "teal", label: "Teal", color: "linear-gradient(135deg, #00e6b8, #22d3ee)" },
   { id: "violet", label: "Violet", color: "linear-gradient(135deg, #a855f7, #6366f1)" },
   { id: "amber", label: "Amber", color: "linear-gradient(135deg, #f59e0b, #f97316)" },

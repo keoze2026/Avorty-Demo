@@ -100,7 +100,7 @@ export function LoginForm() {
                 setEmail(p.email);
                 setRole(p.role);
               }}
-              className={`rounded-md border px-2 py-2 text-xs font-mono transition-colors ${
+              className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors ${
                 role === p.role
                   ? "border-accent bg-accent/10 text-accent"
                   : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
@@ -110,7 +110,7 @@ export function LoginForm() {
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Demo mode — credentials accept any value. Pick a role to see that perspective.
         </p>
       </div>

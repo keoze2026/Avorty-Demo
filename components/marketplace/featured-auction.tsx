@@ -66,18 +66,11 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
       transition={{ duration: 0.32 }}
       className="@container/featured relative overflow-hidden rounded-2xl border border-border bg-card p-6"
     >
-      {/* Premium ambient glow + faint dot grid */}
+      {/* Subtle ambient glow tinted by the listing's vertical */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-60 bg-dot-grid"
-        style={{
-          maskImage: "radial-gradient(ellipse 60% 70% at 30% 0%, #000 30%, transparent 75%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full blur-3xl"
-        style={{ background: `color-mix(in oklab, ${palette.line} 40%, transparent)` }}
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full blur-3xl opacity-50"
+        style={{ background: `color-mix(in oklab, ${palette.line} 28%, transparent)` }}
       />
 
       {/* @3xl/featured = 768px featured card width — only then do we

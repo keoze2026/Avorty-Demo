@@ -2,12 +2,9 @@
 
 /**
  * Integrations logo cloud — clean wordmark grid.
- * Uses neutral text-only logos for a premium "trusted-by" look that
- * doesn't depend on hosting real third-party SVG assets.
  */
 
 import { motion } from "framer-motion";
-import { Plug } from "lucide-react";
 
 const INTEGRATIONS = [
   "Twilio",
@@ -26,19 +23,15 @@ const INTEGRATIONS = [
 
 export function IntegrationsSection() {
   return (
-    <section className="relative overflow-hidden border-y border-border/40 bg-card/20 py-20 sm:py-24">
+    <section className="border-y border-border/40 py-24 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-muted-foreground backdrop-blur">
-            <Plug className="h-3 w-3 text-accent" />
-            Integrations
-          </span>
-          <h2 className="mt-4 font-sans text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+          <h2 className="text-balance text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
             Plays well with your stack.
           </h2>
-          <p className="mt-3 text-balance text-base text-muted-foreground">
-            Every event lands on your webhook within milliseconds. Pre-built connectors to the tools
-            you already pay for.
+          <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
+            Every event lands on your webhook within milliseconds. Pre-built connectors to the
+            tools you already pay for.
           </p>
         </div>
 
@@ -49,14 +42,10 @@ export function IntegrationsSection() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: i * 0.03, duration: 0.3 }}
-              className="group relative flex h-24 items-center justify-center bg-card transition-colors hover:bg-secondary/40"
+              transition={{ delay: i * 0.025, duration: 0.3 }}
+              className="flex h-24 items-center justify-center bg-card text-sm text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
             >
-              <span className="font-mono text-base font-medium text-muted-foreground/70 transition-colors group-hover:text-foreground">
-                {name}
-              </span>
-              {/* Accent dot on hover, top-right corner */}
-              <span className="absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              {name}
             </motion.div>
           ))}
         </div>
