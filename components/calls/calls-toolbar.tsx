@@ -2,6 +2,7 @@
 
 import { Columns, Download, Search, X } from "lucide-react";
 
+import { ExportMenu } from "@/components/shared/export-menu";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { DateRange } from "@/lib/analytics";
+import type { ExportFormat } from "@/lib/export";
 import type { CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +69,7 @@ interface Props {
   campaigns: Array<{ id: string; name: string }>;
   visibleColumns: Set<string>;
   onToggleColumn: (id: string) => void;
-  onExport: () => void;
+  onExport: (format: ExportFormat) => void;
   count: number;
   total: number;
 }
@@ -207,10 +209,12 @@ export function CallsToolbar({
           {count} of {total}
         </span>
 
-        <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={onExport}>
-          <Download className="h-3.5 w-3.5" />
-          Export CSV
-        </Button>
+        <ExportMenu onExport={onExport}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5">
+            <Download className="h-3.5 w-3.5" />
+            Export
+          </Button>
+        </ExportMenu>
       </div>
     </div>
   );

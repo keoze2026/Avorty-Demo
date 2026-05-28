@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import { Download, Settings } from "lucide-react";
+import { toast } from "sonner";
 
+import { ExportMenu } from "@/components/shared/export-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Call } from "@/lib/types";
+import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { formatCurrency, formatNumber, formatPercent, formatTimer } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -200,6 +203,41 @@ function totalsOf(rows: SummaryRow[]): SummaryRow {
   return t;
 }
 
+/** Single source of truth for what each summary column writes to a file cell.
+ *  Numbers stay numeric so XLSX preserves them; rates serialize as a 0..1 ratio. */
+function summaryCellValue(row: SummaryRow, key: ColumnKey): number | string {
+  switch (key) {
+    case "live":
+      return row.live;
+    case "incoming":
+      return row.incoming;
+    case "connected":
+      return row.connected;
+    case "qualified":
+      return row.qualified;
+    case "paid":
+      return row.paid;
+    case "converted":
+      return row.converted;
+    case "noConnect":
+      return row.noConnect;
+    case "dupe":
+      return row.dupe;
+    case "conversionRate":
+      return Number(row.conversionRate.toFixed(4));
+    case "tcl":
+      return row.tcl;
+    case "acl":
+      return row.acl;
+    case "payout":
+      return row.payout;
+    case "revenue":
+      return row.revenue;
+    case "profit":
+      return row.revenue - row.payout;
+  }
+}
+
 interface CallSummaryTableProps {
   calls: Call[];
 }
@@ -216,6 +254,23 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
 
   const toggleColumn = (id: ColumnKey) =>
     setVisible((v) => ({ ...v, [id]: !v[id] }));
+
+  const onExport = (format: ExportFormat) => {
+    // Only the columns the operator can currently see make it into the export.
+    const labelCol: ExportColumn<SummaryRow> = {
+      label: TABS.find((t) => t.id === tab)?.label ?? "Group",
+      value: (r) => r.label,
+    };
+    const dataCols: ExportColumn<SummaryRow>[] = COLUMNS.filter((c) => visible[c.id]).map(
+      (c) => ({
+        label: c.label,
+        value: (r) => summaryCellValue(r, c.id),
+      }),
+    );
+    const stem = dateStamped(`vortyx-call-summary-${tab}`);
+    downloadRows(format, [labelCol, ...dataCols], rows, stem, "Call summary");
+    toast.success(`Exported ${rows.length} rows to ${format.toUpperCase()}`);
+  };
 
   return (
     <Card className="overflow-hidden p-0">
@@ -280,9 +335,11 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Export">
-            <Download className="h-4 w-4" />
-          </Button>
+          <ExportMenu onExport={onExport}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Export">
+              <Download className="h-4 w-4" />
+            </Button>
+          </ExportMenu>
         </div>
       </div>
 

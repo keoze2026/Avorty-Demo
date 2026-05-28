@@ -1,24 +1,14 @@
 "use client";
 
 import * as React from "react";
-import {
-  Download,
-  MoreVertical,
-  Play,
-  Search,
-  Settings,
-} from "lucide-react";
+import { Ban, Copy, DollarSign, Download, Play, Search, Settings } from "lucide-react";
+import { toast } from "sonner";
 
+import { ExportMenu } from "@/components/shared/export-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,32 +24,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency, formatDuration } from "@/lib/format";
+import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
+import { formatCurrency } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type ColumnKey =
   | "campaign"
-  | "vendor"
+  | "publisher"
   | "caller"
   | "dialed"
   | "buyer"
   | "revenue"
   | "payout"
+  | "ttc"
   | "duration"
   | "status"
+  | "failReason"
   | "recording";
 
 const COLUMNS: Array<{ id: ColumnKey; label: string }> = [
   { id: "campaign", label: "Campaign" },
-  { id: "vendor", label: "Vendor" },
+  { id: "publisher", label: "Publisher" },
   { id: "caller", label: "Caller ID" },
   { id: "dialed", label: "Dialed" },
   { id: "buyer", label: "Buyer" },
   { id: "revenue", label: "Revenue" },
   { id: "payout", label: "Payout" },
+  { id: "ttc", label: "TTC" },
   { id: "duration", label: "Duration" },
   { id: "status", label: "Status" },
+  { id: "failReason", label: "Fail reason" },
   { id: "recording", label: "Recording" },
 ];
 
@@ -96,6 +91,98 @@ function statusVariant(s: CallStatus): React.ComponentProps<typeof Badge>["varia
   return "destructive";
 }
 
+/** Strip formatting → E.164-ish: "+1 (473) 501-5238" → "+14735015238". */
+function toE164(num: string): string {
+  const digits = num.replace(/\D/g, "");
+  return digits ? `+${digits}` : num;
+}
+
+/** Seconds → "HH:MM:SS" with zero-padded fields. 416 → "00:06:56". */
+function formatHMS(seconds: number): string {
+  const n = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  const pad = (x: number) => x.toString().padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+/** Stable hash so derived fields (TTC, fail reason) don't reshuffle on render. */
+function callHash(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+/**
+ * Time-to-connect derived per status:
+ *  - connected calls → 1-6s typical SIP handshake + ring-pickup
+ *  - missed         → 20-39s (caller waited through the no-answer timeout)
+ *  - rejected       → near-instant (1-4s)
+ *  - failed         → near-instant (0-2s)
+ */
+function getTTCSeconds(c: Call): number {
+  const h = callHash(c.id);
+  switch (c.status) {
+    case "completed":
+      return 1 + (h % 6);
+    case "in-progress":
+      return 1 + (h % 4);
+    case "ringing":
+      return 1 + (h % 3);
+    case "missed":
+      return 20 + (h % 20);
+    case "rejected":
+      return 1 + (h % 4);
+    case "failed":
+      return h % 3;
+  }
+}
+
+const FAIL_REASONS: Partial<Record<CallStatus, string[]>> = {
+  missed: ["No answer", "Caller hung up", "Timed out"],
+  rejected: ["Buyer rejected", "Filter blocked", "Daily cap"],
+  failed: ["Carrier error", "Network error", "Invalid number"],
+};
+
+function getFailReason(c: Call): string {
+  const reasons = FAIL_REASONS[c.status];
+  if (!reasons) return "";
+  return reasons[callHash(c.id) % reasons.length];
+}
+
+/** Single source of truth for export cell values. Numbers stay numeric. */
+function logCellValue(c: Call, key: ColumnKey): number | string {
+  switch (key) {
+    case "campaign":
+      return c.campaignName;
+    case "publisher":
+      return c.publisherName ?? "";
+    case "caller":
+      return toE164(c.callerNumber);
+    case "dialed":
+      return toE164(c.destinationNumber);
+    case "buyer":
+      return c.buyerName ?? "";
+    case "revenue":
+      return c.revenue;
+    case "payout":
+      return c.payout;
+    case "ttc":
+      return formatHMS(getTTCSeconds(c));
+    case "duration":
+      return formatHMS(c.durationSec);
+    case "status":
+      return STATUS_LABEL[c.status];
+    case "failReason":
+      return getFailReason(c);
+    case "recording":
+      return c.recordingUrl ? "yes" : "";
+  }
+}
+
 interface CallLogTableProps {
   calls: Call[];
   /** Optional limit for the visible rows (default 50). */
@@ -122,6 +209,19 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
       : sorted;
     return filtered.slice(0, limit);
   }, [calls, query, limit]);
+
+  const onExport = (format: ExportFormat) => {
+    const dateCol: ExportColumn<Call> = {
+      label: "Call date",
+      value: (c) => new Date(c.startedAt).toISOString(),
+    };
+    const dataCols: ExportColumn<Call>[] = COLUMNS.filter((c) => columns[c.id]).map((c) => ({
+      label: c.label,
+      value: (row) => logCellValue(row, c.id),
+    }));
+    downloadRows(format, [dateCol, ...dataCols], visible, dateStamped("vortyx-call-log"), "Call log");
+    toast.success(`Exported ${visible.length} rows to ${format.toUpperCase()}`);
+  };
 
   return (
     <Card className="overflow-hidden p-0">
@@ -176,9 +276,11 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Export">
-            <Download className="h-4 w-4" />
-          </Button>
+          <ExportMenu onExport={onExport}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Export">
+              <Download className="h-4 w-4" />
+            </Button>
+          </ExportMenu>
         </div>
       </div>
 
@@ -189,16 +291,18 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6">Call date</TableHead>
                 {columns.campaign && <TableHead>Campaign</TableHead>}
-                {columns.vendor && <TableHead>Vendor</TableHead>}
+                {columns.publisher && <TableHead>Publisher</TableHead>}
                 {columns.caller && <TableHead>Caller ID</TableHead>}
                 {columns.dialed && <TableHead>Dialed</TableHead>}
                 {columns.buyer && <TableHead>Buyer</TableHead>}
                 {columns.revenue && <TableHead>Revenue</TableHead>}
                 {columns.payout && <TableHead>Payout</TableHead>}
+                {columns.ttc && <TableHead>TTC</TableHead>}
                 {columns.duration && <TableHead>Duration</TableHead>}
                 {columns.status && <TableHead>Status</TableHead>}
+                {columns.failReason && <TableHead>Fail reason</TableHead>}
                 {columns.recording && <TableHead>Rec.</TableHead>}
-                <TableHead className="w-12 pr-6" />
+                <TableHead className="pr-6">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,19 +323,19 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                       {columns.campaign && (
                         <TableCell className="whitespace-nowrap font-medium">{c.campaignName}</TableCell>
                       )}
-                      {columns.vendor && (
+                      {columns.publisher && (
                         <TableCell className="whitespace-nowrap text-muted-foreground">
                           {c.publisherName ?? "—"}
                         </TableCell>
                       )}
                       {columns.caller && (
                         <TableCell className="whitespace-nowrap font-mono text-xs">
-                          {c.callerNumber}
+                          {toE164(c.callerNumber)}
                         </TableCell>
                       )}
                       {columns.dialed && (
                         <TableCell className="whitespace-nowrap font-mono text-xs">
-                          {c.destinationNumber}
+                          {toE164(c.destinationNumber)}
                         </TableCell>
                       )}
                       {columns.buyer && (
@@ -260,14 +364,24 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                           )}
                         </TableCell>
                       )}
+                      {columns.ttc && (
+                        <TableCell className="font-mono tabular-nums">
+                          {formatHMS(getTTCSeconds(c))}
+                        </TableCell>
+                      )}
                       {columns.duration && (
                         <TableCell className="font-mono tabular-nums">
-                          {formatDuration(c.durationSec)}
+                          {formatHMS(c.durationSec)}
                         </TableCell>
                       )}
                       {columns.status && (
                         <TableCell>
                           <Badge variant={statusVariant(c.status)}>{STATUS_LABEL[c.status]}</Badge>
+                        </TableCell>
+                      )}
+                      {columns.failReason && (
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          {getFailReason(c) || "—"}
                         </TableCell>
                       )}
                       {columns.recording && (
@@ -287,23 +401,7 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                         </TableCell>
                       )}
                       <TableCell className="pr-6">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              aria-label="Call actions"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View details</DropdownMenuItem>
-                            <DropdownMenuItem>Copy caller ID</DropdownMenuItem>
-                            <DropdownMenuItem>Block caller</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <CallRowActions call={c} />
                       </TableCell>
                     </TableRow>
                   );
@@ -314,5 +412,73 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+
+/** Three inline icon actions per row: copy caller, block caller, bill/adjust. */
+function CallRowActions({ call }: { call: Call }) {
+  const caller = toE164(call.callerNumber);
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(caller);
+      toast.success(`Copied ${caller}`);
+    } catch {
+      toast.error("Couldn't copy to clipboard");
+    }
+  };
+
+  const onBlock = () => {
+    toast.success(`Blocked ${caller}`, {
+      description: "Future calls from this number will be rejected.",
+    });
+  };
+
+  const onBill = () => {
+    const reason = getFailReason(call);
+    const ttc = formatHMS(getTTCSeconds(call));
+    if (call.status === "completed" || call.status === "in-progress") {
+      toast.success(`Marked ${caller} for payout review`, {
+        description: `Payout ${formatCurrency(call.payout, true)} · TTC ${ttc}`,
+      });
+    } else {
+      toast.success(`Billed missed call from ${caller}`, {
+        description: `${reason || "No-connect"} · TTC ${ttc}`,
+      });
+    }
+  };
+
+  return (
+    <div className="inline-flex items-center gap-0.5">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        aria-label="Copy caller number"
+        onClick={onCopy}
+      >
+        <Copy className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+        aria-label="Block caller"
+        onClick={onBlock}
+      >
+        <Ban className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-muted-foreground hover:text-[color:var(--success)]"
+        aria-label="Bill / adjust payout"
+        onClick={onBill}
+      >
+        <DollarSign className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }

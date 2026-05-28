@@ -40,6 +40,11 @@ export const ROUTES = {
   settings: "/settings",
   notifications: "/notifications",
   workspace: "/workspace",
+
+  // Suppression list — VoIP/TCPA shields + manual block list
+  voipShield: "/voip-shield",
+  tcpaShield: "/tcpa-shield",
+  blockedNumbers: "/blocked-numbers",
 } as const;
 
 /** Brand color stops — single-hue indigo ramp.

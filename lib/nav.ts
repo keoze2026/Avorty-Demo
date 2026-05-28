@@ -21,6 +21,9 @@ import {
   Plug,
   CreditCard,
   Settings,
+  Shield,
+  ShieldAlert,
+  PhoneOff,
 } from "lucide-react";
 
 import { ROUTES } from "./constants";
@@ -72,6 +75,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Buyers", href: ROUTES.buyers, icon: Building2, roles: ["admin", "buyer"] },
       { label: "Destinations", href: ROUTES.destinations, icon: Target, roles: ["admin", "buyer"] },
       { label: "Publishers", href: ROUTES.publishers, icon: Users, roles: ["admin", "publisher"] },
+    ],
+  },
+  {
+    label: "Suppression List",
+    items: [
+      { label: "VoIP Shield", href: ROUTES.voipShield, icon: Shield, roles: ["admin"] },
+      { label: "TCPA Shield", href: ROUTES.tcpaShield, icon: ShieldAlert, roles: ["admin"] },
+      { label: "Blocked Numbers", href: ROUTES.blockedNumbers, icon: PhoneOff, roles: ["admin"] },
     ],
   },
   {

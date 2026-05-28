@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { MOCK_CALLS } from "@/lib/mock/calls";
+import { cn } from "@/lib/utils";
 
 export function Topbar() {
   // Lightweight live stats derived from the mock call dataset — recomputes
@@ -127,23 +128,45 @@ interface TopStatProps {
 }
 
 function TopStat({ icon: Icon, label, value, live = false }: TopStatProps) {
+  // Bright Won-green ramp — used everywhere on the Live stat so it draws the eye.
+  const greenText = "text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]";
+  const greenBg =
+    "bg-[oklch(0.6_0.18_155)]/15 dark:bg-[oklch(0.78_0.18_155)]/15";
+
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="relative inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent/10 text-accent">
+      <span
+        className={cn(
+          "relative inline-flex h-6 w-6 items-center justify-center rounded-md",
+          live ? `${greenBg} ${greenText}` : "bg-accent/10 text-accent",
+        )}
+      >
         <Icon className="h-3.5 w-3.5" />
         {live && (
           <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--success)] opacity-70" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--success)]" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[oklch(0.6_0.18_155)] opacity-70 dark:bg-[oklch(0.78_0.18_155)]" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[oklch(0.6_0.18_155)] dark:bg-[oklch(0.78_0.18_155)]" />
           </span>
         )}
       </span>
       {label ? (
         <span className="flex flex-col leading-tight">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span
+            className={cn(
+              "text-[10px] uppercase tracking-wider",
+              live ? `${greenText} font-semibold` : "text-muted-foreground",
+            )}
+          >
             {label}
           </span>
-          <span className="text-[13px] font-semibold tabular-nums text-foreground">
+          <span
+            className={cn(
+              "tabular-nums",
+              live
+                ? `text-[15px] font-bold ${greenText}`
+                : "text-[13px] font-semibold text-foreground",
+            )}
+          >
             {value}
           </span>
         </span>

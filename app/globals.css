@@ -188,6 +188,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Slightly smaller root size shrinks every rem-based Tailwind utility
+     across the app shell + auth flows. The marketing layout opts back into
+     the canonical 16px scale via the :has() rule below. */
+  html {
+    font-size: 15px;
+  }
+  html:has(.marketing-shell) {
+    font-size: 16px;
+  }
   html, body {
     color-scheme: light dark;
   }

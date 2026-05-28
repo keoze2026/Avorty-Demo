@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 
 import { CallsChart } from "@/components/dashboard/calls-chart";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
 import { VerticalDonut } from "@/components/dashboard/vertical-donut";
+import { ExportMenu } from "@/components/shared/export-menu";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
@@ -51,6 +54,18 @@ export default function DashboardPage() {
     return MOCK_CALLS.filter((c) => c.destinationNumber === destinationTfn);
   }, [destinationTfn, allSelected]);
 
+  const onExport = (format: ExportFormat) => {
+    const rows = buildDestinationExportRows(
+      destinations,
+      allSelected ? undefined : destinationTfn,
+    );
+    const stem = dateStamped(
+      allSelected ? "vortyx-dashboard" : `vortyx-dashboard-${destinationTfn.replace(/\D/g, "")}`,
+    );
+    downloadRows(format, DASHBOARD_EXPORT_COLUMNS, rows, stem, "Destinations");
+    toast.success(`Exported ${rows.length} destinations to ${format.toUpperCase()}`);
+  };
+
   return (
     <>
       <PageHeader
@@ -83,9 +98,11 @@ export default function DashboardPage() {
                 })}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4" /> Export
-            </Button>
+            <ExportMenu onExport={onExport}>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4" /> Export
+              </Button>
+            </ExportMenu>
           </>
         }
       />
@@ -112,4 +129,73 @@ export default function DashboardPage() {
       />
     </>
   );
+}
+
+/* ─── Export support ─── */
+
+interface DestinationExportRow {
+  destination: string;
+  tfn: string;
+  buyer: string;
+  callsToday: number;
+  revenueToday: number;
+  concurrent: number;
+  dailyCap: number;
+  capPct: number;
+}
+
+const DASHBOARD_EXPORT_COLUMNS: ExportColumn<DestinationExportRow>[] = [
+  { label: "Destination", value: (r) => r.destination },
+  { label: "TFN", value: (r) => r.tfn },
+  { label: "Buyer", value: (r) => r.buyer },
+  { label: "Calls today", value: (r) => r.callsToday },
+  { label: "Revenue today", value: (r) => Number(r.revenueToday.toFixed(2)) },
+  { label: "Concurrent", value: (r) => r.concurrent },
+  { label: "Daily cap", value: (r) => r.dailyCap },
+  { label: "Cap %", value: (r) => Number(r.capPct.toFixed(1)) },
+];
+
+/** Mirror the on-screen Destinations card, scoped to the selected TFN if any. */
+function buildDestinationExportRows(
+  destinations: ReturnType<typeof useDestinationsStore.getState>["destinations"],
+  filter: string | undefined,
+): DestinationExportRow[] {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const startMs = startOfToday.getTime();
+
+  const callsByTfn = new Map<string, number>();
+  const revenueByTfn = new Map<string, number>();
+  const ccByTfn = new Map<string, number>();
+  for (const c of MOCK_CALLS) {
+    if (c.startedAt >= startMs) {
+      callsByTfn.set(c.destinationNumber, (callsByTfn.get(c.destinationNumber) ?? 0) + 1);
+      revenueByTfn.set(
+        c.destinationNumber,
+        (revenueByTfn.get(c.destinationNumber) ?? 0) + c.revenue,
+      );
+    }
+    if (c.status === "ringing" || c.status === "in-progress") {
+      ccByTfn.set(c.destinationNumber, (ccByTfn.get(c.destinationNumber) ?? 0) + 1);
+    }
+  }
+
+  const buyerById = new Map(MOCK_BUYERS.map((b) => [b.id, b]));
+
+  return destinations
+    .filter((d) => !filter || d.tfn === filter)
+    .map<DestinationExportRow>((d) => {
+      const callsToday = callsByTfn.get(d.tfn) ?? 0;
+      return {
+        destination: d.name,
+        tfn: d.tfn,
+        buyer: buyerById.get(d.buyerId)?.name ?? "—",
+        callsToday,
+        revenueToday: revenueByTfn.get(d.tfn) ?? 0,
+        concurrent: ccByTfn.get(d.tfn) ?? 0,
+        dailyCap: d.dailyCap,
+        capPct: d.dailyCap > 0 ? Math.min(100, (callsToday / d.dailyCap) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.revenueToday - a.revenueToday);
 }

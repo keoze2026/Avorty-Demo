@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 const REFRESH_OPTIONS = [
   "Off",
   "Auto refresh",
+  "Every 10 s",
   "Every 30 s",
   "Every 1 min",
   "Every 5 min",

@@ -10,13 +10,31 @@ import { CallsTable } from "@/components/calls/calls-table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
-import { downloadCSV, filterByRange, totals, type DateRange } from "@/lib/analytics";
+import { filterByRange, totals, type DateRange } from "@/lib/analytics";
+import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import { formatCompact, formatCurrency, formatDuration, formatPercent } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 
 const DEFAULT_VISIBLE = new Set(ALL_COLUMNS.map((c) => c.id));
+
+/** Columns written to the CSV / XLSX file. Shared shape — numeric fields
+ *  (duration, payout, revenue) are emitted as numbers so XLSX preserves typing. */
+const CALL_EXPORT_COLUMNS: ExportColumn<Call>[] = [
+  { label: "ID", value: (c) => c.id },
+  { label: "Started", value: (c) => new Date(c.startedAt).toISOString() },
+  { label: "Caller", value: (c) => c.callerNumber },
+  { label: "Destination", value: (c) => c.destinationNumber },
+  { label: "Campaign", value: (c) => c.campaignName },
+  { label: "Buyer", value: (c) => c.buyerName ?? "" },
+  { label: "Publisher", value: (c) => c.publisherName ?? "" },
+  { label: "State", value: (c) => c.geo.state ?? "" },
+  { label: "Status", value: (c) => c.status },
+  { label: "Duration (s)", value: (c) => c.durationSec },
+  { label: "Payout", value: (c) => c.payout },
+  { label: "Revenue", value: (c) => c.revenue },
+];
 
 export default function CallsPage() {
   const [query, setQuery] = useState("");
@@ -68,9 +86,15 @@ export default function CallsPage() {
       return next;
     });
 
-  const onExport = () => {
-    downloadCSV(filtered, `vortyx-calls-${range}-${new Date().toISOString().slice(0, 10)}.csv`);
-    toast.success(`Exported ${filtered.length} calls to CSV`);
+  const onExport = (format: ExportFormat) => {
+    downloadRows(
+      format,
+      CALL_EXPORT_COLUMNS,
+      filtered,
+      dateStamped(`vortyx-calls-${range}`),
+      "Calls",
+    );
+    toast.success(`Exported ${filtered.length} calls to ${format.toUpperCase()}`);
   };
 
   return (

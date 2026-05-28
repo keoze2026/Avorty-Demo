@@ -1,0 +1,133 @@
+"use client";
+
+import * as React from "react";
+
+import { Segmented } from "./block-number-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
+import type { BlockedNumberEntry } from "@/lib/mock/suppression";
+
+type ChoiceType = "all" | "campaign";
+
+interface Props {
+  /** When non-null the dialog is open and seeded with this entry. */
+  entry: BlockedNumberEntry | null;
+  onOpenChange: (open: boolean) => void;
+  onSave: (input: { id: string; number: string; campaignId?: string }) => void;
+}
+
+/** "Update a number" dialog — opened from the row pencil icon. */
+export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
+  const open = entry !== null;
+  const [choiceType, setChoiceType] = React.useState<ChoiceType>("all");
+  const [campaignId, setCampaignId] = React.useState<string>("");
+  const [number, setNumber] = React.useState("");
+
+  // Seed when the dialog opens with a new row.
+  React.useEffect(() => {
+    if (entry) {
+      setChoiceType(entry.campaignId ? "campaign" : "all");
+      setCampaignId(entry.campaignId ?? "");
+      setNumber(entry.number);
+    }
+  }, [entry]);
+
+  const trimmedDigits = number.replace(/\D/g, "");
+  const valid =
+    trimmedDigits.length > 0 && (choiceType === "all" || campaignId !== "");
+
+  const onSubmit = () => {
+    if (!entry || !valid) return;
+    onSave({
+      id: entry.id,
+      number: trimmedDigits,
+      campaignId: choiceType === "campaign" ? campaignId : undefined,
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-[13px] font-semibold uppercase tracking-wider">
+            Update a number
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>Choose Type</Label>
+            <Segmented
+              options={[
+                { id: "all", label: "All Campaigns" },
+                { id: "campaign", label: "Select Campaign" },
+              ]}
+              value={choiceType}
+              onChange={(v) => setChoiceType(v as ChoiceType)}
+            />
+          </div>
+
+          {choiceType === "campaign" && (
+            <div className="space-y-2">
+              <Label htmlFor="un-campaign">Select Campaign</Label>
+              <Select value={campaignId} onValueChange={setCampaignId}>
+                <SelectTrigger id="un-campaign">
+                  <SelectValue placeholder="Choose" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MOCK_CAMPAIGNS.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="un-number">Number</Label>
+            <Input
+              id="un-number"
+              autoFocus
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSubmit();
+              }}
+              inputMode="tel"
+            />
+          </div>
+        </div>
+
+        <div className="my-2 h-px w-full bg-border" />
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={!valid}>
+            Update Number
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
