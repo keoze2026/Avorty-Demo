@@ -53,22 +53,24 @@ export function AppSidebar() {
 
       {/* Content — clean grouped sections without numeric prefixes */}
       <SidebarContent className="gap-0 px-3 py-4 group-data-[collapsible=icon]:px-1">
-        {NAV_GROUPS.map((group) => {
+        {NAV_GROUPS.map((group, idx) => {
           const visible = group.items.filter((i) => isVisibleForRole(i, role));
           if (visible.length === 0) return null;
           return (
-            <section key={group.label} className="mb-3">
-              {/* Group label — subtle, just the name */}
-              <div
-                className={cn(
-                  "mb-2 px-2 pt-2",
-                  "group-data-[collapsible=icon]:hidden",
-                )}
-              >
-                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
-                  {group.label}
-                </span>
-              </div>
+            <section key={group.label ?? `g-${idx}`} className="mb-3">
+              {/* Group label — only shown when the group has a name */}
+              {group.label && (
+                <div
+                  className={cn(
+                    "mb-2 px-2 pt-2",
+                    "group-data-[collapsible=icon]:hidden",
+                  )}
+                >
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                    {group.label}
+                  </span>
+                </div>
+              )}
 
               {/* Collapsed-mode group separator */}
               <div

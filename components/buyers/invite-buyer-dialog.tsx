@@ -89,7 +89,7 @@ export function InviteBuyerDialog({
               <Building2 className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Invite a buyer</DialogTitle>
+              <DialogTitle>Create a buyer</DialogTitle>
               <DialogDescription>They&apos;ll receive a setup link by email.</DialogDescription>
             </div>
           </div>

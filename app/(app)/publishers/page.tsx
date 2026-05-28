@@ -1,40 +1,51 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { EditPublisherDialog } from "@/components/publishers/edit-publisher-dialog";
 import { InvitePublisherDialog } from "@/components/publishers/invite-publisher-dialog";
 import { PublishersTable } from "@/components/publishers/publishers-table";
-import { PublishersToolbar, type PublisherStatusFilter } from "@/components/publishers/publishers-toolbar";
+import {
+  ALL_PUBLISHER_COLUMNS,
+  PublishersTableToolbar,
+  type PublisherColumnKey,
+  type PublisherTableSortKey,
+  type PublisherTableStatusFilter,
+} from "@/components/publishers/publishers-table-toolbar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 
-type SortKey = "revenue" | "calls" | "conv" | "recent";
-
 export default function PublishersPage() {
   const publishers = usePublishersStore((s) => s.publishers);
-  const setStatus = usePublishersStore((s) => s.setStatus);
+  const setPublisherStatus = usePublishersStore((s) => s.setStatus);
   const remove = usePublishersStore((s) => s.remove);
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+
+  // Toolbar state
   const [query, setQuery] = useState("");
-  const [status, setStatusFilter] = useState<PublisherStatusFilter>("all");
-  const [sort, setSort] = useState<SortKey>("revenue");
+  const [statusFilter, setStatusFilter] =
+    useState<PublisherTableStatusFilter>("all");
+  const [sort, setSort] = useState<PublisherTableSortKey>("recent");
+  const [pageSize, setPageSize] = useState(25);
+  const [columns, setColumns] =
+    useState<Record<PublisherColumnKey, boolean>>(ALL_PUBLISHER_COLUMNS);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = publishers.filter((p) => {
-      if (status !== "all" && p.status !== status) return false;
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
       if (
         q &&
-        !`${p.name} ${p.organization} ${p.contactName ?? ""} ${p.email ?? ""}`.toLowerCase().includes(q)
+        !`${p.name} ${p.organization} ${p.contactName ?? ""} ${p.email ?? ""}`
+          .toLowerCase()
+          .includes(q)
       )
         return false;
       return true;
@@ -45,21 +56,22 @@ export default function PublishersPage() {
       if (sort === "conv") return b.conversionRate - a.conversionRate;
       return b.createdAt - a.createdAt;
     });
-  }, [publishers, query, status, sort]);
+  }, [publishers, query, statusFilter, sort]);
+
+  const visible = filtered.slice(0, pageSize);
 
   const stats = useMemo(() => {
     const active = publishers.filter((p) => p.status === "active").length;
     const revenue = publishers.reduce((s, p) => s + p.revenueToday, 0);
-    const calls = publishers.reduce((s, p) => s + p.callsToday, 0);
     const pending = publishers.reduce((s, p) => s + p.pendingPayout, 0);
-    return { total: publishers.length, active, revenue, calls, pending };
+    return { total: publishers.length, active, revenue, pending };
   }, [publishers]);
 
   const onToggle = (id: string) => {
     const p = publishers.find((x) => x.id === id);
     if (!p) return;
     const next = p.status === "active" ? "paused" : "active";
-    setStatus(id, next);
+    setPublisherStatus(id, next);
     toast.success(next === "active" ? `${p.name} activated` : `${p.name} paused`);
   };
 
@@ -75,11 +87,6 @@ export default function PublishersPage() {
       <PageHeader
         title="Publishers"
         description="Traffic sources sending calls into your network — their payouts, conversion, and assigned numbers."
-        actions={
-          <Button size="sm" onClick={() => setInviteOpen(true)}>
-            <Plus className="h-4 w-4" /> Invite publisher
-          </Button>
-        }
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -98,18 +105,22 @@ export default function PublishersPage() {
         ))}
       </div>
 
-      <PublishersToolbar
+      <PublishersTableToolbar
         query={query}
         onQuery={setQuery}
-        status={status}
-        onStatus={setStatusFilter}
         sort={sort}
         onSort={setSort}
-        count={filtered.length}
-        total={publishers.length}
+        status={statusFilter}
+        onStatus={setStatusFilter}
+        pageSize={pageSize}
+        onPageSize={setPageSize}
+        columns={columns}
+        onColumns={setColumns}
+        onRefresh={() => toast.success("Publishers refreshed")}
+        onCreate={() => setInviteOpen(true)}
       />
 
-      {filtered.length === 0 ? (
+      {visible.length === 0 ? (
         <EmptyState
           icon={Users}
           tone="violet"
@@ -118,7 +129,8 @@ export default function PublishersPage() {
         />
       ) : (
         <PublishersTable
-          publishers={filtered}
+          publishers={visible}
+          columns={columns}
           onToggle={onToggle}
           onArchive={onArchive}
           onEdit={setEditId}

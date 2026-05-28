@@ -48,7 +48,6 @@ export function Topbar() {
           <div className="hidden items-center gap-3 rounded-lg border border-border/70 bg-secondary/30 px-3 py-1.5 md:inline-flex">
             <TopStat
               icon={Wallet}
-              label="Recharge"
               value={formatCurrency(rechargeAmount)}
             />
             <span aria-hidden className="h-7 w-px bg-border/70" />
@@ -120,7 +119,8 @@ function CommandSearch() {
 
 interface TopStatProps {
   icon: React.ElementType;
-  label: string;
+  /** Optional eyebrow label. When omitted, the value renders alone next to the icon. */
+  label?: string;
   value: string;
   /** Pulses the icon when true (used for the "Live" stat). */
   live?: boolean;
@@ -138,14 +138,20 @@ function TopStat({ icon: Icon, label, value, live = false }: TopStatProps) {
           </span>
         )}
       </span>
-      <span className="flex flex-col leading-tight">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          {label}
+      {label ? (
+        <span className="flex flex-col leading-tight">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {label}
+          </span>
+          <span className="text-[13px] font-semibold tabular-nums text-foreground">
+            {value}
+          </span>
         </span>
-        <span className="text-[13px] font-semibold tabular-nums text-foreground">
+      ) : (
+        <span className="text-sm font-semibold tabular-nums text-foreground">
           {value}
         </span>
-      </span>
+      )}
     </span>
   );
 }

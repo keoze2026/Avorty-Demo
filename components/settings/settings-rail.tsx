@@ -2,21 +2,12 @@
 
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import {
-  Bell,
-  Building2,
-  KeyRound,
-  Monitor,
-  ShieldCheck,
-  UserCog,
-} from "lucide-react";
+import { Bell, KeyRound, Monitor, UserCog } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 export type SettingsSection =
   | "profile"
-  | "workspace"
-  | "team"
   | "api-keys"
   | "notifications"
   | "sessions";
@@ -30,8 +21,6 @@ interface RailItem {
 
 const ITEMS: RailItem[] = [
   { id: "profile", label: "Profile", description: "Personal account", icon: UserCog },
-  { id: "workspace", label: "Workspace", description: "Org defaults", icon: Building2 },
-  { id: "team", label: "Team & permissions", description: "Members + RBAC", icon: ShieldCheck },
   { id: "api-keys", label: "API keys", description: "Programmatic access", icon: KeyRound },
   { id: "notifications", label: "Notifications", description: "Channels + alerts", icon: Bell },
   { id: "sessions", label: "Sessions", description: "Active devices", icon: Monitor },

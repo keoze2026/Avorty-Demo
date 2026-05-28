@@ -115,8 +115,8 @@ export function DestinationSummaryTable({
         <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6">Destination</TableHead>
-              <TableHead>Buyer</TableHead>
+              <TableHead className="pl-6 text-left">Destination</TableHead>
+              <TableHead className="text-left">Buyer</TableHead>
               <TableHead>CC</TableHead>
               <TableHead>Cap (today)</TableHead>
               <TableHead>Calls today</TableHead>
@@ -145,13 +145,13 @@ export function DestinationSummaryTable({
                   "bg-accent";
                 return (
                   <TableRow key={destination.id}>
-                    <TableCell className="pl-6">
+                    <TableCell className="pl-6 text-left">
                       <div className="font-medium">{destination.name}</div>
                       <div className="mt-0.5 font-mono text-xs text-muted-foreground">
                         {destination.tfn}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-left">
                       {buyer ? (
                         <Link
                           href={`${ROUTES.buyers}/${buyer.id}`}

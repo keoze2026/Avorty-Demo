@@ -113,10 +113,10 @@ export function DestinationsTable({
         <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6 uppercase tracking-wider text-[11px]">
+              <TableHead className="pl-6 text-left uppercase tracking-wider text-[11px]">
                 Name
               </TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">
+              <TableHead className="text-left uppercase tracking-wider text-[11px]">
                 Buyer
               </TableHead>
               <TableHead className="uppercase tracking-wider text-[11px]">
@@ -173,7 +173,7 @@ export function DestinationsTable({
                     }
                   >
                     {/* NAME */}
-                    <TableCell className="pl-6">
+                    <TableCell className="pl-6 text-left">
                       <Link
                         href={`${ROUTES.destinations}/${destination.id}`}
                         onClick={(e) => e.stopPropagation()}
@@ -190,7 +190,7 @@ export function DestinationsTable({
                     </TableCell>
 
                     {/* BUYER */}
-                    <TableCell>
+                    <TableCell className="text-left">
                       {buyer ? (
                         <Link
                           href={`${ROUTES.buyers}/${buyer.id}`}

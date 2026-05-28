@@ -11,6 +11,7 @@ import {
   Hash,
   GitFork,
   Building2,
+  Briefcase,
   Target,
   Users,
   PhoneCall,
@@ -35,13 +36,20 @@ export interface NavItem {
 }
 
 export interface NavGroup {
-  label: string;
+  /** Group heading. Omit (or leave empty) to render the group without a header. */
+  label?: string;
   items: NavItem[];
 }
 
 const ALL_ROLES = ["admin", "buyer", "publisher"] as const;
 
 export const NAV_GROUPS: NavGroup[] = [
+  {
+    // Top-level pinned item — Workspace settings, separated from the in-app modules below.
+    items: [
+      { label: "Workspace", href: ROUTES.workspace, icon: Briefcase, roles: ["admin"] },
+    ],
+  },
   {
     label: "Overview",
     items: [

@@ -291,7 +291,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
           <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6">{TABS.find((t) => t.id === tab)?.label}</TableHead>
+                <TableHead className="pl-6 text-left">{TABS.find((t) => t.id === tab)?.label}</TableHead>
                 {visible.live && <TableHead>Live</TableHead>}
                 {visible.incoming && <TableHead>Incoming</TableHead>}
                 {visible.connected && <TableHead>Connected</TableHead>}
@@ -320,7 +320,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                   const profit = r.revenue - r.payout;
                   return (
                     <TableRow key={r.key}>
-                      <TableCell className="pl-6 font-medium">{r.label}</TableCell>
+                      <TableCell className="pl-6 text-left font-medium">{r.label}</TableCell>
                       {visible.live && (
                         <TableCell className="tabular-nums">{formatNumber(r.live)}</TableCell>
                       )}
@@ -379,7 +379,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
               {/* Totals */}
               {rows.length > 0 && (
                 <TableRow className="border-t-2 border-border bg-muted/40 hover:bg-muted/40 font-semibold">
-                  <TableCell className="pl-6">Totals</TableCell>
+                  <TableCell className="pl-6 text-left">Totals</TableCell>
                   {visible.live && (
                     <TableCell className="tabular-nums">{formatNumber(totals.live)}</TableCell>
                   )}

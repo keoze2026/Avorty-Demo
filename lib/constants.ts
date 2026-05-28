@@ -38,6 +38,8 @@ export const ROUTES = {
   integrations: "/integrations",
   billing: "/billing",
   settings: "/settings",
+  notifications: "/notifications",
+  workspace: "/workspace",
 } as const;
 
 /** Brand color stops — single-hue indigo ramp.

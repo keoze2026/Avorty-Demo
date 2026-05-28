@@ -24,15 +24,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { TIMEZONES as TZ_OPTIONS } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
-
-const TIMEZONES = [
-  "(UTC−05:00) Eastern Time (US & Canada)",
-  "(UTC−06:00) Central Time (US & Canada)",
-  "(UTC−07:00) Mountain Time (US & Canada)",
-  "(UTC−08:00) Pacific Time (US & Canada)",
-  "(UTC+00:00) UTC",
-] as const;
 
 const REFRESH_OPTIONS = [
   "Off",
@@ -74,7 +67,11 @@ export function ReportsToolbar({
   filters,
   onFiltersChange,
 }: ReportsToolbarProps) {
-  const [tz, setTz] = useState<(typeof TIMEZONES)[number]>(TIMEZONES[0]);
+  // Default to Eastern Time — first entry in the curated list that matches.
+  const [tz, setTz] = useState<string>(
+    TZ_OPTIONS.find((t) => t.iana === "America/New_York")?.label ??
+      TZ_OPTIONS[0].label,
+  );
   const [refresh, setRefresh] = useState<(typeof REFRESH_OPTIONS)[number]>(
     "Auto refresh",
   );
@@ -111,14 +108,14 @@ export function ReportsToolbar({
               <ChevronDown className="h-3 w-3 opacity-60" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72">
-            {TIMEZONES.map((t) => (
+          <DropdownMenuContent align="end" className="max-h-80 w-80 overflow-y-auto">
+            {TZ_OPTIONS.map((t) => (
               <DropdownMenuItem
-                key={t}
-                onSelect={() => setTz(t)}
-                className={cn(tz === t && "text-accent")}
+                key={t.iana}
+                onSelect={() => setTz(t.label)}
+                className={cn(tz === t.label && "text-accent")}
               >
-                {t}
+                {t.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

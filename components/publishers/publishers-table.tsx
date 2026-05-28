@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { MoreVertical, Pause, Pencil, Play } from "lucide-react";
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Pencil, Trash2, Undo2 } from "lucide-react";
 
-import { PartnerStatusBadge } from "@/components/network/partner-status-badge";
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ALL_PUBLISHER_COLUMNS,
+  type PublisherColumnKey,
+} from "@/components/publishers/publishers-table-toolbar";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -21,102 +20,168 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import type { Publisher } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-export function PublishersTable({
-  publishers,
-  onToggle,
-  onArchive,
-  onEdit,
-}: {
+interface PublishersTableProps {
   publishers: Publisher[];
+  columns?: Record<PublisherColumnKey, boolean>;
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
   onEdit: (id: string) => void;
+}
+
+export function PublishersTable({
+  publishers,
+  columns = ALL_PUBLISHER_COLUMNS,
+  onToggle,
+  onArchive,
+  onEdit,
+}: PublishersTableProps) {
+  const router = useRouter();
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
+
+  const allChecked = publishers.length > 0 && selected.size === publishers.length;
+  const indeterminate = selected.size > 0 && !allChecked;
+
+  const toggleAll = () => {
+    if (allChecked || indeterminate) setSelected(new Set());
+    else setSelected(new Set(publishers.map((p) => p.id)));
+  };
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="overflow-x-auto">
+        <Table className="min-w-[900px]">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-10 pl-4">
+                <Checkbox
+                  checked={allChecked || (indeterminate && "indeterminate")}
+                  onCheckedChange={toggleAll}
+                  aria-label="Select all publishers"
+                />
+              </TableHead>
+              <TableHead className="text-left">Name</TableHead>
+              {columns.hourly && <TableHead>Hourly</TableHead>}
+              {columns.daily && <TableHead>Daily</TableHead>}
+              {columns.monthly && <TableHead>Monthly</TableHead>}
+              {columns.global && <TableHead>Global</TableHead>}
+              {columns.status && <TableHead>Status</TableHead>}
+              <TableHead className="pr-4">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {publishers.map((p) => {
+              const isActive = p.status === "active";
+              // Hourly revenue estimated from today's revenue / elapsed hours.
+              const hourly = p.revenueToday / Math.max(1, new Date().getHours() || 1);
+              return (
+                <TableRow
+                  key={p.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`${ROUTES.publishers}/${p.id}`)}
+                >
+                  <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selected.has(p.id)}
+                      onCheckedChange={() => toggleOne(p.id)}
+                      aria-label={`Select ${p.name}`}
+                    />
+                  </TableCell>
+                  <TableCell className="text-left font-medium text-foreground">
+                    {p.name}
+                  </TableCell>
+                  {columns.hourly && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {formatCurrency(hourly, true)}
+                    </TableCell>
+                  )}
+                  {columns.daily && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {formatCurrency(p.revenueToday, true)}
+                    </TableCell>
+                  )}
+                  {columns.monthly && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {formatCurrency(p.revenueMonth, true)}
+                    </TableCell>
+                  )}
+                  {columns.global && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {formatCurrency(p.lifetimeRevenue, true)}
+                    </TableCell>
+                  )}
+                  {columns.status && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        checked={isActive}
+                        onCheckedChange={() => onToggle(p.id)}
+                        aria-label={isActive ? "Pause publisher" : "Activate publisher"}
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell className="pr-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="inline-flex items-center gap-0.5">
+                      <ActionIcon
+                        icon={Pencil}
+                        label="Edit"
+                        onClick={() => onEdit(p.id)}
+                      />
+                      <ActionIcon icon={Undo2} label="Revert" />
+                      <ActionIcon
+                        icon={Trash2}
+                        label="Remove"
+                        tone="destructive"
+                        onClick={() => onArchive(p.id)}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+
+function ActionIcon({
+  icon: Icon,
+  label,
+  onClick,
+  tone = "muted",
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick?: () => void;
+  tone?: "muted" | "destructive";
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-secondary/40">
-            <TableHead className="w-[26%]">Publisher</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Calls today</TableHead>
-            <TableHead>Revenue today</TableHead>
-            <TableHead>Conv.</TableHead>
-            <TableHead>Payout %</TableHead>
-            <TableHead>Pending</TableHead>
-            <TableHead className="w-10" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {publishers.map((p) => {
-            const isActive = p.status === "active";
-            return (
-              <TableRow key={p.id} className="hover:bg-secondary/30">
-                <TableCell>
-                  <div className="min-w-0">
-                    <Link
-                      href={`${ROUTES.publishers}/${p.id}`}
-                      className="block truncate font-medium transition-colors hover:text-accent"
-                    >
-                      {p.name}
-                    </Link>
-                    <div className="truncate text-[10px] font-mono text-muted-foreground">
-                      {p.organization} Â· {p.id}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <PartnerStatusBadge status={p.status} />
-                </TableCell>
-                <TableCell className="font-mono">{formatCompact(p.callsToday)}</TableCell>
-                <TableCell className="font-mono">{formatCurrency(p.revenueToday)}</TableCell>
-                <TableCell className="font-mono text-xs">
-                  {formatPercent(p.conversionRate * 100, 0)}
-                </TableCell>
-                <TableCell className="font-mono text-xs">
-                  {formatPercent(p.payoutRate * 100, 0)}
-                </TableCell>
-                <TableCell className="font-mono">{formatCurrency(p.pendingPayout)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Actions">
-                        <MoreVertical className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => onEdit(p.id)}>
-                        <Pencil className="h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => onToggle(p.id)}>
-                        {isActive ? (
-                          <>
-                            <Pause className="h-4 w-4" /> Pause
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4" /> Activate
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onSelect={() => onArchive(p.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+        tone === "destructive"
+          ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
   );
 }

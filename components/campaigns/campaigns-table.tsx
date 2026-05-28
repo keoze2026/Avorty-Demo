@@ -120,7 +120,7 @@ export function CampaignsTable({
                 />
               </TableHead>
               {columns.progress && <TableHead>Progress</TableHead>}
-              <TableHead>Campaign</TableHead>
+              <TableHead className="text-left">Campaign</TableHead>
               {columns.access && <TableHead>Access</TableHead>}
               {columns.live && <TableHead>Live</TableHead>}
               {columns.hourly && <TableHead>Hourly</TableHead>}
@@ -154,13 +154,8 @@ export function CampaignsTable({
                       <ProgressPill paused={isPaused} />
                     </TableCell>
                   )}
-                  <TableCell>
-                    <span className="inline-flex items-center gap-2 font-medium text-foreground">
-                      <span aria-hidden className="text-base leading-none">
-                        🇺🇸
-                      </span>
-                      {c.name}
-                    </span>
+                  <TableCell className="text-left font-medium text-foreground">
+                    {c.name}
                   </TableCell>
                   {columns.access && (
                     <TableCell>
