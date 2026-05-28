@@ -39,11 +39,11 @@ export function BuyersTable({ buyers, onToggle, onArchive, onEdit }: BuyersTable
           <TableRow className="bg-secondary/40">
             <TableHead className="w-[28%]">Buyer</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Bid</TableHead>
-            <TableHead className="text-right">Calls today</TableHead>
-            <TableHead className="text-right">Spend today</TableHead>
-            <TableHead className="text-right">Conv.</TableHead>
-            <TableHead className="text-right">Daily cap</TableHead>
+            <TableHead>Bid</TableHead>
+            <TableHead>Calls today</TableHead>
+            <TableHead>Spend today</TableHead>
+            <TableHead>Conv.</TableHead>
+            <TableHead>Daily cap</TableHead>
             <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
@@ -63,23 +63,23 @@ export function BuyersTable({ buyers, onToggle, onArchive, onEdit }: BuyersTable
                       {b.name}
                     </Link>
                     <div className="truncate text-[10px] font-mono text-muted-foreground">
-                      {b.organization} · {b.id}
+                      {b.organization} Â· {b.id}
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
                   <PartnerStatusBadge status={b.status} />
                 </TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(b.bidAmount, true)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCompact(b.callsToday)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(b.spendToday)}</TableCell>
-                <TableCell className="text-right font-mono text-xs">
+                <TableCell className="font-mono">{formatCurrency(b.bidAmount, true)}</TableCell>
+                <TableCell className="font-mono">{formatCompact(b.callsToday)}</TableCell>
+                <TableCell className="font-mono">{formatCurrency(b.spendToday)}</TableCell>
+                <TableCell className="font-mono text-xs">
                   {formatPercent(b.conversionRate * 100, 0)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell>
                   <div className="inline-flex flex-col items-end gap-1">
                     <span className="font-mono text-xs">
-                      {b.dailyCap === 0 ? "∞" : `${dailyUsage}%`}
+                      {b.dailyCap === 0 ? "âˆž" : `${dailyUsage}%`}
                     </span>
                     <div className="h-1 w-16 overflow-hidden rounded-full bg-secondary/60">
                       <div

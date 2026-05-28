@@ -75,7 +75,7 @@ export function PublisherDetailHeader({ publisher }: { publisher: Publisher }) {
               </>
             )}
           </div>
-          <h1 className="mt-1 font-sans text-2xl font-bold tracking-tight sm:text-3xl">{publisher.name}</h1>
+          <h1 className="mt-1 font-sans text-xl font-semibold tracking-tight sm:text-2xl">{publisher.name}</h1>
           {publisher.description && (
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{publisher.description}</p>
           )}

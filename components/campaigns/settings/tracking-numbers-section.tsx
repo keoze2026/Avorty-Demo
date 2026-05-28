@@ -65,7 +65,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
                 <TableHead className="uppercase tracking-wider text-[11px]">Type</TableHead>
                 <TableHead className="uppercase tracking-wider text-[11px]">Name</TableHead>
                 <TableHead className="uppercase tracking-wider text-[11px]">Vendor</TableHead>
-                <TableHead className="text-right uppercase tracking-wider text-[11px]">Payout</TableHead>
+                <TableHead className="uppercase tracking-wider text-[11px]">Payout</TableHead>
                 <TableHead className="text-center uppercase tracking-wider text-[11px]">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -84,7 +84,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
                   <TableCell className="text-xs text-muted-foreground">
                     {n.vendor ?? "Vortyx"}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs tabular-nums">
+                  <TableCell className="font-mono text-xs tabular-nums">
                     {formatCurrency(n.payoutPerCall ?? 0, true)}
                   </TableCell>
                   <TableCell className="text-center">

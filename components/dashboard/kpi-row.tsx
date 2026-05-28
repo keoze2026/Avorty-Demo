@@ -76,16 +76,16 @@ function KpiSection({ label, value, format, delta }: KpiConfig) {
   const positive = delta >= 0;
   return (
     <div className="min-w-0">
-      <div className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground/80 truncate">
+      <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80 truncate">
         {label}
       </div>
-      <div className="mt-2 flex items-baseline justify-between gap-2">
-        <span className="truncate text-3xl font-bold tabular-nums tracking-tight text-foreground">
+      <div className="mt-1.5 flex items-baseline justify-between gap-2">
+        <span className="truncate text-2xl font-semibold tabular-nums tracking-tight text-foreground">
           {format(animated)}
         </span>
         <span
           className={cn(
-            "inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+            "inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
             positive
               ? "bg-[color:var(--success)]/12 text-[color:var(--success)]"
               : "bg-destructive/12 text-destructive",

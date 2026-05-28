@@ -77,8 +77,8 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <CardTitle className="text-base">Top campaigns</CardTitle>
-          <p className="mt-0.5 text-xs text-muted-foreground">Revenue today, by campaign</p>
+          <CardTitle className="text-sm font-semibold">Top campaigns</CardTitle>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Revenue today, by campaign</p>
         </div>
         <Link
           href={ROUTES.campaigns}

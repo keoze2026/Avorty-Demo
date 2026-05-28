@@ -38,8 +38,8 @@ export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Prop
               {visibleColumns.has("buyer") && <TableHead>Buyer</TableHead>}
               {visibleColumns.has("geo") && <TableHead className="w-[6%]">Geo</TableHead>}
               {visibleColumns.has("status") && <TableHead>Status</TableHead>}
-              {visibleColumns.has("duration") && <TableHead className="text-right">Duration</TableHead>}
-              {visibleColumns.has("payout") && <TableHead className="text-right">Payout</TableHead>}
+              {visibleColumns.has("duration") && <TableHead>Duration</TableHead>}
+              {visibleColumns.has("payout") && <TableHead>Payout</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -118,12 +118,12 @@ export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Prop
                     </TableCell>
                   )}
                   {visibleColumns.has("duration") && (
-                    <TableCell className="text-right font-mono text-xs">
+                    <TableCell className="font-mono text-xs">
                       {c.durationSec > 0 ? formatDuration(c.durationSec) : "—"}
                     </TableCell>
                   )}
                   {visibleColumns.has("payout") && (
-                    <TableCell className="text-right font-mono">
+                    <TableCell className="font-mono">
                       {c.payout > 0 ? (
                         <span className="text-foreground">{formatCurrency(c.payout, true)}</span>
                       ) : (

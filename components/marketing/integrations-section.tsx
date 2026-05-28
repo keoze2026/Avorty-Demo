@@ -1,59 +1,70 @@
 "use client";
 
-/**
- * Integrations logo cloud — clean wordmark grid.
- */
-
 import { motion } from "framer-motion";
+import { Phone } from "lucide-react";
 
-const INTEGRATIONS = [
+const integrations = [
   "Twilio",
   "HubSpot",
   "Salesforce",
   "Zapier",
   "Segment",
   "Snowflake",
-  "Slack",
   "Stripe",
-  "PostgreSQL",
-  "BigQuery",
-  "Bandwidth",
   "GoHighLevel",
 ];
 
 export function IntegrationsSection() {
   return (
-    <section className="border-y border-border/40 py-24 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-balance text-3xl font-medium tracking-tight text-foreground sm:text-4xl">
-            Plays well with your stack.
-          </h2>
-          <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
-            Every event lands on your webhook within milliseconds. Pre-built connectors to the
-            tools you already pay for.
-          </p>
-        </div>
+    <div className="relative z-20 pb-24 pt-8">
+      <div className="w-full flex justify-center px-6">
+        <div className="w-full max-w-4xl text-center">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-lg text-foreground/85 mb-2"
+          >
+            Powering the networks regulators ask about.
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-lg text-muted-foreground mb-16"
+          >
+            Plays well with your existing stack.
+          </motion.p>
 
-        <div className="mx-auto mt-14 grid max-w-5xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60 sm:grid-cols-3 lg:grid-cols-4">
-          {INTEGRATIONS.map((name, i) => (
-            <motion.div
-              key={name}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: i * 0.025, duration: 0.3 }}
-              className="flex h-24 items-center justify-center bg-card text-sm text-muted-foreground transition-colors hover:bg-secondary/40 hover:text-foreground"
-            >
-              {name}
-            </motion.div>
-          ))}
-        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative group cursor-pointer"
+          >
+            {/* Logo grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-16 gap-y-10 items-center justify-items-center transition-all duration-300 group-hover:blur-[2.5px] group-hover:opacity-50">
+              {integrations.map((name) => (
+                <div key={name} className="text-foreground font-semibold text-xl flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-muted-foreground" />
+                  {name}
+                </div>
+              ))}
+            </div>
 
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          Plus REST API, webhooks, and a typed TypeScript SDK — extend Vortyx in any direction.
-        </p>
+            {/* Hover overlay button */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+              <div className="px-5 py-2.5 bg-secondary/80 backdrop-blur-sm border border-border rounded-full text-sm text-foreground/85 flex items-center gap-2">
+                View all integrations
+                <span aria-hidden="true">›</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

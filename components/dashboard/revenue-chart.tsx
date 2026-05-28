@@ -55,12 +55,12 @@ export function RevenueChart({ calls }: RevenueChartProps = {}) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-base">Revenue</CardTitle>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-semibold tracking-tight tabular-nums">
+          <CardTitle className="text-sm font-semibold">Revenue</CardTitle>
+          <div className="mt-1.5 flex items-baseline gap-2">
+            <span className="text-2xl font-semibold tracking-tight tabular-nums">
               {formatCurrency(total)}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground">
               peak {formatCurrency(peak)} · avg {formatCurrency(avg)}
             </span>
           </div>

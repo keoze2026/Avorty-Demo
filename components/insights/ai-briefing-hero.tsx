@@ -118,10 +118,10 @@ export function AiBriefingHero() {
             <Activity className="h-3 w-3" />
             Vortyx co-pilot
           </span>
-          <h2 className="mt-2 font-sans text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
             {greeting()}, {firstName}.
           </h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-1.5 max-w-2xl text-[13px] text-muted-foreground">
             I&apos;ve been watching the network. Here are the moves I&apos;d make today —
             ranked by impact and confidence.
           </p>

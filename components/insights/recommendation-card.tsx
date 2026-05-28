@@ -286,7 +286,7 @@ function ImpactStat({
   return (
     <div className="rounded-lg border border-border bg-secondary/30 p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn("mt-0.5 flex items-baseline gap-1 text-2xl font-bold tabular-nums tracking-tight", tone.text)}>
+      <div className={cn("mt-0.5 flex items-baseline gap-1 text-xl font-semibold tabular-nums tracking-tight", tone.text)}>
         <Arrow className="h-4 w-4" strokeWidth={3} />
         {value}
       </div>

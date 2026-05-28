@@ -52,7 +52,7 @@ export function InvoicesTable() {
                 <TableHead>Invoice</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
@@ -71,7 +71,7 @@ export function InvoicesTable() {
                     {new Date(inv.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-xs">{inv.description}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(inv.amount, true)}</TableCell>
+                  <TableCell className="font-mono">{formatCurrency(inv.amount, true)}</TableCell>
                   <TableCell>
                     <Badge variant={STATUS_VARIANT[inv.status]}>{STATUS_LABEL[inv.status]}</Badge>
                   </TableCell>

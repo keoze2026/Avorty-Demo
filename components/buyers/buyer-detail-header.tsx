@@ -75,7 +75,7 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
               </>
             )}
           </div>
-          <h1 className="mt-1 font-sans text-2xl font-bold tracking-tight sm:text-3xl">{buyer.name}</h1>
+          <h1 className="mt-1 font-sans text-xl font-semibold tracking-tight sm:text-2xl">{buyer.name}</h1>
           {buyer.description && (
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{buyer.description}</p>
           )}

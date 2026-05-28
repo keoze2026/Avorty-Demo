@@ -78,13 +78,13 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
 
             {/* Center display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xs font-medium uppercase tracking-wider text-accent">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-accent">
                 In-flight
               </span>
-              <span className="mt-1 text-6xl font-bold tabular-nums leading-none tracking-tight">
+              <span className="mt-1 text-5xl font-semibold tabular-nums leading-none tracking-tight">
                 {Math.round(animated)}
               </span>
-              <span className="mt-1 text-xs text-muted-foreground">active calls</span>
+              <span className="mt-1 text-[11px] text-muted-foreground">active calls</span>
             </div>
           </div>
 
@@ -189,7 +189,7 @@ function Telemetry({ icon: Icon, label, value, tone, money = false }: TelemetryP
         </span>
         <span className="text-[11px] text-muted-foreground">{label}</span>
       </div>
-      <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight">{display}</div>
+      <div className="mt-2 text-xl font-semibold tabular-nums tracking-tight">{display}</div>
     </motion.div>
   );
 }

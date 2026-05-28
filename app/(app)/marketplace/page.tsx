@@ -156,8 +156,8 @@ function FloorStat({
 }) {
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4">
-      <div className={`text-2xl font-bold tabular-nums tracking-tight ${accent}`}>{value}</div>
-      <div className="mt-1 text-xs text-muted-foreground">{label}</div>
+      <div className={`text-xl font-semibold tabular-nums tracking-tight ${accent}`}>{value}</div>
+      <div className="mt-0.5 text-[11px] text-muted-foreground">{label}</div>
     </div>
   );
 }

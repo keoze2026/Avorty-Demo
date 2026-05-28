@@ -5,13 +5,12 @@ import {
   Calendar as CalendarIcon,
   ChevronDown,
   Eye,
-  Filter,
   Globe,
   RefreshCw,
 } from "lucide-react";
 import type { DateRange } from "react-day-picker";
-import { toast } from "sonner";
 
+import { ReportsFilterPopover, type ReportFilters } from "@/components/reports/reports-filter-popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -64,12 +63,16 @@ interface ReportsToolbarProps {
   dateRange: DateRange | undefined;
   onDateRangeChange: (range: DateRange | undefined) => void;
   onRefresh: () => void;
+  filters: ReportFilters;
+  onFiltersChange: (filters: ReportFilters) => void;
 }
 
 export function ReportsToolbar({
   dateRange,
   onDateRangeChange,
   onRefresh,
+  filters,
+  onFiltersChange,
 }: ReportsToolbarProps) {
   const [tz, setTz] = useState<(typeof TIMEZONES)[number]>(TIMEZONES[0]);
   const [refresh, setRefresh] = useState<(typeof REFRESH_OPTIONS)[number]>(
@@ -145,15 +148,7 @@ export function ReportsToolbar({
           </PopoverContent>
         </Popover>
 
-        <Button
-          variant="outline"
-          size="icon"
-          className={cn("h-9 w-9", TOOLBAR_BTN_HOVER)}
-          aria-label="Filters"
-          onClick={() => toast.info("Filters — coming soon")}
-        >
-          <Filter className="h-4 w-4" />
-        </Button>
+        <ReportsFilterPopover filters={filters} onChange={onFiltersChange} />
 
         <Button
           variant="outline"

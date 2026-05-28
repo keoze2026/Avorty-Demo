@@ -8,6 +8,7 @@ import { CallLogTable } from "@/components/reports/call-log-table";
 import { CallPerfCard } from "@/components/reports/call-perf-card";
 import { CallSummaryTable } from "@/components/reports/call-summary-table";
 import { HourlyDistribution } from "@/components/reports/hourly-distribution";
+import { EMPTY_FILTERS, type ReportFilters } from "@/components/reports/reports-filter-popover";
 import { ReportsToolbar } from "@/components/reports/reports-toolbar";
 import { TotalCallsDonut } from "@/components/reports/total-calls-donut";
 import { PageHeader } from "@/components/shared/page-header";
@@ -30,13 +31,30 @@ export default function ReportsPage() {
     const today = new Date();
     return { from: today, to: today };
   });
+  const [filters, setFilters] = useState<ReportFilters>(EMPTY_FILTERS);
 
   const filtered = useMemo(() => {
-    if (!dateRange?.from) return MOCK_CALLS;
-    const start = startOfDay(dateRange.from).getTime();
-    const end = endOfDay(dateRange.to ?? dateRange.from).getTime();
-    return MOCK_CALLS.filter((c) => c.startedAt >= start && c.startedAt <= end);
-  }, [dateRange]);
+    const start = dateRange?.from ? startOfDay(dateRange.from).getTime() : -Infinity;
+    const end = dateRange?.from
+      ? endOfDay(dateRange.to ?? dateRange.from).getTime()
+      : Infinity;
+
+    const campaignSet = new Set(filters.campaignIds);
+    const buyerSet = new Set(filters.buyerIds);
+    const publisherSet = new Set(filters.publisherIds);
+    const statusSet = new Set(filters.statuses);
+
+    return MOCK_CALLS.filter((c) => {
+      if (c.startedAt < start || c.startedAt > end) return false;
+      if (campaignSet.size > 0 && !campaignSet.has(c.campaignId)) return false;
+      if (buyerSet.size > 0 && (!c.buyerId || !buyerSet.has(c.buyerId))) return false;
+      if (publisherSet.size > 0 && (!c.publisherId || !publisherSet.has(c.publisherId))) {
+        return false;
+      }
+      if (statusSet.size > 0 && !statusSet.has(c.status)) return false;
+      return true;
+    });
+  }, [dateRange, filters]);
 
   const summary = useMemo(() => {
     const revenue = filtered.reduce((s, c) => s + c.revenue, 0);
@@ -52,6 +70,8 @@ export default function ReportsPage() {
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
         onRefresh={() => toast.success("Reports refreshed")}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
 
       {/* Row 1 — Hourly distribution (2/3) + perf card over donut (1/3). */}

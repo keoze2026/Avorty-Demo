@@ -41,9 +41,9 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
             <TableHead>Campaign</TableHead>
             <TableHead>Geo</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Calls today</TableHead>
-            <TableHead className="text-right">Conv.</TableHead>
-            <TableHead className="text-right">Last call</TableHead>
+            <TableHead>Calls today</TableHead>
+            <TableHead>Conv.</TableHead>
+            <TableHead>Last call</TableHead>
             <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
@@ -76,11 +76,11 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                 <TableCell>
                   <NumberStatusBadge status={n.status} />
                 </TableCell>
-                <TableCell className="text-right font-mono">{formatCompact(n.callsToday)}</TableCell>
-                <TableCell className="text-right font-mono text-xs">
+                <TableCell className="font-mono">{formatCompact(n.callsToday)}</TableCell>
+                <TableCell className="font-mono text-xs">
                   {formatPercent(n.conversionRate * 100, 0)}
                 </TableCell>
-                <TableCell className="text-right text-xs font-mono text-muted-foreground">
+                <TableCell className="text-xs font-mono text-muted-foreground">
                   {n.lastCallAt ? formatRelativeTime(n.lastCallAt) : "—"}
                 </TableCell>
                 <TableCell>

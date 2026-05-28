@@ -1,0 +1,234 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Filter, X } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { MOCK_CALLS } from "@/lib/mock/calls";
+import type { CallStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+const TOOLBAR_BTN_HOVER =
+  "hover:bg-muted hover:text-foreground dark:hover:bg-muted/70";
+
+export interface ReportFilters {
+  campaignIds: string[];
+  buyerIds: string[];
+  publisherIds: string[];
+  statuses: CallStatus[];
+}
+
+export const EMPTY_FILTERS: ReportFilters = {
+  campaignIds: [],
+  buyerIds: [],
+  publisherIds: [],
+  statuses: [],
+};
+
+const STATUS_OPTIONS: Array<{ id: CallStatus; label: string }> = [
+  { id: "completed", label: "Completed" },
+  { id: "in-progress", label: "In progress" },
+  { id: "ringing", label: "Ringing" },
+  { id: "missed", label: "Missed" },
+  { id: "rejected", label: "Rejected" },
+  { id: "failed", label: "Failed" },
+];
+
+interface ReportsFilterPopoverProps {
+  filters: ReportFilters;
+  onChange: (filters: ReportFilters) => void;
+}
+
+export function ReportsFilterPopover({ filters, onChange }: ReportsFilterPopoverProps) {
+  const [open, setOpen] = useState(false);
+
+  // Derive option lists from the full mock dataset so the popover always shows
+  // every value the user could pick — not just what's visible in the current
+  // date range. Sorted alphabetically.
+  const facets = useMemo(() => {
+    const camp = new Map<string, string>();
+    const buyer = new Map<string, string>();
+    const pub = new Map<string, string>();
+    for (const c of MOCK_CALLS) {
+      if (c.campaignId && !camp.has(c.campaignId)) camp.set(c.campaignId, c.campaignName);
+      if (c.buyerId && c.buyerName && !buyer.has(c.buyerId)) buyer.set(c.buyerId, c.buyerName);
+      if (c.publisherId && c.publisherName && !pub.has(c.publisherId)) {
+        pub.set(c.publisherId, c.publisherName);
+      }
+    }
+    const toList = (m: Map<string, string>) =>
+      Array.from(m.entries())
+        .map(([id, label]) => ({ id, label }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+    return { campaigns: toList(camp), buyers: toList(buyer), publishers: toList(pub) };
+  }, []);
+
+  const total =
+    filters.campaignIds.length +
+    filters.buyerIds.length +
+    filters.publisherIds.length +
+    filters.statuses.length;
+
+  const clearAll = () => onChange(EMPTY_FILTERS);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn("relative h-9 w-9", TOOLBAR_BTN_HOVER)}
+          aria-label="Filters"
+        >
+          <Filter className="h-4 w-4" />
+          {total > 0 && (
+            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-foreground">
+              {total}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[22rem] p-0">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <span className="text-sm font-semibold">Filters</span>
+          {total > 0 && (
+            <button
+              type="button"
+              onClick={clearAll}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <X className="h-3 w-3" /> Clear all
+            </button>
+          )}
+        </div>
+
+        <div className="max-h-[26rem] space-y-5 overflow-y-auto px-4 py-4">
+          <FacetGroup
+            title="Campaigns"
+            options={facets.campaigns}
+            selected={filters.campaignIds}
+            onToggle={(id) => onChange(toggle(filters, "campaignIds", id))}
+          />
+          <FacetGroup
+            title="Buyers"
+            options={facets.buyers}
+            selected={filters.buyerIds}
+            onToggle={(id) => onChange(toggle(filters, "buyerIds", id))}
+          />
+          <FacetGroup
+            title="Publishers"
+            options={facets.publishers}
+            selected={filters.publisherIds}
+            onToggle={(id) => onChange(toggle(filters, "publisherIds", id))}
+          />
+          <FacetGroup
+            title="Status"
+            options={STATUS_OPTIONS}
+            selected={filters.statuses}
+            onToggle={(id) =>
+              onChange({
+                ...filters,
+                statuses: filters.statuses.includes(id as CallStatus)
+                  ? filters.statuses.filter((s) => s !== id)
+                  : [...filters.statuses, id as CallStatus],
+              })
+            }
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+          <Button variant="ghost" size="sm" onClick={clearAll} disabled={total === 0}>
+            Reset
+          </Button>
+          <Button size="sm" onClick={() => setOpen(false)}>
+            Apply
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function toggle<K extends keyof Pick<ReportFilters, "campaignIds" | "buyerIds" | "publisherIds">>(
+  filters: ReportFilters,
+  key: K,
+  id: string,
+): ReportFilters {
+  const list = filters[key];
+  return {
+    ...filters,
+    [key]: list.includes(id) ? list.filter((x) => x !== id) : [...list, id],
+  };
+}
+
+function FacetGroup<T extends string>({
+  title,
+  options,
+  selected,
+  onToggle,
+}: {
+  title: string;
+  options: Array<{ id: T; label: string }>;
+  selected: T[];
+  onToggle: (id: T) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((o) => o.label.toLowerCase().includes(q));
+  }, [options, query]);
+
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+        {selected.length > 0 && (
+          <span className="text-[11px] text-accent">{selected.length} selected</span>
+        )}
+      </div>
+      {options.length > 6 && (
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Search ${title.toLowerCase()}…`}
+          className="mb-2 h-8 text-xs"
+        />
+      )}
+      <div className="space-y-1.5">
+        {filtered.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No matches</p>
+        ) : (
+          filtered.map((o) => {
+            const id = `f-${title}-${o.id}`;
+            const checked = selected.includes(o.id);
+            return (
+              <Label
+                key={o.id}
+                htmlFor={id}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm font-normal hover:bg-secondary/50"
+              >
+                <Checkbox
+                  id={id}
+                  checked={checked}
+                  onCheckedChange={() => onToggle(o.id)}
+                />
+                <span className="truncate">{o.label}</span>
+              </Label>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

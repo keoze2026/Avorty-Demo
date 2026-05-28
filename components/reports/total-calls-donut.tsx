@@ -16,8 +16,6 @@ interface Slice {
   label: string;
   count: number;
   color: string;
-  /** Optional alpha used to keep the two red slices distinguishable. */
-  alpha?: number;
 }
 
 function classify(c: Call): Slice["key"] {
@@ -31,11 +29,11 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
   for (const c of calls) counts[classify(c)] += 1;
 
   // Strict 2-color: indigo for the positive outcome, red for the rest.
-  // Not-converted rides red at reduced opacity so it stays distinguishable
-  // from no-answer without breaking the binary.
+  // Both "Not converted" and "No answer" use the same bright destructive red,
+  // matching the dashboard donut.
   const slices: Slice[] = [
     { key: "converted", label: "Converted", count: counts.converted, color: "var(--accent)" },
-    { key: "notConverted", label: "Not converted", count: counts.notConverted, color: "var(--destructive)", alpha: 0.55 },
+    { key: "notConverted", label: "Not converted", count: counts.notConverted, color: "var(--destructive)" },
     { key: "noAnswer", label: "No answer", count: counts.noAnswer, color: "var(--destructive)" },
   ];
   const total = slices.reduce((s, x) => s + x.count, 0);
@@ -61,7 +59,7 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
                 animationDuration={500}
               >
                 {slices.map((s) => (
-                  <Cell key={s.key} fill={s.color} fillOpacity={s.alpha ?? 1} />
+                  <Cell key={s.key} fill={s.color} />
                 ))}
               </Pie>
               <Tooltip
@@ -72,7 +70,7 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</span>
-            <span className="text-2xl font-semibold tabular-nums">{formatNumber(total)}</span>
+            <span className="text-xl font-semibold tabular-nums">{formatNumber(total)}</span>
           </div>
         </div>
 
@@ -82,7 +80,7 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
               <span
                 aria-hidden
                 className="h-2 w-2 rounded-sm"
-                style={{ background: s.color, opacity: s.alpha ?? 1 }}
+                style={{ background: s.color }}
               />
               <span className="text-muted-foreground">{s.label}</span>
             </li>

@@ -145,8 +145,8 @@ export function SectionShell({
         <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
           {eyebrow}
         </span>
-        <h2 className="mt-1 font-sans text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
+        <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">{description}</p>
       </header>
       {children}
     </div>

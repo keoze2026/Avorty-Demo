@@ -117,10 +117,10 @@ export function DestinationSummaryTable({
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-6">Destination</TableHead>
               <TableHead>Buyer</TableHead>
-              <TableHead className="text-right">CC</TableHead>
+              <TableHead>CC</TableHead>
               <TableHead>Cap (today)</TableHead>
-              <TableHead className="text-right">Calls today</TableHead>
-              <TableHead className="pr-6 text-right">Revenue today</TableHead>
+              <TableHead>Calls today</TableHead>
+              <TableHead className="pr-6">Revenue today</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,7 +168,7 @@ export function DestinationSummaryTable({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="tabular-nums">
                       <span className={cn("font-medium", cc > 0 ? ccColor : "text-muted-foreground")}>
                         {cc > 0 && (
                           <span
@@ -200,10 +200,10 @@ export function DestinationSummaryTable({
                         <span className="text-xs text-muted-foreground">Unlimited</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="tabular-nums">
                       {formatNumber(callsToday)}
                     </TableCell>
-                    <TableCell className="pr-6 text-right font-medium tabular-nums">
+                    <TableCell className="pr-6 font-medium tabular-nums">
                       {formatCurrency(revenueToday)}
                     </TableCell>
                   </TableRow>

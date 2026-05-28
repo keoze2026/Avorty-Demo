@@ -41,8 +41,8 @@ function Cell({
 }) {
   return (
     <div className="min-w-0">
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={cn("mt-1 truncate text-lg font-semibold tabular-nums", valueClass)}>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={cn("mt-1 truncate text-base font-semibold tabular-nums", valueClass)}>
         {value}
       </div>
     </div>

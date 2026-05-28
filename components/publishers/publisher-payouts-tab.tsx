@@ -74,10 +74,10 @@ export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
               <TableHeader>
                 <TableRow className="bg-secondary/40">
                   <TableHead>Period</TableHead>
-                  <TableHead className="text-right">Calls</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Calls</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Paid / scheduled</TableHead>
+                  <TableHead>Paid / scheduled</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -94,8 +94,8 @@ export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
                       className="hover:bg-secondary/30"
                     >
                       <TableCell className="font-mono text-xs">{p.period}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCompact(p.callsCount)}</TableCell>
-                      <TableCell className="text-right font-mono font-semibold">
+                      <TableCell className="font-mono">{formatCompact(p.callsCount)}</TableCell>
+                      <TableCell className="font-mono font-semibold">
                         {formatCurrency(p.amount)}
                       </TableCell>
                       <TableCell>
@@ -104,7 +104,7 @@ export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
                           {meta.label}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right text-xs font-mono text-muted-foreground">
+                      <TableCell className="text-xs font-mono text-muted-foreground">
                         {p.paidAt
                           ? new Date(p.paidAt).toLocaleDateString()
                           : new Date(p.scheduledFor).toLocaleDateString()}

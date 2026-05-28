@@ -84,7 +84,7 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
               Total
             </span>
-            <span className="text-2xl font-semibold tabular-nums">
+            <span className="text-xl font-semibold tabular-nums">
               {formatNumber(total)}
             </span>
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">

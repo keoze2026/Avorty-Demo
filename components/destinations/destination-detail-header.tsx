@@ -93,7 +93,7 @@ export function DestinationDetailHeader({
             )}
           </div>
 
-          <h1 className="mt-1 font-sans text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="mt-1 font-sans text-xl font-semibold tracking-tight sm:text-2xl">
             {destination.name}
           </h1>
         </div>

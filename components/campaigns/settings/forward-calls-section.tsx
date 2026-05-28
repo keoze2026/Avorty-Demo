@@ -46,7 +46,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
 
   // Show every active destination — a real router pick is determined by the
-  // campaign↔buyer↔destination chain; for this UI we list all enabled ones
+  // campaignâ†”buyerâ†”destination chain; for this UI we list all enabled ones
   // so the user can reorder them by priority/weight.
   const destinations = useMemo(
     () => (allDestinations ?? []).filter((d) => d.enabled),
@@ -117,7 +117,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
               <TableHead className="uppercase tracking-wider text-[11px]">Name</TableHead>
               <TableHead className="uppercase tracking-wider text-[11px]">Number</TableHead>
               <TableHead className="uppercase tracking-wider text-[11px]">Type</TableHead>
-              <TableHead className="text-right uppercase tracking-wider text-[11px]">Revenue</TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">Revenue</TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -179,7 +179,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                         Call Connected
                       </span>
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                    <TableCell className="font-mono text-xs tabular-nums">
                       {formatCurrency(buyer?.bidAmount ?? 0, true)}
                     </TableCell>
                     <TableCell className="text-center">

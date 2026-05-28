@@ -180,15 +180,9 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 width={32}
                 allowDecimals={false}
               />
-              <YAxis
-                yAxisId="rev"
-                orientation="right"
-                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `$${Math.round(v)}`}
-                width={48}
-              />
+              {/* Right-side revenue axis kept for line scaling, but hidden —
+                  dollar-labeled ticks aren't shown. */}
+              <YAxis yAxisId="rev" orientation="right" hide />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
                 cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
@@ -229,7 +223,6 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 dataKey="notConverted"
                 stackId="calls"
                 fill={COLOR_NOTCONV}
-                fillOpacity={0.55}
                 radius={[0, 0, 0, 0]}
               />
               <Bar

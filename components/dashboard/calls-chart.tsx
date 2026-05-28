@@ -63,12 +63,12 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-base">Calls</CardTitle>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-semibold tracking-tight tabular-nums">
+          <CardTitle className="text-sm font-semibold">Calls</CardTitle>
+          <div className="mt-1.5 flex items-baseline gap-2">
+            <span className="text-2xl font-semibold tracking-tight tabular-nums">
               {formatNumber(total)}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground">
               peak {formatNumber(peak)}
               {range === "24h" && peakPoint ? ` at ${peakPoint.full}` : null}
               {" · avg "}

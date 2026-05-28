@@ -42,11 +42,11 @@ export function PublishersTable({
           <TableRow className="bg-secondary/40">
             <TableHead className="w-[26%]">Publisher</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Calls today</TableHead>
-            <TableHead className="text-right">Revenue today</TableHead>
-            <TableHead className="text-right">Conv.</TableHead>
-            <TableHead className="text-right">Payout %</TableHead>
-            <TableHead className="text-right">Pending</TableHead>
+            <TableHead>Calls today</TableHead>
+            <TableHead>Revenue today</TableHead>
+            <TableHead>Conv.</TableHead>
+            <TableHead>Payout %</TableHead>
+            <TableHead>Pending</TableHead>
             <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
@@ -64,22 +64,22 @@ export function PublishersTable({
                       {p.name}
                     </Link>
                     <div className="truncate text-[10px] font-mono text-muted-foreground">
-                      {p.organization} · {p.id}
+                      {p.organization} Â· {p.id}
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
                   <PartnerStatusBadge status={p.status} />
                 </TableCell>
-                <TableCell className="text-right font-mono">{formatCompact(p.callsToday)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(p.revenueToday)}</TableCell>
-                <TableCell className="text-right font-mono text-xs">
+                <TableCell className="font-mono">{formatCompact(p.callsToday)}</TableCell>
+                <TableCell className="font-mono">{formatCurrency(p.revenueToday)}</TableCell>
+                <TableCell className="font-mono text-xs">
                   {formatPercent(p.conversionRate * 100, 0)}
                 </TableCell>
-                <TableCell className="text-right font-mono text-xs">
+                <TableCell className="font-mono text-xs">
                   {formatPercent(p.payoutRate * 100, 0)}
                 </TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(p.pendingPayout)}</TableCell>
+                <TableCell className="font-mono">{formatCurrency(p.pendingPayout)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

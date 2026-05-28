@@ -75,7 +75,7 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
             <span className="text-muted-foreground/60">·</span>
             <span className="font-mono text-muted-foreground">{campaign.id}</span>
           </div>
-          <h1 className="mt-1 font-mono text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
             {campaign.name}
           </h1>
           {campaign.description && (

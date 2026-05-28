@@ -52,12 +52,12 @@ export function SubscriptionHero() {
             </span>
           </div>
 
-          <h2 className="mt-3 font-sans text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             {MOCK_PLAN.tier}
           </h2>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-mono text-2xl font-semibold">{formatCurrency(MOCK_PLAN.monthlyCost)}</span>
-            <span className="text-sm text-muted-foreground">/ month</span>
+            <span className="font-mono text-xl font-semibold">{formatCurrency(MOCK_PLAN.monthlyCost)}</span>
+            <span className="text-[13px] text-muted-foreground">/ month</span>
           </div>
 
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
@@ -146,7 +146,7 @@ function UsageRing({ pct, used, included }: { pct: number; used: number; include
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-3xl font-bold tabular-nums">{Math.round(pct * 100)}%</span>
+        <span className="font-mono text-2xl font-semibold tabular-nums">{Math.round(pct * 100)}%</span>
         <span className="mt-0.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
           Calls used
         </span>
