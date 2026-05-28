@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { CreditCard, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,6 +49,9 @@ export function UserMenu() {
           aria-label={`Account menu for ${user.name}`}
         >
           <Avatar className="h-8 w-8 border border-border">
+            {user.avatarUrl && (
+              <AvatarImage src={user.avatarUrl} alt={user.name} />
+            )}
             <AvatarFallback className="bg-accent/15 text-accent text-xs">
               {initials(user.name)}
             </AvatarFallback>

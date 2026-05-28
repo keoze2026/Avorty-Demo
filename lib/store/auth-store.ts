@@ -19,6 +19,8 @@ interface AuthState {
   signup: (input: { name: string; email: string; password: string; organization: string }) => Promise<User>;
   logout: () => void;
   setRole: (role: Role) => void;
+  /** Replace the user's avatar with a data URL (or clear it when null). */
+  setAvatar: (avatarUrl: string | null) => void;
   _setHydrated: () => void;
 }
 
@@ -57,6 +59,13 @@ export const useAuthStore = create<AuthState>()(
 
       setRole: (role) =>
         set((s) => (s.user ? { user: { ...s.user, role } } : s)),
+
+      setAvatar: (avatarUrl) =>
+        set((s) =>
+          s.user
+            ? { user: { ...s.user, avatarUrl: avatarUrl ?? undefined } }
+            : s,
+        ),
 
       _setHydrated: () => set({ hydrated: true }),
     }),
