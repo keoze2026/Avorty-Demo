@@ -1,79 +1,63 @@
 /**
- * Accent palette registry.
+ * Color-theme registry.
  *
- * Each entry maps to a complete `--accent` swap on the document root.
- * The first item (Indigo) is the original Vortyx brand color, kept as the
- * default. Operators can pick a different hue from the topbar theme picker;
- * the selection is persisted via the accent Zustand store.
+ * Each entry maps to one of the `.theme-*` classes defined in globals.css.
+ * Selecting an entry swaps the full palette — background, foreground, cards,
+ * sidebar, borders, ring, accent, chart-1 — across both light and dark mode.
+ * "Default" is the original Vortyx Indigo+slate look (no class applied).
  */
 
-export interface AccentConfig {
+export interface ColorTheme {
   /** Stable id stored in localStorage. */
   id: string;
   /** Human-readable label shown in the picker. */
   name: string;
   /** Solid color used for the swatch dot. */
   swatch: string;
-  /** Computed `--accent` value (HSL token). */
-  accent: string;
-  /** Foreground color paired with the accent — keeps text legible on accent fills. */
-  accentForeground: string;
+  /** Class added to <html>. Empty string = use base :root/.dark tokens. */
+  className: string;
 }
 
-export const ACCENTS: AccentConfig[] = [
+export const ACCENTS: ColorTheme[] = [
   {
-    id: "indigo",
-    name: "Indigo (default)",
+    id: "default",
+    name: "Default (Indigo)",
     swatch: "#5266E0",
-    accent: "hsl(231 70% 58%)",
-    accentForeground: "hsl(0 0% 100%)",
+    className: "",
   },
   {
     id: "red",
     name: "Red",
     swatch: "#DC2626",
-    accent: "hsl(0 72% 51%)",
-    accentForeground: "hsl(0 0% 100%)",
+    className: "theme-red",
   },
   {
     id: "amber",
     name: "Amber",
     swatch: "#F59E0B",
-    accent: "hsl(38 92% 50%)",
-    accentForeground: "hsl(0 0% 11%)",
+    className: "theme-amber",
   },
   {
     id: "emerald",
     name: "Emerald",
     swatch: "#10B981",
-    accent: "hsl(160 70% 42%)",
-    accentForeground: "hsl(0 0% 100%)",
-  },
-  {
-    id: "cyan",
-    name: "Cyan",
-    swatch: "#06B6D4",
-    accent: "hsl(190 80% 45%)",
-    accentForeground: "hsl(0 0% 100%)",
+    className: "theme-emerald",
   },
   {
     id: "violet",
     name: "Violet",
     swatch: "#8B5CF6",
-    accent: "hsl(263 70% 60%)",
-    accentForeground: "hsl(0 0% 100%)",
-  },
-  {
-    id: "rose",
-    name: "Rose",
-    swatch: "#F43F5E",
-    accent: "hsl(346 77% 60%)",
-    accentForeground: "hsl(0 0% 100%)",
+    className: "theme-violet",
   },
 ];
 
-export const DEFAULT_ACCENT_ID = "indigo";
+export const DEFAULT_ACCENT_ID = "default";
 
-export function findAccent(id: string | undefined): AccentConfig {
+export function findAccent(id: string | undefined): ColorTheme {
   return ACCENTS.find((a) => a.id === id) ?? ACCENTS[0];
 }
+
+/** Every class we ever add — used by the provider to wipe stale state. */
+export const ALL_THEME_CLASSES = ACCENTS.map((a) => a.className).filter(
+  (c) => c.length > 0,
+);

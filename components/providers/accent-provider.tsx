@@ -1,14 +1,30 @@
 "use client";
 
 /**
- * Listens to the accent store and overrides the relevant CSS variables on
- * `<html>` whenever the user picks a different brand color. Renders nothing.
+ * Listens to the color-theme store and toggles the matching `.theme-*` class
+ * on `<html>`. Renders nothing.
+ *
+ * Also wipes the inline CSS-variable overrides we previously set (back when
+ * the picker only changed `--accent`) so legacy state from prior sessions
+ * doesn't bleed into the new class-based scheme.
  */
 
 import * as React from "react";
 
-import { findAccent } from "@/lib/accent-themes";
+import { ALL_THEME_CLASSES, findAccent } from "@/lib/accent-themes";
 import { useAccentStore } from "@/lib/store/accent-store";
+
+const LEGACY_INLINE_VARS = [
+  "--accent",
+  "--accent-foreground",
+  "--primary",
+  "--primary-foreground",
+  "--sidebar-primary",
+  "--sidebar-primary-foreground",
+  "--sidebar-ring",
+  "--ring",
+  "--chart-1",
+];
 
 export function AccentProvider() {
   const accent = useAccentStore((s) => s.accent);
@@ -16,10 +32,13 @@ export function AccentProvider() {
   React.useEffect(() => {
     const cfg = findAccent(accent);
     const root = document.documentElement;
-    root.style.setProperty("--accent", cfg.accent);
-    root.style.setProperty("--accent-foreground", cfg.accentForeground);
-    // The focus ring should match the accent so form fields feel coherent.
-    root.style.setProperty("--ring", cfg.accent);
+
+    // Wipe any inline overrides from earlier picker versions.
+    for (const name of LEGACY_INLINE_VARS) root.style.removeProperty(name);
+
+    // Drop every other theme class, then add the selected one (if any).
+    for (const cls of ALL_THEME_CLASSES) root.classList.remove(cls);
+    if (cfg.className) root.classList.add(cfg.className);
   }, [accent]);
 
   return null;

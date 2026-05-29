@@ -114,11 +114,11 @@ export function ThemeToggle({ className, variant = "menu" }: ThemeToggleProps) {
             })}
           </div>
 
-          {/* Accent swatches */}
+          {/* Color theme swatches — full palette swap */}
           <div className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Accent color
+            Color theme
           </div>
-          <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+          <div className="mt-1.5 grid grid-cols-5 gap-1.5">
             {ACCENTS.map((a) => {
               const active = accent === a.id;
               return (
@@ -127,15 +127,15 @@ export function ThemeToggle({ className, variant = "menu" }: ThemeToggleProps) {
                   type="button"
                   onClick={() => setAccent(a.id)}
                   className={cn(
-                    "relative inline-flex h-7 w-7 items-center justify-center rounded-full border-2 transition-transform hover:scale-110",
+                    "relative inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition-transform hover:scale-110",
                     active ? "border-foreground" : "border-transparent",
                   )}
                   style={{ backgroundColor: a.swatch }}
-                  aria-label={`Pick ${a.name}`}
+                  aria-label={`Apply ${a.name} theme`}
                   title={a.name}
                 >
                   {active && (
-                    <Check className="h-3.5 w-3.5 text-white drop-shadow" strokeWidth={3} />
+                    <Check className="h-4 w-4 text-white drop-shadow" strokeWidth={3} />
                   )}
                 </button>
               );
