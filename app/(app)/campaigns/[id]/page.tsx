@@ -2,19 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { BarChart3, Building2, GitFork, Hash, LayoutDashboard, Settings as SettingsIcon, Users } from "lucide-react";
+import { Hash } from "lucide-react";
 
-import { CampaignBuyersTab } from "@/components/campaigns/campaign-buyers-tab";
 import { CampaignDetailHeader } from "@/components/campaigns/campaign-detail-header";
-import { CampaignNumbersTab } from "@/components/campaigns/campaign-numbers-tab";
-import { CampaignOverviewTab } from "@/components/campaigns/campaign-overview-tab";
-import { CampaignPerformanceTab } from "@/components/campaigns/campaign-performance-tab";
-import { CampaignPublishersTab } from "@/components/campaigns/campaign-publishers-tab";
-import { CampaignRoutingTab } from "@/components/campaigns/campaign-routing-tab";
 import { CampaignSettingsView } from "@/components/campaigns/settings/campaign-settings-view";
-import { CampaignStatsRow } from "@/components/campaigns/campaign-stats-row";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
@@ -46,55 +38,7 @@ export default function CampaignDetailPage() {
   return (
     <>
       <CampaignDetailHeader campaign={campaign} />
-      <CampaignStatsRow campaign={campaign} />
-
-      <Tabs defaultValue="overview" className="gap-4">
-        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="overview">
-            <LayoutDashboard className="h-3.5 w-3.5" /> Overview
-          </TabsTrigger>
-          <TabsTrigger value="numbers">
-            <Hash className="h-3.5 w-3.5" /> Numbers
-          </TabsTrigger>
-          <TabsTrigger value="buyers">
-            <Building2 className="h-3.5 w-3.5" /> Buyers
-          </TabsTrigger>
-          <TabsTrigger value="publishers">
-            <Users className="h-3.5 w-3.5" /> Publishers
-          </TabsTrigger>
-          <TabsTrigger value="routing">
-            <GitFork className="h-3.5 w-3.5" /> Routing
-          </TabsTrigger>
-          <TabsTrigger value="performance">
-            <BarChart3 className="h-3.5 w-3.5" /> Performance
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <SettingsIcon className="h-3.5 w-3.5" /> Settings
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <CampaignOverviewTab campaign={campaign} />
-        </TabsContent>
-        <TabsContent value="numbers">
-          <CampaignNumbersTab campaignId={campaign.id} />
-        </TabsContent>
-        <TabsContent value="buyers">
-          <CampaignBuyersTab campaignId={campaign.id} />
-        </TabsContent>
-        <TabsContent value="publishers">
-          <CampaignPublishersTab campaignId={campaign.id} />
-        </TabsContent>
-        <TabsContent value="routing" className="space-y-4">
-          <CampaignRoutingTab campaignId={campaign.id} />
-        </TabsContent>
-        <TabsContent value="performance">
-          <CampaignPerformanceTab campaignId={campaign.id} />
-        </TabsContent>
-        <TabsContent value="settings">
-          <CampaignSettingsView campaign={campaign} />
-        </TabsContent>
-      </Tabs>
+      <CampaignSettingsView campaign={campaign} />
     </>
   );
 }

@@ -11,9 +11,9 @@
  *   4. Advanced Settings — 12 collapsible feature cards
  */
 
+import * as React from "react";
 import { Globe, LockKeyhole, Settings as SettingsIcon, Zap } from "lucide-react";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampaignSettingsTab as CampaignIdentitySection } from "@/components/campaigns/campaign-settings-tab";
 import { AccessTab } from "./access-tab";
 import { AdvancedSettingsList } from "./advanced-settings-cards";
@@ -22,58 +22,79 @@ import { ForwardCallsSection } from "./forward-calls-section";
 import { RtbTab } from "./rtb-tab";
 import { TrackingNumbersSection } from "./tracking-numbers-section";
 import type { Campaign } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+type TabId = "general" | "rtb" | "enrichment" | "access";
+
+const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "general", label: "General", icon: SettingsIcon },
+  { id: "rtb", label: "Real-Time Bidding", icon: Zap },
+  { id: "enrichment", label: "Enrichment URLs", icon: Globe },
+  { id: "access", label: "Access", icon: LockKeyhole },
+];
 
 export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
+  const [tab, setTab] = React.useState<TabId>("general");
+
   return (
-    <Tabs defaultValue="general" className="gap-4">
-      <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-        <TabsTrigger value="general">
-          <SettingsIcon className="h-3.5 w-3.5" /> General
-        </TabsTrigger>
-        <TabsTrigger value="rtb">
-          <Zap className="h-3.5 w-3.5" /> Real-Time Bidding
-        </TabsTrigger>
-        <TabsTrigger value="enrichment">
-          <Globe className="h-3.5 w-3.5" /> Enrichment URLs
-        </TabsTrigger>
-        <TabsTrigger value="access">
-          <LockKeyhole className="h-3.5 w-3.5" /> Access
-        </TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      {/* Underline-style tab strip — matches the Call Summary tabs. */}
+      <div className="flex overflow-x-auto border-b border-border">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "relative inline-flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                active
+                  ? "text-accent"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {t.label}
+              {active && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-2 -bottom-px h-0.5 bg-accent"
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-      <TabsContent value="general" className="space-y-6">
-        {/* 1 — Identity / Payout / Caps / Schedule (the existing form) */}
-        <CampaignIdentitySection campaign={campaign} />
+      {tab === "general" && (
+        <div className="space-y-6">
+          {/* 1 — Identity / Payout / Caps / Schedule (the existing form) */}
+          <CampaignIdentitySection campaign={campaign} />
 
-        {/* 2 — Tracking Numbers */}
-        <TrackingNumbersSection campaignId={campaign.id} />
+          {/* 2 — Tracking Numbers */}
+          <TrackingNumbersSection campaignId={campaign.id} />
 
-        {/* 3 — Forward Calls To */}
-        <ForwardCallsSection campaignId={campaign.id} />
+          {/* 3 — Forward Calls To */}
+          <ForwardCallsSection campaignId={campaign.id} />
 
-        {/* 4 — Advanced Settings (12 collapsible cards) */}
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-base font-semibold uppercase tracking-wider">Advanced Settings</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Customize how incoming calls are routed to optimize the call experience.
-            </p>
-          </div>
-          <AdvancedSettingsList campaignId={campaign.id} />
-        </section>
-      </TabsContent>
+          {/* 4 — Advanced Settings (12 collapsible cards) */}
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-base font-semibold uppercase tracking-wider">Advanced Settings</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Customize how incoming calls are routed to optimize the call experience.
+              </p>
+            </div>
+            <AdvancedSettingsList campaignId={campaign.id} />
+          </section>
+        </div>
+      )}
 
-      <TabsContent value="rtb">
-        <RtbTab campaignId={campaign.id} />
-      </TabsContent>
-
-      <TabsContent value="enrichment">
-        <EnrichmentTab campaignId={campaign.id} />
-      </TabsContent>
-
-      <TabsContent value="access">
-        <AccessTab campaignId={campaign.id} />
-      </TabsContent>
-    </Tabs>
+      {tab === "rtb" && <RtbTab campaignId={campaign.id} />}
+      {tab === "enrichment" && <EnrichmentTab campaignId={campaign.id} />}
+      {tab === "access" && <AccessTab campaignId={campaign.id} />}
+    </div>
   );
 }

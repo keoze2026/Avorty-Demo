@@ -65,7 +65,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Traffic",
     items: [
       { label: "Campaigns", href: ROUTES.campaigns, icon: Megaphone, roles: ["admin", "publisher"] },
-      { label: "Numbers", href: ROUTES.numbers, icon: Hash, roles: ["admin"] },
+      { label: "Phone Numbers", href: ROUTES.numbers, icon: Hash, roles: ["admin"] },
       { label: "Routing", href: ROUTES.routing, icon: GitFork, roles: ["admin"] },
     ],
   },
