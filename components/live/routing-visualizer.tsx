@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Building2, GitFork, Hash, PhoneIncoming, Sparkles, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toE164 } from "@/lib/format";
 import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +30,7 @@ export function RoutingVisualizer({ call }: RoutingVisualizerProps) {
           Routing path
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          {call ? `Watching ${call.callerNumber}` : "Pick a call to follow its path"}
+          {call ? `Watching ${toE164(call.callerNumber)}` : "Pick a call to follow its path"}
         </p>
       </CardHeader>
       <CardContent>

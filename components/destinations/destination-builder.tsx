@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { toE164 } from "@/lib/format";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 import type { Destination } from "@/lib/types";
@@ -56,7 +57,7 @@ const EMPTY: FormState = {
 
 /**
  * Loose TFN check — accepts the formats we generate elsewhere (e.g.
- * "+1 (555) 123-4567") plus pasted variants. Anything with at least 7 digits
+ * "+15551234567") plus pasted variants. Anything with at least 7 digits
  * passes; the form normalizes by trim only.
  */
 function isValidTfn(s: string) {
@@ -109,7 +110,7 @@ export function DestinationBuilder({
 
     const payload: Omit<Destination, "id"> = {
       name: form.name.trim(),
-      tfn: form.tfn.trim(),
+      tfn: toE164(form.tfn.trim()),
       buyerId: form.buyerId,
       concurrencyCap: form.concurrencyCap,
       dailyCap: form.dailyCap,
@@ -159,7 +160,7 @@ export function DestinationBuilder({
             <Label htmlFor="dest-tfn">Toll-free number (TFN)</Label>
             <Input
               id="dest-tfn"
-              placeholder="+1 (555) 123-4567"
+              placeholder="+15551234567"
               value={form.tfn}
               onChange={(e) => setForm((f) => ({ ...f, tfn: e.target.value }))}
               className="font-mono"

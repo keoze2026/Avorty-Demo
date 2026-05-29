@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, toE164 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type RoutingOption = "Standard" | "Menu" | "Call Flow" | "Revenue";
@@ -168,7 +168,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                      {d.tfn}
+                      {toE164(d.tfn)}
                     </TableCell>
                     <TableCell>
                       <span

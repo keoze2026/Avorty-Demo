@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { formatCompact, formatNumber } from "@/lib/format";
+import { formatCompact, formatNumber, toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import type { TrackingNumber } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -204,12 +204,12 @@ export function TrackNumbersTable({
                       <Checkbox
                         checked={selected.has(n.id)}
                         onCheckedChange={() => onToggle(n.id)}
-                        aria-label={`Select ${n.number}`}
+                        aria-label={`Select ${toE164(n.number)}`}
                       />
                     </TableCell>
                     {visibleColumns.has("number") && (
                       <TableCell className="text-left font-mono text-xs">
-                        {n.number}
+                        {toE164(n.number)}
                       </TableCell>
                     )}
                     {visibleColumns.has("name") && (
@@ -314,8 +314,8 @@ export function TrackNumbersTable({
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          aria-label={`Edit ${n.number}`}
-                          onClick={() => toast(`Edit ${n.number} — coming soon`)}
+                          aria-label={`Edit ${toE164(n.number)}`}
+                          onClick={() => toast(`Edit ${toE164(n.number)} — coming soon`)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -323,10 +323,10 @@ export function TrackNumbersTable({
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          aria-label={`Release ${n.number}`}
+                          aria-label={`Release ${toE164(n.number)}`}
                           onClick={() => {
                             remove(n.id);
-                            toast.success(`${n.number} released`);
+                            toast.success(`${toE164(n.number)} released`);
                           }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

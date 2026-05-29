@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { formatCurrency, formatDuration, formatRelativeTime } from "@/lib/format";
+import { formatCurrency, formatDuration, formatRelativeTime, toE164 } from "@/lib/format";
 import type { Call } from "@/lib/types";
 
 interface Props {
@@ -62,7 +62,7 @@ export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Prop
                     </TableCell>
                   )}
                   {visibleColumns.has("caller") && (
-                    <TableCell className="font-mono text-xs">{c.callerNumber}</TableCell>
+                    <TableCell className="font-mono text-xs">{toE164(c.callerNumber)}</TableCell>
                   )}
                   {visibleColumns.has("campaign") && (
                     <TableCell>

@@ -21,7 +21,7 @@ export function ProfileSection() {
   const [name, setName] = useState(user?.name ?? "Avery Quinn");
   const [email, setEmail] = useState(user?.email ?? "avery@vortyx.io");
   const [mfa, setMfa] = useState(true);
-  const [phone, setPhone] = useState("+1 (415) 555-0184");
+  const [phone, setPhone] = useState("+14155550184");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

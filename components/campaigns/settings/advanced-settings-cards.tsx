@@ -259,7 +259,7 @@ export function SpamFilterCard({ campaignId }: { campaignId: string }) {
           <Label className="text-xs">Blocked numbers (one per line)</Label>
           <Textarea
             rows={3}
-            placeholder="+1 (555) 123-4567"
+            placeholder="+15551234567"
             value={s.blockedNumbers}
             onChange={(e) => patch({ blockedNumbers: e.target.value })}
           />

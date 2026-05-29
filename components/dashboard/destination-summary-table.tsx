@@ -17,7 +17,7 @@ import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, toE164 } from "@/lib/format";
 import type { Buyer, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +34,16 @@ interface Row {
   callsToday: number;
   revenueToday: number;
   capPct: number;
+}
+
+/** Small green pill — every row in this table is, by filter, active. */
+function ActiveBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[oklch(0.78_0.18_155)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
+      <span aria-hidden className="h-1 w-1 rounded-full bg-current" />
+      Active
+    </span>
+  );
 }
 
 function buildRows(
@@ -105,7 +115,7 @@ export function DestinationSummaryTable({
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between gap-2 border-b border-border px-6 py-4">
         <div>
-          <h3 className="text-base font-semibold">Destinations</h3>
+          <h3 className="text-[13px] font-semibold uppercase tracking-wider">DESTINATIONS</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Active TFNs attached to active buyers — paused destinations drop off automatically.
           </p>
@@ -119,12 +129,12 @@ export function DestinationSummaryTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1000px]">
+        <Table className="min-w-[980px] [&_tr]:border-b-0 [&_td]:py-2 [&_th]:h-8 [&_th]:py-1.5 [&_th]:text-[10px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wider">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-6 text-left">Destination</TableHead>
               <TableHead className="text-left">Buyer</TableHead>
-              <TableHead>CC</TableHead>
+              <TableHead>Live</TableHead>
               <TableHead>Cap (today)</TableHead>
               <TableHead>Calls today</TableHead>
               <TableHead className="pr-6">Revenue today</TableHead>
@@ -142,10 +152,14 @@ export function DestinationSummaryTable({
                 const ccPct = destination.concurrencyCap > 0
                   ? (cc / destination.concurrencyCap) * 100
                   : 0;
+                // Live concurrency color ramp:
+                //   0–69%   bright Won-green (healthy)
+                //   70–89%  amber (heads-up)
+                //   90%+    red (over the ceiling)
                 const ccColor =
                   ccPct >= 90 ? "text-destructive" :
                   ccPct >= 70 ? "text-[color:var(--warning)]" :
-                  "text-accent";
+                  "text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]";
                 const capColor =
                   capPct >= 90 ? "bg-destructive" :
                   capPct >= 70 ? "bg-[color:var(--warning)]" :
@@ -153,16 +167,19 @@ export function DestinationSummaryTable({
                 return (
                   <TableRow key={destination.id}>
                     <TableCell className="pl-6 text-left">
-                      <div className="font-medium">{destination.name}</div>
-                      <div className="mt-0.5 font-mono text-xs text-muted-foreground">
-                        {destination.tfn}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium leading-tight">{destination.name}</span>
+                        <ActiveBadge />
+                      </div>
+                      <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                        {toE164(destination.tfn)}
                       </div>
                     </TableCell>
                     <TableCell className="text-left">
                       {buyer ? (
                         <Link
                           href={`${ROUTES.buyers}/${buyer.id}`}
-                          className="text-sm transition-colors hover:text-accent"
+                          className="text-xs transition-colors hover:text-accent"
                         >
                           {buyer.name}
                         </Link>
@@ -170,7 +187,7 @@ export function DestinationSummaryTable({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="tabular-nums">
+                    <TableCell className="text-xs tabular-nums">
                       <span className={cn("font-medium", cc > 0 ? ccColor : "text-muted-foreground")}>
                         {cc > 0 && (
                           <span
@@ -184,14 +201,14 @@ export function DestinationSummaryTable({
                     </TableCell>
                     <TableCell>
                       {destination.dailyCap > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-baseline justify-between gap-2 text-xs tabular-nums">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-baseline justify-between gap-2 text-[11px] tabular-nums">
                             <span className="font-medium">
                               {formatNumber(callsToday)} / {formatNumber(destination.dailyCap)}
                             </span>
                             <span className="text-muted-foreground">{Math.round(capPct)}%</span>
                           </div>
-                          <div className="h-1 w-32 overflow-hidden rounded-full bg-muted">
+                          <div className="h-0.5 w-28 overflow-hidden rounded-full bg-muted">
                             <div
                               className={cn("h-full rounded-full transition-[width]", capColor)}
                               style={{ width: `${capPct}%` }}
@@ -199,13 +216,13 @@ export function DestinationSummaryTable({
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">Unlimited</span>
+                        <span className="text-[11px] text-muted-foreground">Unlimited</span>
                       )}
                     </TableCell>
-                    <TableCell className="tabular-nums">
+                    <TableCell className="text-xs tabular-nums">
                       {formatNumber(callsToday)}
                     </TableCell>
-                    <TableCell className="pr-6 font-medium tabular-nums">
+                    <TableCell className="pr-6 text-xs font-medium tabular-nums">
                       {formatCurrency(revenueToday)}
                     </TableCell>
                   </TableRow>

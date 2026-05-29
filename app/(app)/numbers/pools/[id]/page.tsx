@@ -58,6 +58,7 @@ import {
   derivePurchaseStatus,
   deriveName as deriveNumberName,
 } from "@/components/numbers/track-numbers-table";
+import { toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import type {
   NumberPool,
@@ -351,9 +352,9 @@ function AttachNumbersCard({
                 return (
                   <TableRow key={n.id}>
                     <TableCell className="pl-4 text-left">
-                      <Checkbox aria-label={`Select ${n.number}`} />
+                      <Checkbox aria-label={`Select ${toE164(n.number)}`} />
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{n.number}</TableCell>
+                    <TableCell className="font-mono text-xs">{toE164(n.number)}</TableCell>
                     <TableCell className="font-medium">{deriveNumberName(n)}</TableCell>
                     <TableCell>
                       <Badge variant={purchase.tone}>{purchase.label}</Badge>
@@ -369,7 +370,7 @@ function AttachNumbersCard({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        aria-label={`Detach ${n.number}`}
+                        aria-label={`Detach ${toE164(n.number)}`}
                         onClick={() => detach(n.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -480,7 +481,7 @@ function AttachNumbersDialog({
                   checked={selected.has(n.id)}
                   onCheckedChange={() => toggle(n.id)}
                 />
-                <span className="font-mono text-xs">{n.number}</span>
+                <span className="font-mono text-xs">{toE164(n.number)}</span>
                 <span className="text-muted-foreground">· {deriveNumberName(n)}</span>
               </Label>
             ))

@@ -8,12 +8,15 @@
 
 import type { Destination } from "@/lib/types";
 
-/** Deterministic TFN generator so the SSR + hydration pass agree. */
+/**
+ * Deterministic TFN generator so SSR + hydration agree.
+ * Emits E.164 ("+1XXXXXXXXXX") — same format the rest of the app expects.
+ */
 function tfn(seed: number): string {
   const area = 200 + ((seed * 9301 + 49297) % 700);
   const prefix = 200 + ((seed * 13 + 17) % 700);
   const line = 1000 + ((seed * 31 + 7) % 8999);
-  return `+1 (${area}) ${prefix}-${line}`;
+  return `+1${area}${prefix}${line}`;
 }
 
 export const MOCK_DESTINATIONS: Destination[] = [

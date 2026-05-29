@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, toE164 } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -89,12 +89,6 @@ function statusVariant(s: CallStatus): React.ComponentProps<typeof Badge>["varia
   if (s === "in-progress" || s === "ringing") return "default";
   if (s === "missed") return "warning";
   return "destructive";
-}
-
-/** Strip formatting → E.164-ish: "+1 (473) 501-5238" → "+14735015238". */
-function toE164(num: string): string {
-  const digits = num.replace(/\D/g, "");
-  return digits ? `+${digits}` : num;
 }
 
 /** Seconds → "HH:MM:SS" with zero-padded fields. 416 → "00:06:56". */

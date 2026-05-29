@@ -40,17 +40,17 @@ const STATE_OPTIONS = [
   { code: "GA", city: "Atlanta", area: 404 },
 ];
 
+/** Emit E.164 ("+1XXXXXXXXXX") so the rest of the app renders consistently. */
 function randomLocalNumber(area: number) {
   const prefix = 200 + Math.floor(Math.random() * 700);
   const line = 1000 + Math.floor(Math.random() * 8999);
-  return `+1 (${area}) ${prefix}-${line}`;
+  return `+1${area}${prefix}${line}`;
 }
 
 function randomTollfree() {
   const prefix = [800, 833, 844, 855, 866, 877, 888][Math.floor(Math.random() * 7)];
   const line = 100000 + Math.floor(Math.random() * 899999);
-  const line6 = line.toString();
-  return `+1 (${prefix}) ${line6.slice(0, 3)}-${line6.slice(3)}`;
+  return `+1${prefix}${line}`;
 }
 
 export function ProvisionNumberDialog({ open, onOpenChange }: Props) {

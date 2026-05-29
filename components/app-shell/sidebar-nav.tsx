@@ -66,7 +66,7 @@ export function AppSidebar() {
                     "group-data-[collapsible=icon]:hidden",
                   )}
                 >
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                     {group.label}
                   </span>
                 </div>
@@ -115,16 +115,16 @@ export function AppSidebar() {
 
 function BrandHeader({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className="flex h-16 items-center px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+    <div className="flex h-14 items-center px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
       <Link
         href="/dashboard"
         aria-label={BRAND.name}
-        className="flex min-w-0 items-center gap-2.5"
+        className="flex min-w-0 items-center gap-2"
       >
-        <Logo className="h-8 w-8 shrink-0" />
+        <Logo className="h-6 w-6 shrink-0" />
         {!collapsed && (
           <span
-            className="truncate text-xl font-bold tracking-tight"
+            className="truncate text-base font-bold tracking-tight"
             style={{
               background:
                 "linear-gradient(120deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%)",
@@ -161,20 +161,20 @@ function SidebarItem({
         href={item.href}
         title={collapsed ? item.label : undefined}
         className={cn(
-          "group/item relative flex h-11 items-center gap-3 rounded-lg px-3 transition-all",
-          "group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
+          "group/item relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 transition-all",
+          "group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
           active
             ? "bg-accent text-accent-foreground shadow-[0_4px_16px_rgba(82,102,224,0.30)]"
             : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
         )}
       >
         {/* Icon */}
-        <Icon className={cn("h-[18px] w-[18px] shrink-0", active ? "" : "opacity-80")} />
+        <Icon className={cn("h-[15px] w-[15px] shrink-0", active ? "" : "opacity-80")} />
 
         {/* Label */}
         <span
           className={cn(
-            "flex-1 truncate text-[14px] font-medium",
+            "flex-1 truncate text-[12px] font-medium",
             "group-data-[collapsible=icon]:hidden",
           )}
         >
@@ -185,7 +185,7 @@ function SidebarItem({
         {item.badge && (
           <span
             className={cn(
-              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+              "shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider",
               "group-data-[collapsible=icon]:hidden",
               active
                 ? "bg-accent-foreground/20 text-accent-foreground"

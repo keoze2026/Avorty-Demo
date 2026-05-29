@@ -21,7 +21,8 @@ function pad(n: number, w = 4) {
 function num(area: number, i: number): string {
   const prefix = 200 + ((i * 31) % 700);
   const line = 1000 + ((i * 17) % 8999);
-  return `+1 (${area}) ${prefix}-${line}`;
+  // E.164 "+1XXXXXXXXXX" — single canonical format across the app.
+  return `+1${area}${prefix}${line}`;
 }
 
 const TYPES: NumberType[] = ["local", "local", "local", "tollfree"];

@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, toE164 } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -109,7 +109,7 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
                       {d.name}
                     </Link>
                     <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-                      {d.tfn}
+                      {toE164(d.tfn)}
                     </p>
                   </div>
                   {d.enabled ? (

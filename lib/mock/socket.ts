@@ -29,8 +29,9 @@ function generateCall(): Call {
     campaignName: campaign.name,
     publisherId: `p_${(counter % 4) + 1}`,
     publisherName: `Publisher ${(counter % 4) + 1}`,
-    callerNumber: `+1 (${200 + Math.floor(rng(counter) * 700)}) ${200 + Math.floor(rng(counter + 1) * 700)}-${1000 + Math.floor(rng(counter + 2) * 8999)}`,
-    destinationNumber: `+1 (${200 + Math.floor(rng(counter + 3) * 700)}) ${200 + Math.floor(rng(counter + 4) * 700)}-${1000 + Math.floor(rng(counter + 5) * 8999)}`,
+    // E.164 ("+1XXXXXXXXXX") to match the rest of the app.
+    callerNumber: `+1${200 + Math.floor(rng(counter) * 700)}${200 + Math.floor(rng(counter + 1) * 700)}${1000 + Math.floor(rng(counter + 2) * 8999)}`,
+    destinationNumber: `+1${200 + Math.floor(rng(counter + 3) * 700)}${200 + Math.floor(rng(counter + 4) * 700)}${1000 + Math.floor(rng(counter + 5) * 8999)}`,
     startedAt: Date.now(),
     durationSec: 0,
     status: "ringing",

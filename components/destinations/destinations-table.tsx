@@ -18,7 +18,7 @@ import {
 import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, toE164 } from "@/lib/format";
 import type { Buyer, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -86,11 +86,6 @@ function buildRows(destinations: Destination[]): Row[] {
     monthly: monthly.get(destination.tfn) ?? 0,
     global: global.get(destination.tfn) ?? 0,
   }));
-}
-
-/** "+1 (213) 217-2017" → "12132172017"; Ringba's compact dial-string form. */
-function compactTfn(tfn: string) {
-  return tfn.replace(/\D/g, "");
 }
 
 /** Color a cell based on the fraction used (0..1). */
@@ -204,9 +199,9 @@ export function DestinationsTable({
                       )}
                     </TableCell>
 
-                    {/* DESTINATION (TFN, compact dial-string form) */}
+                    {/* DESTINATION (TFN, E.164 dial-string) */}
                     <TableCell className="font-mono text-xs tabular-nums text-muted-foreground">
-                      {compactTfn(destination.tfn)}
+                      {toE164(destination.tfn)}
                     </TableCell>
 
                     {/* LIVE — current concurrent / max */}

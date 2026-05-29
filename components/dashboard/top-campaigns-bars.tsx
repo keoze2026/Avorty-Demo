@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import {
@@ -22,6 +22,7 @@ import { formatNumber } from "@/lib/format";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { Call } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface Row {
   id: string;
@@ -29,6 +30,14 @@ interface Row {
   connected: number;
   vertical: string;
 }
+
+type RangeId = "today" | "14d" | "30d";
+
+const RANGES: Array<{ id: RangeId; label: string; days: number }> = [
+  { id: "today", label: "Today", days: 1 },
+  { id: "14d", label: "14d", days: 14 },
+  { id: "30d", label: "Monthly", days: 30 },
+];
 
 interface TopCampaignsBarsProps {
   /** When provided, top-6 are computed from these calls' connected count per campaign. */
@@ -40,15 +49,32 @@ function isConnected(status: Call["status"]) {
   return status === "completed" || status === "in-progress";
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
+  const [range, setRange] = useState<RangeId>("today");
+
   const data = useMemo<Row[]>(() => {
     const source = calls ?? MOCK_CALLS;
+
+    // For "today" the cutoff is local midnight; for 14d/30d we take a rolling
+    // window measured from now so the chart doesn't snap to a calendar boundary.
+    let cutoffMs: number;
+    if (range === "today") {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      cutoffMs = d.getTime();
+    } else {
+      const days = RANGES.find((r) => r.id === range)?.days ?? 14;
+      cutoffMs = Date.now() - days * DAY_MS;
+    }
 
     const campaignById = new Map<string, (typeof MOCK_CAMPAIGNS)[number]>();
     for (const c of MOCK_CAMPAIGNS) campaignById.set(c.id, c);
 
     const m = new Map<string, Row>();
     for (const call of source) {
+      if (call.startedAt < cutoffMs) continue;
       if (!isConnected(call.status)) continue;
       const camp = campaignById.get(call.campaignId);
       if (!camp) continue;
@@ -68,24 +94,59 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
       .filter((r) => r.connected > 0)
       .sort((a, b) => b.connected - a.connected)
       .slice(0, 6);
-  }, [calls]);
+  }, [calls, range]);
+
+  const subLabel =
+    range === "today"
+      ? "Connected calls today, by campaign"
+      : range === "14d"
+        ? "Connected calls in the last 14 days, by campaign"
+        : "Connected calls in the last 30 days, by campaign";
 
   // Recharts BarChart with layout="vertical" renders horizontal bars (y = category, x = value).
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-3 pb-2">
         <div>
           <CardTitle className="text-sm font-semibold">Top campaigns</CardTitle>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Connected calls today, by campaign
+            {subLabel}
           </p>
         </div>
-        <Link
-          href={ROUTES.campaigns}
-          className="inline-flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
-        >
-          View all <ArrowUpRight className="h-3 w-3" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <div
+            role="tablist"
+            aria-label="Time range"
+            className="inline-flex rounded-md border border-border bg-muted/30 p-0.5"
+          >
+            {RANGES.map((r) => {
+              const active = range === r.id;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setRange(r.id)}
+                  className={cn(
+                    "rounded-[5px] px-2 py-1 text-[10px] font-medium uppercase tracking-wider transition-colors",
+                    active
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
+          <Link
+            href={ROUTES.campaigns}
+            className="inline-flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            View all <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-72 w-full">

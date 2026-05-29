@@ -67,3 +67,23 @@ export function formatRelativeTime(timestamp: number, now = Date.now()) {
 
 // Reference to avoid unused-import warning if a consumer only takes the array.
 void RELATIVE_THRESHOLDS;
+
+/**
+ * Normalize any phone-number-shaped string to compact E.164 — no spaces,
+ * no parens, no dashes, leading "+". US numbers come out as "+1XXXXXXXXXX".
+ *
+ *   "+1 (809) 373-1379" → "+18093731379"
+ *   "8093731379"         → "+18093731379"   (10-digit US assumed)
+ *   "18093731379"        → "+18093731379"
+ *   ""                   → ""               (pass-through for empties)
+ *
+ * Use this everywhere a phone number is rendered so the UI is consistent.
+ */
+export function toE164(value: string | null | undefined): string {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  // 10-digit input → assume US, prefix with country code "1".
+  if (digits.length === 10) return `+1${digits}`;
+  return `+${digits}`;
+}

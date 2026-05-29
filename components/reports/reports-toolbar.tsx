@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
   Eye,
@@ -21,14 +21,32 @@ import {
 import { TIMEZONES as TZ_OPTIONS } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
 
-const REFRESH_OPTIONS = [
+type RefreshOption =
+  | "Off"
+  | "Auto refresh"
+  | "Every 10 s"
+  | "Every 30 s"
+  | "Every 1 min"
+  | "Every 5 min";
+
+const REFRESH_OPTIONS: RefreshOption[] = [
   "Off",
   "Auto refresh",
   "Every 10 s",
   "Every 30 s",
   "Every 1 min",
   "Every 5 min",
-] as const;
+];
+
+/** How many seconds before the option fires onRefresh again. 0 = no timer. */
+const REFRESH_SECONDS: Record<RefreshOption, number> = {
+  Off: 0,
+  "Auto refresh": 30, // sensible default for the "smart" auto mode
+  "Every 10 s": 10,
+  "Every 30 s": 30,
+  "Every 1 min": 60,
+  "Every 5 min": 300,
+};
 
 /**
  * Subtle hover override used on every outline button in the toolbar.
@@ -62,9 +80,40 @@ export function ReportsToolbar({
     TZ_OPTIONS.find((t) => t.iana === "America/New_York")?.label ??
       TZ_OPTIONS[0].label,
   );
-  const [refresh, setRefresh] = useState<(typeof REFRESH_OPTIONS)[number]>(
-    "Auto refresh",
-  );
+  const [refresh, setRefresh] = useState<RefreshOption>("Auto refresh");
+
+  // Live ticking countdown: seconds remaining until the next auto-refresh fires.
+  // 0 whenever the option is "Off" or no interval is active.
+  const intervalSec = REFRESH_SECONDS[refresh];
+  const [remaining, setRemaining] = useState<number>(intervalSec);
+  // Hold the latest onRefresh in a ref so the ticking effect doesn't re-arm
+  // every render just because the parent passed a fresh callback.
+  const refreshRef = useRef(onRefresh);
+  useEffect(() => {
+    refreshRef.current = onRefresh;
+  }, [onRefresh]);
+
+  useEffect(() => {
+    if (intervalSec <= 0) {
+      setRemaining(0);
+      return;
+    }
+    setRemaining(intervalSec);
+    const id = window.setInterval(() => {
+      setRemaining((s) => {
+        if (s <= 1) {
+          // Fire the refresh and rearm.
+          refreshRef.current();
+          return intervalSec;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [intervalSec]);
+
+  const active = intervalSec > 0;
+  const countdownLabel = active ? `${refresh} · ${remaining}s` : refresh;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -128,10 +177,26 @@ export function ReportsToolbar({
             <Button
               variant="outline"
               size="sm"
-              className={cn("gap-2", TOOLBAR_BTN_HOVER)}
+              className={cn(
+                "gap-2 tabular-nums",
+                // When auto-refresh is armed, tint the chip in the portal accent
+                // (and the dot below pulses) so the operator sees it ticking.
+                active
+                  ? "border-accent/50 bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent"
+                  : TOOLBAR_BTN_HOVER,
+              )}
             >
-              {refresh}
-              <ChevronDown className="h-3 w-3 opacity-60" />
+              {active && (
+                <span
+                  aria-hidden
+                  className="relative inline-flex h-1.5 w-1.5"
+                >
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-current" />
+                </span>
+              )}
+              {countdownLabel}
+              <ChevronDown className={cn("h-3 w-3", active ? "opacity-80" : "opacity-60")} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

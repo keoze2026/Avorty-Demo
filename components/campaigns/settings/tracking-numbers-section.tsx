@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Hash } from "lucide-react";
 import { useNumbersStore } from "@/lib/store/numbers-store";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, toE164 } from "@/lib/format";
 
 export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
   // Stable selector + useMemo to avoid the new-ref-per-render Zustand loop.
@@ -73,7 +73,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
               {numbers.map((n) => (
                 <TableRow key={n.id}>
                   <TableCell className="pl-6 font-mono text-xs whitespace-nowrap">
-                    {n.number}
+                    {toE164(n.number)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
@@ -93,10 +93,10 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
                       onCheckedChange={(v) => {
                         setNumberStatus(n.id, v ? "active" : "paused");
                         toast.success(
-                          v ? `Activated ${n.number}` : `Paused ${n.number}`,
+                          v ? `Activated ${toE164(n.number)}` : `Paused ${toE164(n.number)}`,
                         );
                       }}
-                      aria-label={`Toggle ${n.number}`}
+                      aria-label={`Toggle ${toE164(n.number)}`}
                     />
                   </TableCell>
                 </TableRow>

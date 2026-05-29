@@ -45,7 +45,8 @@ function fmtNumber(seed: number) {
   const area = 200 + Math.floor(rng(seed) * 700);
   const prefix = 200 + Math.floor(rng(seed + 1) * 700);
   const line = 1000 + Math.floor(rng(seed + 2) * 8999);
-  return `+1 (${area}) ${prefix}-${line}`;
+  // E.164 ("+1XXXXXXXXXX") — single canonical format across the app.
+  return `+1${area}${prefix}${line}`;
 }
 
 /**

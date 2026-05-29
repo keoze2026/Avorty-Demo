@@ -149,14 +149,14 @@ export function DashboardMockup() {
         </div>
 
         <div className="flex-1 overflow-auto scrollbar-hide">
-          <CallItem phone="+1 (512) 555-0184" campaign="Health Tier 1" state="TX" duration="0:24" status="connected" active />
-          <CallItem phone="+1 (305) 555-0721" campaign="Solar Nationwide" state="FL" duration="3:12" status="connected" />
-          <CallItem phone="+1 (415) 555-0932" campaign="Legal Intake" state="CA" duration="0:08" status="ringing" />
-          <CallItem phone="+1 (212) 555-0455" campaign="Health Tier 1" state="NY" duration="2:47" status="connected" />
-          <CallItem phone="+1 (404) 555-0617" campaign="Auto Warranty" state="GA" duration="1:53" status="connected" />
-          <CallItem phone="+1 (312) 555-0298" campaign="Health Tier 1" state="IL" duration="4:21" status="connected" />
-          <CallItem phone="+1 (602) 555-0847" campaign="Solar Southwest" state="AZ" duration="0:45" status="connected" />
-          <CallItem phone="+1 (718) 555-0392" campaign="Legal Mass Tort" state="NY" duration="1:12" status="connected" />
+          <CallItem phone="+15125550184" campaign="Health Tier 1" state="TX" duration="0:24" status="connected" active />
+          <CallItem phone="+13055550721" campaign="Solar Nationwide" state="FL" duration="3:12" status="connected" />
+          <CallItem phone="+14155550932" campaign="Legal Intake" state="CA" duration="0:08" status="ringing" />
+          <CallItem phone="+12125550455" campaign="Health Tier 1" state="NY" duration="2:47" status="connected" />
+          <CallItem phone="+14045550617" campaign="Auto Warranty" state="GA" duration="1:53" status="connected" />
+          <CallItem phone="+13125550298" campaign="Health Tier 1" state="IL" duration="4:21" status="connected" />
+          <CallItem phone="+16025550847" campaign="Solar Southwest" state="AZ" duration="0:45" status="connected" />
+          <CallItem phone="+17185550392" campaign="Legal Mass Tort" state="NY" duration="1:12" status="connected" />
         </div>
       </motion.div>
 

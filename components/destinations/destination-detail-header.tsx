@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ROUTES } from "@/lib/constants";
+import { toE164 } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 import type { Destination } from "@/lib/types";
@@ -78,7 +79,7 @@ export function DestinationDetailHeader({
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
               <Target className="h-3 w-3" />
-              <span className="font-mono">{destination.tfn}</span>
+              <span className="font-mono">{toE164(destination.tfn)}</span>
             </span>
             {buyer && (
               <>

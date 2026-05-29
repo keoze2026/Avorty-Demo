@@ -162,7 +162,7 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
       <CardContent>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 12, right: 16, left: -8, bottom: 0 }}>
+            <ComposedChart data={data} margin={{ top: 12, right: 4, left: -8, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="label"
@@ -180,9 +180,20 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 width={32}
                 allowDecimals={false}
               />
-              {/* Right-side revenue axis kept for line scaling, but hidden —
-                  dollar-labeled ticks aren't shown. */}
-              <YAxis yAxisId="rev" orientation="right" hide />
+              {/* Right-side revenue axis — $ ticks for the Revenue line. */}
+              <YAxis
+                yAxisId="rev"
+                orientation="right"
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                width={48}
+                tickFormatter={(v: number) => {
+                  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+                  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
+                  return `$${v}`;
+                }}
+              />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
                 cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}

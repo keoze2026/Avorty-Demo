@@ -155,7 +155,10 @@ export function CampaignsTable({
                     </TableCell>
                   )}
                   <TableCell className="text-left font-medium text-foreground">
-                    {c.name}
+                    <div className="flex items-center gap-2">
+                      <span>{c.name}</span>
+                      {isActive && <ActiveBadge />}
+                    </div>
                   </TableCell>
                   {columns.access && (
                     <TableCell>
@@ -221,6 +224,15 @@ export function CampaignsTable({
 /* ─────────────────────────────────────────────────────────────────── */
 /*  Subcomponents                                                       */
 /* ─────────────────────────────────────────────────────────────────── */
+
+function ActiveBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[oklch(0.78_0.18_155)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
+      <span aria-hidden className="h-1 w-1 rounded-full bg-current" />
+      Active
+    </span>
+  );
+}
 
 function ProgressPill({ paused }: { paused: boolean }) {
   return (

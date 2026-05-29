@@ -26,7 +26,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ROUTES } from "@/lib/constants";
-import { formatCurrency, formatDuration, formatRelativeTime } from "@/lib/format";
+import { formatCurrency, formatDuration, formatRelativeTime, toE164 } from "@/lib/format";
 import type { Call } from "@/lib/types";
 
 interface Props {
@@ -49,7 +49,7 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                 <span className="text-muted-foreground/40">·</span>
                 <span>{new Date(call.startedAt).toLocaleString()}</span>
               </div>
-              <SheetTitle className="font-mono text-lg">{call.callerNumber}</SheetTitle>
+              <SheetTitle className="font-mono text-lg">{toE164(call.callerNumber)}</SheetTitle>
               <SheetDescription>
                 <CallStatusBadge status={call.status} />
               </SheetDescription>
@@ -79,7 +79,7 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                   <Step
                     icon={PhoneIncoming}
                     label="Caller"
-                    value={call.callerNumber}
+                    value={toE164(call.callerNumber)}
                     sub={call.geo.state ? `${call.geo.city}, ${call.geo.state}` : "Unknown geo"}
                   />
                   <Step
@@ -92,7 +92,7 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                   <Step
                     icon={Hash}
                     label="Tracking number"
-                    value={call.destinationNumber}
+                    value={toE164(call.destinationNumber)}
                   />
                   <Step
                     icon={Tag}
@@ -119,7 +119,7 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                   {call.geo.state ? `${call.geo.city}, ${call.geo.state}` : "—"}
                 </MetaCell>
                 <MetaCell icon={Phone} label="Destination">
-                  <span className="font-mono">{call.destinationNumber}</span>
+                  <span className="font-mono">{toE164(call.destinationNumber)}</span>
                 </MetaCell>
                 <MetaCell icon={CheckCircle2} label="Outcome">
                   {call.status === "completed" ? "Qualified · paid" : call.status}

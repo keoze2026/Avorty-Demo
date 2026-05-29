@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { formatCompact, formatPercent, formatRelativeTime } from "@/lib/format";
+import { formatCompact, formatPercent, formatRelativeTime, toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import type { TrackingNumber } from "@/lib/types";
 
@@ -52,7 +52,7 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
             const isActive = n.status === "active";
             return (
               <TableRow key={n.id} className="hover:bg-secondary/30">
-                <TableCell className="font-mono text-xs">{n.number}</TableCell>
+                <TableCell className="font-mono text-xs">{toE164(n.number)}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className="capitalize">
                     {n.type === "tollfree" ? "Toll-free" : n.type}
@@ -94,7 +94,7 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                       <DropdownMenuItem
                         onSelect={() => {
                           setStatus(n.id, isActive ? "paused" : "active");
-                          toast.success(isActive ? `${n.number} paused` : `${n.number} activated`);
+                          toast.success(isActive ? `${toE164(n.number)} paused` : `${toE164(n.number)} activated`);
                         }}
                       >
                         {isActive ? (
@@ -111,7 +111,7 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                       <DropdownMenuItem
                         onSelect={() => {
                           remove(n.id);
-                          toast.success(`${n.number} released`);
+                          toast.success(`${toE164(n.number)} released`);
                         }}
                         className="text-destructive focus:text-destructive"
                       >

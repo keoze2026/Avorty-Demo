@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCompact, formatPercent, formatRelativeTime } from "@/lib/format";
+import { formatCompact, formatPercent, formatRelativeTime, toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 
 /**
@@ -66,7 +66,7 @@ export function PublisherNumbersTab({ publisherId }: { publisherId: string }) {
         <TableBody>
           {slice.map((n) => (
             <TableRow key={n.id} className="hover:bg-secondary/30">
-              <TableCell className="font-mono text-xs">{n.number}</TableCell>
+              <TableCell className="font-mono text-xs">{toE164(n.number)}</TableCell>
               <TableCell>
                 <Badge variant="outline" className="capitalize">
                   {n.type === "tollfree" ? "Toll-free" : n.type}

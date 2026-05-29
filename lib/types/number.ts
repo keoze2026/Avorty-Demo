@@ -3,7 +3,7 @@ export type NumberType = "local" | "tollfree" | "international";
 
 export interface TrackingNumber {
   id: string;
-  /** Pretty-printed E.164 — e.g. "+1 (512) 555-0123" */
+  /** E.164 dial-string — e.g. "+15125550123". */
   number: string;
   type: NumberType;
   status: NumberStatus;

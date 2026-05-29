@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/table";
 import type { Call } from "@/lib/types";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
-import { formatCurrency, formatNumber, formatPercent, formatTimer } from "@/lib/format";
+import { formatCurrency, formatNumber, formatPercent, formatTimer, toE164 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type GroupKey =
@@ -429,8 +429,10 @@ function deriveGroup(c: Call, group: GroupKey): { key: string; label: string } |
         ? { key: c.publisherId, label: c.publisherName ?? "—" }
         : null;
     case "dialed":
-    case "destination":
-      return { key: c.destinationNumber, label: c.destinationNumber };
+    case "destination": {
+      const v = toE164(c.destinationNumber);
+      return { key: v, label: v };
+    }
     case "numberPool": {
       const digits = c.destinationNumber.replace(/\D/g, "");
       const pool = `+${digits.slice(0, 6)}xxxxx`;
@@ -546,9 +548,11 @@ function deriveGroup(c: Call, group: GroupKey): { key: string; label: string } |
       return labelOf(pickFrom(c, "i-car", CARRIERS));
     case "identity-linetype":
       return labelOf(pickFrom(c, "i-lt", LINE_TYPES));
-    case "identity-phone":
+    case "identity-phone": {
       // The caller's own number is already known on the record.
-      return { key: c.callerNumber, label: c.callerNumber };
+      const v = toE164(c.callerNumber);
+      return { key: v, label: v };
+    }
     case "identity-zipcode": {
       const prefix = ZIP_PREFIXES[hashOf(c.callerNumber + "i-zip") % ZIP_PREFIXES.length];
       const v = `${prefix}${(hashOf(c.id + "i-zip") % 999).toString().padStart(3, "0")}`;

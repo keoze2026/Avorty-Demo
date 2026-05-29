@@ -25,7 +25,7 @@ export interface PushNotification {
   icon?: PushIcon;
   title: string;
   body: string;
-  /** Short source / label (campaign, buyer, "+1 (888) 324-1868", …). */
+  /** Short source / label (campaign, buyer, "+18883241868", …). */
   source?: string;
   /** Optional action label rendered as a chip button at the bottom right. */
   action?: string;

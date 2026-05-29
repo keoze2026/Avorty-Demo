@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
 import { useBuyersStore } from "@/lib/store/buyers-store";
-import { formatCompact } from "@/lib/format";
+import { formatCompact, toE164 } from "@/lib/format";
 import type { Destination } from "@/lib/types";
 
 interface DestinationSettingsTabProps {
@@ -46,7 +46,7 @@ export function DestinationSettingsTab({
       <CardContent>
         <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
           <Row label="Name" value={<span>{destination.name}</span>} />
-          <Row label="TFN" value={<span className="font-mono">{destination.tfn}</span>} />
+          <Row label="TFN" value={<span className="font-mono">{toE164(destination.tfn)}</span>} />
           <Row
             label="Buyer"
             value={
