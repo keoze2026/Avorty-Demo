@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
-  Calendar as CalendarIcon,
   ChevronDown,
   Eye,
   Globe,
@@ -11,19 +10,14 @@ import {
 import type { DateRange } from "react-day-picker";
 
 import { ReportsFilterPopover, type ReportFilters } from "@/components/reports/reports-filter-popover";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { TIMEZONES as TZ_OPTIONS } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
 
@@ -47,11 +41,6 @@ const REFRESH_OPTIONS = [
 const TOOLBAR_BTN_HOVER =
   "hover:bg-muted hover:text-foreground dark:hover:bg-muted/70";
 
-function formatYMD(d: Date) {
-  return `${d.getFullYear()}-${(d.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
-}
 
 interface ReportsToolbarProps {
   dateRange: DateRange | undefined;
@@ -76,13 +65,6 @@ export function ReportsToolbar({
   const [refresh, setRefresh] = useState<(typeof REFRESH_OPTIONS)[number]>(
     "Auto refresh",
   );
-
-  const dateLabel = useMemo(() => {
-    if (!dateRange?.from) return "Select date range";
-    const from = formatYMD(dateRange.from);
-    const to = dateRange.to ? formatYMD(dateRange.to) : from;
-    return `${from} — ${to}`;
-  }, [dateRange]);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -122,29 +104,12 @@ export function ReportsToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Real date-range picker — Popover + react-day-picker in range mode */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn("gap-2", TOOLBAR_BTN_HOVER)}
-            >
-              <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>{dateLabel}</span>
-              <ChevronDown className="h-3 w-3 opacity-60" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-auto p-0">
-            <Calendar
-              mode="range"
-              selected={dateRange}
-              onSelect={onDateRangeChange}
-              numberOfMonths={2}
-              defaultMonth={dateRange?.from}
-            />
-          </PopoverContent>
-        </Popover>
+        {/* Date-range picker with preset shortcuts + Cancel/Apply (buffered) */}
+        <DateRangePicker
+          value={dateRange}
+          onChange={onDateRangeChange}
+          className={TOOLBAR_BTN_HOVER}
+        />
 
         <ReportsFilterPopover filters={filters} onChange={onFiltersChange} />
 
