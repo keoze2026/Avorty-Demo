@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Check, Monitor, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,16 +12,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ACCENTS, DEFAULT_ACCENT_ID } from "@/lib/accent-themes";
+import { useAccentStore } from "@/lib/store/accent-store";
 import { cn } from "@/lib/utils";
 
 interface ThemeToggleProps {
   className?: string;
-  /** "icon" = compact button (topbar). "menu" = dropdown with all 3 options. */
+  /** "icon" = compact button (topbar). "menu" = legacy dropdown with theme modes only. */
   variant?: "icon" | "menu";
 }
 
 export function ThemeToggle({ className, variant = "menu" }: ThemeToggleProps) {
   const { setTheme, theme, resolvedTheme } = useTheme();
+  const accent = useAccentStore((s) => s.accent);
+  const setAccent = useAccentStore((s) => s.setAccent);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -38,39 +47,114 @@ export function ThemeToggle({ className, variant = "menu" }: ThemeToggleProps) {
 
   if (variant === "icon") {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn("relative overflow-hidden", className)}
-        onClick={() => setTheme(isDark ? "light" : "dark")}
-        aria-label="Toggle theme"
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          {isDark ? (
-            <motion.span
-              key="moon"
-              initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
-              animate={{ rotate: 0, opacity: 1, scale: 1 }}
-              exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <Moon className="h-4 w-4" />
-            </motion.span>
-          ) : (
-            <motion.span
-              key="sun"
-              initial={{ rotate: 90, opacity: 0, scale: 0.6 }}
-              animate={{ rotate: 0, opacity: 1, scale: 1 }}
-              exit={{ rotate: -90, opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <Sun className="h-4 w-4" />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </Button>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("relative overflow-hidden", className)}
+            aria-label="Theme & accent"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {isDark ? (
+                <motion.span
+                  key="moon"
+                  initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.18 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <Moon className="h-4 w-4" />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="sun"
+                  initial={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.18 }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <Sun className="h-4 w-4" />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-60 p-3">
+          {/* Mode segmented control */}
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Mode
+          </div>
+          <div className="mt-1.5 grid grid-cols-3 gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
+            {[
+              { id: "light", label: "Light", icon: Sun },
+              { id: "dark", label: "Dark", icon: Moon },
+              { id: "system", label: "Auto", icon: Monitor },
+            ].map((m) => {
+              const Icon = m.icon;
+              const active = theme === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setTheme(m.id)}
+                  className={cn(
+                    "inline-flex items-center justify-center gap-1 rounded px-2 py-1.5 text-[11px] font-medium transition-colors",
+                    active
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Accent swatches */}
+          <div className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Accent color
+          </div>
+          <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+            {ACCENTS.map((a) => {
+              const active = accent === a.id;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => setAccent(a.id)}
+                  className={cn(
+                    "relative inline-flex h-7 w-7 items-center justify-center rounded-full border-2 transition-transform hover:scale-110",
+                    active ? "border-foreground" : "border-transparent",
+                  )}
+                  style={{ backgroundColor: a.swatch }}
+                  aria-label={`Pick ${a.name}`}
+                  title={a.name}
+                >
+                  {active && (
+                    <Check className="h-3.5 w-3.5 text-white drop-shadow" strokeWidth={3} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-2 truncate text-[11px] text-muted-foreground">
+            {(ACCENTS.find((a) => a.id === accent) ?? ACCENTS[0]).name}
+            {accent !== DEFAULT_ACCENT_ID && (
+              <button
+                type="button"
+                onClick={() => setAccent(DEFAULT_ACCENT_ID)}
+                className="ml-2 text-accent hover:underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
     );
   }
 
