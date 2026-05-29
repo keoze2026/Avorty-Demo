@@ -1,13 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Download, Settings } from "lucide-react";
+import { ChevronDown, Download, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 import { ExportMenu } from "@/components/shared/export-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import {
   Popover,
@@ -27,15 +33,129 @@ import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from 
 import { formatCurrency, formatNumber, formatPercent, formatTimer } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-type GroupKey = "campaign" | "vendor" | "destination" | "buyer" | "date";
+type GroupKey =
+  | "campaign"
+  | "publisher"
+  | "dialed"
+  | "numberPool"
+  | "destination"
+  | "buyer"
+  | "trafficSource"
+  // Date sub-options
+  | "date"
+  | "date-week"
+  | "date-month"
+  | "date-hour"
+  | "date-dow"
+  // Parameters sub-options
+  | "param-source"
+  | "param-medium"
+  | "param-campaign"
+  | "param-term"
+  | "param-content"
+  // Custom Parameters sub-options
+  | "custom-vertical"
+  | "custom-lead-id"
+  | "custom-partner-id"
+  // Caller Profile sub-options
+  | "profile-age"
+  | "profile-gender"
+  | "profile-income"
+  // Caller Identity sub-options
+  | "identity-name"
+  | "identity-email"
+  | "identity-zip"
+  // Session Data sub-options
+  | "session-device"
+  | "session-browser"
+  | "session-referrer";
 
-const TABS: Array<{ id: GroupKey; label: string }> = [
+interface TabConfig {
+  /** The default group key when the tab is selected. For dropdown tabs this
+   *  is also the first sub-option, so clicking the parent activates a sane default. */
+  id: GroupKey;
+  label: string;
+  /** When present, the tab renders as a dropdown trigger with these sub-options. */
+  sub?: Array<{ id: GroupKey; label: string }>;
+}
+
+const TABS: TabConfig[] = [
   { id: "campaign", label: "Campaign" },
-  { id: "vendor", label: "Vendor" },
+  { id: "publisher", label: "Publisher" },
+  { id: "dialed", label: "Dialed" },
+  { id: "numberPool", label: "Number Pool" },
   { id: "destination", label: "Destination" },
   { id: "buyer", label: "Buyer" },
-  { id: "date", label: "Date" },
+  {
+    id: "date",
+    label: "Date",
+    sub: [
+      { id: "date", label: "By day" },
+      { id: "date-week", label: "By week" },
+      { id: "date-month", label: "By month" },
+      { id: "date-hour", label: "By hour" },
+      { id: "date-dow", label: "By weekday" },
+    ],
+  },
+  { id: "trafficSource", label: "Traffic Source" },
+  {
+    id: "param-source",
+    label: "Parameters",
+    sub: [
+      { id: "param-source", label: "UTM source" },
+      { id: "param-medium", label: "UTM medium" },
+      { id: "param-campaign", label: "UTM campaign" },
+      { id: "param-term", label: "UTM term" },
+      { id: "param-content", label: "UTM content" },
+    ],
+  },
+  {
+    id: "custom-vertical",
+    label: "Custom Parameters",
+    sub: [
+      { id: "custom-vertical", label: "Vertical" },
+      { id: "custom-lead-id", label: "Lead ID" },
+      { id: "custom-partner-id", label: "Partner ID" },
+    ],
+  },
+  {
+    id: "profile-age",
+    label: "Caller Profile",
+    sub: [
+      { id: "profile-age", label: "Age range" },
+      { id: "profile-gender", label: "Gender" },
+      { id: "profile-income", label: "Income" },
+    ],
+  },
+  {
+    id: "identity-name",
+    label: "Caller Identity",
+    sub: [
+      { id: "identity-name", label: "Caller name" },
+      { id: "identity-email", label: "Email" },
+      { id: "identity-zip", label: "ZIP" },
+    ],
+  },
+  {
+    id: "session-device",
+    label: "Session Data",
+    sub: [
+      { id: "session-device", label: "Device" },
+      { id: "session-browser", label: "Browser" },
+      { id: "session-referrer", label: "Referrer" },
+    ],
+  },
 ];
+
+/** Flat lookup: every GroupKey → its display label (for the column header). */
+const KEY_LABEL = new Map<GroupKey, string>();
+for (const t of TABS) {
+  if (t.sub) {
+    for (const s of t.sub) KEY_LABEL.set(s.id, s.label);
+  } else {
+    KEY_LABEL.set(t.id, t.label);
+  }
+}
 
 type ColumnKey =
   | "live"
@@ -51,7 +171,8 @@ type ColumnKey =
   | "acl"
   | "payout"
   | "revenue"
-  | "profit";
+  | "profit"
+  | "cost";
 
 const COLUMNS: Array<{ id: ColumnKey; label: string }> = [
   { id: "live", label: "Live" },
@@ -68,7 +189,17 @@ const COLUMNS: Array<{ id: ColumnKey; label: string }> = [
   { id: "payout", label: "Payout" },
   { id: "revenue", label: "Revenue" },
   { id: "profit", label: "Profit" },
+  { id: "cost", label: "Cost" },
 ];
+
+/* Cost is publisher payout plus a small operational/carrier surcharge:
+ *   $0.05 per incoming call (routing + queuing infra)
+ *   $0.003 per second of call time (carrier minutes) */
+const COST_PER_CALL = 0.05;
+const COST_PER_SECOND = 0.003;
+function computeCost(row: { payout: number; incoming: number; tcl: number }) {
+  return row.payout + row.incoming * COST_PER_CALL + row.tcl * COST_PER_SECOND;
+}
 
 const ALL_VISIBLE: Record<ColumnKey, boolean> = COLUMNS.reduce(
   (acc, c) => ({ ...acc, [c.id]: true }),
@@ -98,28 +229,160 @@ function dateKey(ts: number) {
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
 }
 
+/* ─── Deterministic derivation tables ─────────────────────────────────
+ *  Used by group keys that don't map to a stored field on `Call`. Each
+ *  call's id is hashed with a salt to pick a stable value from the list,
+ *  so groupings are reproducible across renders and exports. */
+
+const UTM_SOURCES = ["google", "facebook", "bing", "tiktok", "direct"];
+const UTM_MEDIUMS = ["cpc", "organic", "social", "email", "referral"];
+const UTM_CAMPAIGNS = ["spring2026", "rebrand", "awareness", "retargeting", "remarketing"];
+const UTM_TERMS = ["insurance quote", "auto warranty", "solar quote", "legal help", "medicare"];
+const UTM_CONTENTS = ["banner_a", "banner_b", "video_short", "video_long", "carousel"];
+const VERTICALS = ["Health", "Auto", "Legal", "Solar", "Finance", "Insurance"];
+const PARTNERS = ["P-001", "P-002", "P-003", "P-004", "P-005"];
+const AGE_RANGES = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
+const GENDERS = ["Male", "Female", "Unknown"];
+const INCOME_RANGES = ["<$25K", "$25K-$50K", "$50K-$75K", "$75K-$100K", "$100K+"];
+const NAMES = [
+  "John Smith",
+  "Mary Johnson",
+  "Robert Brown",
+  "Patricia Davis",
+  "Michael Wilson",
+  "Linda Martinez",
+];
+const EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com"];
+const ZIP_PREFIXES = ["10", "20", "30", "40", "50", "60", "70", "80", "90"];
+const DEVICES = ["Mobile", "Desktop", "Tablet"];
+const BROWSERS = ["Chrome", "Safari", "Firefox", "Edge"];
+const REFERRERS = ["google.com", "facebook.com", "direct", "twitter.com", "tiktok.com", "youtube.com"];
+const TRAFFIC_SOURCES = ["Search", "Display", "Social", "Email", "Affiliate"];
+
+function hashOf(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+/** Pick a stable bucket from a list using id + salt. */
+function pickFrom(c: Call, salt: string, list: string[]): string {
+  return list[hashOf(c.id + salt) % list.length];
+}
+
+/** Translate a (call, group) pair to a {key, label} bucket — or null to skip. */
+function deriveGroup(c: Call, group: GroupKey): { key: string; label: string } | null {
+  switch (group) {
+    case "campaign":
+      return { key: c.campaignId, label: c.campaignName };
+    case "publisher":
+      return c.publisherId
+        ? { key: c.publisherId, label: c.publisherName ?? "—" }
+        : null;
+    case "dialed":
+    case "destination":
+      return { key: c.destinationNumber, label: c.destinationNumber };
+    case "numberPool": {
+      const digits = c.destinationNumber.replace(/\D/g, "");
+      const pool = `+${digits.slice(0, 6)}xxxxx`;
+      return { key: pool, label: pool };
+    }
+    case "buyer":
+      return c.buyerId ? { key: c.buyerId, label: c.buyerName ?? "—" } : null;
+    case "trafficSource": {
+      const idx = hashOf((c.publisherId ?? c.id) + "ts") % TRAFFIC_SOURCES.length;
+      const v = TRAFFIC_SOURCES[idx];
+      return { key: v, label: v };
+    }
+
+    case "date": {
+      const v = dateKey(c.startedAt);
+      return { key: v, label: v };
+    }
+    case "date-week": {
+      const d = new Date(c.startedAt);
+      const jan1 = new Date(d.getFullYear(), 0, 1);
+      const week = Math.ceil(
+        ((d.getTime() - jan1.getTime()) / 86_400_000 + jan1.getDay() + 1) / 7,
+      );
+      const v = `${d.getFullYear()}-W${week.toString().padStart(2, "0")}`;
+      return { key: v, label: v };
+    }
+    case "date-month": {
+      const d = new Date(c.startedAt);
+      const v = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      return { key: v, label: v };
+    }
+    case "date-hour": {
+      const d = new Date(c.startedAt);
+      const v = `${d.getHours().toString().padStart(2, "0")}:00`;
+      return { key: v, label: v };
+    }
+    case "date-dow": {
+      const v = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(c.startedAt).getDay()];
+      return { key: v, label: v };
+    }
+
+    case "param-source":
+      return labelOf(pickFrom(c, "src", UTM_SOURCES));
+    case "param-medium":
+      return labelOf(pickFrom(c, "med", UTM_MEDIUMS));
+    case "param-campaign":
+      return labelOf(pickFrom(c, "cmp", UTM_CAMPAIGNS));
+    case "param-term":
+      return labelOf(pickFrom(c, "trm", UTM_TERMS));
+    case "param-content":
+      return labelOf(pickFrom(c, "cnt", UTM_CONTENTS));
+
+    case "custom-vertical":
+      return labelOf(pickFrom(c, "vrt", VERTICALS));
+    case "custom-lead-id": {
+      const v = `L-${(hashOf(c.id + "lid") % 9999).toString().padStart(4, "0")}`;
+      return { key: v, label: v };
+    }
+    case "custom-partner-id":
+      return labelOf(pickFrom(c, "ptr", PARTNERS));
+
+    case "profile-age":
+      return labelOf(pickFrom(c, "age", AGE_RANGES));
+    case "profile-gender":
+      return labelOf(pickFrom(c, "gnd", GENDERS));
+    case "profile-income":
+      return labelOf(pickFrom(c, "inc", INCOME_RANGES));
+
+    case "identity-name":
+      return labelOf(pickFrom(c, "nam", NAMES));
+    case "identity-email": {
+      const dom = EMAIL_DOMAINS[hashOf(c.callerNumber + "eml") % EMAIL_DOMAINS.length];
+      const local = `user${(hashOf(c.id + "eml") % 999).toString().padStart(3, "0")}`;
+      const v = `${local}@${dom}`;
+      return { key: v, label: v };
+    }
+    case "identity-zip": {
+      const prefix = ZIP_PREFIXES[hashOf(c.callerNumber + "zip") % ZIP_PREFIXES.length];
+      const v = `${prefix}${(hashOf(c.id + "zip") % 999).toString().padStart(3, "0")}`;
+      return { key: v, label: v };
+    }
+
+    case "session-device":
+      return labelOf(pickFrom(c, "dev", DEVICES));
+    case "session-browser":
+      return labelOf(pickFrom(c, "brw", BROWSERS));
+    case "session-referrer":
+      return labelOf(pickFrom(c, "ref", REFERRERS));
+  }
+}
+
+function labelOf(value: string) {
+  return { key: value, label: value };
+}
+
 function groupCalls(calls: Call[], group: GroupKey): SummaryRow[] {
   const m = new Map<string, SummaryRow>();
   for (const c of calls) {
-    let key = "";
-    let label = "";
-    if (group === "campaign") {
-      key = c.campaignId;
-      label = c.campaignName;
-    } else if (group === "vendor") {
-      key = c.publisherId ?? "";
-      label = c.publisherName ?? "—";
-    } else if (group === "destination") {
-      key = c.destinationNumber;
-      label = c.destinationNumber;
-    } else if (group === "buyer") {
-      key = c.buyerId ?? "";
-      label = c.buyerName ?? "—";
-    } else {
-      key = dateKey(c.startedAt);
-      label = key;
-    }
-    if (!key) continue;
+    const bucket = deriveGroup(c, group);
+    if (!bucket || !bucket.key) continue;
+    const { key, label } = bucket;
 
     let row = m.get(key);
     if (!row) {
@@ -235,6 +498,8 @@ function summaryCellValue(row: SummaryRow, key: ColumnKey): number | string {
       return row.revenue;
     case "profit":
       return row.revenue - row.payout;
+    case "cost":
+      return Number(computeCost(row).toFixed(2));
   }
 }
 
@@ -258,7 +523,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
   const onExport = (format: ExportFormat) => {
     // Only the columns the operator can currently see make it into the export.
     const labelCol: ExportColumn<SummaryRow> = {
-      label: TABS.find((t) => t.id === tab)?.label ?? "Group",
+      label: KEY_LABEL.get(tab) ?? "Group",
       value: (r) => r.label,
     };
     const dataCols: ExportColumn<SummaryRow>[] = COLUMNS.filter((c) => visible[c.id]).map(
@@ -279,22 +544,60 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
 
       {/* Tabs + right actions */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-4">
-        <div className="flex">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                "relative px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
-                tab === t.id ? "text-accent" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t.label}
-              {tab === t.id && (
-                <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-accent" />
-              )}
-            </button>
-          ))}
+        <div className="flex overflow-x-auto">
+          {TABS.map((t) => {
+            // A dropdown tab is "active" when the current tab is any of its sub-options.
+            const subIds = t.sub?.map((s) => s.id) ?? [t.id];
+            const active = subIds.includes(tab);
+
+            if (t.sub) {
+              return (
+                <DropdownMenu key={t.label}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={cn(
+                        "relative inline-flex items-center gap-1 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                        active ? "text-accent" : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {t.label}
+                      <ChevronDown className="h-3 w-3 opacity-70" />
+                      {active && (
+                        <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-accent" />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {t.sub.map((s) => (
+                      <DropdownMenuItem
+                        key={s.id}
+                        onSelect={() => setTab(s.id)}
+                        className={cn(tab === s.id && "text-accent")}
+                      >
+                        {s.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              );
+            }
+
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "relative whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                  active ? "text-accent" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+                {active && (
+                  <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-accent" />
+                )}
+              </button>
+            );
+          })}
         </div>
         <div className="flex items-center gap-1">
           <Popover>
@@ -362,7 +665,8 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                 {visible.acl && <TableHead>ACL</TableHead>}
                 {visible.payout && <TableHead>Payout</TableHead>}
                 {visible.revenue && <TableHead>Revenue</TableHead>}
-                {visible.profit && <TableHead className="pr-6">Profit</TableHead>}
+                {visible.profit && <TableHead>Profit</TableHead>}
+                {visible.cost && <TableHead className="pr-6">Cost</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -422,11 +726,16 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                       {visible.profit && (
                         <TableCell
                           className={cn(
-                            "pr-6 tabular-nums",
+                            "tabular-nums",
                             profit < 0 ? "text-destructive" : "text-[color:var(--success)]",
                           )}
                         >
                           {formatCurrency(profit, true)}
+                        </TableCell>
+                      )}
+                      {visible.cost && (
+                        <TableCell className="pr-6 tabular-nums">
+                          {formatCurrency(computeCost(r), true)}
                         </TableCell>
                       )}
                     </TableRow>
@@ -481,13 +790,18 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                   {visible.profit && (
                     <TableCell
                       className={cn(
-                        "pr-6 tabular-nums",
+                        "tabular-nums",
                         totals.revenue - totals.payout < 0
                           ? "text-destructive"
                           : "text-[color:var(--success)]",
                       )}
                     >
                       {formatCurrency(totals.revenue - totals.payout, true)}
+                    </TableCell>
+                  )}
+                  {visible.cost && (
+                    <TableCell className="pr-6 tabular-nums">
+                      {formatCurrency(computeCost(totals), true)}
                     </TableCell>
                   )}
                 </TableRow>

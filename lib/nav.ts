@@ -24,6 +24,8 @@ import {
   Shield,
   ShieldAlert,
   PhoneOff,
+  Bitcoin,
+  Newspaper,
 } from "lucide-react";
 
 import { ROUTES } from "./constants";
@@ -91,6 +93,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Call Logs", href: ROUTES.calls, icon: PhoneCall, roles: ALL_ROLES },
       { label: "Marketplace", href: ROUTES.marketplace, icon: Store, roles: ["admin", "buyer"] },
       { label: "AI Insights", href: ROUTES.insights, icon: Sparkles, roles: ["admin"], badge: "AI" },
+    ],
+  },
+  {
+    label: "News",
+    items: [
+      { label: "Coin Market", href: ROUTES.cryptoNews, icon: Bitcoin, roles: ALL_ROLES },
+      { label: "Daily News", href: ROUTES.dailyNews, icon: Newspaper, roles: ALL_ROLES },
     ],
   },
   {

@@ -45,6 +45,10 @@ export const ROUTES = {
   voipShield: "/voip-shield",
   tcpaShield: "/tcpa-shield",
   blockedNumbers: "/blocked-numbers",
+
+  // News feeds
+  cryptoNews: "/news/crypto",
+  dailyNews: "/news/daily",
 } as const;
 
 /** Brand color stops — single-hue indigo ramp.
