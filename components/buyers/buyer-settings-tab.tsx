@@ -5,6 +5,7 @@ import { Building2, DollarSign, Gauge, Mail, UserSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import { ErrorLine, SaveBar } from "@/components/campaigns/campaign-settings-tab";
+import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,6 +91,9 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
 
   return (
     <div className="space-y-4">
+      {/* Auto schedule — daily play/pause on portal time */}
+      <AutoScheduleCard target="buyer" id={buyer.id} entityLabel="buyer" />
+
       {/* Identity */}
       <Card>
         <CardHeader className="pb-2">

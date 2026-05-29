@@ -118,7 +118,7 @@ export function CoinMarketTabs({ tokens: initialTokens, news }: Props) {
 
   return (
     <>
-      <div className="flex overflow-x-auto border-b border-border">
+      <div className="no-scrollbar flex overflow-x-auto border-b border-border">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;

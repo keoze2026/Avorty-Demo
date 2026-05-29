@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Member } from "@/lib/types";
+import { useAutoScheduleStore } from "@/lib/store/auto-schedule-store";
 import { TIMEZONES } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
 
@@ -43,14 +44,17 @@ const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ classN
 
 export function WorkspaceSection() {
   const [name, setName] = React.useState("Vortyx Demo Co.");
-  const [tz, setTz] = React.useState("America/Los_Angeles");
+  // Portal timezone is the single source of truth for the auto-schedule runtime,
+  // so write it straight to the auto-schedule store rather than local state.
+  const tz = useAutoScheduleStore((s) => s.portalTimezone);
+  const setTz = useAutoScheduleStore((s) => s.setPortalTimezone);
   const [members, setMembers] = React.useState<Member[]>(MOCK_MEMBERS);
   const [tab, setTab] = React.useState<TabId>("general");
 
   return (
     <div className="space-y-4">
       {/* Underline-style tab strip — matches the Campaign Settings + Call Summary tabs. */}
-      <div className="flex overflow-x-auto border-b border-border">
+      <div className="no-scrollbar flex overflow-x-auto border-b border-border">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;

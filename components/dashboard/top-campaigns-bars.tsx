@@ -18,58 +18,56 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { ROUTES } from "@/lib/constants";
-import { formatCurrency } from "@/lib/format";
-import { topCampaignsByRevenue } from "@/lib/mock/timeseries";
+import { formatNumber } from "@/lib/format";
+import { MOCK_CALLS } from "@/lib/mock/calls";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { Call } from "@/lib/types";
 
 interface Row {
   id: string;
   name: string;
-  revenue: number;
+  connected: number;
   vertical: string;
 }
 
 interface TopCampaignsBarsProps {
-  /** When provided, top-6 are computed from these calls' revenue (per campaign). */
+  /** When provided, top-6 are computed from these calls' connected count per campaign. */
   calls?: Call[];
+}
+
+/** Status values that count a call as "connected" (answered + still live). */
+function isConnected(status: Call["status"]) {
+  return status === "completed" || status === "in-progress";
 }
 
 export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
   const data = useMemo<Row[]>(() => {
-    if (calls) {
-      // Re-aggregate revenue per campaign from the filtered call set.
-      const campaignById = new Map<string, (typeof MOCK_CAMPAIGNS)[number]>();
-      for (const c of MOCK_CAMPAIGNS) campaignById.set(c.id, c);
+    const source = calls ?? MOCK_CALLS;
 
-      const m = new Map<string, Row>();
-      for (const call of calls) {
-        const camp = campaignById.get(call.campaignId);
-        if (!camp) continue;
-        let row = m.get(camp.id);
-        if (!row) {
-          row = {
-            id: camp.id,
-            name: camp.name,
-            vertical: camp.vertical,
-            revenue: 0,
-          };
-          m.set(camp.id, row);
-        }
-        row.revenue += call.revenue;
+    const campaignById = new Map<string, (typeof MOCK_CAMPAIGNS)[number]>();
+    for (const c of MOCK_CAMPAIGNS) campaignById.set(c.id, c);
+
+    const m = new Map<string, Row>();
+    for (const call of source) {
+      if (!isConnected(call.status)) continue;
+      const camp = campaignById.get(call.campaignId);
+      if (!camp) continue;
+      let row = m.get(camp.id);
+      if (!row) {
+        row = {
+          id: camp.id,
+          name: camp.name,
+          vertical: camp.vertical,
+          connected: 0,
+        };
+        m.set(camp.id, row);
       }
-      return Array.from(m.values())
-        .filter((r) => r.revenue > 0)
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 6);
+      row.connected += 1;
     }
-
-    return topCampaignsByRevenue(6).map((c) => ({
-      id: c.id,
-      name: c.name,
-      revenue: c.revenueToday,
-      vertical: c.vertical,
-    }));
+    return Array.from(m.values())
+      .filter((r) => r.connected > 0)
+      .sort((a, b) => b.connected - a.connected)
+      .slice(0, 6);
   }, [calls]);
 
   // Recharts BarChart with layout="vertical" renders horizontal bars (y = category, x = value).
@@ -78,7 +76,9 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
           <CardTitle className="text-sm font-semibold">Top campaigns</CardTitle>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Revenue today, by campaign</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Connected calls today, by campaign
+          </p>
         </div>
         <Link
           href={ROUTES.campaigns}
@@ -110,10 +110,10 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
                 cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
-                formatter={(v: number) => [formatCurrency(v), "Revenue"]}
+                formatter={(v: number) => [formatNumber(v), "Connected"]}
               />
               <Bar
-                dataKey="revenue"
+                dataKey="connected"
                 radius={[0, 4, 4, 0]}
                 isAnimationActive
                 animationDuration={500}
@@ -129,9 +129,9 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
                   />
                 ))}
                 <LabelList
-                  dataKey="revenue"
+                  dataKey="connected"
                   position="right"
-                  formatter={(value: number) => formatCurrency(value)}
+                  formatter={(value: number) => formatNumber(value)}
                   fill="var(--muted-foreground)"
                   fontSize={11}
                   className="tabular-nums"

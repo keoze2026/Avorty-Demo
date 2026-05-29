@@ -443,6 +443,17 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Hide scrollbar on tab strips that scroll horizontally — the visible
+     thumb reads as a "stick" on wide layouts even when there's nothing to
+     scroll. Pair with overflow-x-auto so keyboard / wheel scrolling still
+     works on narrow viewports. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;

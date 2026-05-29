@@ -49,6 +49,9 @@ export const ROUTES = {
   // News feeds
   cryptoNews: "/news/crypto",
   dailyNews: "/news/daily",
+
+  // Referral program — earn 10% on every client you bring in
+  referrals: "/referrals",
 } as const;
 
 /** Brand color stops — single-hue indigo ramp.

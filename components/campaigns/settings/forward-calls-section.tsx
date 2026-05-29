@@ -59,8 +59,8 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-base font-semibold uppercase tracking-wider">Forward Calls To</h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">
+        <h2 className="text-[13px] font-semibold uppercase tracking-wider">Forward Calls To</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
           Automatically forward all incoming calls to destinations or groups in this campaign.
         </p>
       </div>
@@ -89,8 +89,8 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
         />
         <div className="flex items-start justify-between gap-3 border-t border-border pt-4">
           <div>
-            <div className="text-sm font-medium">Use Strict Mode</div>
-            <div className="text-xs text-muted-foreground">Connect repeat calls to new destinations only</div>
+            <div className="text-xs font-medium">Use Strict Mode</div>
+            <div className="text-[11px] text-muted-foreground">Connect repeat calls to new destinations only</div>
           </div>
           <Switch checked={strict} onCheckedChange={setStrict} aria-label="Use strict mode" />
         </div>
@@ -219,8 +219,8 @@ function ChoiceRow<T extends string>({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <Label className="text-sm font-medium">{label}</Label>
-        <div className="text-xs text-muted-foreground">{description}</div>
+        <Label className="text-xs font-medium">{label}</Label>
+        <div className="text-[11px] text-muted-foreground">{description}</div>
       </div>
       <div className="inline-flex rounded-md border border-border bg-muted p-0.5">
         {options.map((opt) => (

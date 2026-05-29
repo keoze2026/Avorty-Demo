@@ -19,6 +19,7 @@ import { EnrichmentTab } from "./enrichment-tab";
 import { ForwardCallsSection } from "./forward-calls-section";
 import { RtbTab } from "./rtb-tab";
 import { TrackingNumbersSection } from "./tracking-numbers-section";
+import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
 import type { Campaign } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,7 @@ export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
   return (
     <div className="space-y-4">
       {/* Underline-style tab strip — matches the Call Summary tabs. */}
-      <div className="flex overflow-x-auto border-b border-border">
+      <div className="no-scrollbar flex overflow-x-auto border-b border-border">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
@@ -47,13 +48,13 @@ export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
               type="button"
               onClick={() => setTab(t.id)}
               className={cn(
-                "relative inline-flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                "relative inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors focus-visible:outline-none",
                 active
                   ? "text-accent"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-3 w-3" />
               {t.label}
               {active && (
                 <span
@@ -68,6 +69,13 @@ export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
 
       {tab === "general" && (
         <div className="space-y-6">
+          {/* Auto schedule — daily play/pause based on portal timezone */}
+          <AutoScheduleCard
+            target="campaign"
+            id={campaign.id}
+            entityLabel="campaign"
+          />
+
           {/* 1 — Tracking Numbers */}
           <TrackingNumbersSection campaignId={campaign.id} />
 
@@ -77,8 +85,8 @@ export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
           {/* 3 — Advanced Settings (12 collapsible cards) */}
           <section className="space-y-3">
             <div>
-              <h2 className="text-base font-semibold uppercase tracking-wider">Advanced Settings</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <h2 className="text-[13px] font-semibold uppercase tracking-wider">Advanced Settings</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Customize how incoming calls are routed to optimize the call experience.
               </p>
             </div>

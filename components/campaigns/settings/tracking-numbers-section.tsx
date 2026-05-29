@@ -34,8 +34,8 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
     <section className="space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold uppercase tracking-wider">Tracking Numbers</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wider">Tracking Numbers</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Set up unique phone numbers to track calls from your marketing campaigns.
           </p>
         </div>

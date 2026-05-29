@@ -26,6 +26,7 @@ import {
   PhoneOff,
   Bitcoin,
   Newspaper,
+  Gift,
 } from "lucide-react";
 
 import { ROUTES } from "./constants";
@@ -105,6 +106,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Account",
     items: [
+      { label: "Referrals", href: ROUTES.referrals, icon: Gift, roles: ALL_ROLES },
       { label: "Integrations", href: ROUTES.integrations, icon: Plug, roles: ["admin"] },
       { label: "Billing", href: ROUTES.billing, icon: CreditCard, roles: ["admin", "buyer", "publisher"] },
       { label: "Settings", href: ROUTES.settings, icon: Settings, roles: ALL_ROLES },

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 
+import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,10 +24,17 @@ export function DestinationSettingsTab({
   const buyer = useBuyersStore((s) => s.buyers.find((b) => b.id === destination.buyerId));
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
-        <div>
-          <CardTitle className="text-base">Configuration</CardTitle>
+    <div className="space-y-4">
+      <AutoScheduleCard
+        target="destination"
+        id={destination.id}
+        entityLabel="destination"
+      />
+
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
+          <div>
+            <CardTitle className="text-base">Configuration</CardTitle>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Editable via the destination builder.
           </p>
@@ -92,7 +100,8 @@ export function DestinationSettingsTab({
           />
         </dl>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }
 

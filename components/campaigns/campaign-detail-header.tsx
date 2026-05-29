@@ -75,11 +75,11 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
             <span className="text-muted-foreground/60">·</span>
             <span className="font-mono text-muted-foreground">{campaign.id}</span>
           </div>
-          <h1 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
+          <h1 className="mt-1 text-base font-semibold tracking-tight sm:text-lg">
             {campaign.name}
           </h1>
           {campaign.description && (
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{campaign.description}</p>
+            <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{campaign.description}</p>
           )}
         </div>
 

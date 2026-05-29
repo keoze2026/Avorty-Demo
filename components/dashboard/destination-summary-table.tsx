@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -68,6 +67,14 @@ function buildRows(
 
   return destinations
     .filter((d) => !filter || d.tfn === filter)
+    // Only active destinations attached to an active buyer surface here.
+    // A paused destination (`enabled === false`) or one whose buyer is paused
+    // / capped / pending is hidden so the operator sees live inventory only.
+    .filter((d) => {
+      if (!d.enabled) return false;
+      const buyer = buyerById.get(d.buyerId);
+      return buyer?.status === "active";
+    })
     .map<Row>((destination) => {
       const callsToday = callsByTfn.get(destination.tfn) ?? 0;
       const cap = destination.dailyCap;
@@ -100,7 +107,7 @@ export function DestinationSummaryTable({
         <div>
           <h3 className="text-base font-semibold">Destinations</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Each TFN with its own concurrent-call ceiling and daily cap usage.
+            Active TFNs attached to active buyers — paused destinations drop off automatically.
           </p>
         </div>
         <Link
@@ -161,11 +168,6 @@ export function DestinationSummaryTable({
                         </Link>
                       ) : (
                         <span className="text-muted-foreground">—</span>
-                      )}
-                      {!destination.enabled && (
-                        <Badge variant="outline" className="ml-2 text-[10px]">
-                          Disabled
-                        </Badge>
                       )}
                     </TableCell>
                     <TableCell className="tabular-nums">

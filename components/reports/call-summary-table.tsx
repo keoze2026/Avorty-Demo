@@ -58,17 +58,43 @@ type GroupKey =
   | "custom-lead-id"
   | "custom-partner-id"
   // Caller Profile sub-options
-  | "profile-age"
-  | "profile-gender"
-  | "profile-income"
+  | "profile-carrier"
+  | "profile-linetype"
+  | "profile-country"
+  | "profile-city"
+  | "profile-zipcode"
+  | "profile-region"
+  | "profile-timezone"
+  | "profile-fraudscore"
   // Caller Identity sub-options
-  | "identity-name"
+  | "identity-age"
+  | "identity-gender"
+  | "identity-city"
   | "identity-email"
-  | "identity-zip"
+  | "identity-emails"
+  | "identity-firstname"
+  | "identity-lastname"
+  | "identity-address1"
+  | "identity-address2"
+  | "identity-carrier"
+  | "identity-linetype"
+  | "identity-phone"
+  | "identity-zipcode"
+  | "identity-state"
   // Session Data sub-options
-  | "session-device"
+  | "session-ip"
+  | "session-continent"
+  | "session-continentcode"
+  | "session-country"
+  | "session-countrycode"
+  | "session-region"
+  | "session-regioncode"
+  | "session-city"
+  | "session-zipcode"
   | "session-browser"
-  | "session-referrer";
+  | "session-device"
+  | "session-referrerurl"
+  | "session-useragent";
 
 interface TabConfig {
   /** The default group key when the tab is selected. For dropdown tabs this
@@ -119,30 +145,56 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    id: "profile-age",
+    id: "profile-carrier",
     label: "Caller Profile",
     sub: [
-      { id: "profile-age", label: "Age range" },
-      { id: "profile-gender", label: "Gender" },
-      { id: "profile-income", label: "Income" },
+      { id: "profile-carrier", label: "Carrier" },
+      { id: "profile-linetype", label: "Line type" },
+      { id: "profile-country", label: "Country" },
+      { id: "profile-city", label: "City" },
+      { id: "profile-zipcode", label: "Zip code" },
+      { id: "profile-region", label: "Region" },
+      { id: "profile-timezone", label: "Timezone" },
+      { id: "profile-fraudscore", label: "Fraud score" },
     ],
   },
   {
-    id: "identity-name",
+    id: "identity-age",
     label: "Caller Identity",
     sub: [
-      { id: "identity-name", label: "Caller name" },
+      { id: "identity-age", label: "Age range" },
+      { id: "identity-gender", label: "Gender" },
+      { id: "identity-city", label: "City" },
       { id: "identity-email", label: "Email" },
-      { id: "identity-zip", label: "ZIP" },
+      { id: "identity-emails", label: "Emails" },
+      { id: "identity-firstname", label: "First name" },
+      { id: "identity-lastname", label: "Last name" },
+      { id: "identity-address1", label: "Address 1" },
+      { id: "identity-address2", label: "Address 2" },
+      { id: "identity-carrier", label: "Carrier" },
+      { id: "identity-linetype", label: "Line type" },
+      { id: "identity-phone", label: "Phone number" },
+      { id: "identity-zipcode", label: "Zip code" },
+      { id: "identity-state", label: "State" },
     ],
   },
   {
-    id: "session-device",
+    id: "session-ip",
     label: "Session Data",
     sub: [
-      { id: "session-device", label: "Device" },
+      { id: "session-ip", label: "IP" },
+      { id: "session-continent", label: "Continent" },
+      { id: "session-continentcode", label: "Continent code" },
+      { id: "session-country", label: "Country" },
+      { id: "session-countrycode", label: "Country code" },
+      { id: "session-region", label: "Region" },
+      { id: "session-regioncode", label: "Region code" },
+      { id: "session-city", label: "City" },
+      { id: "session-zipcode", label: "Zip code" },
       { id: "session-browser", label: "Browser" },
-      { id: "session-referrer", label: "Referrer" },
+      { id: "session-device", label: "Device" },
+      { id: "session-referrerurl", label: "Referrer URL" },
+      { id: "session-useragent", label: "User agent" },
     ],
   },
 ];
@@ -259,6 +311,103 @@ const BROWSERS = ["Chrome", "Safari", "Firefox", "Edge"];
 const REFERRERS = ["google.com", "facebook.com", "direct", "twitter.com", "tiktok.com", "youtube.com"];
 const TRAFFIC_SOURCES = ["Search", "Display", "Social", "Email", "Affiliate"];
 
+/* Caller profile / identity derivations — added per Ringba-style sub-options. */
+const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "US Cellular", "Cricket"];
+const LINE_TYPES = ["Mobile", "Landline", "VoIP", "Toll-free"];
+const COUNTRIES = ["United States", "Canada", "Mexico", "United Kingdom", "Australia"];
+const CITIES = [
+  "New York",
+  "Los Angeles",
+  "Chicago",
+  "Houston",
+  "Phoenix",
+  "Miami",
+  "Boston",
+  "Seattle",
+];
+const REGIONS = [
+  "California",
+  "Texas",
+  "New York",
+  "Florida",
+  "Illinois",
+  "Pennsylvania",
+  "Ohio",
+  "Georgia",
+];
+const STATES = ["CA", "TX", "NY", "FL", "IL", "PA", "OH", "GA", "NC", "MI", "WA", "MA"];
+const PROFILE_TIMEZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+];
+const FRAUD_BANDS = ["Low (0-30)", "Medium (31-70)", "High (71-100)"];
+
+const FIRST_NAMES = [
+  "John",
+  "Mary",
+  "Robert",
+  "Patricia",
+  "Michael",
+  "Linda",
+  "James",
+  "Susan",
+  "David",
+  "Karen",
+];
+const LAST_NAMES = [
+  "Smith",
+  "Johnson",
+  "Brown",
+  "Davis",
+  "Wilson",
+  "Martinez",
+  "Anderson",
+  "Thompson",
+  "Garcia",
+  "Lee",
+];
+const ADDRESS_STREETS = [
+  "100 Main St",
+  "200 Oak Ave",
+  "300 Park Rd",
+  "400 Elm St",
+  "500 Pine Ln",
+  "600 Cedar Dr",
+];
+const ADDRESS_UNITS = ["—", "Apt 1A", "Apt 2B", "Suite 100", "Floor 3", "Unit 7"];
+const EMAIL_FIRST_HALVES = ["alex", "sam", "jordan", "casey", "riley", "morgan", "taylor"];
+
+/* Session-data derivations. */
+const CONTINENTS = [
+  "North America",
+  "Europe",
+  "Asia",
+  "South America",
+  "Africa",
+  "Oceania",
+];
+const CONTINENT_CODES = ["NA", "EU", "AS", "SA", "AF", "OC"];
+const COUNTRY_CODES = ["US", "CA", "MX", "UK", "AU", "DE", "FR", "JP"];
+const REGION_CODES = ["US-CA", "US-NY", "US-TX", "US-FL", "US-IL", "CA-ON", "UK-ENG"];
+const USER_AGENTS = [
+  "Chrome/120 (Windows)",
+  "Safari/17 (macOS)",
+  "Firefox/121 (Windows)",
+  "Chrome/120 (Android)",
+  "Safari/17 (iOS)",
+  "Edge/120 (Windows)",
+];
+const REFERRER_URLS = [
+  "https://www.google.com/search",
+  "https://www.facebook.com/ads",
+  "https://duckduckgo.com/?q=insurance",
+  "direct",
+  "https://t.co/share",
+  "https://www.youtube.com/watch",
+];
+
 function hashOf(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
@@ -343,33 +492,108 @@ function deriveGroup(c: Call, group: GroupKey): { key: string; label: string } |
     case "custom-partner-id":
       return labelOf(pickFrom(c, "ptr", PARTNERS));
 
-    case "profile-age":
-      return labelOf(pickFrom(c, "age", AGE_RANGES));
-    case "profile-gender":
-      return labelOf(pickFrom(c, "gnd", GENDERS));
-    case "profile-income":
-      return labelOf(pickFrom(c, "inc", INCOME_RANGES));
+    /* ── Caller Profile ──────────────────────────────────────────────── */
+    case "profile-carrier":
+      return labelOf(pickFrom(c, "p-car", CARRIERS));
+    case "profile-linetype":
+      return labelOf(pickFrom(c, "p-lt", LINE_TYPES));
+    case "profile-country":
+      return labelOf(pickFrom(c, "p-cn", COUNTRIES));
+    case "profile-city":
+      return labelOf(pickFrom(c, "p-cty", CITIES));
+    case "profile-zipcode": {
+      const prefix = ZIP_PREFIXES[hashOf(c.callerNumber + "p-zip") % ZIP_PREFIXES.length];
+      const v = `${prefix}${(hashOf(c.id + "p-zip") % 999).toString().padStart(3, "0")}`;
+      return { key: v, label: v };
+    }
+    case "profile-region":
+      return labelOf(pickFrom(c, "p-reg", REGIONS));
+    case "profile-timezone":
+      return labelOf(pickFrom(c, "p-tz", PROFILE_TIMEZONES));
+    case "profile-fraudscore":
+      return labelOf(pickFrom(c, "p-fr", FRAUD_BANDS));
 
-    case "identity-name":
-      return labelOf(pickFrom(c, "nam", NAMES));
+    /* ── Caller Identity ─────────────────────────────────────────────── */
+    case "identity-age":
+      return labelOf(pickFrom(c, "i-age", AGE_RANGES));
+    case "identity-gender":
+      return labelOf(pickFrom(c, "i-gnd", GENDERS));
+    case "identity-city":
+      return labelOf(pickFrom(c, "i-cty", CITIES));
     case "identity-email": {
-      const dom = EMAIL_DOMAINS[hashOf(c.callerNumber + "eml") % EMAIL_DOMAINS.length];
-      const local = `user${(hashOf(c.id + "eml") % 999).toString().padStart(3, "0")}`;
+      const dom = EMAIL_DOMAINS[hashOf(c.callerNumber + "i-eml") % EMAIL_DOMAINS.length];
+      const local = `user${(hashOf(c.id + "i-eml") % 999).toString().padStart(3, "0")}`;
       const v = `${local}@${dom}`;
       return { key: v, label: v };
     }
-    case "identity-zip": {
-      const prefix = ZIP_PREFIXES[hashOf(c.callerNumber + "zip") % ZIP_PREFIXES.length];
-      const v = `${prefix}${(hashOf(c.id + "zip") % 999).toString().padStart(3, "0")}`;
+    case "identity-emails": {
+      // Multiple known emails per caller — comma-separated for the table cell.
+      const dom1 = EMAIL_DOMAINS[hashOf(c.callerNumber + "i-em1") % EMAIL_DOMAINS.length];
+      const dom2 = EMAIL_DOMAINS[hashOf(c.callerNumber + "i-em2") % EMAIL_DOMAINS.length];
+      const local = EMAIL_FIRST_HALVES[hashOf(c.id + "i-em") % EMAIL_FIRST_HALVES.length];
+      const v = `${local}@${dom1}, ${local}.alt@${dom2}`;
       return { key: v, label: v };
     }
+    case "identity-firstname":
+      return labelOf(pickFrom(c, "i-fn", FIRST_NAMES));
+    case "identity-lastname":
+      return labelOf(pickFrom(c, "i-ln", LAST_NAMES));
+    case "identity-address1":
+      return labelOf(pickFrom(c, "i-a1", ADDRESS_STREETS));
+    case "identity-address2":
+      return labelOf(pickFrom(c, "i-a2", ADDRESS_UNITS));
+    case "identity-carrier":
+      return labelOf(pickFrom(c, "i-car", CARRIERS));
+    case "identity-linetype":
+      return labelOf(pickFrom(c, "i-lt", LINE_TYPES));
+    case "identity-phone":
+      // The caller's own number is already known on the record.
+      return { key: c.callerNumber, label: c.callerNumber };
+    case "identity-zipcode": {
+      const prefix = ZIP_PREFIXES[hashOf(c.callerNumber + "i-zip") % ZIP_PREFIXES.length];
+      const v = `${prefix}${(hashOf(c.id + "i-zip") % 999).toString().padStart(3, "0")}`;
+      return { key: v, label: v };
+    }
+    case "identity-state":
+      return labelOf(pickFrom(c, "i-st", STATES));
 
+    /* ── Session Data ────────────────────────────────────────────────── */
+    case "session-ip": {
+      const h = hashOf(c.id + "s-ip");
+      const a = (h & 0xff) || 1;
+      const b = (h >> 8) & 0xff;
+      const cc = (h >> 16) & 0xff;
+      const d = (h >> 24) & 0xff || 1;
+      const v = `${a}.${b}.${cc}.${d}`;
+      return { key: v, label: v };
+    }
+    case "session-continent":
+      return labelOf(pickFrom(c, "s-cont", CONTINENTS));
+    case "session-continentcode":
+      return labelOf(pickFrom(c, "s-cont-c", CONTINENT_CODES));
+    case "session-country":
+      return labelOf(pickFrom(c, "s-cn", COUNTRIES));
+    case "session-countrycode":
+      return labelOf(pickFrom(c, "s-cn-c", COUNTRY_CODES));
+    case "session-region":
+      return labelOf(pickFrom(c, "s-reg", REGIONS));
+    case "session-regioncode":
+      return labelOf(pickFrom(c, "s-reg-c", REGION_CODES));
+    case "session-city":
+      return labelOf(pickFrom(c, "s-cty", CITIES));
+    case "session-zipcode": {
+      const prefix = ZIP_PREFIXES[hashOf(c.callerNumber + "s-zip") % ZIP_PREFIXES.length];
+      const v = `${prefix}${(hashOf(c.id + "s-zip") % 999).toString().padStart(3, "0")}`;
+      return { key: v, label: v };
+    }
     case "session-device":
-      return labelOf(pickFrom(c, "dev", DEVICES));
+      return labelOf(pickFrom(c, "s-dev", DEVICES));
     case "session-browser":
-      return labelOf(pickFrom(c, "brw", BROWSERS));
-    case "session-referrer":
-      return labelOf(pickFrom(c, "ref", REFERRERS));
+      return labelOf(pickFrom(c, "s-brw", BROWSERS));
+    case "session-referrerurl":
+      return labelOf(pickFrom(c, "s-ref", REFERRER_URLS));
+    case "session-useragent":
+      return labelOf(pickFrom(c, "s-ua", USER_AGENTS));
   }
 }
 
@@ -544,7 +768,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
 
       {/* Tabs + right actions */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-4">
-        <div className="flex overflow-x-auto">
+        <div className="no-scrollbar flex overflow-x-auto">
           {TABS.map((t) => {
             // A dropdown tab is "active" when the current tab is any of its sub-options.
             const subIds = t.sub?.map((s) => s.id) ?? [t.id];
@@ -556,7 +780,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
-                        "relative inline-flex items-center gap-1 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                        "relative inline-flex items-center gap-1 whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none",
                         active ? "text-accent" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
@@ -587,7 +811,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  "relative whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                  "relative whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none",
                   active ? "text-accent" : "text-muted-foreground hover:text-foreground",
                 )}
               >
