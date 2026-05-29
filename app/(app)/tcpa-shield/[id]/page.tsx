@@ -46,7 +46,9 @@ export default function TcpaShieldDetailPage() {
   }
 
   return (
-    <>
+    // Max-width wrapper — keeps the provider edit form readable without
+    // stretching across the whole content area (matches Campaign edit).
+    <div className="mx-auto w-full max-w-[928px] space-y-6">
       <Link
         href={ROUTES.tcpaShield}
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -71,6 +73,6 @@ export default function TcpaShieldDetailPage() {
         config={provider.config}
         onChange={(patch) => updateConfig(provider.id, patch)}
       />
-    </>
+    </div>
   );
 }

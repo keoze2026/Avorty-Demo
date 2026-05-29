@@ -36,9 +36,11 @@ export default function CampaignDetailPage() {
   }
 
   return (
-    <>
+    // Max-width wrapper — keeps the campaign edit form readable without
+    // stretching across the whole content area.
+    <div className="mx-auto w-full max-w-[928px] space-y-6">
       <CampaignDetailHeader campaign={campaign} />
       <CampaignSettingsView campaign={campaign} />
-    </>
+    </div>
   );
 }

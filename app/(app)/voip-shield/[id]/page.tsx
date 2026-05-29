@@ -47,7 +47,9 @@ export default function VoipShieldDetailPage() {
   }
 
   return (
-    <>
+    // Max-width wrapper — keeps the shield edit form readable without
+    // stretching across the whole content area (matches Campaign edit).
+    <div className="mx-auto w-full max-w-[928px] space-y-6">
       <Link
         href={ROUTES.voipShield}
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -72,6 +74,6 @@ export default function VoipShieldDetailPage() {
         onBlock={(carrier) => addCarrier(shield.id, carrier)}
         onUnblock={(carrier) => removeCarrier(shield.id, carrier)}
       />
-    </>
+    </div>
   );
 }

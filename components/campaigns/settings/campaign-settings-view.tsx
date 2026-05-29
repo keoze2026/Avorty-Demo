@@ -4,17 +4,15 @@
  * The expanded "Settings" tab on a campaign detail page.
  *
  * Top-level tabs: General · Real-Time Bidding · Enrichment URLs · Access.
- * The General sub-tab composes four sections:
- *   1. Identity / Payout / Caps / Schedule — the existing edit form
- *   2. Tracking Numbers — the numbers wired to this campaign
- *   3. Forward Calls To — routing controls + destination priority table
- *   4. Advanced Settings — 12 collapsible feature cards
+ * The General sub-tab composes three sections:
+ *   1. Tracking Numbers — the numbers wired to this campaign
+ *   2. Forward Calls To — routing controls + destination priority table
+ *   3. Advanced Settings — 12 collapsible feature cards
  */
 
 import * as React from "react";
 import { Globe, LockKeyhole, Settings as SettingsIcon, Zap } from "lucide-react";
 
-import { CampaignSettingsTab as CampaignIdentitySection } from "@/components/campaigns/campaign-settings-tab";
 import { AccessTab } from "./access-tab";
 import { AdvancedSettingsList } from "./advanced-settings-cards";
 import { EnrichmentTab } from "./enrichment-tab";
@@ -70,16 +68,13 @@ export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
 
       {tab === "general" && (
         <div className="space-y-6">
-          {/* 1 — Identity / Payout / Caps / Schedule (the existing form) */}
-          <CampaignIdentitySection campaign={campaign} />
-
-          {/* 2 — Tracking Numbers */}
+          {/* 1 — Tracking Numbers */}
           <TrackingNumbersSection campaignId={campaign.id} />
 
-          {/* 3 — Forward Calls To */}
+          {/* 2 — Forward Calls To */}
           <ForwardCallsSection campaignId={campaign.id} />
 
-          {/* 4 — Advanced Settings (12 collapsible cards) */}
+          {/* 3 — Advanced Settings (12 collapsible cards) */}
           <section className="space-y-3">
             <div>
               <h2 className="text-base font-semibold uppercase tracking-wider">Advanced Settings</h2>
