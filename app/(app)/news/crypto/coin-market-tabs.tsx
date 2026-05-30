@@ -37,10 +37,14 @@ const CRYPTO_CATEGORIES: NewsCategory[] = [
  * arrive right after the cache refreshes — every poll is guaranteed-fresh.
  */
 const POLL_INTERVAL_MS = 8_000;
+/** How often to poll /api/news (ms). Matches the upstream news cache window. */
+const NEWS_POLL_INTERVAL_MS = 30_000;
 /** Each CoinGecko fetch returns this many tokens. */
 const BLOCK_SIZE = 250;
 /** Rough upper bound — used while we haven't hit the end of CoinGecko's list. */
 const ESTIMATED_MAX_TOKENS = 15_000;
+/** How many news items to keep in memory. */
+const NEWS_LIMIT = 24;
 
 interface Props {
   tokens: TokenEntry[];
@@ -48,9 +52,10 @@ interface Props {
 }
 
 /** Client-side tab switcher — the server page hands us the initial data. */
-export function CoinMarketTabs({ tokens: initialTokens, news }: Props) {
+export function CoinMarketTabs({ tokens: initialTokens, news: initialNews }: Props) {
   const [tab, setTab] = React.useState<TabId>("tokens");
   const [tokens, setTokens] = React.useState<TokenEntry[]>(initialTokens);
+  const [news, setNews] = React.useState<NewsItem[]>(initialNews);
   const [loading, setLoading] = React.useState(false);
   // True until we hit a CoinGecko page that returns an empty array.
   const [hasMore, setHasMore] = React.useState(true);
@@ -131,6 +136,45 @@ export function CoinMarketTabs({ tokens: initialTokens, news }: Props) {
     return () => window.clearInterval(id);
   }, [tab]);
   const secondsAgo = Math.max(0, Math.floor((now - lastUpdatedAt) / 1000));
+
+  /* ─── Poll /api/news so the Crypto News tab stays fresh. ──────────────
+   * Runs on every CoinMarketTabs mount (regardless of which tab is active)
+   * so the moment the operator switches to "Crypto News", the latest pull
+   * is already in state. An empty / failed response keeps the previous good
+   * snapshot — same "last known values" pattern we use for tokens. */
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const refresh = async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      try {
+        const res = await fetch(`/api/news?limit=${NEWS_LIMIT}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const payload = (await res.json()) as { news: NewsItem[] };
+        const fresh = payload.news;
+        if (cancelled || !Array.isArray(fresh) || fresh.length === 0) return;
+        setNews(fresh);
+      } catch {
+        /* keep the last good snapshot on transient errors */
+      }
+    };
+
+    // Re-poll immediately on visibility change so coming back to the tab
+    // pulls the latest headlines right away.
+    const onVisible = () => {
+      if (!document.hidden) void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    const id = window.setInterval(refresh, NEWS_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
 
   /* ─── Append the next block when the user paginates past loaded data. ── */
   const ensureLoadedForPage = React.useCallback(

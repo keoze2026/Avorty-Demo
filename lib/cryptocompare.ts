@@ -1,21 +1,28 @@
 /**
- * CryptoCompare news fetcher.
+ * Crypto news fetcher with a multi-source fallback chain.
  *
- * Server-side only — Next.js caches the response for 5 minutes via
- * `revalidate: 300`. On failure we return the static mock seed so the
- * page never renders empty.
+ * Primary source is CryptoCompare's free JSON endpoint. When that's
+ * unreachable (rate-limited, WAF-blocked, etc.) we fall through to public RSS
+ * feeds from CoinDesk and CoinTelegraph — neither requires an API key and
+ * they rarely all fail together.
  *
- *   GET /data/v2/news/?lang=EN&excludeCategories=Sponsored
+ * Server-side only — Next.js caches the response via the caller-supplied
+ * `revalidateSec` window. On total failure across every source we return an
+ * empty array; the client keeps the last good snapshot in place so the
+ * operator continues to see real, recent headlines instead of placeholders.
  */
 
-import {
-  MOCK_CRYPTO_NEWS,
-  type NewsCategory,
-  type NewsItem,
-} from "./mock/news";
+import type { NewsCategory, NewsItem } from "./mock/news";
 
-const ENDPOINT =
+const CRYPTOCOMPARE_ENDPOINT =
   "https://min-api.cryptocompare.com/data/v2/news/?lang=EN&excludeCategories=Sponsored";
+
+/** Public RSS feeds — used as a fallback if CryptoCompare returns empty. */
+const RSS_SOURCES: Array<{ name: string; url: string }> = [
+  { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml" },
+  { name: "CoinTelegraph", url: "https://cointelegraph.com/rss" },
+  { name: "Decrypt", url: "https://decrypt.co/feed" },
+];
 
 interface CryptoCompareItem {
   id: string;
@@ -36,27 +43,158 @@ interface CryptoCompareResponse {
   Message?: string;
 }
 
-/** Pull the latest English-language crypto news. Mock fallback on failure. */
-export async function fetchCryptoNews(limit = 24): Promise<NewsItem[]> {
+/**
+ * Pull the latest English-language crypto news. Tries CryptoCompare first,
+ * then falls back to public RSS feeds. Returns an empty array only when
+ * every source fails — no mock fallback.
+ */
+export async function fetchCryptoNews(
+  limit = 24,
+  revalidateSec = 60,
+): Promise<NewsItem[]> {
+  const primary = await fetchCryptoCompare(limit, revalidateSec);
+  if (primary.length > 0) return primary;
+
+  // CryptoCompare failed — race every RSS source in parallel so we don't
+  // chain 3 sequential network calls on a cold cache.
+  console.warn("[news] CryptoCompare empty, falling back to RSS sources");
+  const results = await Promise.all(
+    RSS_SOURCES.map((src) => fetchRss(src.name, src.url, revalidateSec)),
+  );
+  const collected = results.flat();
+  // Sort newest-first, dedupe by url, and trim to limit.
+  const seen = new Set<string>();
+  return collected
+    .filter((n) => {
+      if (seen.has(n.url)) return false;
+      seen.add(n.url);
+      return true;
+    })
+    .sort((a, b) => b.publishedAt - a.publishedAt)
+    .slice(0, limit);
+}
+
+/* ─── Primary: CryptoCompare JSON ────────────────────────────────────── */
+
+async function fetchCryptoCompare(
+  limit: number,
+  revalidateSec: number,
+): Promise<NewsItem[]> {
   try {
-    const res = await fetch(ENDPOINT, {
-      next: { revalidate: 300 },
+    const res = await fetch(CRYPTOCOMPARE_ENDPOINT, {
+      next: { revalidate: revalidateSec },
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) throw new Error(`CryptoCompare returned ${res.status}`);
+    if (!res.ok) throw new Error(`status ${res.status}`);
     const json = (await res.json()) as CryptoCompareResponse;
     const items = json.Data;
     if (!Array.isArray(items) || items.length === 0) {
-      throw new Error("CryptoCompare returned no articles");
+      throw new Error("empty payload");
     }
     return items.slice(0, limit).map(toNewsItem);
   } catch (err) {
-    console.warn(
-      "[cryptocompare] using MOCK_CRYPTO_NEWS fallback:",
-      (err as Error).message,
-    );
-    return MOCK_CRYPTO_NEWS;
+    console.warn("[cryptocompare] upstream failed:", (err as Error).message);
+    return [];
   }
+}
+
+/* ─── Fallback: RSS feeds ────────────────────────────────────────────── */
+
+async function fetchRss(
+  source: string,
+  url: string,
+  revalidateSec: number,
+): Promise<NewsItem[]> {
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: revalidateSec },
+      headers: {
+        Accept: "application/rss+xml, application/xml, text/xml",
+        "User-Agent": "Mozilla/5.0 (compatible; VortyxNewsAggregator/1.0)",
+      },
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const xml = await res.text();
+    return parseRssItems(xml, source);
+  } catch (err) {
+    console.warn(`[rss:${source}] upstream failed:`, (err as Error).message);
+    return [];
+  }
+}
+
+/**
+ * Minimal RSS 2.0 parser. We only need title/link/description/pubDate/image
+ * — sufficient for every major crypto-news feed. Avoids pulling in an XML
+ * library and keeps the bundle small.
+ */
+function parseRssItems(xml: string, source: string): NewsItem[] {
+  const items: NewsItem[] = [];
+  const itemRegex = /<item\b[^>]*>([\s\S]*?)<\/item>/gi;
+  let match: RegExpExecArray | null;
+  let idx = 0;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const body = match[1];
+    const title = extractTag(body, "title");
+    const link = extractTag(body, "link");
+    const description = extractTag(body, "description");
+    const pubDate = extractTag(body, "pubDate") || extractTag(body, "dc:date");
+    const imageUrl = extractImage(body);
+    const categories = extractAllTags(body, "category");
+
+    if (!title || !link) continue;
+
+    const summary = stripHtml(description).trim();
+    const publishedAt = pubDate ? Date.parse(pubDate) : Date.now() - idx * 60_000;
+    items.push({
+      id: link,
+      title: stripHtml(title).trim(),
+      summary: truncate(summary, 220),
+      source,
+      category: detectCategory(categories.join(" ") + " " + title),
+      publishedAt: Number.isFinite(publishedAt) ? publishedAt : Date.now(),
+      url: link,
+      imageUrl: imageUrl || undefined,
+      tint: tintFromString(title),
+    });
+    idx += 1;
+  }
+  return items;
+}
+
+function extractTag(body: string, tag: string): string {
+  const re = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
+  const m = body.match(re);
+  if (!m) return "";
+  // Strip CDATA wrappers if present.
+  return m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
+}
+
+function extractAllTags(body: string, tag: string): string[] {
+  const re = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi");
+  const out: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(body)) !== null) {
+    out.push(m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim());
+  }
+  return out;
+}
+
+/** Try a few common RSS image conventions. */
+function extractImage(body: string): string {
+  // <media:content url="..."/> or <media:thumbnail url="..."/>
+  const media = body.match(/<media:(?:content|thumbnail)\b[^>]*url="([^"]+)"/i);
+  if (media) return media[1];
+  // <enclosure url="..." type="image/..."/>
+  const encl = body.match(/<enclosure\b[^>]*url="([^"]+)"[^>]*type="image/i);
+  if (encl) return encl[1];
+  // First <img src=...> inside the description CDATA.
+  const img = body.match(/<img\b[^>]*src="([^"]+)"/i);
+  if (img) return img[1];
+  return "";
+}
+
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]*>/g, "");
 }
 
 /* ─── Mapping helpers ────────────────────────────────────────────────── */
