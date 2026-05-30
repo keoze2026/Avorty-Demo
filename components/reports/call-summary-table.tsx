@@ -880,17 +880,17 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6 text-left">{TABS.find((t) => t.id === tab)?.label}</TableHead>
-                {visible.live && <TableHead className="text-right">Live</TableHead>}
-                {visible.incoming && <TableHead className="text-right">Incoming</TableHead>}
-                {visible.connected && <TableHead className="text-right">Connected</TableHead>}
-                {visible.qualified && <TableHead className="text-right">Qualified</TableHead>}
-                {visible.paid && <TableHead className="text-right">Paid</TableHead>}
-                {visible.converted && <TableHead className="text-right">Converted</TableHead>}
-                {visible.noConnect && <TableHead className="text-right">Not Connected</TableHead>}
-                {visible.dupe && <TableHead className="text-right">Dupe</TableHead>}
-                {visible.conversionRate && <TableHead className="text-right">Conv. rate</TableHead>}
-                {visible.tcl && <TableHead className="text-right">TCL</TableHead>}
-                {visible.acl && <TableHead className="text-right">ACL</TableHead>}
+                {visible.live && <TableHead className="text-center">Live</TableHead>}
+                {visible.incoming && <TableHead className="text-center">Incoming</TableHead>}
+                {visible.connected && <TableHead className="text-center">Connected</TableHead>}
+                {visible.qualified && <TableHead className="text-center">Qualified</TableHead>}
+                {visible.paid && <TableHead className="text-center">Paid</TableHead>}
+                {visible.converted && <TableHead className="text-center">Converted</TableHead>}
+                {visible.noConnect && <TableHead className="text-center">Not Connected</TableHead>}
+                {visible.dupe && <TableHead className="text-center">Dupe</TableHead>}
+                {visible.conversionRate && <TableHead className="text-center">Conv. rate</TableHead>}
+                {visible.tcl && <TableHead className="text-center">TCL</TableHead>}
+                {visible.acl && <TableHead className="text-center">ACL</TableHead>}
                 {visible.payout && <TableHead className="text-right">Payout</TableHead>}
                 {visible.revenue && <TableHead className="text-right">Revenue</TableHead>}
                 {visible.profit && <TableHead className="text-right">Profit</TableHead>}
@@ -911,39 +911,39 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                     <TableRow key={r.key}>
                       <TableCell className="pl-6 text-left font-medium">{r.label}</TableCell>
                       {visible.live && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.live)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.live)}</TableCell>
                       )}
                       {visible.incoming && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.incoming)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.incoming)}</TableCell>
                       )}
                       {visible.connected && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.connected)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.connected)}</TableCell>
                       )}
                       {visible.qualified && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.qualified)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.qualified)}</TableCell>
                       )}
                       {visible.paid && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.paid)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.paid)}</TableCell>
                       )}
                       {visible.converted && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.converted)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.converted)}</TableCell>
                       )}
                       {visible.noConnect && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.noConnect)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.noConnect)}</TableCell>
                       )}
                       {visible.dupe && (
-                        <TableCell className="text-right tabular-nums">{formatNumber(r.dupe)}</TableCell>
+                        <TableCell className="text-center tabular-nums">{formatNumber(r.dupe)}</TableCell>
                       )}
                       {visible.conversionRate && (
-                        <TableCell className="text-right tabular-nums">
+                        <TableCell className="text-center tabular-nums">
                           {formatPercent(r.conversionRate * 100, 1)}
                         </TableCell>
                       )}
                       {visible.tcl && (
-                        <TableCell className="text-right font-mono tabular-nums">{formatTimer(r.tcl)}</TableCell>
+                        <TableCell className="text-center font-mono tabular-nums">{formatTimer(r.tcl)}</TableCell>
                       )}
                       {visible.acl && (
-                        <TableCell className="text-right font-mono tabular-nums">{formatTimer(r.acl)}</TableCell>
+                        <TableCell className="text-center font-mono tabular-nums">{formatTimer(r.acl)}</TableCell>
                       )}
                       {visible.payout && (
                         <TableCell className="text-right tabular-nums">{formatCurrency(r.payout, true)}</TableCell>
@@ -1010,15 +1010,15 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                     <TableCell className="font-mono tabular-nums">{formatTimer(totals.acl)}</TableCell>
                   )}
                   {visible.payout && (
-                    <TableCell className="tabular-nums">{formatCurrency(totals.payout, true)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(totals.payout, true)}</TableCell>
                   )}
                   {visible.revenue && (
-                    <TableCell className="tabular-nums">{formatCurrency(totals.revenue, true)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{formatCurrency(totals.revenue, true)}</TableCell>
                   )}
                   {visible.profit && (
                     <TableCell
                       className={cn(
-                        "tabular-nums",
+                        "text-right tabular-nums",
                         totals.revenue - totals.payout < 0
                           ? "text-destructive"
                           : "text-[color:var(--success)]",
@@ -1028,7 +1028,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                     </TableCell>
                   )}
                   {visible.cost && (
-                    <TableCell className="pr-6 tabular-nums">
+                    <TableCell className="pr-6 text-right tabular-nums">
                       {formatCurrency(computeCost(totals), true)}
                     </TableCell>
                   )}

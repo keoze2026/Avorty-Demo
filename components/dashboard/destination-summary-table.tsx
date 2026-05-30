@@ -167,8 +167,13 @@ export function DestinationSummaryTable({
                 return (
                   <TableRow key={destination.id}>
                     <TableCell className="pl-6 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium leading-tight">{destination.name}</span>
+                      {/* Push the Active pill to the cell's right edge so the
+                          badge column reads as a clean vertical band,
+                          regardless of destination-name length. */}
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <span className="truncate text-[13px] font-medium leading-tight">
+                          {destination.name}
+                        </span>
                         <ActiveBadge />
                       </div>
                       <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
