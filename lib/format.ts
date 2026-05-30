@@ -49,6 +49,17 @@ export function formatTimer(seconds: number) {
   return `${m}:${s}`;
 }
 
+/** Pad seconds → "HH:MM:SS" — used for call-log durations.
+ *  416 → "00:06:56", 3725 → "01:02:05". */
+export function formatHMS(seconds: number): string {
+  const n = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor((n % 3600) / 60);
+  const s = n % 60;
+  const pad = (x: number) => x.toString().padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
 const RELATIVE_THRESHOLDS: Array<[number, string]> = [
   [60, "s"],
   [3600, "m"],

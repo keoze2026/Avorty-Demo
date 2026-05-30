@@ -7,11 +7,14 @@ import {
   CheckCircle2,
   DollarSign,
   ExternalLink,
+  Flag,
   Hash,
   MapPin,
   Phone,
   PhoneIncoming,
   PlayCircle,
+  Radio,
+  Signal,
   Tag,
   Users,
 } from "lucide-react";
@@ -34,8 +37,50 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+/* ─── Deterministic per-call synthetic enrichment ───────────────────────
+ * The Call record doesn't store carrier / line-type / country (those come
+ * from a CNAM / number-intelligence lookup in production). For the demo
+ * surface we derive them from `call.id` via a stable hash so the same call
+ * always shows the same values across renders. */
+
+const CARRIERS = ["AT&T", "Verizon", "T-Mobile", "Sprint", "US Cellular", "Cricket"];
+const LINE_TYPES = ["Mobile", "Landline", "VoIP", "Toll-free"] as const;
+const COUNTRIES: Array<{ name: string; flag: string }> = [
+  { name: "United States", flag: "🇺🇸" },
+  { name: "Canada", flag: "🇨🇦" },
+  { name: "Mexico", flag: "🇲🇽" },
+  { name: "United Kingdom", flag: "🇬🇧" },
+  { name: "Australia", flag: "🇦🇺" },
+];
+
+function hash(s: string, salt: number): number {
+  let h = salt | 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+interface CallEnrichment {
+  country: { name: string; flag: string };
+  carrier: string;
+  lineType: (typeof LINE_TYPES)[number];
+}
+
+function enrich(call: Call): CallEnrichment {
+  return {
+    // US-formatted callers always resolve to United States; anything else
+    // gets a stable bucket. (All mock data is US right now, but keeping the
+    // branch makes the field meaningful when international traffic arrives.)
+    country: call.callerNumber.startsWith("+1")
+      ? COUNTRIES[0]
+      : COUNTRIES[hash(call.id, 101) % COUNTRIES.length],
+    carrier: CARRIERS[hash(call.id, 203) % CARRIERS.length],
+    lineType: LINE_TYPES[hash(call.id, 307) % LINE_TYPES.length],
+  };
+}
+
 export function CallDetailSheet({ call, onOpenChange }: Props) {
   const open = !!call;
+  const enrichment = call ? enrich(call) : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
@@ -130,6 +175,39 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                     {call.payout > 0 ? formatCurrency(call.payout, true) : "—"}
                   </span>
                 </MetaCell>
+                {/* Caller intelligence — country, carrier, line-type. Derived
+                    from a CNAM/number-lookup in production; here it's a stable
+                    per-call hash so the same call always shows the same data. */}
+                {enrichment && (
+                  <>
+                    <MetaCell icon={Flag} label="Country">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span aria-hidden>{enrichment.country.flag}</span>
+                        {enrichment.country.name}
+                      </span>
+                    </MetaCell>
+                    <MetaCell icon={Radio} label="Carrier">
+                      {enrichment.carrier}
+                    </MetaCell>
+                    <MetaCell icon={Signal} label="Line type">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          aria-hidden
+                          className={
+                            enrichment.lineType === "Mobile"
+                              ? "h-1.5 w-1.5 rounded-full bg-[oklch(0.65_0.18_155)]"
+                              : enrichment.lineType === "VoIP"
+                                ? "h-1.5 w-1.5 rounded-full bg-[color:var(--warning)]"
+                                : enrichment.lineType === "Landline"
+                                  ? "h-1.5 w-1.5 rounded-full bg-accent"
+                                  : "h-1.5 w-1.5 rounded-full bg-muted-foreground"
+                          }
+                        />
+                        {enrichment.lineType}
+                      </span>
+                    </MetaCell>
+                  </>
+                )}
               </section>
 
               {/* Recording placeholder */}

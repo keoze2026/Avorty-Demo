@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { formatCurrency, formatDuration, formatRelativeTime, toE164 } from "@/lib/format";
+import { formatCurrency, formatHMS, formatRelativeTime, toE164 } from "@/lib/format";
 import type { Call } from "@/lib/types";
 
 interface Props {
@@ -118,8 +118,8 @@ export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Prop
                     </TableCell>
                   )}
                   {visibleColumns.has("duration") && (
-                    <TableCell className="font-mono text-xs">
-                      {c.durationSec > 0 ? formatDuration(c.durationSec) : "—"}
+                    <TableCell className="font-mono text-xs tabular-nums">
+                      {c.durationSec > 0 ? formatHMS(c.durationSec) : "—"}
                     </TableCell>
                   )}
                   {visibleColumns.has("payout") && (

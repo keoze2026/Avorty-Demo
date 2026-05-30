@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
-import { formatCurrency, toE164 } from "@/lib/format";
+import { formatCurrency, formatHMS, toE164 } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -91,15 +91,6 @@ function statusVariant(s: CallStatus): React.ComponentProps<typeof Badge>["varia
   return "destructive";
 }
 
-/** Seconds → "HH:MM:SS" with zero-padded fields. 416 → "00:06:56". */
-function formatHMS(seconds: number): string {
-  const n = Math.max(0, Math.floor(seconds));
-  const h = Math.floor(n / 3600);
-  const m = Math.floor((n % 3600) / 60);
-  const s = n % 60;
-  const pad = (x: number) => x.toString().padStart(2, "0");
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
-}
 
 /** Stable hash so derived fields (TTC, fail reason) don't reshuffle on render. */
 function callHash(id: string): number {
