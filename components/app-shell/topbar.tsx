@@ -63,6 +63,7 @@ export function Topbar() {
               icon={PhoneCall}
               label="Total"
               value={formatCompact(totalCalls)}
+              accent
             />
           </div>
 
@@ -125,9 +126,11 @@ interface TopStatProps {
   value: string;
   /** Pulses the icon when true (used for the "Live" stat). */
   live?: boolean;
+  /** Renders label + value in the portal accent (matches the auto-refresh chip). */
+  accent?: boolean;
 }
 
-function TopStat({ icon: Icon, label, value, live = false }: TopStatProps) {
+function TopStat({ icon: Icon, label, value, live = false, accent = false }: TopStatProps) {
   // Bright Won-green ramp — used everywhere on the Live stat so it draws the eye.
   const greenText = "text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]";
   const greenBg =
@@ -154,7 +157,11 @@ function TopStat({ icon: Icon, label, value, live = false }: TopStatProps) {
           <span
             className={cn(
               "text-[10px] uppercase tracking-wider",
-              live ? `${greenText} font-semibold` : "text-muted-foreground",
+              live
+                ? `${greenText} font-semibold`
+                : accent
+                  ? "text-accent font-semibold"
+                  : "text-muted-foreground",
             )}
           >
             {label}
@@ -164,14 +171,21 @@ function TopStat({ icon: Icon, label, value, live = false }: TopStatProps) {
               "tabular-nums",
               live
                 ? `text-[15px] font-bold ${greenText}`
-                : "text-[13px] font-semibold text-foreground",
+                : accent
+                  ? "text-[15px] font-bold text-accent"
+                  : "text-[13px] font-semibold text-foreground",
             )}
           >
             {value}
           </span>
         </span>
       ) : (
-        <span className="text-sm font-semibold tabular-nums text-foreground">
+        <span
+          className={cn(
+            "text-sm font-semibold tabular-nums",
+            accent ? "text-accent" : "text-foreground",
+          )}
+        >
           {value}
         </span>
       )}

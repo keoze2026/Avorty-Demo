@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, DollarSign, Gauge, PhoneCall, Users } from "lucide-react";
 
-import { RevenueChart } from "@/components/dashboard/revenue-chart";
+import { BuyerFunnelChart } from "@/components/buyers/buyer-funnel-chart";
 import { RecentCallsFeed } from "@/components/dashboard/recent-calls-feed";
+import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
@@ -15,9 +16,14 @@ export function BuyerOverviewTab({ buyer }: { buyer: Buyer }) {
 
   return (
     <div className="space-y-4">
+      {/* Auto schedule — daily play/pause on portal time. Lifted up to the
+          Overview tab so the operator doesn't have to dig into Settings to
+          see whether the buyer is being auto-paused. */}
+      <AutoScheduleCard target="buyer" id={buyer.id} entityLabel="buyer" />
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <RevenueChart />
+          <BuyerFunnelChart buyer={buyer} />
         </div>
 
         <Card>

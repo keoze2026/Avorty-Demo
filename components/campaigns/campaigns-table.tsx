@@ -155,8 +155,11 @@ export function CampaignsTable({
                     </TableCell>
                   )}
                   <TableCell className="text-left font-medium text-foreground">
-                    <div className="flex items-center gap-2">
-                      <span>{c.name}</span>
+                    {/* Push the Active pill to the cell's right edge so the
+                        badge column reads as a clean vertical band, regardless
+                        of campaign-name length. */}
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <span className="truncate">{c.name}</span>
                       {isActive && <ActiveBadge />}
                     </div>
                   </TableCell>

@@ -49,6 +49,66 @@ export const ACCENTS: ColorTheme[] = [
     swatch: "#8B5CF6",
     className: "theme-violet",
   },
+  {
+    id: "cyan",
+    name: "Cyan",
+    swatch: "#06B6D4",
+    className: "theme-cyan",
+  },
+  {
+    id: "rose",
+    name: "Rose",
+    swatch: "#F43F5E",
+    className: "theme-rose",
+  },
+  {
+    id: "lime",
+    name: "Lime",
+    swatch: "#84CC16",
+    className: "theme-lime",
+  },
+  {
+    id: "orange",
+    name: "Orange",
+    swatch: "#F97316",
+    className: "theme-orange",
+  },
+  {
+    id: "sky",
+    name: "Sky",
+    swatch: "#0EA5E9",
+    className: "theme-sky",
+  },
+  {
+    id: "teal",
+    name: "Teal",
+    swatch: "#14B8A6",
+    className: "theme-teal",
+  },
+  {
+    id: "fuchsia",
+    name: "Fuchsia",
+    swatch: "#D946EF",
+    className: "theme-fuchsia",
+  },
+  {
+    id: "yellow",
+    name: "Yellow",
+    swatch: "#EAB308",
+    className: "theme-yellow",
+  },
+  {
+    id: "slate",
+    name: "Slate",
+    swatch: "#64748B",
+    className: "theme-slate",
+  },
+  {
+    id: "mono",
+    name: "Pure Black",
+    swatch: "#000000",
+    className: "theme-mono",
+  },
 ];
 
 export const DEFAULT_ACCENT_ID = "default";

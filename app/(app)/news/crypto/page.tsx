@@ -13,7 +13,7 @@ import { CoinMarketTabs } from "./coin-market-tabs";
  * fails, the fetchers fall back to local mock data so the page never breaks.
  */
 export default async function CoinMarketPage() {
-  const [tokens, news] = await Promise.all([
+  const [tokensResult, news] = await Promise.all([
     fetchTopTokens(250, 300), // 5-min cache for the initial server render
     fetchCryptoNews(24),
   ]);
@@ -24,7 +24,7 @@ export default async function CoinMarketPage() {
         title="Coin Market"
         description="Live token tape with sparklines plus the latest crypto headlines."
       />
-      <CoinMarketTabs tokens={tokens} news={news} />
+      <CoinMarketTabs tokens={tokensResult.tokens} news={news} />
     </div>
   );
 }

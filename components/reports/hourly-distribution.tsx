@@ -14,7 +14,6 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import type { Call } from "@/lib/types";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -42,6 +41,8 @@ interface HourlyDistributionProps {
 
 interface Bucket {
   label: string;
+  /** Start-of-bucket timestamp (ms). Drives the tooltip header. */
+  ts: number;
   converted: number;
   notConverted: number;
   noAnswer: number;
@@ -62,13 +63,18 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
     // Today's calls grouped by hour 0..23
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
-    const slots: Bucket[] = Array.from({ length: 24 }, (_, h) => ({
-      label: `${h.toString().padStart(2, "0")}:00`,
-      converted: 0,
-      notConverted: 0,
-      noAnswer: 0,
-      revenue: 0,
-    }));
+    const slots: Bucket[] = Array.from({ length: 24 }, (_, h) => {
+      const d = new Date(startOfDay);
+      d.setHours(h, 0, 0, 0);
+      return {
+        label: `${h.toString().padStart(2, "0")}:00`,
+        ts: d.getTime(),
+        converted: 0,
+        notConverted: 0,
+        noAnswer: 0,
+        revenue: 0,
+      };
+    });
     for (const c of calls) {
       if (c.startedAt < startOfDay.getTime()) continue;
       const h = new Date(c.startedAt).getHours();
@@ -88,6 +94,7 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
       const d = new Date(start.getTime() - (days - 1 - i) * day);
       return {
         label: `${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`,
+        ts: d.getTime(),
         converted: 0,
         notConverted: 0,
         noAnswer: 0,
@@ -115,6 +122,7 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
     const d = new Date(start.getTime() - (weeks - 1 - i) * 7 * day);
     return {
       label: `${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`,
+      ts: d.getTime(),
       converted: 0,
       notConverted: 0,
       noAnswer: 0,
@@ -195,19 +203,8 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 }}
               />
               <Tooltip
-                {...CHART_TOOLTIP_PROPS}
                 cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
-                formatter={(value: number, name) => {
-                  if (name === "revenue") return [formatCurrency(value, true), "Revenue"];
-                  return [
-                    formatNumber(value),
-                    name === "converted"
-                      ? "Converted"
-                      : name === "notConverted"
-                        ? "Not converted"
-                        : "No answer",
-                  ];
-                }}
+                content={<HourlyTooltip grain={grain} />}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
@@ -259,5 +256,74 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Custom tooltip                                                      */
+/* ─────────────────────────────────────────────────────────────────── */
+
+interface TooltipPayload {
+  payload?: Bucket;
+}
+
+interface HourlyTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  grain: Grain;
+}
+
+const DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function headerForBucket(b: Bucket, grain: Grain): string {
+  const d = new Date(b.ts);
+  if (grain === "H") {
+    // "Friday, May 29, 13:00"
+    return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${b.label}`;
+  }
+  if (grain === "D") {
+    // "Friday, May 29"
+    return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  }
+  // M: "Week of May 22"
+  return `Week of ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+function HourlyTooltip({ active, payload, grain }: HourlyTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+  const b = payload[0]?.payload;
+  if (!b) return null;
+
+  const total = b.converted + b.notConverted + b.noAnswer;
+  const rows: Array<{ color: string; label: string; value: string }> = [
+    { color: "var(--muted-foreground)", label: "Total calls", value: formatNumber(total) },
+    { color: COLOR_CONVERTED, label: "Converted", value: formatNumber(b.converted) },
+    { color: COLOR_NOTCONV, label: "Not Converted", value: formatNumber(b.notConverted) },
+    { color: COLOR_NOANS, label: "No Answer", value: formatNumber(b.noAnswer) },
+    { color: COLOR_REVENUE, label: "Revenue", value: formatCurrency(b.revenue, true) },
+  ];
+
+  return (
+    <div className="rounded-md border border-border bg-popover/95 px-3 py-2 text-xs shadow-lg backdrop-blur-md">
+      <div className="mb-1.5 font-semibold text-foreground">
+        {headerForBucket(b, grain)}
+      </div>
+      <ul className="space-y-1">
+        {rows.map((r) => (
+          <li key={r.label} className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="inline-block h-2 w-2 shrink-0 rounded-full"
+              style={{ background: r.color }}
+            />
+            <span className="text-muted-foreground">{r.label}</span>
+            <span className="ml-auto font-semibold tabular-nums text-foreground">
+              {r.value}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

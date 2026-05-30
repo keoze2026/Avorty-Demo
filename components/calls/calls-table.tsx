@@ -39,7 +39,7 @@ export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Prop
               {visibleColumns.has("geo") && <TableHead className="w-[6%]">Geo</TableHead>}
               {visibleColumns.has("status") && <TableHead>Status</TableHead>}
               {visibleColumns.has("duration") && <TableHead>Duration</TableHead>}
-              {visibleColumns.has("payout") && <TableHead>Payout</TableHead>}
+              {visibleColumns.has("payout") && <TableHead className="text-right">Payout</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,7 +123,7 @@ export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Prop
                     </TableCell>
                   )}
                   {visibleColumns.has("payout") && (
-                    <TableCell className="font-mono">
+                    <TableCell className="text-right font-mono tabular-nums">
                       {c.payout > 0 ? (
                         <span className="text-foreground">{formatCurrency(c.payout, true)}</span>
                       ) : (

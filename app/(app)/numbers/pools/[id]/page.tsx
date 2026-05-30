@@ -109,7 +109,9 @@ export default function NumberPoolDetailPage() {
   }
 
   return (
-    <>
+    // Same content-width cap as Campaign Settings and the other edit pages
+    // — keeps the form readable instead of stretching across an ultrawide.
+    <div className="mx-auto w-full max-w-[928px] space-y-4">
       <Link
         href={ROUTES.numbers}
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -138,7 +140,7 @@ export default function NumberPoolDetailPage() {
         onToggleEnabled={(enabled) => updatePool(pool.id, { trafficSourcesEnabled: enabled })}
         onChangeSources={(sources) => updatePool(pool.id, { trafficSources: sources })}
       />
-    </>
+    </div>
   );
 }
 

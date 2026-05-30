@@ -2,12 +2,27 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Unlink } from "lucide-react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -32,6 +47,45 @@ const ROUTING_OPTIONS: RoutingOption[] = ["Standard", "Menu", "Call Flow", "Reve
 const DUPLICATE_OPTIONS: DuplicateHandling[] = ["Normal", "Original", "Different"];
 const DIRECTION_OPTIONS: DirectionScope[] = ["Destination", "Buyer"];
 
+/* ─── Per-destination conversion settings (Edit pencil modal) ───────── */
+
+type ConvertEvent = "Call Connected" | "Call Length" | "Incoming Call" | "Webhook";
+type DupeRevenue = "Disabled" | "Enabled" | "Time Limit";
+
+const CONVERT_EVENTS: ConvertEvent[] = [
+  "Call Connected",
+  "Call Length",
+  "Incoming Call",
+  "Webhook",
+];
+const DUPE_REVENUE_OPTIONS: DupeRevenue[] = ["Disabled", "Enabled", "Time Limit"];
+
+/**
+ * Webhooks the operator has already configured at the workspace level.
+ * In the real system this would come from a webhooks store / API; for the
+ * demo we surface a stable hand-rolled list so the dropdown isn't empty.
+ */
+const WORKSPACE_WEBHOOKS: Array<{ id: string; name: string }> = [
+  { id: "wh_lead_qualified", name: "Lead Qualified — CRM ingest" },
+  { id: "wh_billing_event", name: "Billing event — Stripe" },
+  { id: "wh_pubsub_main", name: "PubSub — main topic" },
+  { id: "wh_slack_ops", name: "Slack — #ops-routing" },
+];
+
+interface ConversionSettings {
+  rate: number;
+  convertOn: ConvertEvent;
+  /** Minimum call duration (seconds) — only meaningful when convertOn = Call Length. */
+  lengthSec: number;
+  /** Selected webhook id — only meaningful when convertOn = Webhook. */
+  webhookId: string;
+  dupeRevenue: DupeRevenue;
+  /** Days window — only meaningful when dupeRevenue = Time Limit. */
+  dupeRevenueDays: number;
+  priority: number;
+  weight: number;
+}
+
 interface ForwardCallsSectionProps {
   campaignId: string;
 }
@@ -55,6 +109,37 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
 
   const [priorities, setPriorities] = useState<Record<string, number>>({});
   const [weights, setWeights] = useState<Record<string, number>>({});
+  // Per-destination conversion settings entered via the pencil-icon modal.
+  // Survives until the user reloads — sufficient for the demo surface.
+  const [conversions, setConversions] = useState<Record<string, ConversionSettings>>({});
+
+  // The destination currently being edited in the Conversion Settings modal.
+  // `null` means the modal is closed.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editingDest = editingId
+    ? destinations.find((d) => d.id === editingId) ?? null
+    : null;
+  const editingBuyer = editingDest
+    ? MOCK_BUYERS.find((b) => b.id === editingDest.buyerId)
+    : undefined;
+
+  const openEdit = (id: string) => setEditingId(id);
+  const closeEdit = () => setEditingId(null);
+
+  const onConfirmConversion = (id: string, next: ConversionSettings) => {
+    setConversions((prev) => ({ ...prev, [id]: next }));
+    setPriorities((prev) => ({ ...prev, [id]: next.priority }));
+    setWeights((prev) => ({ ...prev, [id]: next.weight }));
+    closeEdit();
+    toast.success("Conversion settings saved");
+  };
+
+  const onDetach = (id: string, name: string) => {
+    // Demo behavior: flip the destination to disabled so it drops out of the
+    // routed list (the section already filters by `enabled`).
+    setEnabled(id, false);
+    toast.success(`${name} detached from this campaign`);
+  };
 
   return (
     <section className="space-y-4">
@@ -119,12 +204,13 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
               <TableHead className="uppercase tracking-wider text-[11px]">Type</TableHead>
               <TableHead className="uppercase tracking-wider text-[11px]">Revenue</TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">Status</TableHead>
+              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {destinations.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="pl-6 py-6 text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="pl-6 py-6 text-sm text-muted-foreground">
                   No destinations routed to this campaign yet.
                 </TableCell>
               </TableRow>
@@ -176,11 +262,14 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                           "inline-flex items-center rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider",
                         )}
                       >
-                        Call Connected
+                        {conversions[d.id]?.convertOn ?? "Call Connected"}
                       </span>
                     </TableCell>
-                    <TableCell className="font-mono text-xs tabular-nums">
-                      {formatCurrency(buyer?.bidAmount ?? 0, true)}
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                      {formatCurrency(
+                        conversions[d.id]?.rate ?? buyer?.bidAmount ?? 0,
+                        true,
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       <Switch
@@ -192,6 +281,26 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                         aria-label={`Toggle ${d.name}`}
                       />
                     </TableCell>
+                    <TableCell className="pr-6">
+                      <div className="inline-flex items-center gap-0.5">
+                        <RowAction
+                          icon={ExternalLink}
+                          label={`Open ${d.name}`}
+                          asLink={`${ROUTES.destinations}/${d.id}`}
+                        />
+                        <RowAction
+                          icon={Pencil}
+                          label={`Edit conversion settings for ${d.name}`}
+                          onClick={() => openEdit(d.id)}
+                        />
+                        <RowAction
+                          icon={Unlink}
+                          label={`Detach ${d.name} from campaign`}
+                          tone="destructive"
+                          onClick={() => onDetach(d.id, d.name)}
+                        />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })
@@ -199,6 +308,28 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Conversion settings — opens when a row's pencil action is clicked. */}
+      {editingDest && (
+        <ConversionSettingsDialog
+          open={!!editingDest}
+          onOpenChange={(o) => !o && closeEdit()}
+          destinationName={editingDest.name}
+          initial={
+            conversions[editingDest.id] ?? {
+              rate: editingBuyer?.bidAmount ?? 1,
+              convertOn: "Call Connected",
+              lengthSec: 10,
+              webhookId: "",
+              dupeRevenue: "Disabled",
+              dupeRevenueDays: 10,
+              priority: priorities[editingDest.id] ?? 1,
+              weight: weights[editingDest.id] ?? 100,
+            }
+          }
+          onConfirm={(next) => onConfirmConversion(editingDest.id, next)}
+        />
+      )}
     </section>
   );
 }
@@ -240,5 +371,321 @@ function ChoiceRow<T extends string>({
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * Single icon-only action in a row's Actions cell.
+ * Either renders as a Link (when `asLink` is set, for navigation actions like
+ * "open detail page") or a button.
+ */
+function RowAction({
+  icon: Icon,
+  label,
+  asLink,
+  onClick,
+  tone = "muted",
+}: {
+  icon: React.ElementType;
+  label: string;
+  asLink?: string;
+  onClick?: () => void;
+  tone?: "muted" | "destructive";
+}) {
+  const cls = cn(
+    "inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+    tone === "destructive"
+      ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+  );
+
+  if (asLink) {
+    return (
+      <Link href={asLink} aria-label={label} className={cls}>
+        <Icon className="h-3.5 w-3.5" />
+      </Link>
+    );
+  }
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className={cls}>
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Conversion Settings dialog (Edit pencil)                            */
+/* ─────────────────────────────────────────────────────────────────── */
+
+interface ConversionSettingsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  destinationName: string;
+  initial: ConversionSettings;
+  onConfirm: (next: ConversionSettings) => void;
+}
+
+function ConversionSettingsDialog({
+  open,
+  onOpenChange,
+  destinationName,
+  initial,
+  onConfirm,
+}: ConversionSettingsDialogProps) {
+  // Buffered form state — discarded on cancel, written on confirm.
+  const [name, setName] = useState(destinationName);
+  const [rate, setRate] = useState<number>(initial.rate);
+  const [convertOn, setConvertOn] = useState<ConvertEvent>(initial.convertOn);
+  const [lengthSec, setLengthSec] = useState<number>(initial.lengthSec);
+  const [webhookId, setWebhookId] = useState<string>(initial.webhookId);
+  const [dupeRevenue, setDupeRevenue] = useState<DupeRevenue>(initial.dupeRevenue);
+  const [dupeRevenueDays, setDupeRevenueDays] = useState<number>(initial.dupeRevenueDays);
+  const [priority, setPriority] = useState<number>(initial.priority);
+  const [weight, setWeight] = useState<number>(initial.weight);
+
+  // Reseed when a different row's pencil opens the dialog.
+  // (initial / destinationName change because the parent passes new values
+  // — checking destinationName keeps this cheap and avoids stale captures.)
+  if (open && name === "" && destinationName !== "") setName(destinationName);
+
+  // Webhook conversions can't be saved without a webhook picked — Call Length
+  // needs a positive duration — and Time Limit needs a positive day window.
+  // Gate Confirm on the active sub-field.
+  const canSubmit =
+    rate >= 0 &&
+    (convertOn !== "Webhook" || webhookId !== "") &&
+    (convertOn !== "Call Length" || lengthSec > 0) &&
+    (dupeRevenue !== "Time Limit" || dupeRevenueDays > 0);
+
+  const submit = () => {
+    if (!canSubmit) return;
+    onConfirm({
+      rate,
+      convertOn,
+      lengthSec: Math.max(1, lengthSec || 1),
+      webhookId,
+      dupeRevenue,
+      dupeRevenueDays: Math.max(1, dupeRevenueDays || 1),
+      priority: Math.max(1, priority || 1),
+      weight: Math.max(0, Math.min(100, weight || 0)),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-[13px] font-semibold uppercase tracking-wider">
+            Conversion Settings
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Destination name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="cs-name" className="text-xs font-medium">
+              Destination Name
+            </Label>
+            <Input
+              id="cs-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          {/* Rate */}
+          <div className="space-y-1.5">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <Label htmlFor="cs-rate" className="text-xs font-medium">
+                  Rate
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Enter the payout rate per qualified call
+                </p>
+              </div>
+              <div className="relative w-28">
+                <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  $
+                </span>
+                <Input
+                  id="cs-rate"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={rate}
+                  onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
+                  className="pl-6 text-right font-mono tabular-nums"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Convert ON */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Convert ON</Label>
+            <Select value={convertOn} onValueChange={(v) => setConvertOn(v as ConvertEvent)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONVERT_EVENTS.map((e) => (
+                  <SelectItem key={e} value={e}>
+                    <span className="inline-flex items-center gap-2">
+                      {e}
+                      {e === "Webhook" && (
+                        <Badge variant="outline" className="px-1.5 py-0 text-[9px]">
+                          Beta
+                        </Badge>
+                      )}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Conditional sub-field driven by the Convert ON choice:
+              - Call Length → minimum-duration input (seconds)
+              - Webhook    → pick one of the workspace webhooks
+              The other two events (Call Connected, Incoming Call) need no
+              extra config, so nothing renders. */}
+          {convertOn === "Call Length" && (
+            <div className="space-y-1.5">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <Label htmlFor="cs-length" className="text-xs font-medium">
+                    Length
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Set the minimum call duration
+                  </p>
+                </div>
+                <div className="relative w-28">
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    sec
+                  </span>
+                  <Input
+                    id="cs-length"
+                    type="number"
+                    min={1}
+                    value={lengthSec}
+                    onChange={(e) => setLengthSec(Number(e.target.value) || 0)}
+                    className="pr-10 text-right font-mono tabular-nums"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {convertOn === "Webhook" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Webhook</Label>
+              <Select value={webhookId} onValueChange={setWebhookId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {WORKSPACE_WEBHOOKS.map((w) => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {webhookId === "" && (
+                <p className="text-[11px] text-destructive">
+                  Pick a webhook to record conversions against.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Duplicate revenue options */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Duplicate revenue Options</Label>
+            <div className="inline-flex w-full rounded-md border border-border bg-muted p-0.5">
+              {DUPE_REVENUE_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setDupeRevenue(opt)}
+                  className={cn(
+                    "flex-1 rounded px-3 py-1.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    dupeRevenue === opt
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Time-Limit sub-field — only relevant when Time Limit is picked. */}
+          {dupeRevenue === "Time Limit" && (
+            <div className="space-y-1.5">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <Label htmlFor="cs-days" className="text-xs font-medium">
+                    Days
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Set a specific time limit within which duplicate calls will not be charged
+                  </p>
+                </div>
+                <Input
+                  id="cs-days"
+                  type="number"
+                  min={1}
+                  value={dupeRevenueDays}
+                  onChange={(e) => setDupeRevenueDays(Number(e.target.value) || 0)}
+                  className="w-24 text-center font-mono tabular-nums"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Priority + Weight */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-priority" className="text-xs font-medium">
+                Priority
+              </Label>
+              <Input
+                id="cs-priority"
+                type="number"
+                min={1}
+                value={priority}
+                onChange={(e) => setPriority(Number(e.target.value) || 1)}
+                className="text-center font-mono tabular-nums"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-weight" className="text-xs font-medium">
+                Weight
+              </Label>
+              <Input
+                id="cs-weight"
+                type="number"
+                min={0}
+                max={100}
+                value={weight}
+                onChange={(e) => setWeight(Number(e.target.value) || 0)}
+                className="text-center font-mono tabular-nums"
+              />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={!canSubmit}>Confirm</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

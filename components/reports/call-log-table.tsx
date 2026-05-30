@@ -289,8 +289,8 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                 {columns.caller && <TableHead>Caller ID</TableHead>}
                 {columns.dialed && <TableHead>Dialed</TableHead>}
                 {columns.buyer && <TableHead>Buyer</TableHead>}
-                {columns.revenue && <TableHead>Revenue</TableHead>}
-                {columns.payout && <TableHead>Payout</TableHead>}
+                {columns.revenue && <TableHead className="text-right">Revenue</TableHead>}
+                {columns.payout && <TableHead className="text-right">Payout</TableHead>}
                 {columns.ttc && <TableHead>TTC</TableHead>}
                 {columns.duration && <TableHead>Duration</TableHead>}
                 {columns.status && <TableHead>Status</TableHead>}
@@ -338,12 +338,12 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                         </TableCell>
                       )}
                       {columns.revenue && (
-                        <TableCell className="tabular-nums">
+                        <TableCell className="text-right tabular-nums">
                           {formatCurrency(c.revenue, true)}
                         </TableCell>
                       )}
                       {columns.payout && (
-                        <TableCell className="tabular-nums">
+                        <TableCell className="text-right tabular-nums">
                           {formatCurrency(c.payout, true)}
                           {profit !== 0 && (
                             <span

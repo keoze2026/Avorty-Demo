@@ -72,10 +72,10 @@ export function PublishersTable({
                 />
               </TableHead>
               <TableHead className="text-left">Name</TableHead>
-              {columns.hourly && <TableHead>Hourly</TableHead>}
-              {columns.daily && <TableHead>Daily</TableHead>}
-              {columns.monthly && <TableHead>Monthly</TableHead>}
-              {columns.global && <TableHead>Global</TableHead>}
+              {columns.hourly && <TableHead className="text-right">Hourly</TableHead>}
+              {columns.daily && <TableHead className="text-right">Daily</TableHead>}
+              {columns.monthly && <TableHead className="text-right">Monthly</TableHead>}
+              {columns.global && <TableHead className="text-right">Global</TableHead>}
               {columns.status && <TableHead>Status</TableHead>}
               <TableHead className="pr-4">Actions</TableHead>
             </TableRow>
@@ -102,22 +102,22 @@ export function PublishersTable({
                     {p.name}
                   </TableCell>
                   {columns.hourly && (
-                    <TableCell className="tabular-nums text-muted-foreground">
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
                       {formatCurrency(hourly, true)}
                     </TableCell>
                   )}
                   {columns.daily && (
-                    <TableCell className="tabular-nums text-muted-foreground">
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
                       {formatCurrency(p.revenueToday, true)}
                     </TableCell>
                   )}
                   {columns.monthly && (
-                    <TableCell className="tabular-nums text-muted-foreground">
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
                       {formatCurrency(p.revenueMonth, true)}
                     </TableCell>
                   )}
                   {columns.global && (
-                    <TableCell className="tabular-nums text-muted-foreground">
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
                       {formatCurrency(p.lifetimeRevenue, true)}
                     </TableCell>
                   )}

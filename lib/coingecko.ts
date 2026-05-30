@@ -14,9 +14,18 @@
  *      &price_change_percentage=1h,24h,7d
  */
 
-import { MOCK_TOKENS, type TokenEntry } from "./mock/tokens";
+import type { TokenEntry } from "./mock/tokens";
 
 const ENDPOINT = "https://api.coingecko.com/api/v3/coins/markets";
+
+export type TokensSource = "live" | "fallback";
+
+export interface TokensResult {
+  tokens: TokenEntry[];
+  /** "live" = real data from CoinGecko. "fallback" = stale mock seed used
+   *  because the upstream call failed (timeout, rate-limit, network). */
+  source: TokensSource;
+}
 
 interface CoinGeckoMarket {
   id: string;
@@ -35,18 +44,22 @@ interface CoinGeckoMarket {
 }
 
 /**
- * Re-fetch the top-N tokens. Returns mock data as a fallback.
+ * Re-fetch the top-N tokens.
  *
  * `revalidateSec` controls Next.js's fetch cache window. The initial server
- * render passes a relaxed 300s; the /api/tokens polling endpoint passes 20s
- * so client polls share a single upstream call every 20 seconds regardless
+ * render passes a relaxed 300s; the /api/tokens polling endpoint passes 8s
+ * so client polls share a single upstream call every few seconds regardless
  * of how many visitors are connected.
+ *
+ * If CoinGecko is unreachable we return an empty array — never a stale mock
+ * seed. The client side keeps the last good snapshot it received so the
+ * operator continues to see real, recent values instead of placeholders.
  */
 export async function fetchTopTokens(
   perPage = 250,
   revalidateSec = 300,
   page = 1,
-): Promise<TokenEntry[]> {
+): Promise<TokensResult> {
   const url =
     `${ENDPOINT}?vs_currency=usd&order=market_cap_desc&per_page=${perPage}` +
     `&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`;
@@ -60,15 +73,10 @@ export async function fetchTopTokens(
     if (!Array.isArray(raw) || raw.length === 0) {
       throw new Error("CoinGecko returned an empty payload");
     }
-    return raw.map(toTokenEntry);
+    return { tokens: raw.map(toTokenEntry), source: "live" };
   } catch (err) {
-    console.warn(
-      "[coingecko] using MOCK_TOKENS fallback:",
-      (err as Error).message,
-    );
-    // Only return the mock seed for the first page — pagination calls that
-    // fail upstream return empty so the UI stops asking for more.
-    return page === 1 ? MOCK_TOKENS : [];
+    console.warn("[coingecko] upstream failed:", (err as Error).message);
+    return { tokens: [], source: "fallback" };
   }
 }
 
@@ -99,6 +107,208 @@ function toTokenEntry(m: CoinGeckoMarket): TokenEntry {
         : [m.current_price ?? 0, m.current_price ?? 0],
   };
 }
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Per-coin detail                                                     */
+/* ─────────────────────────────────────────────────────────────────── */
+
+export interface CoinDetail {
+  id: string;
+  symbol: string;
+  name: string;
+  rank: number;
+  logoUrl?: string;
+  /** Long-form HTML description from CoinGecko. May be empty. */
+  description: string;
+  homepageUrl?: string;
+  blockchainExplorerUrl?: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  fullyDilutedValuation?: number;
+  volume24h: number;
+  circulatingSupply: number;
+  totalSupply?: number;
+  maxSupply?: number;
+  ath: number;
+  athChangePct: number;
+  athDate?: string;
+  atl: number;
+  atlChangePct: number;
+  atlDate?: string;
+  /** "live" or "fallback" (synthesized from MOCK_TOKENS). */
+  source: TokensSource;
+}
+
+interface CoinGeckoCoin {
+  id: string;
+  symbol: string;
+  name: string;
+  market_cap_rank?: number;
+  image?: { thumb?: string; small?: string; large?: string };
+  description?: { en?: string };
+  links?: {
+    homepage?: string[];
+    blockchain_site?: string[];
+  };
+  market_data?: {
+    current_price?: { usd?: number };
+    market_cap?: { usd?: number };
+    fully_diluted_valuation?: { usd?: number };
+    total_volume?: { usd?: number };
+    price_change_percentage_24h?: number;
+    circulating_supply?: number;
+    total_supply?: number;
+    max_supply?: number;
+    ath?: { usd?: number };
+    ath_change_percentage?: { usd?: number };
+    ath_date?: { usd?: string };
+    atl?: { usd?: number };
+    atl_change_percentage?: { usd?: number };
+    atl_date?: { usd?: string };
+  };
+}
+
+/**
+ * Fetch detail for a single coin. `idOrSymbol` is preferentially CoinGecko's
+ * stable id ("bitcoin", "ethereum"). If we only have a symbol we resolve it
+ * via the cached top-list lookup before hitting the detail endpoint.
+ */
+export async function fetchCoinDetail(
+  idOrSymbol: string,
+  revalidateSec = 30,
+): Promise<CoinDetail | null> {
+  // Step 1: resolve to a CoinGecko id. The detail endpoint requires the id
+  // ("bitcoin"), not the symbol ("btc"), and the input from the URL may be
+  // either casing/form.
+  const id = await resolveCoinId(idOrSymbol);
+  if (!id) return null;
+
+  const url =
+    `https://api.coingecko.com/api/v3/coins/${id}?` +
+    `localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: revalidateSec },
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) throw new Error(`CoinGecko returned ${res.status}`);
+    const raw = (await res.json()) as CoinGeckoCoin;
+    return toCoinDetail(raw, "live");
+  } catch (err) {
+    console.warn(
+      "[coingecko] coin detail upstream failed:",
+      (err as Error).message,
+    );
+    // No mock fallback — surfacing real-but-stale data isn't possible from a
+    // single server fetch, so return null and let the route handle it.
+    return null;
+  }
+}
+
+/** Map CoinGecko's bulky detail payload into a flat consumer shape. */
+function toCoinDetail(c: CoinGeckoCoin, source: TokensSource): CoinDetail {
+  const m = c.market_data ?? {};
+  // Strip HTML from the description so consumers can decide how to render it.
+  const description = (c.description?.en ?? "").trim();
+  const homepageUrl = c.links?.homepage?.find((u) => !!u) ?? undefined;
+  const blockchainExplorerUrl = c.links?.blockchain_site?.find((u) => !!u) ?? undefined;
+  return {
+    id: c.id,
+    symbol: c.symbol.toUpperCase(),
+    name: c.name,
+    rank: c.market_cap_rank ?? 0,
+    logoUrl: c.image?.large ?? c.image?.small ?? c.image?.thumb,
+    description,
+    homepageUrl,
+    blockchainExplorerUrl,
+    price: m.current_price?.usd ?? 0,
+    change24h: m.price_change_percentage_24h ?? 0,
+    marketCap: m.market_cap?.usd ?? 0,
+    fullyDilutedValuation: m.fully_diluted_valuation?.usd,
+    volume24h: m.total_volume?.usd ?? 0,
+    circulatingSupply: m.circulating_supply ?? 0,
+    totalSupply: m.total_supply ?? undefined,
+    maxSupply: m.max_supply ?? undefined,
+    ath: m.ath?.usd ?? 0,
+    athChangePct: m.ath_change_percentage?.usd ?? 0,
+    athDate: m.ath_date?.usd,
+    atl: m.atl?.usd ?? 0,
+    atlChangePct: m.atl_change_percentage?.usd ?? 0,
+    atlDate: m.atl_date?.usd,
+    source,
+  };
+}
+
+/**
+ * Resolve a raw URL segment ("bitcoin", "BTC", "btc") to a CoinGecko id.
+ * We re-use the top-tokens list (cached) to look up symbols. If the segment
+ * is already a known id we pass it through.
+ */
+async function resolveCoinId(input: string): Promise<string | null> {
+  const raw = input.toLowerCase();
+  if (!raw) return null;
+  // Common direct cases — most users hit these.
+  if (DIRECT_ID_GUESSES[raw]) return DIRECT_ID_GUESSES[raw];
+
+  // Otherwise look up via the cached top-250 list. Symbol -> id mapping.
+  try {
+    const { tokens } = await fetchTopTokens(250, 300, 1);
+    const upper = input.toUpperCase();
+    const match = tokens.find((t) => t.symbol === upper);
+    if (match) {
+      // The TokenEntry shape doesn't carry the id, but CoinGecko's id is the
+      // lowercase canonical name in most cases ("bitcoin", "ethereum"). We
+      // derive it as best-effort.
+      return match.name.toLowerCase().replace(/\s+/g, "-");
+    }
+  } catch {
+    /* fall through */
+  }
+  // Last resort — treat the segment as the id itself.
+  return raw;
+}
+
+/** Small lookup for the most common coins so we don't pay the list call. */
+const DIRECT_ID_GUESSES: Record<string, string> = {
+  btc: "bitcoin",
+  bitcoin: "bitcoin",
+  eth: "ethereum",
+  ethereum: "ethereum",
+  sol: "solana",
+  solana: "solana",
+  bnb: "binancecoin",
+  xrp: "ripple",
+  ripple: "ripple",
+  usdt: "tether",
+  tether: "tether",
+  usdc: "usd-coin",
+  ada: "cardano",
+  cardano: "cardano",
+  doge: "dogecoin",
+  dogecoin: "dogecoin",
+  dot: "polkadot",
+  polkadot: "polkadot",
+  link: "chainlink",
+  chainlink: "chainlink",
+  matic: "matic-network",
+  polygon: "matic-network",
+  avax: "avalanche-2",
+  avalanche: "avalanche-2",
+  ton: "the-open-network",
+  toncoin: "the-open-network",
+  trx: "tron",
+  tron: "tron",
+  shib: "shiba-inu",
+  ltc: "litecoin",
+  litecoin: "litecoin",
+  bch: "bitcoin-cash",
+  near: "near",
+  uni: "uniswap",
+  icp: "internet-computer",
+  apt: "aptos",
+};
 
 function downsample(arr: number[], target: number): number[] {
   if (arr.length <= target) return arr;

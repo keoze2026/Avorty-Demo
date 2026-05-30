@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, Copy, Gift, Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { ReferralSpendChart } from "@/components/referrals/referral-spend-chart";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,11 +57,13 @@ export default function ReferralsPage() {
     }
   };
 
+  const commissionPct = `${(REFERRAL_COMMISSION_RATE * 100).toFixed(0)}%`;
+
   return (
     <>
       <PageHeader
         title="Referral Program"
-        description="Earn 10% of every client's lifetime spend when you bring them onto Vortyx."
+        description={`Earn ${commissionPct} of every client's lifetime spend when you bring them onto Vortyx.`}
       />
 
       {/* Hero — referral link + share CTA */}
@@ -73,11 +76,11 @@ export default function ReferralsPage() {
             </div>
             <h2 className="text-lg font-semibold leading-tight">
               Refer a client. We&apos;ll send you{" "}
-              <span className="text-accent">10%</span> of every dollar they spend — forever.
+              <span className="text-accent">{commissionPct}</span> of every dollar they spend — forever.
             </h2>
             <p className="text-sm text-muted-foreground">
               Share your unique link with any agency or buyer. The moment they sign up
-              through it, every payout they make to the network earns you a 10% partner
+              through it, every payout they make to the network earns you a {commissionPct} partner
               commission. Paid out automatically with your monthly settlement.
             </p>
 
@@ -161,8 +164,8 @@ export default function ReferralsPage() {
         <div className="border-b border-border px-6 py-4">
           <h3 className="text-base font-semibold">Referred clients</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Every client signed up through your link, with their lifetime spend and your
-            10% commission share.
+            Every client signed up through your link, with their lifetime spend and your{" "}
+            {commissionPct} commission share.
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -219,6 +222,10 @@ export default function ReferralsPage() {
           </Table>
         </div>
       </Card>
+
+      {/* Spending tracker — daily bars + your-commission line so the partner
+          can see how their referred clients are pacing over time. */}
+      <ReferralSpendChart />
     </>
   );
 }

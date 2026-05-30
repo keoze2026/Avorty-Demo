@@ -1,7 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Gauge, LayoutDashboard, Megaphone, Settings as SettingsIcon, Target } from "lucide-react";
 
 import { BuyerCampaignsTab } from "@/components/buyers/buyer-campaigns-tab";
@@ -10,16 +11,26 @@ import { BuyerDestinationsTab } from "@/components/buyers/buyer-destinations-tab
 import { BuyerDetailHeader } from "@/components/buyers/buyer-detail-header";
 import { BuyerOverviewTab } from "@/components/buyers/buyer-overview-tab";
 import { BuyerSettingsTab } from "@/components/buyers/buyer-settings-tab";
-import { BuyerStatsRow } from "@/components/buyers/buyer-stats-row";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
 import { useBuyersStore } from "@/lib/store/buyers-store";
+import { cn } from "@/lib/utils";
+
+type TabId = "overview" | "campaigns" | "destinations" | "caps" | "settings";
+
+const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "campaigns", label: "Campaigns", icon: Megaphone },
+  { id: "destinations", label: "Destinations", icon: Target },
+  { id: "caps", label: "Caps & pacing", icon: Gauge },
+  { id: "settings", label: "Settings", icon: SettingsIcon },
+];
 
 export default function BuyerDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const buyer = useBuyersStore((s) => s.getById(params.id));
+  const [tab, setTab] = useState<TabId>("overview");
 
   useBreadcrumbOverride(buyer?.name);
 
@@ -44,43 +55,46 @@ export default function BuyerDetailPage() {
   return (
     <>
       <BuyerDetailHeader buyer={buyer} />
-      <BuyerStatsRow buyer={buyer} />
 
-      <Tabs defaultValue="overview" className="gap-4">
-        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="overview">
-            <LayoutDashboard className="h-3.5 w-3.5" /> Overview
-          </TabsTrigger>
-          <TabsTrigger value="campaigns">
-            <Megaphone className="h-3.5 w-3.5" /> Campaigns
-          </TabsTrigger>
-          <TabsTrigger value="destinations">
-            <Target className="h-3.5 w-3.5" /> Destinations
-          </TabsTrigger>
-          <TabsTrigger value="caps">
-            <Gauge className="h-3.5 w-3.5" /> Caps &amp; pacing
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <SettingsIcon className="h-3.5 w-3.5" /> Settings
-          </TabsTrigger>
-        </TabsList>
+      <div className="space-y-4">
+        {/* Underline-style tab strip — matches Campaign Settings, Workspace,
+            and Coin Market. Replaces the heavy shadcn pill triggers that read
+            as a giant button block. */}
+        <div className="no-scrollbar flex overflow-x-auto border-b border-border">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "relative inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
+                  active
+                    ? "text-accent"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+                {active && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-2 -bottom-px h-0.5 bg-accent"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-        <TabsContent value="overview" className="space-y-4">
-          <BuyerOverviewTab buyer={buyer} />
-        </TabsContent>
-        <TabsContent value="campaigns">
-          <BuyerCampaignsTab campaignIds={buyer.campaignIds} />
-        </TabsContent>
-        <TabsContent value="destinations">
-          <BuyerDestinationsTab buyer={buyer} />
-        </TabsContent>
-        <TabsContent value="caps">
-          <BuyerCapsTab buyer={buyer} />
-        </TabsContent>
-        <TabsContent value="settings">
-          <BuyerSettingsTab buyer={buyer} />
-        </TabsContent>
-      </Tabs>
+        {tab === "overview" && <BuyerOverviewTab buyer={buyer} />}
+        {tab === "campaigns" && <BuyerCampaignsTab campaignIds={buyer.campaignIds} />}
+        {tab === "destinations" && <BuyerDestinationsTab buyer={buyer} />}
+        {tab === "caps" && <BuyerCapsTab buyer={buyer} />}
+        {tab === "settings" && <BuyerSettingsTab buyer={buyer} />}
+      </div>
     </>
   );
 }

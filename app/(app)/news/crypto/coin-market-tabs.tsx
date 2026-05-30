@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Coins, Newspaper } from "lucide-react";
+import { Coins, Newspaper, RefreshCw } from "lucide-react";
 
 import { MarketStatsRow } from "@/components/coinmarket/market-stats-row";
 import { TokensTable } from "@/components/coinmarket/tokens-table";
@@ -31,8 +31,12 @@ const CRYPTO_CATEGORIES: NewsCategory[] = [
   "Markets",
 ];
 
-/** How often to poll /api/tokens for the visible block (ms). */
-const POLL_INTERVAL_MS = 20_000;
+/**
+ * How often to poll /api/tokens for the visible block (ms).
+ * Synced with the upstream cache window in app/api/tokens/route.ts so polls
+ * arrive right after the cache refreshes — every poll is guaranteed-fresh.
+ */
+const POLL_INTERVAL_MS = 8_000;
 /** Each CoinGecko fetch returns this many tokens. */
 const BLOCK_SIZE = 250;
 /** Rough upper bound — used while we haven't hit the end of CoinGecko's list. */
@@ -50,36 +54,83 @@ export function CoinMarketTabs({ tokens: initialTokens, news }: Props) {
   const [loading, setLoading] = React.useState(false);
   // True until we hit a CoinGecko page that returns an empty array.
   const [hasMore, setHasMore] = React.useState(true);
+  // Refresh status surfaced in the toolbar so the user can see freshness.
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = React.useState<number>(Date.now());
 
-  /* ─── Poll block 1 every 20s so the "live" rows stay fresh. ───────── */
+  /**
+   * Pull the latest block-1 snapshot and splice it into state. Held in a ref
+   * so the interval / visibility handlers all share the same closure-stable
+   * function without re-arming the effect on every render.
+   */
+  const refreshLatestRef = React.useRef<() => Promise<void>>(async () => {});
   React.useEffect(() => {
-    if (tab !== "tokens") return;
-    let cancelled = false;
-
-    const refresh = async () => {
-      if (typeof document !== "undefined" && document.hidden) return;
+    refreshLatestRef.current = async () => {
+      setRefreshing(true);
       try {
         const res = await fetch(
           `/api/tokens?page=1&perPage=${BLOCK_SIZE}`,
           { cache: "no-store" },
         );
         if (!res.ok) return;
-        const fresh = (await res.json()) as TokenEntry[];
-        if (cancelled || !Array.isArray(fresh) || fresh.length === 0) return;
-        // Replace the first BLOCK_SIZE rows; keep any later blocks the user
-        // already paginated into.
+        const payload = (await res.json()) as {
+          tokens: TokenEntry[];
+          source: unknown;
+        };
+        const fresh = payload.tokens;
+        // Only commit when we got real data. An empty array means the
+        // upstream call failed — keep the last good snapshot in place so the
+        // user continues to see real, recent values.
+        if (!Array.isArray(fresh) || fresh.length === 0) return;
         setTokens((prev) => [...fresh, ...prev.slice(fresh.length)]);
+        setLastUpdatedAt(Date.now());
       } catch {
         /* swallow — keep the last good snapshot on transient errors */
+      } finally {
+        setRefreshing(false);
       }
     };
+  }, []);
 
-    const id = window.setInterval(refresh, POLL_INTERVAL_MS);
+  const manualRefresh = React.useCallback(() => {
+    void refreshLatestRef.current();
+  }, []);
+
+  /* ─── Poll block 1 on a short interval so the "live" rows stay fresh. ── */
+  React.useEffect(() => {
+    if (tab !== "tokens") return;
+    let cancelled = false;
+
+    const tick = () => {
+      if (cancelled) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      void refreshLatestRef.current();
+    };
+
+    // Re-poll instantly when the tab opens (or the operator switches back
+    // from another browser tab) so they don't stare at stale numbers.
+    void refreshLatestRef.current();
+    const onVisible = () => {
+      if (!document.hidden) void refreshLatestRef.current();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    const id = window.setInterval(tick, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [tab]);
+
+  /* ─── "Updated Ns ago" rolls every second to feel alive. ───────────── */
+  const [now, setNow] = React.useState<number>(() => Date.now());
+  React.useEffect(() => {
+    if (tab !== "tokens") return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [tab]);
+  const secondsAgo = Math.max(0, Math.floor((now - lastUpdatedAt) / 1000));
 
   /* ─── Append the next block when the user paginates past loaded data. ── */
   const ensureLoadedForPage = React.useCallback(
@@ -96,7 +147,11 @@ export function CoinMarketTabs({ tokens: initialTokens, news }: Props) {
           { cache: "no-store" },
         );
         if (!res.ok) return;
-        const more = (await res.json()) as TokenEntry[];
+        const payload = (await res.json()) as {
+          tokens: TokenEntry[];
+          source: unknown;
+        };
+        const more = payload.tokens;
         if (!Array.isArray(more) || more.length === 0) {
           // Reached the end of CoinGecko's list.
           setHasMore(false);
@@ -149,6 +204,44 @@ export function CoinMarketTabs({ tokens: initialTokens, news }: Props) {
 
       {tab === "tokens" && (
         <div className="space-y-5">
+          {/* Live status strip — shows freshness + manual refresh affordance.
+              When the upstream API can't be reached we silently keep the
+              last good snapshot; the "Updated Ns ago" counter is the only
+              hint that polling has paused (it just keeps climbing). */}
+          <div className="flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="relative inline-flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[oklch(0.78_0.18_155)] opacity-70" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.18_155)]" />
+              </span>
+              <span className="font-semibold uppercase tracking-wider text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
+                Live
+              </span>
+            </span>
+            <span aria-hidden className="text-muted-foreground/40">·</span>
+            <span className="tabular-nums">
+              Updated {secondsAgo < 1 ? "just now" : `${secondsAgo}s ago`}
+            </span>
+            <button
+              type="button"
+              onClick={manualRefresh}
+              disabled={refreshing}
+              aria-label="Refresh tokens"
+              className={cn(
+                "ml-1 inline-flex h-6 w-6 items-center justify-center rounded-md border border-border transition-colors",
+                "hover:bg-muted hover:text-foreground",
+                refreshing && "opacity-60",
+              )}
+            >
+              <RefreshCw
+                className={cn(
+                  "h-3 w-3",
+                  refreshing && "animate-spin",
+                )}
+              />
+            </button>
+          </div>
+
           <MarketStatsRow tokens={tokens.slice(0, BLOCK_SIZE)} />
           <TokensTable
             tokens={tokens}

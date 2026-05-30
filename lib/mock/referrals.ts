@@ -2,7 +2,7 @@
  * Mock referral-program data.
  *
  * Each operator gets a unique referral code, lifetime earnings, and a list
- * of clients they brought in. Earnings are computed as 10% of each client's
+ * of clients they brought in. Earnings are computed as 5% of each client's
  * spend on the platform.
  */
 
@@ -23,7 +23,7 @@ export interface ReferredClient {
   status: "active" | "churned";
 }
 
-export const REFERRAL_COMMISSION_RATE = 0.1; // 10%
+export const REFERRAL_COMMISSION_RATE = 0.05; // 5%
 
 export const MOCK_REFERRAL_CODE = "VORTYX-A4F9X";
 export const MOCK_REFERRAL_LINK = `https://vortyx.io/r/${MOCK_REFERRAL_CODE}`;

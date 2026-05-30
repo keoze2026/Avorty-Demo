@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, Building2, Mail, MoreVertical, Pause, Play, Settings as SettingsIcon, Trash2 } from "lucide-react";
 
+import { BuyerStatsRow } from "@/components/buyers/buyer-stats-row";
 import { PartnerStatusBadge } from "@/components/network/partner-status-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,13 +37,13 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
       <div
         aria-hidden
         className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl"
         style={{ background: "rgba(40, 175, 110, 0.22)" }}
       />
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="relative flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <Button
             variant="ghost"
@@ -107,6 +108,13 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+
+      {/* Compact KPI strip docked to the bottom of the header card. Sits on a
+          divider so the identity block above and the metrics below visually
+          read as one panel. */}
+      <div className="relative border-t border-border/60">
+        <BuyerStatsRow buyer={buyer} />
       </div>
     </div>
   );

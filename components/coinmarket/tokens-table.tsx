@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, ChevronsUpDown, Star } from "lucide-react";
 
 import { Sparkline } from "./sparkline";
@@ -232,6 +233,7 @@ function TokenRow({
   favorite: boolean;
   onToggleFav: () => void;
 }) {
+  const router = useRouter();
   // Use the 7-day move to color both the change pills and the sparkline.
   const sparkColor =
     token.change7d >= 0 ? "oklch(0.65 0.18 155)" : "oklch(0.6 0.18 25)";
@@ -248,9 +250,14 @@ function TokenRow({
     return () => window.clearTimeout(id);
   }, [token.price]);
 
+  // Whole row navigates to the detail page; the favorite button stops
+  // propagation so clicking the star doesn't trigger navigation.
+  const href = `/news/crypto/${token.symbol.toLowerCase()}`;
+  const onRowClick = () => router.push(href);
+
   return (
-    <TableRow>
-      <TableCell className="pl-3 text-left">
+    <TableRow className="cursor-pointer" onClick={onRowClick}>
+      <TableCell className="pl-3 text-left" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={onToggleFav}
@@ -271,7 +278,7 @@ function TokenRow({
         {token.rank}
       </TableCell>
       <TableCell className="text-left">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 transition-colors group-hover:text-accent">
           {token.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -293,7 +300,7 @@ function TokenRow({
             </span>
           )}
           <span className="leading-tight">
-            <span className="block text-sm font-medium text-foreground">
+            <span className="block text-sm font-medium text-foreground transition-colors hover:text-accent">
               {token.name}
             </span>
             <span className="block text-[11px] text-muted-foreground">

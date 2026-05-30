@@ -102,15 +102,15 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
               barCategoryGap={range === "24h" ? "18%" : "26%"}
             >
               <defs>
-                {/* Standard bar — single indigo with a soft top→bottom fade */}
+                {/* Standard bar — solid indigo (no gradient fade). */}
                 <linearGradient id="calls-bar-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={BAR_COLOR} stopOpacity={0.95} />
-                  <stop offset="100%" stopColor={BAR_COLOR} stopOpacity={0.55} />
+                  <stop offset="0%" stopColor={BAR_COLOR} stopOpacity={1} />
+                  <stop offset="100%" stopColor={BAR_COLOR} stopOpacity={1} />
                 </linearGradient>
-                {/* Peak bar — brighter indigo variant for emphasis */}
+                {/* Peak bar — solid brighter indigo. */}
                 <linearGradient id="calls-peak-grad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={PEAK_COLOR} stopOpacity={1} />
-                  <stop offset="100%" stopColor={PEAK_COLOR} stopOpacity={0.7} />
+                  <stop offset="100%" stopColor={PEAK_COLOR} stopOpacity={1} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
@@ -143,7 +143,7 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
               />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
-                cursor={{ fill: "var(--muted)", fillOpacity: 0.4 }}
+                cursor={false}
                 formatter={(value: number) => [formatNumber(value), "Calls"]}
                 labelFormatter={(_, payload) => payload?.[0]?.payload?.full ?? ""}
               />

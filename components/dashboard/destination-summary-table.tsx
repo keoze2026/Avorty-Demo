@@ -134,10 +134,10 @@ export function DestinationSummaryTable({
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-6 text-left">Destination</TableHead>
               <TableHead className="text-left">Buyer</TableHead>
-              <TableHead>Live</TableHead>
-              <TableHead>Cap (today)</TableHead>
-              <TableHead>Calls today</TableHead>
-              <TableHead className="pr-6">Revenue today</TableHead>
+              <TableHead className="text-right">Live</TableHead>
+              <TableHead className="text-right">Cap (today)</TableHead>
+              <TableHead className="text-right">Calls today</TableHead>
+              <TableHead className="pr-6 text-right">Revenue today</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -187,7 +187,7 @@ export function DestinationSummaryTable({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs tabular-nums">
+                    <TableCell className="text-right text-xs tabular-nums">
                       <span className={cn("font-medium", cc > 0 ? ccColor : "text-muted-foreground")}>
                         {cc > 0 && (
                           <span
@@ -199,10 +199,10 @@ export function DestinationSummaryTable({
                       </span>
                       <span className="text-muted-foreground"> / {destination.concurrencyCap}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       {destination.dailyCap > 0 ? (
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-baseline justify-between gap-2 text-[11px] tabular-nums">
+                        <div className="ml-auto flex w-fit flex-col gap-0.5">
+                          <div className="flex items-baseline justify-end gap-2 text-[11px] tabular-nums">
                             <span className="font-medium">
                               {formatNumber(callsToday)} / {formatNumber(destination.dailyCap)}
                             </span>
@@ -219,10 +219,10 @@ export function DestinationSummaryTable({
                         <span className="text-[11px] text-muted-foreground">Unlimited</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs tabular-nums">
+                    <TableCell className="text-right text-xs tabular-nums">
                       {formatNumber(callsToday)}
                     </TableCell>
-                    <TableCell className="pr-6 text-xs font-medium tabular-nums">
+                    <TableCell className="pr-6 text-right text-xs font-medium tabular-nums">
                       {formatCurrency(revenueToday)}
                     </TableCell>
                   </TableRow>

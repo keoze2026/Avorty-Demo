@@ -162,15 +162,39 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
               <YAxis
                 type="category"
                 dataKey="name"
-                tick={{ fontSize: 11, fill: "var(--foreground)" }}
                 axisLine={false}
                 tickLine={false}
                 width={160}
-                tickFormatter={(v: string) => (v.length > 22 ? `${v.slice(0, 20)}…` : v)}
+                interval={0}
+                // Custom tick: render the label at the LEFT edge of the YAxis
+                // area, with text-anchor:start. That way every campaign name
+                // starts in the same column instead of right-justifying to the
+                // bar (which makes them wander as names vary in length).
+                tick={(props: {
+                  x: number;
+                  y: number;
+                  payload: { value: string };
+                }) => {
+                  const { x, y, payload } = props;
+                  const v = payload.value;
+                  const label = v.length > 22 ? `${v.slice(0, 20)}…` : v;
+                  return (
+                    <text
+                      x={x - 156}
+                      y={y}
+                      dy={4}
+                      fontSize={11}
+                      fill="var(--foreground)"
+                      textAnchor="start"
+                    >
+                      {label}
+                    </text>
+                  );
+                }}
               />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
-                cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
+                cursor={false}
                 formatter={(v: number) => [formatNumber(v), "Connected"]}
               />
               <Bar
@@ -178,7 +202,6 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
                 radius={[0, 4, 4, 0]}
                 isAnimationActive
                 animationDuration={500}
-                background={{ fill: "var(--muted)", radius: 4, opacity: 0.5 }}
               >
                 {/* Top bar gets the brand accent at full strength, others fade
                     slightly so the ranking reads at a glance — single hue only. */}
