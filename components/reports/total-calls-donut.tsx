@@ -41,7 +41,13 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
   return (
     <Card className="flex h-full flex-col">
       <CardContent className="flex flex-1 flex-col items-center justify-center gap-4">
-        <div className="relative h-44 w-44">
+        <div
+          // Suppress the browser's default focus outline on the SVG sectors
+          // Recharts renders — clicking a slice was painting a square focus
+          // ring around the chart. We still want keyboard focus to work, so
+          // we only kill the visible outline, not the focus state itself.
+          className="relative h-44 w-44 [&_.recharts-wrapper:focus]:outline-none [&_.recharts-sector:focus]:outline-none [&_path:focus]:outline-none [&_svg:focus]:outline-none"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -57,9 +63,21 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
                 strokeWidth={3}
                 isAnimationActive
                 animationDuration={500}
+                // Don't expand the active sector on hover/click — keeps the
+                // shape stable and avoids the "selected" outline ring.
+                activeShape={undefined}
+                activeIndex={-1}
               >
                 {slices.map((s) => (
-                  <Cell key={s.key} fill={s.color} />
+                  <Cell
+                    key={s.key}
+                    fill={s.color}
+                    // Same suppression at the cell level — `tabIndex={-1}`
+                    // also keeps each sector out of the keyboard tab order so
+                    // clicking it can't focus-outline the path.
+                    tabIndex={-1}
+                    style={{ outline: "none" }}
+                  />
                 ))}
               </Pie>
               <Tooltip

@@ -42,7 +42,11 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
   return (
     <Card className="flex h-full flex-col">
       <CardContent className="flex flex-1 flex-col items-center justify-center gap-5 p-6">
-        <div className="relative h-44 w-44">
+        <div
+          // Suppress the default focus-ring rectangle Recharts paints on the
+          // sectors when a slice is clicked.
+          className="relative h-44 w-44 [&_.recharts-wrapper:focus]:outline-none [&_.recharts-sector:focus]:outline-none [&_path:focus]:outline-none [&_svg:focus]:outline-none"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <defs>
@@ -66,9 +70,16 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
                 strokeWidth={3}
                 isAnimationActive
                 animationDuration={500}
+                activeShape={undefined}
+                activeIndex={-1}
               >
                 {slices.map((s) => (
-                  <Cell key={s.key} fill={s.fill} />
+                  <Cell
+                    key={s.key}
+                    fill={s.fill}
+                    tabIndex={-1}
+                    style={{ outline: "none" }}
+                  />
                 ))}
               </Pie>
               <Tooltip
