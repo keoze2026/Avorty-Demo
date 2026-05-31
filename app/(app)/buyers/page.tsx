@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Building2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import { EditBuyerDialog } from "@/components/buyers/edit-buyer-dialog";
 import { InviteBuyerDialog } from "@/components/buyers/invite-buyer-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
@@ -33,8 +34,15 @@ export default function BuyersPage() {
   const [statusFilter, setStatusFilter] = useState<BuyerTableStatusFilter>("all");
   const [sort, setSort] = useState<BuyerTableSortKey>("recent");
   const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(0);
   const [columns, setColumns] =
     useState<Record<BuyerColumnKey, boolean>>(ALL_BUYER_COLUMNS);
+
+  // Whenever the result set or page size changes, snap back to page 0 so the
+  // current page never points past the end of the filtered list.
+  useEffect(() => {
+    setPage(0);
+  }, [query, statusFilter, sort, pageSize]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -57,7 +65,8 @@ export default function BuyersPage() {
     });
   }, [buyers, query, statusFilter, sort]);
 
-  const visible = filtered.slice(0, pageSize);
+  const start = page * pageSize;
+  const visible = filtered.slice(start, start + pageSize);
 
   const stats = useMemo(() => {
     const active = buyers.filter((b) => b.status === "active").length;
@@ -121,7 +130,7 @@ export default function BuyersPage() {
         onCreate={() => setInviteOpen(true)}
       />
 
-      {visible.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState
           icon={Building2}
           tone="emerald"
@@ -129,13 +138,22 @@ export default function BuyersPage() {
           description="Try clearing the search box or relaxing your status filter."
         />
       ) : (
-        <BuyersTable
-          buyers={visible}
-          columns={columns}
-          onToggle={onToggle}
-          onArchive={onArchive}
-          onEdit={setEditId}
-        />
+        <>
+          <BuyersTable
+            buyers={visible}
+            columns={columns}
+            onToggle={onToggle}
+            onArchive={onArchive}
+            onEdit={setEditId}
+          />
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPage={setPage}
+            onPageSize={setPageSize}
+          />
+        </>
       )}
 
       <InviteBuyerDialog open={inviteOpen} onOpenChange={setInviteOpen} />

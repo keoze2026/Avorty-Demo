@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { CreateTcpaShieldDialog } from "@/components/suppression/create-tcpa-shield-dialog";
 import {
   PAGE_SIZE_OPTIONS,
@@ -83,12 +84,17 @@ export default function TcpaShieldPage() {
 
   const [query, setQuery] = React.useState("");
   const [pageSize, setPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
+  const [page, setPage] = React.useState(0);
   const [sortKey, setSortKey] = React.useState<SortKey>("name-asc");
   const [typeFilter, setTypeFilter] = React.useState<Set<string>>(new Set());
   const [visibleColumns, setVisibleColumns] = React.useState<Set<string>>(DEFAULT_COLUMNS);
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [createOpen, setCreateOpen] = React.useState(false);
   const [removing, setRemoving] = React.useState<TcpaShieldEntry | null>(null);
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [query, sortKey, typeFilter, pageSize]);
 
   const filterOptions = React.useMemo<FilterOption[]>(
     () => TCPA_PROVIDER_TYPES.map((t) => ({ id: t, label: t })),
@@ -122,7 +128,7 @@ export default function TcpaShieldPage() {
     return sorted;
   }, [providers, query, sortKey, typeFilter]);
 
-  const visible = rows.slice(0, pageSize);
+  const visible = rows.slice(page * pageSize, page * pageSize + pageSize);
   const allChecked = visible.length > 0 && visible.every((e) => selected.has(e.id));
 
   const toggleAll = () => {
@@ -291,6 +297,15 @@ export default function TcpaShieldPage() {
           </Table>
         </div>
       </Card>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={rows.length}
+        onPage={setPage}
+        onPageSize={(n) => setPageSize(n as PageSize)}
+        pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
+      />
 
       <CreateTcpaShieldDialog
         open={createOpen}

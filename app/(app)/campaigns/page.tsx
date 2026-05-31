@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Megaphone, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import {
 } from "@/components/campaigns/campaigns-toolbar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
@@ -31,8 +32,15 @@ export default function CampaignsPage() {
   const [sort, setSort] = useState<CampaignSortKey>("recent");
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(0);
   const [columns, setColumns] =
     useState<Record<CampaignColumnKey, boolean>>(ALL_CAMPAIGN_COLUMNS);
+
+  // Reset to page 0 whenever the result set or page size changes so the
+  // current page never points past the end of the filtered list.
+  useEffect(() => {
+    setPage(0);
+  }, [query, statusFilter, sort, pageSize]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -53,7 +61,8 @@ export default function CampaignsPage() {
     });
   }, [campaigns, query, statusFilter, sort]);
 
-  const visible = filtered.slice(0, pageSize);
+  const start = page * pageSize;
+  const visible = filtered.slice(start, start + pageSize);
 
   const onToggle = (id: string) => {
     const c = campaigns.find((x) => x.id === id);
@@ -110,7 +119,7 @@ export default function CampaignsPage() {
             onRefresh={() => toast.success("Campaigns refreshed")}
           />
 
-          {visible.length === 0 ? (
+          {filtered.length === 0 ? (
             <EmptyState
               icon={Megaphone}
               tone="emerald"
@@ -118,12 +127,21 @@ export default function CampaignsPage() {
               description="Try clearing the search or relaxing the status filter."
             />
           ) : (
-            <CampaignsTable
-              campaigns={visible}
-              columns={columns}
-              onToggle={onToggle}
-              onArchive={onArchive}
-            />
+            <>
+              <CampaignsTable
+                campaigns={visible}
+                columns={columns}
+                onToggle={onToggle}
+                onArchive={onArchive}
+              />
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={filtered.length}
+                onPage={setPage}
+                onPageSize={setPageSize}
+              />
+            </>
           )}
         </>
       )}

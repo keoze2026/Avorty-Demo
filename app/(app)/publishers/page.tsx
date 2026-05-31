@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import {
 } from "@/components/publishers/publishers-table-toolbar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { usePublishersStore } from "@/lib/store/publishers-store";
@@ -34,8 +35,14 @@ export default function PublishersPage() {
     useState<PublisherTableStatusFilter>("all");
   const [sort, setSort] = useState<PublisherTableSortKey>("recent");
   const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(0);
   const [columns, setColumns] =
     useState<Record<PublisherColumnKey, boolean>>(ALL_PUBLISHER_COLUMNS);
+
+  // Reset to page 0 whenever the result set or page size changes.
+  useEffect(() => {
+    setPage(0);
+  }, [query, statusFilter, sort, pageSize]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -58,7 +65,8 @@ export default function PublishersPage() {
     });
   }, [publishers, query, statusFilter, sort]);
 
-  const visible = filtered.slice(0, pageSize);
+  const start = page * pageSize;
+  const visible = filtered.slice(start, start + pageSize);
 
   const stats = useMemo(() => {
     const active = publishers.filter((p) => p.status === "active").length;
@@ -120,7 +128,7 @@ export default function PublishersPage() {
         onCreate={() => setInviteOpen(true)}
       />
 
-      {visible.length === 0 ? (
+      {filtered.length === 0 ? (
         <EmptyState
           icon={Users}
           tone="violet"
@@ -128,13 +136,22 @@ export default function PublishersPage() {
           description="Try clearing the search box or relaxing your status filter."
         />
       ) : (
-        <PublishersTable
-          publishers={visible}
-          columns={columns}
-          onToggle={onToggle}
-          onArchive={onArchive}
-          onEdit={setEditId}
-        />
+        <>
+          <PublishersTable
+            publishers={visible}
+            columns={columns}
+            onToggle={onToggle}
+            onArchive={onArchive}
+            onEdit={setEditId}
+          />
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPage={setPage}
+            onPageSize={setPageSize}
+          />
+        </>
       )}
 
       <InvitePublisherDialog open={inviteOpen} onOpenChange={setInviteOpen} />

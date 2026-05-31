@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { DestinationBuilder } from "@/components/destinations/destination-builder";
 import { DestinationsTable } from "@/components/destinations/destinations-table";
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,9 +32,16 @@ export default function DestinationsPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [buyerFilter, setBuyerFilter] = useState<string>("all");
+  const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(0);
 
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editId, setEditId] = useState<string | undefined>(undefined);
+
+  // Reset to page 0 whenever the result set or page size changes.
+  useEffect(() => {
+    setPage(0);
+  }, [query, statusFilter, buyerFilter, pageSize]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -178,10 +186,17 @@ export default function DestinationsPage() {
       </div>
 
       <DestinationsTable
-        destinations={filtered}
+        destinations={filtered.slice(page * pageSize, page * pageSize + pageSize)}
         onToggle={handleToggle}
         onEdit={openEdit}
         onDelete={handleDelete}
+      />
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={filtered.length}
+        onPage={setPage}
+        onPageSize={setPageSize}
       />
 
       <DestinationBuilder

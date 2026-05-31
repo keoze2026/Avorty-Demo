@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Pagination } from "@/components/shared/pagination";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { formatCurrency, formatHMS, toE164 } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
@@ -177,23 +178,35 @@ interface CallLogTableProps {
 export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
   const [query, setQuery] = React.useState("");
   const [columns, setColumns] = React.useState<Record<ColumnKey, boolean>>(ALL_VISIBLE);
+  const [pageSize, setPageSize] = React.useState<number>(limit);
+  const [page, setPage] = React.useState(0);
+
+  // Reset to page 0 whenever the result set or page size changes so we never
+  // sit past the end of the filtered list.
+  React.useEffect(() => {
+    setPage(0);
+  }, [query, pageSize, calls.length]);
 
   const colSpan = 2 + COLUMNS.filter((c) => columns[c.id]).length; // +Call date +actions menu
   const toggleColumn = (id: ColumnKey) =>
     setColumns((v) => ({ ...v, [id]: !v[id] }));
 
-  const visible = React.useMemo(() => {
+  const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     const sorted = [...calls].sort((a, b) => b.startedAt - a.startedAt);
-    const filtered = q
+    return q
       ? sorted.filter((c) =>
           `${c.campaignName} ${c.publisherName ?? ""} ${c.buyerName ?? ""} ${c.callerNumber} ${c.destinationNumber}`
             .toLowerCase()
             .includes(q),
         )
       : sorted;
-    return filtered.slice(0, limit);
-  }, [calls, query, limit]);
+  }, [calls, query]);
+
+  const visible = React.useMemo(
+    () => filtered.slice(page * pageSize, page * pageSize + pageSize),
+    [filtered, page, pageSize],
+  );
 
   const onExport = (format: ExportFormat) => {
     const dateCol: ExportColumn<Call> = {
@@ -394,6 +407,15 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
               )}
             </TableBody>
           </Table>
+        </div>
+        <div className="border-t border-border px-6 py-3">
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPage={setPage}
+            onPageSize={setPageSize}
+          />
         </div>
       </CardContent>
     </Card>

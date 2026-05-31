@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { ReferralSpendChart } from "@/components/referrals/referral-spend-chart";
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,15 @@ import { cn } from "@/lib/utils";
 
 export default function ReferralsPage() {
   const [copied, setCopied] = React.useState(false);
+  const [pageSize, setPageSize] = React.useState(25);
+  const [page, setPage] = React.useState(0);
+  React.useEffect(() => {
+    setPage(0);
+  }, [pageSize]);
+  const visibleClients = React.useMemo(
+    () => MOCK_REFERRED_CLIENTS.slice(page * pageSize, page * pageSize + pageSize),
+    [page, pageSize],
+  );
 
   const stats = React.useMemo(() => {
     let lifetimeSpend = 0;
@@ -182,7 +192,7 @@ export default function ReferralsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_REFERRED_CLIENTS.map((c) => {
+              {visibleClients.map((c) => {
                 const commission = c.lifetimeSpend * REFERRAL_COMMISSION_RATE;
                 return (
                   <TableRow key={c.id}>
@@ -221,6 +231,17 @@ export default function ReferralsPage() {
             </TableBody>
           </Table>
         </div>
+        {MOCK_REFERRED_CLIENTS.length > pageSize && (
+          <div className="border-t border-border px-6 py-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={MOCK_REFERRED_CLIENTS.length}
+              onPage={setPage}
+              onPageSize={setPageSize}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Spending tracker — daily bars + your-commission line so the partner

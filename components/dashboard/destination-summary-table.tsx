@@ -167,11 +167,11 @@ export function DestinationSummaryTable({
                 return (
                   <TableRow key={destination.id}>
                     <TableCell className="pl-6 text-left">
-                      {/* Push the Active pill to the cell's right edge so the
-                          badge column reads as a clean vertical band,
-                          regardless of destination-name length. */}
-                      <div className="flex w-full items-center justify-between gap-2">
-                        <span className="truncate text-[13px] font-medium leading-tight">
+                      {/* Fixed-width name column so the Active badge always
+                          sits at the same x — neither pushed to the far right
+                          edge nor wandering with name length. */}
+                      <div className="flex items-center gap-3">
+                        <span className="w-28 shrink-0 truncate text-[13px] font-medium leading-tight">
                           {destination.name}
                         </span>
                         <ActiveBadge />
@@ -192,17 +192,34 @@ export function DestinationSummaryTable({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right text-xs tabular-nums">
-                      <span className={cn("font-medium", cc > 0 ? ccColor : "text-muted-foreground")}>
-                        {cc > 0 && (
-                          <span
-                            aria-hidden
-                            className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-current align-middle animate-pulse"
-                          />
-                        )}
-                        {cc}
-                      </span>
-                      <span className="text-muted-foreground"> / {destination.concurrencyCap}</span>
+                    <TableCell className="text-xs tabular-nums">
+                      {/* Three fixed slots — pulse dot · current · "/ cap" —
+                          so every row's slash and total line up regardless of
+                          whether the row has a pulsing dot or 1-vs-2-digit
+                          numbers. */}
+                      <div className="flex items-center justify-center gap-1">
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
+                            cc > 0
+                              ? `${ccColor} bg-current animate-pulse opacity-100`
+                              : "opacity-0",
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "w-4 text-right font-medium",
+                            cc > 0 ? ccColor : "text-muted-foreground",
+                          )}
+                        >
+                          {cc}
+                        </span>
+                        <span className="text-muted-foreground">/</span>
+                        <span className="w-6 text-left text-muted-foreground">
+                          {destination.concurrencyCap}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       {destination.dailyCap > 0 ? (

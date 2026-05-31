@@ -10,7 +10,7 @@ import {
   UserPlus,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/shared/pagination";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -70,8 +70,14 @@ function absoluteTime(ts: number) {
 export function WorkspaceActivityLog() {
   const [query, setQuery] = React.useState("");
   const [filter, setFilter] = React.useState<Filter>("all");
+  const [pageSize, setPageSize] = React.useState(25);
+  const [page, setPage] = React.useState(0);
 
   const events = MOCK_WORKSPACE_ACTIVITY;
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [query, filter, pageSize]);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -144,19 +150,22 @@ export function WorkspaceActivityLog() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((e) => <ActivityRow key={e.id} event={e} />)
+                filtered
+                  .slice(page * pageSize, page * pageSize + pageSize)
+                  .map((e) => <ActivityRow key={e.id} event={e} />)
               )}
             </TableBody>
           </Table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
-          <span className="text-[11px] text-muted-foreground">
-            Showing {filtered.length} of {events.length}
-          </span>
-          <Button variant="ghost" size="sm" className="h-7 text-[11px]" disabled>
-            Load older events
-          </Button>
+        <div className="border-t border-border px-4 py-2.5">
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPage={setPage}
+            onPageSize={setPageSize}
+          />
         </div>
       </CardContent>
     </Card>

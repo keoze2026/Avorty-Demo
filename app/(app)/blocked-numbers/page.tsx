@@ -5,6 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { BlockNumberDialog } from "@/components/suppression/block-number-dialog";
 import {
   PAGE_SIZE_OPTIONS,
@@ -78,8 +79,14 @@ export default function BlockedNumbersPage() {
 
   const [query, setQuery] = React.useState("");
   const [pageSize, setPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
+  const [page, setPage] = React.useState(0);
   const [sortKey, setSortKey] = React.useState<SortKey>("number-asc");
   const [campaignFilter, setCampaignFilter] = React.useState<Set<string>>(new Set());
+
+  // Reset to page 0 whenever the result set or page size changes.
+  React.useEffect(() => {
+    setPage(0);
+  }, [query, sortKey, campaignFilter, pageSize]);
   const [visibleColumns, setVisibleColumns] = React.useState<Set<string>>(DEFAULT_COLUMNS);
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -125,7 +132,7 @@ export default function BlockedNumbersPage() {
     return sorted;
   }, [numbers, query, sortKey, campaignFilter]);
 
-  const visible = rows.slice(0, pageSize);
+  const visible = rows.slice(page * pageSize, page * pageSize + pageSize);
   const allChecked = visible.length > 0 && visible.every((e) => selected.has(e.id));
 
   const toggleAll = () => {
@@ -291,6 +298,15 @@ export default function BlockedNumbersPage() {
           </Table>
         </div>
       </Card>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={rows.length}
+        onPage={setPage}
+        onPageSize={(n) => setPageSize(n as PageSize)}
+        pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
+      />
 
       <BlockNumberDialog
         open={createOpen}

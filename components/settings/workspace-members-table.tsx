@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { EditMemberDialog } from "./edit-member-dialog";
 import { InviteMemberDialog } from "./invite-member-dialog";
+import { Pagination } from "@/components/shared/pagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,11 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
   const [inviteOpen, setInviteOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Member | null>(null);
   const [removing, setRemoving] = React.useState<Member | null>(null);
+  const [pageSize, setPageSize] = React.useState(25);
+  const [page, setPage] = React.useState(0);
+  React.useEffect(() => {
+    setPage(0);
+  }, [pageSize, members.length]);
 
   const onInvite = ({ name, email, role }: { name: string; email: string; role: MemberRole }) => {
     const initials = name
@@ -127,7 +133,9 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {members.map((m) => (
+                {members
+                  .slice(page * pageSize, page * pageSize + pageSize)
+                  .map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="pl-4 text-left">
                       <div className="flex items-center gap-3">
@@ -185,6 +193,17 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
               </TableBody>
             </Table>
           </div>
+          {members.length > pageSize && (
+            <div className="border-t border-border px-4 py-2.5">
+              <Pagination
+                page={page}
+                pageSize={pageSize}
+                total={members.length}
+                onPage={setPage}
+                onPageSize={setPageSize}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

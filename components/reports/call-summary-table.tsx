@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Download, Settings } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronsUpDown, Download, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 import { ExportMenu } from "@/components/shared/export-menu";
+import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -735,12 +736,71 @@ interface CallSummaryTableProps {
   calls: Call[];
 }
 
+type SummarySortKey = "label" | ColumnKey;
+type SortDir = "asc" | "desc";
+
+/** Extract the value used to compare two SummaryRows for the given sort key. */
+function sortValue(r: SummaryRow, key: SummarySortKey): number | string {
+  if (key === "label") return r.label.toLowerCase();
+  if (key === "profit") return r.revenue - r.payout;
+  if (key === "cost") return computeCost(r);
+  return r[key];
+}
+
 export function CallSummaryTable({ calls }: CallSummaryTableProps) {
   const [tab, setTab] = React.useState<GroupKey>("campaign");
   const [visible, setVisible] = React.useState<Record<ColumnKey, boolean>>(ALL_VISIBLE);
+  const [pageSize, setPageSize] = React.useState(25);
+  const [page, setPage] = React.useState(0);
+  // Default: sort by Incoming, biggest first — matches what operators expect
+  // when they open the report (highest-volume campaigns at the top).
+  const [sortKey, setSortKey] = React.useState<SummarySortKey>("incoming");
+  const [sortDir, setSortDir] = React.useState<SortDir>("desc");
 
-  const rows = React.useMemo(() => groupCalls(calls, tab), [calls, tab]);
-  const totals = React.useMemo(() => totalsOf(rows), [rows]);
+  const groupedRows = React.useMemo(() => groupCalls(calls, tab), [calls, tab]);
+
+  // Sort the full set first, then paginate. Totals + pagination both read
+  // from the sorted set so the order is stable across pages.
+  const allRows = React.useMemo(() => {
+    const copy = [...groupedRows];
+    copy.sort((a, b) => {
+      const av = sortValue(a, sortKey);
+      const bv = sortValue(b, sortKey);
+      let diff: number;
+      if (typeof av === "string" && typeof bv === "string") {
+        diff = av.localeCompare(bv);
+      } else {
+        diff = (av as number) - (bv as number);
+      }
+      return sortDir === "asc" ? diff : -diff;
+    });
+    return copy;
+  }, [groupedRows, sortKey, sortDir]);
+
+  // Totals always reflect the full result set, not just the current page —
+  // the operator expects "Totals" to summarise everything they filtered to.
+  const totals = React.useMemo(() => totalsOf(allRows), [allRows]);
+  const rows = React.useMemo(
+    () => allRows.slice(page * pageSize, page * pageSize + pageSize),
+    [allRows, page, pageSize],
+  );
+
+  // Reset to page 0 whenever the result set, page size, or sort changes.
+  React.useEffect(() => {
+    setPage(0);
+  }, [tab, pageSize, calls.length, sortKey, sortDir]);
+
+  /** Click a header — toggle direction if already active, else activate. */
+  const requestSort = (key: SummarySortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      // Numeric columns default to high → low (what operators expect for
+      // call counts / revenue). The label column defaults to A → Z.
+      setSortDir(key === "label" ? "asc" : "desc");
+    }
+  };
 
   const visibleCount = COLUMNS.filter((c) => visible[c.id]).length;
   const colSpan = visibleCount + 1; // +1 for the label column
@@ -761,8 +821,9 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
       }),
     );
     const stem = dateStamped(`vortyx-call-summary-${tab}`);
-    downloadRows(format, [labelCol, ...dataCols], rows, stem, "Call summary");
-    toast.success(`Exported ${rows.length} rows to ${format.toUpperCase()}`);
+    // Export the entire filtered result set, not just the current page.
+    downloadRows(format, [labelCol, ...dataCols], allRows, stem, "Call summary");
+    toast.success(`Exported ${allRows.length} rows to ${format.toUpperCase()}`);
   };
 
   return (
@@ -879,26 +940,35 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
           <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6 text-left">{TABS.find((t) => t.id === tab)?.label}</TableHead>
-                {visible.live && <TableHead className="text-center">Live</TableHead>}
-                {visible.incoming && <TableHead className="text-center">Incoming</TableHead>}
-                {visible.connected && <TableHead className="text-center">Connected</TableHead>}
-                {visible.qualified && <TableHead className="text-center">Qualified</TableHead>}
-                {visible.paid && <TableHead className="text-center">Paid</TableHead>}
-                {visible.converted && <TableHead className="text-center">Converted</TableHead>}
-                {visible.noConnect && <TableHead className="text-center">Not Connected</TableHead>}
-                {visible.dupe && <TableHead className="text-center">Dupe</TableHead>}
-                {visible.conversionRate && <TableHead className="text-center">Conv. rate</TableHead>}
-                {visible.tcl && <TableHead className="text-center">TCL</TableHead>}
-                {visible.acl && <TableHead className="text-center">ACL</TableHead>}
-                {visible.payout && <TableHead className="text-right">Payout</TableHead>}
-                {visible.revenue && <TableHead className="text-right">Revenue</TableHead>}
-                {visible.profit && <TableHead className="text-right">Profit</TableHead>}
-                {visible.cost && <TableHead className="pr-6 text-right">Cost</TableHead>}
+                <TableHead className="pl-6 text-left">
+                  <SortHeader
+                    label={TABS.find((t) => t.id === tab)?.label ?? "Group"}
+                    sortKey="label"
+                    active={sortKey}
+                    dir={sortDir}
+                    onClick={requestSort}
+                    align="left"
+                  />
+                </TableHead>
+                {visible.live && <TableHead className="text-center"><SortHeader label="Live" sortKey="live" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.incoming && <TableHead className="text-center"><SortHeader label="Incoming" sortKey="incoming" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.connected && <TableHead className="text-center"><SortHeader label="Connected" sortKey="connected" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.qualified && <TableHead className="text-center"><SortHeader label="Qualified" sortKey="qualified" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.paid && <TableHead className="text-center"><SortHeader label="Paid" sortKey="paid" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.converted && <TableHead className="text-center"><SortHeader label="Converted" sortKey="converted" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.noConnect && <TableHead className="text-center"><SortHeader label="Not Connected" sortKey="noConnect" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.dupe && <TableHead className="text-center"><SortHeader label="Dupe" sortKey="dupe" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.conversionRate && <TableHead className="text-center"><SortHeader label="Conv. rate" sortKey="conversionRate" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.tcl && <TableHead className="text-center"><SortHeader label="TCL" sortKey="tcl" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.acl && <TableHead className="text-center"><SortHeader label="ACL" sortKey="acl" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.payout && <TableHead className="text-right"><SortHeader label="Payout" sortKey="payout" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.revenue && <TableHead className="text-right"><SortHeader label="Revenue" sortKey="revenue" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.profit && <TableHead className="text-right"><SortHeader label="Profit" sortKey="profit" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.cost && <TableHead className="pr-6 text-right"><SortHeader label="Cost" sortKey="cost" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.length === 0 ? (
+              {allRows.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={colSpan} className="pl-6 py-6 text-sm text-muted-foreground">
                     No calls in this range.
@@ -970,8 +1040,9 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                   );
                 })
               )}
-              {/* Totals */}
-              {rows.length > 0 && (
+              {/* Totals — always reflect the full filtered set, not just the
+                  current page, so paginating doesn't make the footer shift. */}
+              {allRows.length > 0 && (
                 <TableRow className="border-t-2 border-border bg-muted/40 hover:bg-muted/40 font-semibold">
                   <TableCell className="pl-6 text-left">Totals</TableCell>
                   {visible.live && (
@@ -1037,7 +1108,68 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
             </TableBody>
           </Table>
         </div>
+        {allRows.length > 0 && (
+          <div className="border-t border-border px-6 py-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={allRows.length}
+              onPage={setPage}
+              onPageSize={setPageSize}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Sortable header                                                     */
+/* ─────────────────────────────────────────────────────────────────── */
+
+interface SortHeaderProps {
+  label: string;
+  /** This header's sort key. Compared against `active` to decide arrow state. */
+  sortKey: SummarySortKey;
+  active: SummarySortKey;
+  dir: SortDir;
+  onClick: (key: SummarySortKey) => void;
+  /** Anchor for the flex container. Defaults to "center" to match the cells. */
+  align?: "left" | "center" | "right";
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  active,
+  dir,
+  onClick,
+  align = "center",
+}: SortHeaderProps) {
+  const isActive = active === sortKey;
+  const justify =
+    align === "left" ? "justify-start" : align === "right" ? "justify-end" : "justify-center";
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(sortKey)}
+      className={cn(
+        "inline-flex w-full items-center gap-1 transition-colors focus-visible:outline-none",
+        justify,
+        isActive ? "text-foreground" : "hover:text-foreground",
+      )}
+    >
+      <span>{label}</span>
+      {isActive ? (
+        dir === "asc" ? (
+          <ArrowUp className="h-3 w-3" />
+        ) : (
+          <ArrowDown className="h-3 w-3" />
+        )
+      ) : (
+        <ChevronsUpDown className="h-3 w-3 opacity-50" />
+      )}
+    </button>
   );
 }

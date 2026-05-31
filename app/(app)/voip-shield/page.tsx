@@ -6,6 +6,7 @@ import { Info, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import { CreateVoipShieldDialog } from "@/components/suppression/create-voip-shield-dialog";
 import {
   PAGE_SIZE_OPTIONS,
@@ -78,12 +79,17 @@ export default function VoipShieldPage() {
 
   const [query, setQuery] = React.useState("");
   const [pageSize, setPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
+  const [page, setPage] = React.useState(0);
   const [sortKey, setSortKey] = React.useState<SortKey>("name-asc");
   const [campaignFilter, setCampaignFilter] = React.useState<Set<string>>(new Set());
   const [visibleColumns, setVisibleColumns] = React.useState<Set<string>>(DEFAULT_COLUMNS);
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [createOpen, setCreateOpen] = React.useState(false);
   const [removing, setRemoving] = React.useState<VoipShieldEntry | null>(null);
+
+  React.useEffect(() => {
+    setPage(0);
+  }, [query, sortKey, campaignFilter, pageSize]);
 
   // Build the campaign filter option list — "All Campaigns" + every known campaign.
   const filterOptions = React.useMemo<FilterOption[]>(
@@ -124,7 +130,7 @@ export default function VoipShieldPage() {
     return sorted;
   }, [shields, query, sortKey, campaignFilter]);
 
-  const visible = rows.slice(0, pageSize);
+  const visible = rows.slice(page * pageSize, page * pageSize + pageSize);
   const allChecked = visible.length > 0 && visible.every((e) => selected.has(e.id));
 
   const toggleAll = () => {
@@ -289,6 +295,15 @@ export default function VoipShieldPage() {
           </Table>
         </div>
       </Card>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={rows.length}
+        onPage={setPage}
+        onPageSize={(n) => setPageSize(n as PageSize)}
+        pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
+      />
 
       <CreateVoipShieldDialog
         open={createOpen}

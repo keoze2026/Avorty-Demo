@@ -30,7 +30,10 @@ const TAG_OPTIONS = ["facebook", "google", "organic", "tiktok", "radio", "email"
 
 const DAY = 1000 * 60 * 60 * 24;
 const NOW = Date.now();
-const TOTAL = 520;
+// Sized so the topbar's "today" count lands at ~3K and the "live" count
+// (status = ringing | in-progress) sits in the low hundreds — matches the
+// scale the operator expects from a real production tape.
+const TOTAL = 6700;
 
 /** Tiny LCG so the fixtures are stable across SSR / hydration. */
 function rng(seed: number) {
@@ -74,10 +77,12 @@ function startedAt(seed: number): number {
 
 function statusFor(seed: number, daysOld: number): CallStatus {
   // Mostly completed; some misses/rejects; a few are actively in-flight
-  // (only for very recent calls).
+  // (only for very recent calls). The "live" thresholds are tighter than the
+  // outcome thresholds so that scaling TOTAL doesn't blow the live count out
+  // of proportion — Live should stay in the low hundreds even at 6.7K total.
   const r = rng(seed + 23);
-  if (daysOld < 0.01 && r < 0.08) return "in-progress";
-  if (daysOld < 0.01 && r < 0.12) return "ringing";
+  if (daysOld < 0.01 && r < 0.02) return "in-progress";
+  if (daysOld < 0.01 && r < 0.03) return "ringing";
   if (r < 0.62) return "completed";
   if (r < 0.78) return "missed";
   if (r < 0.9) return "rejected";

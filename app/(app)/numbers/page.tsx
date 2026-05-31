@@ -15,6 +15,7 @@ import {
   deriveVendor,
 } from "@/components/numbers/track-numbers-table";
 import { PageHeader } from "@/components/shared/page-header";
+import { Pagination } from "@/components/shared/pagination";
 import {
   PAGE_SIZE_OPTIONS,
   TableToolbar,
@@ -104,10 +105,16 @@ export default function NumbersPage() {
   /* ── All Numbers tab state ── */
   const [allQuery, setAllQuery] = React.useState("");
   const [allPageSize, setAllPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
+  const [allPage, setAllPage] = React.useState(0);
   const [allSortKey, setAllSortKey] = React.useState<NumberSortKey>("number-asc");
   const [allTypeFilter, setAllTypeFilter] = React.useState<Set<string>>(new Set());
   const [allColumns, setAllColumns] = React.useState<Set<string>>(DEFAULT_NUMBER_COLUMNS);
   const [allSelected, setAllSelected] = React.useState<Set<string>>(new Set());
+
+  // Reset to page 0 whenever the result set or page size changes.
+  React.useEffect(() => {
+    setAllPage(0);
+  }, [allQuery, allSortKey, allTypeFilter, allPageSize]);
 
   const allFilterOptions = React.useMemo<FilterOption[]>(
     () => [
@@ -127,15 +134,20 @@ export default function NumbersPage() {
     sortKey: allSortKey,
     typeFilter: allTypeFilter,
   });
-  const allVisible = allRows.slice(0, allPageSize);
+  const allVisible = allRows.slice(allPage * allPageSize, allPage * allPageSize + allPageSize);
 
   /* ── Pools tab state ── */
   const [poolsQuery, setPoolsQuery] = React.useState("");
   const [poolsPageSize, setPoolsPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
+  const [poolsPage, setPoolsPage] = React.useState(0);
   const [poolsSortKey, setPoolsSortKey] = React.useState<PoolSortKey>("name-asc");
   const [poolsActiveFilter, setPoolsActiveFilter] = React.useState<Set<string>>(new Set());
   const [poolsColumns, setPoolsColumns] = React.useState<Set<string>>(DEFAULT_POOL_COLUMNS);
   const [poolsSelected, setPoolsSelected] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    setPoolsPage(0);
+  }, [poolsQuery, poolsSortKey, poolsActiveFilter, poolsPageSize]);
 
   const poolsFilterOptions = React.useMemo<FilterOption[]>(
     () => [
@@ -154,7 +166,10 @@ export default function NumbersPage() {
     sortKey: poolsSortKey,
     activeFilter: poolsActiveFilter,
   });
-  const poolsVisible = poolsRows.slice(0, poolsPageSize);
+  const poolsVisible = poolsRows.slice(
+    poolsPage * poolsPageSize,
+    poolsPage * poolsPageSize + poolsPageSize,
+  );
 
   /* ── Selection helpers (per tab) ── */
   const makeToggleAll =
@@ -230,6 +245,14 @@ export default function NumbersPage() {
             onToggle={makeToggle(allSelected, setAllSelected)}
             onToggleAll={makeToggleAll(allVisible, allSelected, setAllSelected)}
           />
+          <Pagination
+            page={allPage}
+            pageSize={allPageSize}
+            total={allRows.length}
+            onPage={setAllPage}
+            onPageSize={(n) => setAllPageSize(n as PageSize)}
+            pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
+          />
         </TabsContent>
 
         {/* ─── Pools ─── */}
@@ -264,6 +287,14 @@ export default function NumbersPage() {
             selected={poolsSelected}
             onToggle={makeToggle(poolsSelected, setPoolsSelected)}
             onToggleAll={makeToggleAll(poolsVisible, poolsSelected, setPoolsSelected)}
+          />
+          <Pagination
+            page={poolsPage}
+            pageSize={poolsPageSize}
+            total={poolsRows.length}
+            onPage={setPoolsPage}
+            onPageSize={(n) => setPoolsPageSize(n as PageSize)}
+            pageSizeOptions={[...PAGE_SIZE_OPTIONS]}
           />
         </TabsContent>
 
