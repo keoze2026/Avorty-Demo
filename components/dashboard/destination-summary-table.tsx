@@ -133,17 +133,18 @@ export function DestinationSummaryTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-6 text-left">Destination</TableHead>
+              <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-left">Buyer</TableHead>
-              <TableHead className="text-right">Live</TableHead>
+              <TableHead className="text-center">Live</TableHead>
               <TableHead className="text-right">Cap (today)</TableHead>
-              <TableHead className="text-right">Calls today</TableHead>
-              <TableHead className="pr-6 text-right">Revenue today</TableHead>
+              <TableHead className="text-center">Calls today</TableHead>
+              <TableHead className="pr-6 text-center">Revenue today</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={6} className="pl-6 py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="pl-6 py-8 text-center text-sm text-muted-foreground">
                   No destinations.
                 </TableCell>
               </TableRow>
@@ -167,17 +168,16 @@ export function DestinationSummaryTable({
                 return (
                   <TableRow key={destination.id}>
                     <TableCell className="pl-6 text-left">
-                      {/* Fixed-width name column so the Active badge always
-                          sits at the same x — neither pushed to the far right
-                          edge nor wandering with name length. */}
-                      <div className="flex items-center gap-3">
-                        <span className="w-28 shrink-0 truncate text-[13px] font-medium leading-tight">
-                          {destination.name}
-                        </span>
-                        <ActiveBadge />
+                      <div className="text-[13px] font-medium leading-tight">
+                        {destination.name}
                       </div>
                       <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
                         {toE164(destination.tfn)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center">
+                        <ActiveBadge />
                       </div>
                     </TableCell>
                     <TableCell className="text-left">
@@ -241,10 +241,10 @@ export function DestinationSummaryTable({
                         <span className="text-[11px] text-muted-foreground">Unlimited</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right text-xs tabular-nums">
+                    <TableCell className="text-center text-xs tabular-nums">
                       {formatNumber(callsToday)}
                     </TableCell>
-                    <TableCell className="pr-6 text-right text-xs font-medium tabular-nums">
+                    <TableCell className="pr-6 text-center text-xs font-medium tabular-nums">
                       {formatCurrency(revenueToday)}
                     </TableCell>
                   </TableRow>
