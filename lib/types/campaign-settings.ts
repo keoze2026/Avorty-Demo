@@ -37,10 +37,42 @@ export interface SpamFilterSettings {
   blockCarrierSpam: boolean;
 }
 
+/**
+ * One leaf of the filter rule tree.
+ *
+ *   ┌────────────────────────────────────────┐
+ *   │ parameter   operator   value           │
+ *   │ caller.state  equals    "TX"           │
+ *   └────────────────────────────────────────┘
+ *
+ * The condition reads "the caller's state equals TX".
+ */
+export interface FilterCondition {
+  id: string;
+  /** Dotted parameter path, e.g. "call.duration" or "caller.profile.state". */
+  parameter: string;
+  /** Comparison operator id (see FILTER_OPERATORS in advanced-settings-cards). */
+  operator: string;
+  /** Right-hand-side value. Free text — the comparator coerces if needed. */
+  value: string;
+}
+
+/**
+ * Group of conditions OR-ed together. Multiple groups are AND-ed.
+ *
+ *   group A = (cond1 OR cond2 OR cond3)
+ *   group B = (cond4 OR cond5)
+ *   result  = group A AND group B
+ */
+export interface FilterGroup {
+  id: string;
+  conditions: FilterCondition[];
+}
+
 export interface FilterSettings {
   enabled: boolean;
-  /** Free-form filter rule expression. */
-  rule: string;
+  /** Group-of-conditions tree. */
+  groups: FilterGroup[];
   /** When the rule fails, where do we send the call? */
   onFail: "reject" | "voicemail" | "deadEnd";
 }
@@ -175,7 +207,18 @@ export const DEFAULT_CAMPAIGN_SETTINGS: CampaignAdvancedSettings = {
   callQueue: { enabled: false, maxQueueSize: 25, maxWaitSec: 90, musicUrl: "" },
   autoRecord: { enabled: false, storeForDays: 90, quality: "standard", notifyBuyer: false },
   spamFilter: { enabled: false, blockedNumbers: "", blockedStates: [], blockCarrierSpam: true },
-  filter: { enabled: false, rule: "", onFail: "reject" },
+  filter: {
+    enabled: false,
+    onFail: "reject",
+    groups: [
+      {
+        id: "g_default",
+        conditions: [
+          { id: "c_default_1", parameter: "", operator: "", value: "" },
+        ],
+      },
+    ],
+  },
   voipShield: { enabled: false, blockAllVoip: false, allowList: "", action: "drop" },
   businessHours: {
     enabled: false,

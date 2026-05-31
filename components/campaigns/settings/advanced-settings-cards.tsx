@@ -14,21 +14,28 @@ import {
   Headphones,
   ListChecks,
   MessagesSquare,
+  Plus,
   Shield,
   ShieldX,
   Sparkles,
   Speech,
   Timer,
+  Trash2,
   Voicemail as VoicemailIcon,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AdvancedSettingShell } from "./advanced-setting-shell";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -42,6 +49,8 @@ import type {
   CampaignAdvancedSettings,
   CapSettings,
   ConcurrencySettings,
+  FilterCondition,
+  FilterGroup,
   FilterSettings,
   GreetingsMessageSettings,
   RevenueSaverSettings,
@@ -50,6 +59,7 @@ import type {
   VoipShieldSettings,
   WhisperMessageSettings,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 /* ─── tiny generic helpers ──────────────────────────────────────── */
 
@@ -293,9 +303,155 @@ export function SpamFilterCard({ campaignId }: { campaignId: string }) {
 
 /* ─── 4. Filter ─────────────────────────────────────────────────── */
 
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Filter rule-builder — group-of-conditions editor                    */
+/* ─────────────────────────────────────────────────────────────────── */
+
+/** Parameter dropdown — grouped by source (Call, Caller Profile, etc.). */
+const FILTER_PARAMETERS: Array<{
+  group: string;
+  items: Array<{ value: string; label: string }>;
+}> = [
+  {
+    group: "Call",
+    items: [
+      { value: "call.duration", label: "Duration (s)" },
+      { value: "call.status", label: "Status" },
+      { value: "call.startedAtHour", label: "Started at hour (0-23)" },
+      { value: "call.callerNumber", label: "Caller number" },
+      { value: "call.destinationNumber", label: "Destination number" },
+      { value: "call.publisherId", label: "Publisher" },
+      { value: "call.campaignId", label: "Campaign" },
+    ],
+  },
+  {
+    group: "Caller Profile",
+    items: [
+      { value: "caller.country", label: "Country" },
+      { value: "caller.state", label: "State" },
+      { value: "caller.city", label: "City" },
+      { value: "caller.zipcode", label: "Zip code" },
+      { value: "caller.carrier", label: "Carrier" },
+      { value: "caller.lineType", label: "Line type (mobile/voip/landline)" },
+      { value: "caller.areaCode", label: "Area code" },
+      { value: "caller.timezone", label: "Timezone" },
+      { value: "caller.fraudScore", label: "Fraud score (0-100)" },
+    ],
+  },
+  {
+    group: "Custom Parameters",
+    items: [
+      { value: "param.vertical", label: "Vertical" },
+      { value: "param.trafficSource", label: "Traffic source" },
+      { value: "param.partnerId", label: "Partner id" },
+      { value: "param.leadId", label: "Lead id" },
+      { value: "param.utmSource", label: "UTM source" },
+      { value: "param.utmMedium", label: "UTM medium" },
+      { value: "param.utmCampaign", label: "UTM campaign" },
+    ],
+  },
+  {
+    group: "Session Data",
+    items: [
+      { value: "session.id", label: "Session id" },
+      { value: "session.referrer", label: "Referrer" },
+      { value: "session.landingPage", label: "Landing page" },
+      { value: "session.userAgent", label: "User agent" },
+      { value: "session.deviceType", label: "Device type" },
+      { value: "session.pagesViewed", label: "Pages viewed" },
+      { value: "session.timeOnSite", label: "Time on site (s)" },
+    ],
+  },
+  {
+    group: "SIP Headers",
+    items: [
+      { value: "sip.fromHost", label: "From host" },
+      { value: "sip.toHost", label: "To host" },
+      { value: "sip.contact", label: "Contact" },
+      { value: "sip.userAgent", label: "User agent" },
+      { value: "sip.diversion", label: "Diversion" },
+      { value: "sip.pAssertedIdentity", label: "P-Asserted-Identity" },
+    ],
+  },
+];
+
+const FILTER_OPERATORS: Array<{ value: string; label: string }> = [
+  { value: "equals", label: "equals" },
+  { value: "notEquals", label: "does not equal" },
+  { value: "contains", label: "contains" },
+  { value: "notContains", label: "does not contain" },
+  { value: "startsWith", label: "starts with" },
+  { value: "endsWith", label: "ends with" },
+  { value: "in", label: "is in list" },
+  { value: "notIn", label: "is not in list" },
+  { value: "greaterThan", label: ">" },
+  { value: "lessThan", label: "<" },
+  { value: "greaterOrEqual", label: "≥" },
+  { value: "lessOrEqual", label: "≤" },
+  { value: "exists", label: "exists" },
+  { value: "notExists", label: "does not exist" },
+];
+
+const cid = () =>
+  `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+const gid = () =>
+  `g_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+
+function newCondition(): FilterCondition {
+  return { id: cid(), parameter: "", operator: "", value: "" };
+}
+function newGroup(): FilterGroup {
+  return { id: gid(), conditions: [newCondition()] };
+}
+
 export function FilterCard({ campaignId }: { campaignId: string }) {
   const [s, setS] = useSetting(campaignId, "filter");
   const patch = (p: Partial<FilterSettings>) => setS({ ...s, ...p });
+
+  /* ── Group / condition mutators ─────────────────────────────────── */
+
+  const updateGroup = (gIndex: number, next: FilterGroup) => {
+    const groups = s.groups.map((g, i) => (i === gIndex ? next : g));
+    patch({ groups });
+  };
+  const addGroup = () => patch({ groups: [...s.groups, newGroup()] });
+  const removeGroup = (gIndex: number) => {
+    const groups = s.groups.filter((_, i) => i !== gIndex);
+    // Always keep at least one group in the tree so the UI stays meaningful.
+    patch({ groups: groups.length > 0 ? groups : [newGroup()] });
+  };
+  const clearAll = () => patch({ groups: [newGroup()] });
+
+  const addCondition = (gIndex: number) => {
+    const g = s.groups[gIndex];
+    updateGroup(gIndex, { ...g, conditions: [...g.conditions, newCondition()] });
+  };
+  const removeCondition = (gIndex: number, cIndex: number) => {
+    const g = s.groups[gIndex];
+    const conditions = g.conditions.filter((_, i) => i !== cIndex);
+    // Each group needs at least one condition row to stay readable.
+    updateGroup(gIndex, {
+      ...g,
+      conditions: conditions.length > 0 ? conditions : [newCondition()],
+    });
+  };
+  const updateCondition = (
+    gIndex: number,
+    cIndex: number,
+    patchCond: Partial<FilterCondition>,
+  ) => {
+    const g = s.groups[gIndex];
+    const conditions = g.conditions.map((c, i) =>
+      i === cIndex ? { ...c, ...patchCond } : c,
+    );
+    updateGroup(gIndex, { ...g, conditions });
+  };
+
+  const onSave = () => {
+    // For demo purposes — in production this would also POST the settings
+    // back to the server. We just toast a confirmation.
+    toast.success("Filter saved");
+  };
 
   return (
     <AdvancedSettingShell
@@ -305,32 +461,254 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
-      <div className="grid gap-4">
-        <div className="grid gap-1.5">
-          <Label className="text-xs">Rule expression</Label>
-          <Textarea
-            rows={3}
-            placeholder='e.g. caller.state in ["TX","CA"] && caller.duration > 60'
-            value={s.rule}
-            onChange={(e) => patch({ rule: e.target.value })}
-            className="font-mono text-xs"
-          />
+      <div className="grid gap-5">
+        {/* "Continue only if" — the header for the rule tree */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-foreground">
+              Continue only if:
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              All groups of conditions are met.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={clearAll}
+          >
+            Clear all
+          </Button>
         </div>
-        <div className="grid gap-1.5">
-          <Label className="text-xs">When the rule fails</Label>
-          <Select value={s.onFail} onValueChange={(v) => patch({ onFail: v as FilterSettings["onFail"] })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="reject">Reject the call</SelectItem>
-              <SelectItem value="voicemail">Send to voicemail</SelectItem>
-              <SelectItem value="deadEnd">Send to dead-end</SelectItem>
-            </SelectContent>
-          </Select>
+
+        {/* Rule tree — groups separated by AND */}
+        <div className="space-y-2">
+          {s.groups.map((g, gIdx) => (
+            <div key={g.id}>
+              <FilterGroupBlock
+                group={g}
+                showDelete={s.groups.length > 1}
+                onUpdateCondition={(cIdx, p) => updateCondition(gIdx, cIdx, p)}
+                onAddCondition={() => addCondition(gIdx)}
+                onRemoveCondition={(cIdx) => removeCondition(gIdx, cIdx)}
+                onRemoveGroup={() => removeGroup(gIdx)}
+              />
+              {gIdx < s.groups.length - 1 && (
+                <div className="my-3 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    AND
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={addGroup}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent/80"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add group
+        </button>
+
+        {/* When the rule fails + Save */}
+        <div className="border-t border-border pt-4">
+          <div className="grid gap-1.5">
+            <Label className="text-xs">When the rule fails</Label>
+            <Select
+              value={s.onFail}
+              onValueChange={(v) =>
+                patch({ onFail: v as FilterSettings["onFail"] })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="reject">Reject the call</SelectItem>
+                <SelectItem value="voicemail">Send to voicemail</SelectItem>
+                <SelectItem value="deadEnd">Send to dead-end</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button size="sm" onClick={onSave}>
+              Save
+            </Button>
+          </div>
         </div>
       </div>
     </AdvancedSettingShell>
+  );
+}
+
+/* ─── Group of conditions block ────────────────────────────────── */
+
+function FilterGroupBlock({
+  group,
+  showDelete,
+  onUpdateCondition,
+  onAddCondition,
+  onRemoveCondition,
+  onRemoveGroup,
+}: {
+  group: FilterGroup;
+  showDelete: boolean;
+  onUpdateCondition: (cIdx: number, patch: Partial<FilterCondition>) => void;
+  onAddCondition: () => void;
+  onRemoveCondition: (cIdx: number) => void;
+  onRemoveGroup: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-secondary/20 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Group of conditions
+        </div>
+        {showDelete && (
+          <button
+            type="button"
+            onClick={onRemoveGroup}
+            aria-label="Delete group"
+            className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        {group.conditions.map((c, cIdx) => (
+          <div key={c.id}>
+            <ConditionRow
+              condition={c}
+              onUpdate={(patch) => onUpdateCondition(cIdx, patch)}
+              onRemove={() => onRemoveCondition(cIdx)}
+              showRemove={group.conditions.length > 1}
+            />
+            {cIdx < group.conditions.length - 1 && (
+              <div className="my-1.5 ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                OR
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={onAddCondition}
+        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent/80"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add condition
+      </button>
+    </div>
+  );
+}
+
+/* ─── Single PARAMETER · OPERATOR · VALUE row ──────────────────── */
+
+function ConditionRow({
+  condition,
+  onUpdate,
+  onRemove,
+  showRemove,
+}: {
+  condition: FilterCondition;
+  onUpdate: (patch: Partial<FilterCondition>) => void;
+  onRemove: () => void;
+  showRemove: boolean;
+}) {
+  // Some operators don't need a right-hand value (exists / does not exist).
+  // We grey-out the value cell in those cases.
+  const valueDisabled =
+    condition.operator === "exists" || condition.operator === "notExists";
+
+  return (
+    <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
+      <div className="grid gap-1">
+        <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Parameter
+        </Label>
+        <Select
+          value={condition.parameter}
+          onValueChange={(v) => onUpdate({ parameter: v })}
+        >
+          <SelectTrigger size="sm">
+            <SelectValue placeholder="Select parameter" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {FILTER_PARAMETERS.map((g) => (
+              <SelectGroup key={g.group}>
+                <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {g.group}
+                </SelectLabel>
+                {g.items.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-1">
+        <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Operator
+        </Label>
+        <Select
+          value={condition.operator}
+          onValueChange={(v) => onUpdate({ operator: v })}
+        >
+          <SelectTrigger size="sm">
+            <SelectValue placeholder="Select operator" />
+          </SelectTrigger>
+          <SelectContent>
+            {FILTER_OPERATORS.map((op) => (
+              <SelectItem key={op.value} value={op.value}>
+                {op.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-1">
+        <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Value
+        </Label>
+        <Input
+          value={condition.value}
+          onChange={(e) => onUpdate({ value: e.target.value })}
+          placeholder={valueDisabled ? "—" : "Type value"}
+          disabled={valueDisabled}
+          className={cn("h-9 text-xs", valueDisabled && "opacity-50")}
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={!showRemove}
+        aria-label="Remove condition"
+        className={cn(
+          "inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+          showRemove
+            ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            : "cursor-not-allowed text-muted-foreground/30",
+        )}
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 
