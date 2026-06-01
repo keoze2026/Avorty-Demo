@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { NotificationsSection } from "@/components/settings/notifications-section";
 import { ProfileSection } from "@/components/settings/profile-section";
+import { SecuritySection } from "@/components/settings/security-section";
 import { SessionsSection } from "@/components/settings/sessions-section";
 import { SettingsRail, type SettingsSection } from "@/components/settings/settings-rail";
 import { PageHeader } from "@/components/shared/page-header";
@@ -35,6 +36,7 @@ export default function SettingsPage() {
               transition={{ duration: 0.22, ease: "easeOut" }}
             >
               {section === "profile" && <ProfileSection />}
+              {section === "security" && <SecuritySection />}
               {section === "api-keys" && <ApiKeysSection />}
               {section === "notifications" && <NotificationsSection />}
               {section === "sessions" && <SessionsSection />}

@@ -52,6 +52,9 @@ export const ROUTES = {
 
   // Referral program — earn 10% on every client you bring in
   referrals: "/referrals",
+
+  // KYC / Trust Engine — multi-vector continuous identity + compliance
+  kyc: "/kyc",
 } as const;
 
 /** Brand color stops — single-hue indigo ramp.

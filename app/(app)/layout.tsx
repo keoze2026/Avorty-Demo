@@ -4,6 +4,7 @@ import { AuthGuard } from "@/components/app-shell/auth-guard";
 import { NotificationRuntime } from "@/components/app-shell/notification-runtime";
 import { AppSidebar } from "@/components/app-shell/sidebar-nav";
 import { Topbar } from "@/components/app-shell/topbar";
+import { SandboxBanner } from "@/components/kyc/sandbox-banner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 /**
@@ -17,6 +18,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <AppSidebar />
         <SidebarInset className="app-canvas !bg-transparent">
           <Topbar />
+          <SandboxBanner />
           <NotificationRuntime />
           <div className="flex-1 overflow-auto">
             {/* @container/main lets children respond to the actual content-area

@@ -9,6 +9,7 @@ import { CallPerfCard } from "@/components/reports/call-perf-card";
 import { CallSummaryTable } from "@/components/reports/call-summary-table";
 import { HourlyDistribution } from "@/components/reports/hourly-distribution";
 import { EMPTY_FILTERS, type ReportFilters } from "@/components/reports/reports-filter-popover";
+import { ReportsPinGate } from "@/components/reports/reports-pin-gate";
 import { ReportsToolbar } from "@/components/reports/reports-toolbar";
 import { TotalCallsDonut } from "@/components/reports/total-calls-donut";
 import { PageHeader } from "@/components/shared/page-header";
@@ -62,6 +63,19 @@ export default function ReportsPage() {
     return { revenue, payout };
   }, [filtered]);
 
+  // The PIN gate trips when the requested range starts before today's
+  // midnight. Today-only views always pass through.
+  const needsPin = useMemo(() => {
+    if (!dateRange?.from) return false;
+    const todayStart = startOfDay(new Date()).getTime();
+    return startOfDay(dateRange.from).getTime() < todayStart;
+  }, [dateRange]);
+
+  const cancelHistorical = () => {
+    const today = new Date();
+    setDateRange({ from: today, to: today });
+  };
+
   return (
     <>
       <PageHeader title="Reporting" description="Calls, performance, and detail logs." />
@@ -74,22 +88,24 @@ export default function ReportsPage() {
         onFiltersChange={setFilters}
       />
 
-      {/* Row 1 — Hourly distribution (2/3) + perf card over donut (1/3). */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <HourlyDistribution calls={filtered} />
-        </div>
-        <div className="flex flex-col gap-4 lg:h-full">
-          <CallPerfCard revenue={summary.revenue} payout={summary.payout} />
-          <div className="min-h-0 flex-1">
-            <TotalCallsDonut calls={filtered} />
+      <ReportsPinGate needsPin={needsPin} onCancel={cancelHistorical}>
+        {/* Row 1 — Hourly distribution (2/3) + perf card over donut (1/3). */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <HourlyDistribution calls={filtered} />
+          </div>
+          <div className="flex flex-col gap-4 lg:h-full">
+            <CallPerfCard revenue={summary.revenue} payout={summary.payout} />
+            <div className="min-h-0 flex-1">
+              <TotalCallsDonut calls={filtered} />
+            </div>
           </div>
         </div>
-      </div>
 
-      <CallSummaryTable calls={filtered} />
+        <CallSummaryTable calls={filtered} />
 
-      <CallLogTable calls={filtered} />
+        <CallLogTable calls={filtered} />
+      </ReportsPinGate>
     </>
   );
 }

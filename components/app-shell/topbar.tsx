@@ -7,7 +7,7 @@ import { NotificationsMenu } from "./notifications-menu";
 import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { formatCompact, formatCurrency } from "@/lib/format";
+import { formatCompact, formatCurrency, formatNumber } from "@/lib/format";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { cn } from "@/lib/utils";
 
@@ -62,7 +62,7 @@ export function Topbar() {
             <TopStat
               icon={PhoneCall}
               label="Total"
-              value={formatCompact(totalCalls)}
+              value={formatNumber(totalCalls)}
               accent
             />
           </div>

@@ -47,10 +47,11 @@ export default function DashboardPage() {
   const allSelected = destinationTfn === ALL_DEST;
 
   // When a destination is selected, scope everything to just its calls.
-  // When "All destinations" is selected, pass undefined so each chart falls
-  // back to its static seeded data (TODAY_HOURLY etc.).
+  // When "All destinations" is selected, pass the full MOCK_CALLS slice so
+  // the chart and donut use the same dataset as the topbar's TOTAL counter
+  // — keeps the headline numbers (3,016 today) consistent across surfaces.
   const scopedCalls = useMemo(() => {
-    if (allSelected) return undefined;
+    if (allSelected) return MOCK_CALLS;
     return MOCK_CALLS.filter((c) => c.destinationNumber === destinationTfn);
   }, [destinationTfn, allSelected]);
 
