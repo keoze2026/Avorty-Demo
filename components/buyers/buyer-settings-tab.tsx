@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, DollarSign, Gauge, Mail, UserSquare } from "lucide-react";
+import { Building2, DollarSign, Eye, Gauge, Mail, UserSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import { ErrorLine, SaveBar } from "@/components/campaigns/campaign-settings-tab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,6 +18,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useBuyersStore } from "@/lib/store/buyers-store";
+import {
+  REPORTING_COLUMNS,
+  useBuyerReportingStore,
+} from "@/lib/store/buyer-reporting-store";
 import type { Buyer, BuyerPayoutModel } from "@/lib/types";
 
 interface FormState {
@@ -49,6 +54,19 @@ function fromBuyer(b: Buyer): FormState {
 
 export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
   const update = useBuyersStore((s) => s.update);
+  const reporting = useBuyerReportingStore((s) => s.byBuyer[buyer.id]) ?? {
+    incoming: true,
+    connected: true,
+    qualified: true,
+    notConnected: true,
+    acl: true,
+    tcl: true,
+    cost: true,
+  };
+  const toggleReportingColumn = useBuyerReportingStore(
+    (s) => s.toggleReportingColumn,
+  );
+  const visibleCount = REPORTING_COLUMNS.filter((c) => reporting[c.key]).length;
   const [form, setForm] = useState<FormState>(() => fromBuyer(buyer));
   const [submitting, setSubmitting] = useState(false);
 
@@ -255,6 +273,51 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
             />
             <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Reporting visibility — admin-controlled column allowlist for the
+          buyer's view of reporting. Defaults to every column on. */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Eye className="h-4 w-4 text-accent" />
+            Reporting visibility
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Pick which reporting columns this buyer can see — uncheck to hide. {visibleCount} of {REPORTING_COLUMNS.length} visible.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+            {REPORTING_COLUMNS.map((col) => {
+              const id = `brpt-${col.key}`;
+              const checked = !!reporting[col.key];
+              return (
+                <li key={col.key}>
+                  <label
+                    htmlFor={id}
+                    className="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary/40"
+                  >
+                    <Checkbox
+                      id={id}
+                      checked={checked}
+                      onCheckedChange={() => toggleReportingColumn(buyer.id, col.key)}
+                      className="mt-0.5"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium leading-tight">
+                        {col.label}
+                      </div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {col.description}
+                      </div>
+                    </div>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         </CardContent>
       </Card>
 
