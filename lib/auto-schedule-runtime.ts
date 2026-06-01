@@ -25,28 +25,32 @@ import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 const TICK_INTERVAL_MS = 30_000;
 
-function isScheduledActive(schedule: AutoSchedule, hour: number): boolean {
-  const { playHour, pauseHour } = schedule;
+function isScheduledActive(schedule: AutoSchedule, minuteOfDay: number): boolean {
+  const play = schedule.playHour * 60 + (schedule.playMinute ?? 0);
+  const pause = schedule.pauseHour * 60 + (schedule.pauseMinute ?? 0);
   // Misconfigured (play == pause) — leave the entity alone.
-  if (playHour === pauseHour) return false;
-  if (playHour < pauseHour) return hour >= playHour && hour < pauseHour;
+  if (play === pause) return false;
+  if (play < pause) return minuteOfDay >= play && minuteOfDay < pause;
   // Overnight range — e.g. play 22:00, pause 06:00.
-  return hour >= playHour || hour < pauseHour;
+  return minuteOfDay >= play || minuteOfDay < pause;
 }
 
-function getPortalHour(timezone: string): number {
+function getPortalMinuteOfDay(timezone: string): number {
   try {
     const fmt = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
       hour: "numeric",
+      minute: "numeric",
       hour12: false,
     });
     const parts = fmt.formatToParts(new Date());
-    const raw = parts.find((p) => p.type === "hour")?.value ?? "0";
+    const hRaw = parts.find((p) => p.type === "hour")?.value ?? "0";
+    const mRaw = parts.find((p) => p.type === "minute")?.value ?? "0";
     // "24" can appear for midnight in some locales — normalize to 0.
-    return Number(raw) % 24;
+    return (Number(hRaw) % 24) * 60 + Number(mRaw);
   } catch {
-    return new Date().getHours();
+    const d = new Date();
+    return d.getHours() * 60 + d.getMinutes();
   }
 }
 
@@ -66,14 +70,14 @@ export function useAutoScheduleRuntime() {
 
   React.useEffect(() => {
     const tick = () => {
-      const hour = getPortalHour(portalTimezone);
+      const minuteOfDay = getPortalMinuteOfDay(portalTimezone);
 
       // Campaigns
       for (const [id, schedule] of Object.entries(campaignSchedules)) {
         if (!schedule.enabled) continue;
         const c = campaigns.find((x) => x.id === id);
         if (!c) continue;
-        const desiredActive = isScheduledActive(schedule, hour);
+        const desiredActive = isScheduledActive(schedule, minuteOfDay);
         const currentActive = c.status === "active";
         if (desiredActive !== currentActive) {
           setCampaignStatus(id, desiredActive ? "active" : "paused");
@@ -85,7 +89,7 @@ export function useAutoScheduleRuntime() {
         if (!schedule.enabled) continue;
         const b = buyers.find((x) => x.id === id);
         if (!b) continue;
-        const desiredActive = isScheduledActive(schedule, hour);
+        const desiredActive = isScheduledActive(schedule, minuteOfDay);
         const currentActive = b.status === "active";
         if (desiredActive !== currentActive) {
           setBuyerStatus(id, desiredActive ? "active" : "paused");
@@ -97,7 +101,7 @@ export function useAutoScheduleRuntime() {
         if (!schedule.enabled) continue;
         const d = destinations.find((x) => x.id === id);
         if (!d) continue;
-        const desiredActive = isScheduledActive(schedule, hour);
+        const desiredActive = isScheduledActive(schedule, minuteOfDay);
         if (desiredActive !== d.enabled) {
           setDestinationEnabled(id, desiredActive);
         }

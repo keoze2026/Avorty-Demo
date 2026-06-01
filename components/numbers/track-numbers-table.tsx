@@ -167,7 +167,9 @@ export function TrackNumbersTable({
               {visibleColumns.has("name") && (
                 <TableHead className="text-left">Name</TableHead>
               )}
-              {visibleColumns.has("country") && <TableHead>Country</TableHead>}
+              {visibleColumns.has("country") && (
+                <TableHead className="text-left">Country</TableHead>
+              )}
               {visibleColumns.has("purchaseStatus") && <TableHead>Purchase status</TableHead>}
               {visibleColumns.has("type") && <TableHead>Type</TableHead>}
               {visibleColumns.has("region") && <TableHead>Region</TableHead>}
@@ -218,7 +220,7 @@ export function TrackNumbersTable({
                       </TableCell>
                     )}
                     {visibleColumns.has("country") && (
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-left text-muted-foreground">
                         {deriveCountry(n)}
                       </TableCell>
                     )}

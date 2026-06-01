@@ -20,12 +20,15 @@ export interface AutoSchedule {
   /** Hour-of-day in 24-hour internal form. UI converts to/from 12-hr + AM/PM. */
   playHour: number;
   pauseHour: number;
+  /** Minute-of-hour (0/15/30/45). Optional for back-compat with old persisted state. */
+  playMinute?: number;
+  pauseMinute?: number;
 }
 
 export const DEFAULT_PORTAL_TZ = "America/New_York";
 
 export function emptySchedule(): AutoSchedule {
-  return { enabled: false, playHour: 8, pauseHour: 17 };
+  return { enabled: false, playHour: 8, pauseHour: 17, playMinute: 0, pauseMinute: 0 };
 }
 
 interface State {
@@ -93,9 +96,9 @@ export function to24h(hour12: number, period: "AM" | "PM"): number {
   return hour12 === 12 ? 12 : hour12 + 12;
 }
 
-export function formatTime12(hour24: number): string {
+export function formatTime12(hour24: number, minute: number = 0): string {
   const { hour, period } = to12h(hour24);
-  return `${hour}:00 ${period}`;
+  return `${hour}:${String(minute).padStart(2, "0")} ${period}`;
 }
 
 /* ─── Available portal timezones (matches the existing TIMEZONES list scope) ── */

@@ -6,7 +6,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -28,11 +27,10 @@ const RANGES: Array<{ id: Range; label: string }> = [
   { id: "14d", label: "14 days" },
 ];
 
-/* Bars use a single indigo brand color with a soft top→bottom fade.
-   The peak bar shifts to the bright variant so it stands out without
-   introducing a second hue. */
+// Both bars use the active theme accent; the peak gets a CSS brightness
+// filter so it stands out without introducing a second hue (and so theme
+// swaps recolor every bar).
 const BAR_COLOR = "var(--accent)";
-const PEAK_COLOR = "#818CF8"; // bright indigo (matches --vortyx-bright)
 
 interface CallsChartProps {
   /** When provided, the chart buckets from these calls instead of TODAY_HOURLY/LAST_14_DAYS. */
@@ -98,19 +96,17 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: 12, right: 8, left: -12, bottom: 0 }}
+              // Bumped left margin so the YAxis has room for 3-digit ticks
+              // (e.g. 600 / 750) without clipping the leading digit.
+              margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
               barCategoryGap={range === "24h" ? "18%" : "26%"}
             >
               <defs>
-                {/* Standard bar — solid indigo (no gradient fade). */}
+                {/* Both bars share the theme accent; the peak gets a
+                    brightness filter on the cell to stand out. */}
                 <linearGradient id="calls-bar-grad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={BAR_COLOR} stopOpacity={1} />
                   <stop offset="100%" stopColor={BAR_COLOR} stopOpacity={1} />
-                </linearGradient>
-                {/* Peak bar — solid brighter indigo. */}
-                <linearGradient id="calls-peak-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={PEAK_COLOR} stopOpacity={1} />
-                  <stop offset="100%" stopColor={PEAK_COLOR} stopOpacity={1} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
@@ -126,20 +122,10 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
                 tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                width={36}
+                // Widen the gutter so 3-4 digit tick labels (600, 1.2K) fit
+                // without the leading digit getting clipped.
+                width={48}
                 allowDecimals={false}
-              />
-              <ReferenceLine
-                y={avg}
-                stroke="var(--muted-foreground)"
-                strokeDasharray="4 4"
-                strokeOpacity={0.55}
-                label={{
-                  value: `avg ${avg}`,
-                  position: "insideTopRight",
-                  fontSize: 10,
-                  fill: "var(--muted-foreground)",
-                }}
               />
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
@@ -156,7 +142,12 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
                 {data.map((d) => (
                   <Cell
                     key={d.x}
-                    fill={d.calls === peak ? "url(#calls-peak-grad)" : "url(#calls-bar-grad)"}
+                    fill="url(#calls-bar-grad)"
+                    style={
+                      d.calls === peak
+                        ? { filter: "brightness(1.25) saturate(1.1)" }
+                        : undefined
+                    }
                   />
                 ))}
               </Bar>

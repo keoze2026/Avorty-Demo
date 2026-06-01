@@ -38,6 +38,7 @@ interface Props {
 }
 
 const HOURS_12 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const MINUTES = [0, 15, 30, 45];
 
 export function AutoScheduleCard({ target, id, entityLabel }: Props) {
   const schedule = useAutoScheduleStore((s) =>
@@ -46,7 +47,9 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
       : target === "buyer"
         ? s.buyerSchedules[id]
         : s.destinationSchedules[id],
-  ) ?? { enabled: false, playHour: 8, pauseHour: 17 };
+  ) ?? { enabled: false, playHour: 8, pauseHour: 17, playMinute: 0, pauseMinute: 0 };
+  const playMinute = schedule.playMinute ?? 0;
+  const pauseMinute = schedule.pauseMinute ?? 0;
   const portalTimezone = useAutoScheduleStore((s) => s.portalTimezone);
   const setSchedule = useAutoScheduleStore((s) => s.setSchedule);
 
@@ -96,16 +99,18 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
             label="Play at"
             hint={`Switch this ${labelNoun} to active`}
             hour={play.hour}
+            minute={playMinute}
             period={play.period}
-            onChange={(h, p) => update({ playHour: to24h(h, p) })}
+            onChange={(h, m, p) => update({ playHour: to24h(h, p), playMinute: m })}
           />
           {/* Pause time */}
           <TimeField
             label="Pause at"
             hint={`Switch this ${labelNoun} to paused`}
             hour={pause.hour}
+            minute={pauseMinute}
             period={pause.period}
-            onChange={(h, p) => update({ pauseHour: to24h(h, p) })}
+            onChange={(h, m, p) => update({ pauseHour: to24h(h, p), pauseMinute: m })}
           />
         </div>
 
@@ -118,10 +123,10 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
         </div>
 
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Currently scheduled: <span className="font-medium text-foreground">{formatTime12(schedule.playHour)}</span>
+          Currently scheduled: <span className="font-medium text-foreground">{formatTime12(schedule.playHour, playMinute)}</span>
           {" → "}
-          <span className="font-medium text-foreground">{formatTime12(schedule.pauseHour)}</span>
-          {schedule.playHour === schedule.pauseHour && (
+          <span className="font-medium text-foreground">{formatTime12(schedule.pauseHour, pauseMinute)}</span>
+          {schedule.playHour === schedule.pauseHour && playMinute === pauseMinute && (
             <span className="ml-1 text-destructive">(play and pause times must differ)</span>
           )}
         </p>
@@ -136,14 +141,16 @@ function TimeField({
   label,
   hint,
   hour,
+  minute,
   period,
   onChange,
 }: {
   label: string;
   hint: string;
   hour: number;
+  minute: number;
   period: "AM" | "PM";
-  onChange: (hour: number, period: "AM" | "PM") => void;
+  onChange: (hour: number, minute: number, period: "AM" | "PM") => void;
 }) {
   return (
     <div className="space-y-1.5">
@@ -152,7 +159,7 @@ function TimeField({
       <div className="mt-1 flex items-center gap-2">
         <Select
           value={String(hour)}
-          onValueChange={(v) => onChange(Number(v), period)}
+          onValueChange={(v) => onChange(Number(v), minute, period)}
         >
           <SelectTrigger className="h-9 w-20 tabular-nums">
             <SelectValue />
@@ -160,16 +167,32 @@ function TimeField({
           <SelectContent>
             {HOURS_12.map((h) => (
               <SelectItem key={h} value={String(h)}>
-                {h}:00
+                {h}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-muted-foreground">:</span>
+        <Select
+          value={String(minute)}
+          onValueChange={(v) => onChange(hour, Number(v), period)}
+        >
+          <SelectTrigger className="h-9 w-20 tabular-nums">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {MINUTES.map((m) => (
+              <SelectItem key={m} value={String(m)}>
+                {String(m).padStart(2, "0")}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select
           value={period}
-          onValueChange={(v) => onChange(hour, v as "AM" | "PM")}
+          onValueChange={(v) => onChange(hour, minute, v as "AM" | "PM")}
         >
-          <SelectTrigger className="h-9 w-16">
+          <SelectTrigger className="h-9 w-20">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

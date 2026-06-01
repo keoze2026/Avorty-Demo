@@ -1,7 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Ban, Copy, DollarSign, Download, Play, Search, Settings } from "lucide-react";
+import {
+  Ban,
+  Copy,
+  DollarSign,
+  Download,
+  PhoneOff,
+  Play,
+  Plus,
+  Search,
+  Settings,
+  Tag,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ExportMenu } from "@/components/shared/export-menu";
@@ -40,6 +51,8 @@ type ColumnKey =
   | "payout"
   | "ttc"
   | "duration"
+  | "hangUp"
+  | "tag"
   | "status"
   | "failReason"
   | "recording";
@@ -54,6 +67,8 @@ const COLUMNS: Array<{ id: ColumnKey; label: string }> = [
   { id: "payout", label: "Payout" },
   { id: "ttc", label: "TTC" },
   { id: "duration", label: "Duration" },
+  { id: "hangUp", label: "Hang up" },
+  { id: "tag", label: "Tag" },
   { id: "status", label: "Status" },
   { id: "failReason", label: "Fail reason" },
   { id: "recording", label: "Recording" },
@@ -139,6 +154,46 @@ function getFailReason(c: Call): string {
   return reasons[callHash(c.id) % reasons.length];
 }
 
+/**
+ * Hang-up side per call. Derived deterministically from the call id so the
+ * same row always shows the same direction across renders/refresh.
+ *
+ *   caller   — the caller hung up
+ *   callee   — the buyer / agent hung up
+ *   carrier  — the call dropped (network)
+ *   open     — never connected (no hang-up to attribute)
+ */
+type HangUpSide = "caller" | "callee" | "carrier" | "open";
+
+function getHangUpSide(c: Call): HangUpSide {
+  if (c.status === "ringing" || c.status === "in-progress") return "open";
+  if (c.status === "failed") return "carrier";
+  // For completed / missed / rejected: split 60/40 caller-vs-callee by hash.
+  return callHash(c.id) % 10 < 6 ? "caller" : "callee";
+}
+
+const HANG_UP_LABEL: Record<HangUpSide, string> = {
+  caller: "Caller hung up",
+  callee: "Buyer hung up",
+  carrier: "Carrier drop",
+  open: "—",
+};
+
+/** Predefined tag pool — the per-call set is a deterministic 0-2 slice. */
+const TAG_POOL = ["High intent", "Qualified", "Spanish", "Repeat", "VIP", "New lead"];
+
+function getTags(c: Call): string[] {
+  const h = callHash(c.id);
+  const count = h % 4; // 0..3 tags, biased toward 0-1
+  if (count === 0) return [];
+  const out: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const t = TAG_POOL[(h + i * 7) % TAG_POOL.length];
+    if (!out.includes(t)) out.push(t);
+  }
+  return out;
+}
+
 /** Single source of truth for export cell values. Numbers stay numeric. */
 function logCellValue(c: Call, key: ColumnKey): number | string {
   switch (key) {
@@ -160,6 +215,10 @@ function logCellValue(c: Call, key: ColumnKey): number | string {
       return formatHMS(getTTCSeconds(c));
     case "duration":
       return formatHMS(c.durationSec);
+    case "hangUp":
+      return HANG_UP_LABEL[getHangUpSide(c)];
+    case "tag":
+      return getTags(c).join(", ");
     case "status":
       return STATUS_LABEL[c.status];
     case "failReason":
@@ -297,6 +356,8 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                 {columns.payout && <TableHead className="text-right">Payout</TableHead>}
                 {columns.ttc && <TableHead>TTC</TableHead>}
                 {columns.duration && <TableHead>Duration</TableHead>}
+                {columns.hangUp && <TableHead className="text-center">Hang up</TableHead>}
+                {columns.tag && <TableHead className="text-center">Tag</TableHead>}
                 {columns.status && <TableHead>Status</TableHead>}
                 {columns.failReason && <TableHead>Fail reason</TableHead>}
                 {columns.recording && <TableHead>Rec.</TableHead>}
@@ -372,6 +433,16 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                           {formatHMS(c.durationSec)}
                         </TableCell>
                       )}
+                      {columns.hangUp && (
+                        <TableCell className="text-center">
+                          <HangUpCell call={c} />
+                        </TableCell>
+                      )}
+                      {columns.tag && (
+                        <TableCell className="text-center">
+                          <TagCell call={c} />
+                        </TableCell>
+                      )}
                       {columns.status && (
                         <TableCell>
                           <Badge variant={statusVariant(c.status)}>{STATUS_LABEL[c.status]}</Badge>
@@ -423,6 +494,62 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
 }
 
 /* ─────────────────────────────────────────────────────────────────── */
+
+/**
+ * Hang-up indicator — a phone-with-cross icon tinted by who hung up first.
+ * Caller-hang-ups read as warm (caller dropped early — possible filter
+ * issue), buyer-hang-ups read as cool (normal close), carrier drops red.
+ */
+function HangUpCell({ call }: { call: Call }) {
+  const side = getHangUpSide(call);
+  if (side === "open") {
+    return (
+      <span className="inline-block h-3 w-3 rounded-full bg-muted" aria-label="No hang-up" />
+    );
+  }
+  const tone =
+    side === "caller"
+      ? "text-[oklch(0.82_0.16_75)]"
+      : side === "callee"
+        ? "text-[oklch(0.78_0.14_220)]"
+        : "text-destructive";
+  return (
+    <span
+      title={HANG_UP_LABEL[side]}
+      className={cn("inline-flex h-7 w-7 items-center justify-center rounded-md", tone)}
+    >
+      <PhoneOff className="h-3.5 w-3.5" />
+    </span>
+  );
+}
+
+/**
+ * Tag cell — renders the existing tag chips inline and a "+" button to
+ * surface the add-tag affordance. Stays compact in the column.
+ */
+function TagCell({ call }: { call: Call }) {
+  const tags = getTags(call);
+  return (
+    <div className="inline-flex items-center gap-1">
+      {tags.map((t) => (
+        <span
+          key={t}
+          className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+        >
+          {t}
+        </span>
+      ))}
+      <button
+        type="button"
+        aria-label={`Add tag to call ${call.id}`}
+        onClick={() => toast.info("Tag picker — coming soon")}
+        className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-accent/50 hover:text-accent"
+      >
+        {tags.length === 0 ? <Tag className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+      </button>
+    </div>
+  );
+}
 
 /** Three inline icon actions per row: copy caller, block caller, bill/adjust. */
 function CallRowActions({ call }: { call: Call }) {
