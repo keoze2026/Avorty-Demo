@@ -167,7 +167,7 @@ function TimeField({
           <SelectContent>
             {HOURS_12.map((h) => (
               <SelectItem key={h} value={String(h)}>
-                {h}
+                {String(h).padStart(2, "0")}
               </SelectItem>
             ))}
           </SelectContent>

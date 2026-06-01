@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ChatWidget } from "@/components/marketing/chat-widget";
 import { Footer } from "@/components/marketing/footer";
 import { Navbar } from "@/components/marketing/navbar";
 
@@ -14,6 +15,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
       <Navbar />
       <main>{children}</main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 }

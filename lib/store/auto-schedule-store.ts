@@ -98,7 +98,7 @@ export function to24h(hour12: number, period: "AM" | "PM"): number {
 
 export function formatTime12(hour24: number, minute: number = 0): string {
   const { hour, period } = to12h(hour24);
-  return `${hour}:${String(minute).padStart(2, "0")} ${period}`;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${period}`;
 }
 
 /* ─── Available portal timezones (matches the existing TIMEZONES list scope) ── */
