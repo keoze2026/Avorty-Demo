@@ -98,7 +98,7 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
               data={data}
               // Bumped left margin so the YAxis has room for 3-digit ticks
               // (e.g. 600 / 750) without clipping the leading digit.
-              margin={{ top: 12, right: 8, left: 0, bottom: 0 }}
+              margin={{ top: 12, right: 8, left: 0, bottom: 8 }}
               barCategoryGap={range === "24h" ? "18%" : "26%"}
             >
               <defs>
@@ -113,10 +113,12 @@ export function CallsChart({ calls }: CallsChartProps = {}) {
               <XAxis
                 dataKey="x"
                 tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                axisLine={false}
+                // Dashed baseline at y=0 — matches the rest of the CartesianGrid
+                // so the chart floor reads as a gridline instead of a hard edge.
+                axisLine={{ stroke: "var(--border)", strokeDasharray: "3 3" }}
                 tickLine={false}
                 interval={range === "24h" ? 2 : 0}
-                tickMargin={8}
+                tickMargin={10}
               />
               <YAxis
                 tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
