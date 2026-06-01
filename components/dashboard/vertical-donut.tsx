@@ -50,11 +50,13 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <defs>
-                {/* Soft single-hue indigo gradient across the completed arc */}
+                {/* Soft single-hue gradient tied to the active theme accent.
+                    Opacity stops give a subtle dark→light arc without
+                    locking us to a hardcoded hue. */}
                 <linearGradient id="donut-success-grad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#3A4BC4" />
-                  <stop offset="50%" stopColor="#5266E0" />
-                  <stop offset="100%" stopColor="#818CF8" />
+                  <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.65} />
+                  <stop offset="60%" stopColor="var(--accent)" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity={1} />
                 </linearGradient>
               </defs>
               <Pie

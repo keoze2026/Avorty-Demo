@@ -1,0 +1,204 @@
+/**
+ * Per-publisher access store.
+ *
+ * Holds publisher-scoped collaboration state: timezone, members who can view
+ * the publisher's stats, permission flags those members get, and the advanced
+ * cap toggle. State persists to localStorage so settings made yesterday are
+ * still in place tomorrow.
+ */
+
+"use client";
+
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+export interface PublisherMember {
+  id: string;
+  email: string;
+  status: "active" | "invited";
+  invitedAt: number;
+}
+
+export type PermissionKey =
+  | "manageTraffic"
+  | "numberCreation"
+  | "audioRecording"
+  | "blockNumbers"
+  | "downloadReports";
+
+export type PublisherPermissions = Record<PermissionKey, boolean>;
+
+export interface PublisherCapSettings {
+  enabled: boolean;
+}
+
+export interface PublisherAccessState {
+  timezone: string;
+  members: PublisherMember[];
+  permissions: PublisherPermissions;
+  cap: PublisherCapSettings;
+}
+
+const DEFAULT_TZ = "UTC";
+
+const DEFAULT_PERMISSIONS: PublisherPermissions = {
+  manageTraffic: false,
+  numberCreation: false,
+  audioRecording: false,
+  blockNumbers: false,
+  downloadReports: false,
+};
+
+export function emptyAccess(): PublisherAccessState {
+  return {
+    timezone: DEFAULT_TZ,
+    members: [],
+    permissions: { ...DEFAULT_PERMISSIONS },
+    cap: { enabled: false },
+  };
+}
+
+interface Store {
+  byPublisher: Record<string, PublisherAccessState>;
+  getAccess: (publisherId: string) => PublisherAccessState;
+  setTimezone: (publisherId: string, timezone: string) => void;
+  togglePermission: (publisherId: string, key: PermissionKey) => void;
+  setCapEnabled: (publisherId: string, enabled: boolean) => void;
+  addMember: (publisherId: string, email: string) => void;
+  removeMember: (publisherId: string, memberId: string) => void;
+}
+
+export const usePublisherAccessStore = create<Store>()(
+  persist(
+    (set, get) => ({
+      byPublisher: {},
+
+      getAccess: (publisherId) => {
+        return get().byPublisher[publisherId] ?? emptyAccess();
+      },
+
+      setTimezone: (publisherId, timezone) =>
+        set((s) => ({
+          byPublisher: {
+            ...s.byPublisher,
+            [publisherId]: { ...(s.byPublisher[publisherId] ?? emptyAccess()), timezone },
+          },
+        })),
+
+      togglePermission: (publisherId, key) =>
+        set((s) => {
+          const cur = s.byPublisher[publisherId] ?? emptyAccess();
+          return {
+            byPublisher: {
+              ...s.byPublisher,
+              [publisherId]: {
+                ...cur,
+                permissions: { ...cur.permissions, [key]: !cur.permissions[key] },
+              },
+            },
+          };
+        }),
+
+      setCapEnabled: (publisherId, enabled) =>
+        set((s) => {
+          const cur = s.byPublisher[publisherId] ?? emptyAccess();
+          return {
+            byPublisher: {
+              ...s.byPublisher,
+              [publisherId]: { ...cur, cap: { ...cur.cap, enabled } },
+            },
+          };
+        }),
+
+      addMember: (publisherId, email) =>
+        set((s) => {
+          const cur = s.byPublisher[publisherId] ?? emptyAccess();
+          const trimmed = email.trim().toLowerCase();
+          if (!trimmed) return s;
+          if (cur.members.some((m) => m.email.toLowerCase() === trimmed)) return s;
+          const member: PublisherMember = {
+            id: `mem_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+            email: trimmed,
+            status: "invited",
+            invitedAt: Date.now(),
+          };
+          return {
+            byPublisher: {
+              ...s.byPublisher,
+              [publisherId]: { ...cur, members: [...cur.members, member] },
+            },
+          };
+        }),
+
+      removeMember: (publisherId, memberId) =>
+        set((s) => {
+          const cur = s.byPublisher[publisherId];
+          if (!cur) return s;
+          return {
+            byPublisher: {
+              ...s.byPublisher,
+              [publisherId]: {
+                ...cur,
+                members: cur.members.filter((m) => m.id !== memberId),
+              },
+            },
+          };
+        }),
+    }),
+    {
+      name: "vortyx.publisher-access",
+      storage: createJSONStorage(() => localStorage),
+      version: 1,
+    },
+  ),
+);
+
+/* ─── Static lists shared by the UI ──────────────────────────────────── */
+
+export const TIMEZONES: Array<{ value: string; label: string }> = [
+  { value: "UTC", label: "(UTC) Coordinated Universal Time" },
+  { value: "America/New_York", label: "(UTC-05:00) Eastern Time (EST)" },
+  { value: "America/Chicago", label: "(UTC-06:00) Central Time (CST)" },
+  { value: "America/Denver", label: "(UTC-07:00) Mountain Time (MST)" },
+  { value: "America/Los_Angeles", label: "(UTC-08:00) Pacific Time (PST)" },
+  { value: "America/Anchorage", label: "(UTC-09:00) Alaska Time" },
+  { value: "Pacific/Honolulu", label: "(UTC-10:00) Hawaii Time" },
+  { value: "Europe/London", label: "(UTC+00:00) London" },
+  { value: "Europe/Berlin", label: "(UTC+01:00) Berlin / Paris" },
+  { value: "Asia/Tokyo", label: "(UTC+09:00) Tokyo" },
+  { value: "Australia/Sydney", label: "(UTC+11:00) Sydney" },
+];
+
+export interface PermissionDef {
+  key: PermissionKey;
+  label: string;
+  description: string;
+}
+
+export const PERMISSIONS: PermissionDef[] = [
+  {
+    key: "manageTraffic",
+    label: "Manage Traffic",
+    description: "Users can effectively manage and optimize traffic.",
+  },
+  {
+    key: "numberCreation",
+    label: "Number Creation",
+    description: "Users can purchase a new number within the system.",
+  },
+  {
+    key: "audioRecording",
+    label: "Audio Recording",
+    description: "It provides users with the ability to view call recordings.",
+  },
+  {
+    key: "blockNumbers",
+    label: "Block Numbers",
+    description: "Reject calls from specific phone numbers.",
+  },
+  {
+    key: "downloadReports",
+    label: "Download Reports",
+    description: "Users can download reports about their call activity.",
+  },
+];

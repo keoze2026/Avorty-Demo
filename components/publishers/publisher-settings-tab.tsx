@@ -1,231 +1,443 @@
 "use client";
 
 /**
- * Inline settings editor for a single publisher.
- * Identity / Contact / Payout cards, with a sticky save bar that activates
- * when the form is dirty. Payout rate is stored as 0..1 but edited as a %.
+ * Publisher settings — Members + Permissions + Advanced collaboration controls.
+ *
+ * Layout (matches the design spec):
+ *   ┌─────────────────────────────────────────────┐
+ *   │ Publisher name        [Timezone select]      │
+ *   │ Manage settings for this publisher           │
+ *   ├──────────── MEMBERS ─────────────────────────┤
+ *   ├──────────── PERMISSIONS ─────────────────────┤
+ *   ├──────────── ADVANCED SETTINGS ───────────────┤
+ *   └─────────────────────────────────────────────┘
+ *
+ * All state persists per-publisher via `usePublisherAccessStore`.
  */
 
-import { useMemo, useState } from "react";
-import { Building2, Mail, Percent, UserSquare, Wallet } from "lucide-react";
+import * as React from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  Gauge,
+  Info,
+  Search,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { ErrorLine, SaveBar } from "@/components/campaigns/campaign-settings-tab";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { usePublishersStore } from "@/lib/store/publishers-store";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  PERMISSIONS,
+  TIMEZONES,
+  usePublisherAccessStore,
+  type PermissionKey,
+} from "@/lib/store/publisher-access-store";
 import type { Publisher } from "@/lib/types";
 
-interface FormState {
-  name: string;
-  organization: string;
-  contactName: string;
-  email: string;
-  description: string;
-  /** Stored as a percentage 0..100 here for friendlier editing. */
-  payoutPct: number;
+interface Props {
+  publisher: Publisher;
 }
 
-function fromPublisher(p: Publisher): FormState {
-  return {
-    name: p.name,
-    organization: p.organization,
-    contactName: p.contactName ?? "",
-    email: p.email ?? "",
-    description: p.description ?? "",
-    payoutPct: Math.round(p.payoutRate * 1000) / 10,
+export function PublisherSettingsTab({ publisher }: Props) {
+  const access = usePublisherAccessStore((s) => s.byPublisher[publisher.id]);
+  const setTimezone = usePublisherAccessStore((s) => s.setTimezone);
+  const togglePermission = usePublisherAccessStore((s) => s.togglePermission);
+  const setCapEnabled = usePublisherAccessStore((s) => s.setCapEnabled);
+  const addMember = usePublisherAccessStore((s) => s.addMember);
+  const removeMember = usePublisherAccessStore((s) => s.removeMember);
+
+  const timezone = access?.timezone ?? "UTC";
+  const members = access?.members ?? [];
+  const permissions = access?.permissions ?? {
+    manageTraffic: false,
+    numberCreation: false,
+    audioRecording: false,
+    blockNumbers: false,
+    downloadReports: false,
   };
-}
-
-export function PublisherSettingsTab({ publisher }: { publisher: Publisher }) {
-  const update = usePublishersStore((s) => s.update);
-  const [form, setForm] = useState<FormState>(() => fromPublisher(publisher));
-  const [submitting, setSubmitting] = useState(false);
-
-  const baseline = useMemo(() => fromPublisher(publisher), [publisher]);
-  const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
-
-  const errors = validate(form);
-  const hasErrors = Object.keys(errors).length > 0;
-
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((f) => ({ ...f, [key]: value }));
-
-  const onSave = async () => {
-    if (hasErrors) {
-      toast.error("Please fix the highlighted fields first");
-      return;
-    }
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 350));
-    update(publisher.id, {
-      name: form.name.trim(),
-      organization: form.organization.trim(),
-      contactName: form.contactName.trim() || undefined,
-      email: form.email.trim() || undefined,
-      description: form.description.trim() || undefined,
-      payoutRate: Math.round(form.payoutPct * 10) / 1000,
-    });
-    setSubmitting(false);
-    toast.success("Publisher settings saved");
-  };
-  const onDiscard = () => {
-    setForm(baseline);
-    toast.info("Discarded unsaved changes");
-  };
-
-  const previewShare = Math.max(0, Math.min(100, form.payoutPct));
+  const capEnabled = access?.cap.enabled ?? false;
 
   return (
-    <div className="space-y-4">
-      {/* Identity */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Building2 className="h-4 w-4 text-accent" />
-            Identity
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="ps-name">Publisher name</Label>
-            <Input
-              id="ps-name"
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              aria-invalid={!!errors.name}
-            />
-            {errors.name && <ErrorLine>{errors.name}</ErrorLine>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ps-org">Organization</Label>
-            <Input
-              id="ps-org"
-              value={form.organization}
-              onChange={(e) => set("organization", e.target.value)}
-              aria-invalid={!!errors.organization}
-            />
-            {errors.organization && <ErrorLine>{errors.organization}</ErrorLine>}
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="ps-desc">Notes</Label>
-            <Textarea
-              id="ps-desc"
-              rows={2}
-              value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder="Source quality, traffic mix, anything routing-affecting."
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Contact */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <UserSquare className="h-4 w-4 text-accent" />
-            Contact
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="ps-contact">Contact name</Label>
-            <Input
-              id="ps-contact"
-              value={form.contactName}
-              onChange={(e) => set("contactName", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ps-email" className="inline-flex items-center gap-1.5">
-              <Mail className="h-3 w-3 text-muted-foreground" />
-              Email
-            </Label>
-            <Input
-              id="ps-email"
-              type="email"
-              value={form.email}
-              onChange={(e) => set("email", e.target.value)}
-              aria-invalid={!!errors.email}
-            />
-            {errors.email && <ErrorLine>{errors.email}</ErrorLine>}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payout */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Wallet className="h-4 w-4 text-accent" />
-            Payout share
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Share of the buyer payout passed through to this publisher per qualified call.
-          </p>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="ps-payout">Payout rate</Label>
-            <div className="relative">
-              <Percent className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                id="ps-payout"
-                type="number"
-                min={0}
-                max={100}
-                step="0.5"
-                value={form.payoutPct}
-                onChange={(e) => set("payoutPct", parseFloat(e.target.value) || 0)}
-                className="pl-8 font-mono"
-                aria-invalid={!!errors.payoutPct}
-              />
-            </div>
-            {errors.payoutPct && <ErrorLine>{errors.payoutPct}</ErrorLine>}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Preview on a $40 buyer payout
-            </Label>
-            <div className="rounded-md border border-border bg-secondary/30 p-3">
-              <div className="flex items-baseline gap-2">
-                <span className="font-mono text-lg font-semibold text-accent">
-                  ${((40 * previewShare) / 100).toFixed(2)}
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  to publisher · ${(40 - (40 * previewShare) / 100).toFixed(2)} kept by network
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary/60">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[color:var(--accent)] to-[color:var(--vortyx-cyan)]"
-                  style={{ width: `${previewShare}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <SaveBar
-        dirty={dirty}
-        submitting={submitting}
-        hasErrors={hasErrors}
-        onSave={onSave}
-        onDiscard={onDiscard}
+    <Card className="space-y-6 p-6">
+      <HeaderRow
+        title={publisher.name}
+        timezone={timezone}
+        onTimezoneChange={(v) => setTimezone(publisher.id, v)}
       />
+
+      <MembersSection
+        publisherId={publisher.id}
+        members={members}
+        onAdd={(email) => addMember(publisher.id, email)}
+        onRemove={(memberId) => removeMember(publisher.id, memberId)}
+      />
+
+      <PermissionsSection
+        permissions={permissions}
+        onToggle={(key) => togglePermission(publisher.id, key)}
+      />
+
+      <AdvancedSection
+        capEnabled={capEnabled}
+        onCapEnabledChange={(v) => setCapEnabled(publisher.id, v)}
+      />
+    </Card>
+  );
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────── */
+
+function HeaderRow({
+  title,
+  timezone,
+  onTimezoneChange,
+}: {
+  title: string;
+  timezone: string;
+  onTimezoneChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+          <Info className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage settings for this publisher
+        </p>
+      </div>
+      <Select value={timezone} onValueChange={onTimezoneChange}>
+        <SelectTrigger className="w-full sm:w-72">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {TIMEZONES.map((tz) => (
+            <SelectItem key={tz.value} value={tz.value}>
+              {tz.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
 
-function validate(form: FormState) {
-  const errs: Record<string, string> = {};
-  if (form.name.trim().length < 2) errs.name = "Name is required.";
-  if (form.organization.trim().length < 2) errs.organization = "Organization is required.";
-  if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = "Doesn't look like a valid email.";
-  if (form.payoutPct < 0 || form.payoutPct > 100) errs.payoutPct = "Payout must be between 0 and 100%.";
-  return errs;
+/* ─── Members ────────────────────────────────────────────────────────── */
+
+function MembersSection({
+  publisherId,
+  members,
+  onAdd,
+  onRemove,
+}: {
+  publisherId: string;
+  members: ReturnType<typeof usePublisherAccessStore.getState>["byPublisher"][string]["members"];
+  onAdd: (email: string) => void;
+  onRemove: (memberId: string) => void;
+}) {
+  const [query, setQuery] = React.useState("");
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const [inviteOpen, setInviteOpen] = React.useState(false);
+  const [inviteEmail, setInviteEmail] = React.useState("");
+
+  const filtered = React.useMemo(() => {
+    if (!query.trim()) return members;
+    const q = query.trim().toLowerCase();
+    return members.filter((m) => m.email.toLowerCase().includes(q));
+  }, [members, query]);
+
+  const submitInvite = () => {
+    const trimmed = inviteEmail.trim();
+    if (!/^\S+@\S+\.\S+$/.test(trimmed)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    onAdd(trimmed);
+    toast.success(`Invited ${trimmed}`);
+    setInviteEmail("");
+    setInviteOpen(false);
+  };
+
+  return (
+    <Section
+      title="Members"
+      description="Users who can view the statistics for this publisher"
+    >
+      <div className="flex items-center justify-end gap-2 px-4 pb-3 pt-1">
+        <button
+          type="button"
+          onClick={() => setSearchOpen((v) => !v)}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          aria-label="Search members"
+        >
+          <Search className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => toast.info("Filter members — coming soon")}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          aria-label="Filter members"
+        >
+          <Filter className="h-3.5 w-3.5" />
+        </button>
+        <Button
+          size="sm"
+          variant="default"
+          onClick={() => setInviteOpen((v) => !v)}
+        >
+          Invite
+        </Button>
+      </div>
+
+      {searchOpen && (
+        <div className="px-4 pb-3">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by email"
+            className="h-8"
+          />
+        </div>
+      )}
+
+      {inviteOpen && (
+        <div className="mx-4 mb-3 flex items-center gap-2 rounded-md border border-border bg-secondary/30 p-2">
+          <Input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submitInvite();
+              }
+            }}
+            placeholder="member@example.com"
+            className="h-8"
+            autoFocus
+          />
+          <Button size="sm" onClick={submitInvite}>
+            Send invite
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setInviteOpen(false);
+              setInviteEmail("");
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      <div className="overflow-hidden border-t border-border">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="pl-4 text-left">Email</TableHead>
+              <TableHead className="text-left">Status</TableHead>
+              <TableHead className="pr-4 text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={3}
+                  className="py-10 text-center text-sm text-muted-foreground"
+                >
+                  <Users className="mx-auto mb-2 h-5 w-5 opacity-40" />
+                  No data available
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((m) => (
+                <TableRow key={m.id}>
+                  <TableCell className="pl-4 text-left font-medium">
+                    {m.email}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    <Badge
+                      variant={m.status === "active" ? "success" : "outline"}
+                      className="capitalize"
+                    >
+                      {m.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="pr-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onRemove(m.id);
+                        toast.success(`Removed ${m.email}`);
+                      }}
+                      aria-label={`Remove ${m.email}`}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      {/* swallow unused-var linter warning when publisherId isn't read directly */}
+      <span hidden data-publisher-id={publisherId} />
+    </Section>
+  );
+}
+
+/* ─── Permissions ────────────────────────────────────────────────────── */
+
+function PermissionsSection({
+  permissions,
+  onToggle,
+}: {
+  permissions: Record<PermissionKey, boolean>;
+  onToggle: (key: PermissionKey) => void;
+}) {
+  return (
+    <Section
+      title="Permissions"
+      description="List of available permissions for users"
+    >
+      <ul className="divide-y divide-border">
+        {PERMISSIONS.map((p) => (
+          <li
+            key={p.key}
+            className="flex items-center justify-between gap-4 px-4 py-3.5"
+          >
+            <div>
+              <div className="text-sm font-medium leading-tight">{p.label}</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {p.description}
+              </div>
+            </div>
+            <Switch
+              checked={!!permissions[p.key]}
+              onCheckedChange={() => onToggle(p.key)}
+              aria-label={`Toggle ${p.label}`}
+            />
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+/* ─── Advanced settings ──────────────────────────────────────────────── */
+
+function AdvancedSection({
+  capEnabled,
+  onCapEnabledChange,
+}: {
+  capEnabled: boolean;
+  onCapEnabledChange: (v: boolean) => void;
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+
+  return (
+    <Section
+      title="Advanced Settings"
+      description="Customize how incoming calls are routed to optimize the call experience"
+    >
+      <div className="px-2 py-2">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex w-full items-center justify-between gap-4 rounded-md px-3 py-3 text-left transition-colors hover:bg-secondary/40"
+        >
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-accent/10 text-accent">
+              <Gauge className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-sm font-medium leading-tight">CAP SETTINGS</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                Manage limits for the traffic sources of the publisher
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={capEnabled ? "success" : "outline"}>
+              {capEnabled ? "Enabled" : "Disabled"}
+            </Badge>
+            {expanded ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+        </button>
+        {expanded && (
+          <div className="mx-3 mt-2 rounded-md border border-border bg-secondary/30 p-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm font-medium">Enable cap limits</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  When on, routing will respect this publisher's hourly / daily caps.
+                </div>
+              </div>
+              <Switch
+                checked={capEnabled}
+                onCheckedChange={onCapEnabledChange}
+                aria-label="Enable cap settings"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+/* ─── Shared sub-card shell ──────────────────────────────────────────── */
+
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-lg border border-border bg-background/30">
+      <header className="px-4 py-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
+          {title}
+        </h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      </header>
+      {children}
+    </section>
+  );
 }
