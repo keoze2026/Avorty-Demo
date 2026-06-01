@@ -132,8 +132,8 @@ export function DestinationSummaryTable({
         <Table className="min-w-[980px] [&_tr]:border-b-0 [&_td]:py-2 [&_th]:h-8 [&_th]:py-1.5 [&_th]:text-[10px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wider">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6 text-left">Destination</TableHead>
-              <TableHead className="!text-center">Status</TableHead>
+              <TableHead className="w-[220px] pl-6 text-left">Destination</TableHead>
+              <TableHead className="w-[110px] !text-center">Status</TableHead>
               <TableHead className="text-left">Buyer</TableHead>
               <TableHead className="text-center">Live</TableHead>
               <TableHead className="text-right">Cap (today)</TableHead>
@@ -167,7 +167,7 @@ export function DestinationSummaryTable({
                   "bg-accent";
                 return (
                   <TableRow key={destination.id}>
-                    <TableCell className="pl-6 text-left">
+                    <TableCell className="w-[220px] pl-6 text-left">
                       <div className="text-[13px] font-medium leading-tight">
                         {destination.name}
                       </div>
@@ -175,8 +175,8 @@ export function DestinationSummaryTable({
                         {toE164(destination.tfn)}
                       </div>
                     </TableCell>
-                    <TableCell className="!text-center">
-                      <div className="flex w-full justify-center">
+                    <TableCell className="w-[110px] !text-center">
+                      <div className="flex w-full items-center justify-center">
                         <ActiveBadge />
                       </div>
                     </TableCell>

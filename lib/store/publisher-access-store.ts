@@ -28,6 +28,17 @@ export type PermissionKey =
 
 export type PublisherPermissions = Record<PermissionKey, boolean>;
 
+export type ReportingColumnKey =
+  | "incoming"
+  | "connected"
+  | "qualified"
+  | "notConnected"
+  | "acl"
+  | "tcl"
+  | "cost";
+
+export type ReportingVisibility = Record<ReportingColumnKey, boolean>;
+
 export interface PublisherCapSettings {
   enabled: boolean;
 }
@@ -36,6 +47,7 @@ export interface PublisherAccessState {
   timezone: string;
   members: PublisherMember[];
   permissions: PublisherPermissions;
+  reporting: ReportingVisibility;
   cap: PublisherCapSettings;
 }
 
@@ -49,11 +61,23 @@ const DEFAULT_PERMISSIONS: PublisherPermissions = {
   downloadReports: false,
 };
 
+// Publishers see every reporting column by default — admin un-checks to hide.
+const DEFAULT_REPORTING: ReportingVisibility = {
+  incoming: true,
+  connected: true,
+  qualified: true,
+  notConnected: true,
+  acl: true,
+  tcl: true,
+  cost: true,
+};
+
 export function emptyAccess(): PublisherAccessState {
   return {
     timezone: DEFAULT_TZ,
     members: [],
     permissions: { ...DEFAULT_PERMISSIONS },
+    reporting: { ...DEFAULT_REPORTING },
     cap: { enabled: false },
   };
 }
@@ -63,6 +87,7 @@ interface Store {
   getAccess: (publisherId: string) => PublisherAccessState;
   setTimezone: (publisherId: string, timezone: string) => void;
   togglePermission: (publisherId: string, key: PermissionKey) => void;
+  toggleReportingColumn: (publisherId: string, key: ReportingColumnKey) => void;
   setCapEnabled: (publisherId: string, enabled: boolean) => void;
   addMember: (publisherId: string, email: string) => void;
   removeMember: (publisherId: string, memberId: string) => void;
@@ -94,6 +119,21 @@ export const usePublisherAccessStore = create<Store>()(
               [publisherId]: {
                 ...cur,
                 permissions: { ...cur.permissions, [key]: !cur.permissions[key] },
+              },
+            },
+          };
+        }),
+
+      toggleReportingColumn: (publisherId, key) =>
+        set((s) => {
+          const cur = s.byPublisher[publisherId] ?? emptyAccess();
+          const reporting = cur.reporting ?? { ...DEFAULT_REPORTING };
+          return {
+            byPublisher: {
+              ...s.byPublisher,
+              [publisherId]: {
+                ...cur,
+                reporting: { ...reporting, [key]: !reporting[key] },
               },
             },
           };
@@ -174,6 +214,22 @@ export interface PermissionDef {
   label: string;
   description: string;
 }
+
+export interface ReportingColumnDef {
+  key: ReportingColumnKey;
+  label: string;
+  description: string;
+}
+
+export const REPORTING_COLUMNS: ReportingColumnDef[] = [
+  { key: "incoming", label: "Incoming", description: "Total inbound call attempts." },
+  { key: "connected", label: "Connected", description: "Calls that reached a destination." },
+  { key: "qualified", label: "Qualified", description: "Calls that met the buyer's quality criteria." },
+  { key: "notConnected", label: "Not Connected", description: "Calls that failed to reach a destination." },
+  { key: "acl", label: "ACL", description: "Average call length across delivered calls." },
+  { key: "tcl", label: "TCL", description: "Total call length aggregated across delivered calls." },
+  { key: "cost", label: "Cost", description: "Spend / payout figures on each call." },
+];
 
 export const PERMISSIONS: PermissionDef[] = [
   {

@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -50,9 +51,12 @@ import {
 } from "@/components/ui/table";
 import {
   PERMISSIONS,
+  REPORTING_COLUMNS,
   TIMEZONES,
   usePublisherAccessStore,
   type PermissionKey,
+  type ReportingColumnKey,
+  type ReportingVisibility,
 } from "@/lib/store/publisher-access-store";
 import type { Publisher } from "@/lib/types";
 
@@ -64,6 +68,7 @@ export function PublisherSettingsTab({ publisher }: Props) {
   const access = usePublisherAccessStore((s) => s.byPublisher[publisher.id]);
   const setTimezone = usePublisherAccessStore((s) => s.setTimezone);
   const togglePermission = usePublisherAccessStore((s) => s.togglePermission);
+  const toggleReportingColumn = usePublisherAccessStore((s) => s.toggleReportingColumn);
   const setCapEnabled = usePublisherAccessStore((s) => s.setCapEnabled);
   const addMember = usePublisherAccessStore((s) => s.addMember);
   const removeMember = usePublisherAccessStore((s) => s.removeMember);
@@ -76,6 +81,15 @@ export function PublisherSettingsTab({ publisher }: Props) {
     audioRecording: false,
     blockNumbers: false,
     downloadReports: false,
+  };
+  const reporting: ReportingVisibility = access?.reporting ?? {
+    incoming: true,
+    connected: true,
+    qualified: true,
+    notConnected: true,
+    acl: true,
+    tcl: true,
+    cost: true,
   };
   const capEnabled = access?.cap.enabled ?? false;
 
@@ -97,6 +111,11 @@ export function PublisherSettingsTab({ publisher }: Props) {
       <PermissionsSection
         permissions={permissions}
         onToggle={(key) => togglePermission(publisher.id, key)}
+      />
+
+      <ReportingVisibilitySection
+        visibility={reporting}
+        onToggle={(key) => toggleReportingColumn(publisher.id, key)}
       />
 
       <AdvancedSection
@@ -347,6 +366,55 @@ function PermissionsSection({
             />
           </li>
         ))}
+      </ul>
+    </Section>
+  );
+}
+
+/* ─── Reporting visibility ───────────────────────────────────────────── */
+
+function ReportingVisibilitySection({
+  visibility,
+  onToggle,
+}: {
+  visibility: ReportingVisibility;
+  onToggle: (key: ReportingColumnKey) => void;
+}) {
+  const visibleCount = REPORTING_COLUMNS.filter((c) => visibility[c.key]).length;
+
+  return (
+    <Section
+      title="Reporting Visibility"
+      description={`Pick which reporting columns this publisher can see — uncheck to hide. ${visibleCount} of ${REPORTING_COLUMNS.length} visible.`}
+    >
+      <ul className="grid grid-cols-1 gap-1 px-2 py-2 sm:grid-cols-2">
+        {REPORTING_COLUMNS.map((col) => {
+          const id = `rpt-${col.key}`;
+          const checked = !!visibility[col.key];
+          return (
+            <li key={col.key}>
+              <label
+                htmlFor={id}
+                className="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-secondary/40"
+              >
+                <Checkbox
+                  id={id}
+                  checked={checked}
+                  onCheckedChange={() => onToggle(col.key)}
+                  className="mt-0.5"
+                />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium leading-tight">
+                    {col.label}
+                  </div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
+                    {col.description}
+                  </div>
+                </div>
+              </label>
+            </li>
+          );
+        })}
       </ul>
     </Section>
   );
