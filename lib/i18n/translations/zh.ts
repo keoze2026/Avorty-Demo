@@ -239,6 +239,16 @@ export const zh: TranslationShape = {
       avg: "平均",
       callsByHour: "按小时通话量",
     },
+    donut: {
+      total: "合计",
+      callsSuffix: "通话",
+      totalCalls: "总通话",
+      notConnected: "未接通",
+      completed: "已完成",
+    },
+    tooltips: {
+      connected: "已接通",
+    },
   },
 
   settings: {

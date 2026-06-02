@@ -252,6 +252,16 @@ export const en = {
       avg: "avg",
       callsByHour: "Calls by hour",
     },
+    donut: {
+      total: "Total",
+      callsSuffix: "calls",
+      totalCalls: "Total calls",
+      notConnected: "Not connected",
+      completed: "Completed",
+    },
+    tooltips: {
+      connected: "Connected",
+    },
   },
 
   /* ─── Settings (rail + sections) ─────────────────────────── */

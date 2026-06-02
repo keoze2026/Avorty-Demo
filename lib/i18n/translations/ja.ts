@@ -239,6 +239,16 @@ export const ja: TranslationShape = {
       avg: "平均",
       callsByHour: "時間別通話",
     },
+    donut: {
+      total: "合計",
+      callsSuffix: "件",
+      totalCalls: "総通話数",
+      notConnected: "未接続",
+      completed: "完了",
+    },
+    tooltips: {
+      connected: "接続",
+    },
   },
 
   settings: {

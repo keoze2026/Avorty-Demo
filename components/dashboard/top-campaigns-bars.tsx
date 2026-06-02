@@ -194,7 +194,7 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
                 cursor={false}
-                formatter={(v: number) => [formatNumber(v), "Connected"]}
+                formatter={(v: number) => [formatNumber(v), t("dashboard.tooltips.connected")]}
               />
               <Bar
                 dataKey="connected"

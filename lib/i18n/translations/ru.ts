@@ -239,6 +239,16 @@ export const ru: TranslationShape = {
       avg: "сред.",
       callsByHour: "Звонки по часам",
     },
+    donut: {
+      total: "Всего",
+      callsSuffix: "звонков",
+      totalCalls: "Всего звонков",
+      notConnected: "Не соединено",
+      completed: "Завершено",
+    },
+    tooltips: {
+      connected: "Соединено",
+    },
   },
 
   settings: {

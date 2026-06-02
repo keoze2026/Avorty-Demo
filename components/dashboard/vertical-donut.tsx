@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatNumber } from "@/lib/format";
@@ -23,6 +24,7 @@ const SUCCESS_SWATCH = "var(--accent)";
 const DROP_SWATCH = "var(--destructive)";
 
 export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
+  const { t } = useTranslation();
   const { total, completed, dropped } = useMemo(() => {
     if (calls) {
       // Match the topbar TOTAL — only count calls that started today, so the
@@ -42,8 +44,8 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
   }, [calls]);
 
   const slices = [
-    { key: "completed", label: "Completed", count: completed, fill: SUCCESS_FILL },
-    { key: "dropped", label: "Not connected", count: dropped, fill: DROP_FILL },
+    { key: "completed", label: t("dashboard.donut.completed"), count: completed, fill: SUCCESS_FILL },
+    { key: "dropped", label: t("dashboard.donut.notConnected"), count: dropped, fill: DROP_FILL },
   ].filter((s) => s.count > 0);
 
   return (
@@ -102,13 +104,13 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Total
+              {t("dashboard.donut.total")}
             </span>
             <span className="text-xl font-semibold tabular-nums">
               {formatNumber(total)}
             </span>
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              calls
+              {t("dashboard.donut.callsSuffix")}
             </span>
           </div>
         </div>
@@ -121,7 +123,7 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
               className="h-2.5 w-2.5 rounded-sm"
               style={{ background: SUCCESS_SWATCH }}
             />
-            <span>Total calls</span>
+            <span>{t("dashboard.donut.totalCalls")}</span>
             <span className="font-medium tabular-nums">{formatNumber(total)}</span>
           </li>
           <li className="inline-flex items-center gap-2 text-destructive">
@@ -130,7 +132,7 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
               className="h-2.5 w-2.5 rounded-sm"
               style={{ background: DROP_SWATCH }}
             />
-            <span>Not connected</span>
+            <span>{t("dashboard.donut.notConnected")}</span>
             <span className="font-medium tabular-nums">{formatNumber(dropped)}</span>
           </li>
         </ul>
