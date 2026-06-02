@@ -126,7 +126,7 @@ export function RevenueChart({ calls }: RevenueChartProps = {}) {
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
                 cursor={{ stroke: "var(--accent)", strokeOpacity: 0.4, strokeWidth: 1 }}
-                formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                formatter={(value: number) => [formatCurrency(value), t("dashboard.revenue")]}
               />
               <Area
                 type="stepAfter"
