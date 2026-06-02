@@ -7,7 +7,7 @@ import { NotificationsMenu } from "./notifications-menu";
 import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { formatCompact, formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber } from "@/lib/format";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { cn } from "@/lib/utils";
 
@@ -47,26 +47,25 @@ export function Topbar() {
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           {/* Live stats — recharge, in-flight, total today.
               Always visible; on mobile the inner TopStat labels collapse so
-              the pill stays compact (icon + value only). */}
+              the pill stays compact (icon + value only). Values stay in
+              their full form (e.g. "3,016" not "3K") at every breakpoint. */}
           <div className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/30 px-2 py-1.5 sm:gap-3 sm:px-3">
             <TopStat
               icon={Wallet}
-              value={formatCompact(rechargeAmount)}
-              fullValue={formatCurrency(rechargeAmount)}
+              value={formatCurrency(rechargeAmount)}
             />
             <span aria-hidden className="h-7 w-px bg-border/70" />
             <TopStat
               icon={PhoneIncoming}
               label="Live"
-              value={formatCompact(liveCalls)}
+              value={formatNumber(liveCalls)}
               live
             />
             <span aria-hidden className="h-7 w-px bg-border/70" />
             <TopStat
               icon={PhoneCall}
               label="Total"
-              value={formatCompact(totalCalls)}
-              fullValue={formatNumber(totalCalls)}
+              value={formatNumber(totalCalls)}
               accent
             />
           </div>
@@ -128,10 +127,7 @@ interface TopStatProps {
   icon: React.ElementType;
   /** Optional eyebrow label. When omitted, the value renders alone next to the icon. */
   label?: string;
-  /** Mobile-friendly value (e.g. compact `$12K`). */
   value: string;
-  /** Optional richer value shown on sm+ breakpoints (e.g. full `$12,480`). */
-  fullValue?: string;
   /** Pulses the icon when true (used for the "Live" stat). */
   live?: boolean;
   /** Renders label + value in the portal accent (matches the auto-refresh chip). */
@@ -142,7 +138,6 @@ function TopStat({
   icon: Icon,
   label,
   value,
-  fullValue,
   live = false,
   accent = false,
 }: TopStatProps) {
@@ -192,9 +187,7 @@ function TopStat({
                   : "text-[12px] font-semibold text-foreground sm:text-[13px]",
             )}
           >
-            {/* Compact value on mobile, full on sm+ (if provided). */}
-            <span className={fullValue ? "sm:hidden" : ""}>{value}</span>
-            {fullValue && <span className="hidden sm:inline">{fullValue}</span>}
+            {value}
           </span>
         </span>
       ) : (
@@ -204,8 +197,7 @@ function TopStat({
             accent ? "text-accent-gradient" : "text-foreground",
           )}
         >
-          <span className={fullValue ? "sm:hidden" : ""}>{value}</span>
-          {fullValue && <span className="hidden sm:inline">{fullValue}</span>}
+          {value}
         </span>
       )}
     </span>

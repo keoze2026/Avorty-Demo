@@ -12,22 +12,16 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { useSecurityStore } from "@/lib/store/security-store";
 import { verifyTotpCode } from "@/lib/totp";
 import { ROUTES } from "@/lib/constants";
-import type { Role } from "@/lib/types";
-
-const DEMO_PRESETS: Array<{ label: string; email: string; role: Role }> = [
-  { label: "Admin", email: "avery@vortyx.io", role: "admin" },
-  { label: "Buyer", email: "morgan@buyersco.com", role: "buyer" },
-  { label: "Publisher", email: "riley@traffichub.com", role: "publisher" },
-];
 
 /**
- * Two-step login:
+ * Two-step login (admin-only):
  *   1. Credentials  → email/password (always)
  *   2. 2FA challenge → 6-digit Authenticator code (only if user has 2FA enabled)
  *
- * The 2FA step is a separate phase rather than a modal so it gets its own
- * URL state (well, render state) — the back button still works to bounce
- * the operator back to the credentials step.
+ * Buyers and publishers do NOT sign in here — they get a role-scoped invite
+ * link emailed to them and accept at /invite/[role]/[token]. Keeping the
+ * primary login admin-only makes the surface honest and removes the role
+ * picker that used to confuse demos.
  */
 export function LoginForm() {
   const router = useRouter();
@@ -42,7 +36,6 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("avery@vortyx.io");
   const [password, setPassword] = useState("vortyx");
-  const [role, setRole] = useState<Role>("admin");
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -59,7 +52,7 @@ export function LoginForm() {
     if (pending) return;
     setPending(true);
     try {
-      await login(email, password, role);
+      await login(email, password, "admin");
       if (twoFactorEnabled) {
         // Don't redirect yet — show the 2FA step.
         toast.success("Password accepted — enter your authenticator code");
@@ -184,31 +177,10 @@ export function LoginForm() {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Sign in as</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {DEMO_PRESETS.map((p) => (
-            <button
-              type="button"
-              key={p.role}
-              onClick={() => {
-                setEmail(p.email);
-                setRole(p.role);
-              }}
-              className={`rounded-md border px-2 py-2 text-xs font-medium transition-colors ${
-                role === p.role
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-border bg-secondary/40 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Demo mode — credentials accept any value. Pick a role to see that perspective.
-        </p>
-      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Buyers and publishers sign in via the role-scoped invite link emailed
+        to them, not this form.
+      </p>
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? (
