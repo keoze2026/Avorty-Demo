@@ -20,7 +20,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <Topbar />
           <SandboxBanner />
           <NotificationRuntime />
-          <div className="flex-1 overflow-auto">
+          {/* `scrollbar-gutter: stable` permanently reserves the scrollbar
+              gutter so the layout doesn't shift horizontally when the page
+              height crosses the viewport-fit threshold (e.g. Live Monitor
+              streaming new cards in / out). Prevents the on/off flicker the
+              vertical scrollbar would otherwise cause. */}
+          <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
             {/* @container/main lets children respond to the actual content-area
                 width (which depends on whether the sidebar is open) instead of
                 the viewport width. Use `@<bp>/main:` utilities on children. */}

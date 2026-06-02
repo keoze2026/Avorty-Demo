@@ -1046,39 +1046,39 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                 <TableRow className="border-t-2 border-border bg-muted/40 hover:bg-muted/40 font-semibold">
                   <TableCell className="pl-6 text-left">Totals</TableCell>
                   {visible.live && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.live)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.live)}</TableCell>
                   )}
                   {visible.incoming && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.incoming)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.incoming)}</TableCell>
                   )}
                   {visible.connected && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.connected)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.connected)}</TableCell>
                   )}
                   {visible.qualified && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.qualified)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.qualified)}</TableCell>
                   )}
                   {visible.paid && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.paid)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.paid)}</TableCell>
                   )}
                   {visible.converted && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.converted)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.converted)}</TableCell>
                   )}
                   {visible.noConnect && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.noConnect)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.noConnect)}</TableCell>
                   )}
                   {visible.dupe && (
-                    <TableCell className="tabular-nums">{formatNumber(totals.dupe)}</TableCell>
+                    <TableCell className="text-center tabular-nums">{formatNumber(totals.dupe)}</TableCell>
                   )}
                   {visible.conversionRate && (
-                    <TableCell className="tabular-nums">
+                    <TableCell className="text-center tabular-nums">
                       {formatPercent(totals.conversionRate * 100, 1)}
                     </TableCell>
                   )}
                   {visible.tcl && (
-                    <TableCell className="font-mono tabular-nums">{formatTimer(totals.tcl)}</TableCell>
+                    <TableCell className="text-center font-mono tabular-nums">{formatTimer(totals.tcl)}</TableCell>
                   )}
                   {visible.acl && (
-                    <TableCell className="font-mono tabular-nums">{formatTimer(totals.acl)}</TableCell>
+                    <TableCell className="text-center font-mono tabular-nums">{formatTimer(totals.acl)}</TableCell>
                   )}
                   {visible.payout && (
                     <TableCell className="text-right tabular-nums">{formatCurrency(totals.payout, true)}</TableCell>
