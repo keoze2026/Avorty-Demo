@@ -4,6 +4,7 @@ import { ArrowUpRight, CheckCircle2, Phone, PhoneMissed, XCircle } from "lucide-
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+import { CallWaveform } from "@/components/live/call-waveform";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_CALLS } from "@/lib/mock/calls";
@@ -59,10 +60,27 @@ export function RecentCallsFeed() {
                 </div>
                 <div className="truncate text-[11px] text-muted-foreground">{c.campaignName}</div>
               </div>
-              <div className="text-right">
-                <div className="font-mono text-xs">{formatDuration(c.durationSec)}</div>
-                <div className="text-[10px] text-muted-foreground">
-                  {c.payout ? formatCurrency(c.payout, true) : meta.label}
+              <div className="flex items-center justify-end gap-2 text-right">
+                {/* Audio waveform when the call is live; ringing shows a
+                    paused low-amplitude wave as an "audio pending" cue. */}
+                {(c.status === "in-progress" || c.status === "ringing") && (
+                  <CallWaveform
+                    size="sm"
+                    bars={5}
+                    active={c.status === "in-progress"}
+                    className="text-accent"
+                    label={
+                      c.status === "in-progress"
+                        ? "Call audio active"
+                        : "Call ringing, audio pending"
+                    }
+                  />
+                )}
+                <div>
+                  <div className="font-mono text-xs">{formatDuration(c.durationSec)}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {c.payout ? formatCurrency(c.payout, true) : meta.label}
+                  </div>
                 </div>
               </div>
               <div className="hidden w-16 text-right text-[10px] font-mono text-muted-foreground sm:block">

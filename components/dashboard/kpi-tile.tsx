@@ -40,7 +40,10 @@ export function KpiTile({
     <Card className="relative overflow-hidden">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
+          {/* Gradient pill — picks up `--accent-gradient` so gradient themes
+              show their full sweep while solid themes get an auto-derived
+              dark→accent→bright self-gradient. */}
+          <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent-gradient text-[color:var(--accent-foreground)] shadow-sm">
             <Icon className="h-4 w-4" />
           </div>
           {typeof delta === "number" && (

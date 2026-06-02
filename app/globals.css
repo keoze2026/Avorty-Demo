@@ -77,6 +77,10 @@
   --vortyx-ultra: #C7D2FE;    /* near-white indigo */
   --vortyx-glow: rgba(82, 102, 224, 0.16);
   --vortyx-particle: rgba(82, 102, 224, 0.45);
+  /* Default theme uses a single-hue accent gradient (deep → bright indigo).
+     Other themes redefine this — the gradient themes (aurora, sunset, …)
+     supply real multi-stop gradients. */
+  --accent-gradient: linear-gradient(135deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%);
 }
 
 .dark {
@@ -138,6 +142,7 @@
   --vortyx-ultra: #DBE0FB;
   --vortyx-glow: rgba(107, 126, 233, 0.20);
   --vortyx-particle: rgba(107, 126, 233, 0.50);
+  --accent-gradient: linear-gradient(135deg, #3A4BC4 0%, #5266E0 55%, #93A3F5 100%);
 }
 
 /* =========================================================
@@ -962,6 +967,389 @@
   --sidebar-ring: hsl(0 0% 96%);
 }
 
+/* =========================================================
+   Theme-derived tokens
+   ---------------------------------------------------------
+   Any non-default theme that doesn't supply its own brand
+   ramp gets one auto-derived from its `--accent`. This
+   guarantees progress bars, glow strokes, and the legacy
+   `--vortyx-bright` / `--vortyx-cyan` consumers track the
+   selected hue — no more "one component stayed indigo".
+   Gradient themes below override these explicitly.
+   ========================================================= */
+[class*="theme-"] {
+  --vortyx-bright: color-mix(in oklab, var(--accent) 60%, white 40%);
+  --vortyx-cyan: color-mix(in oklab, var(--accent) 55%, white 45%);
+  --vortyx-deep: color-mix(in oklab, var(--accent) 70%, black 30%);
+  --vortyx-ultra: color-mix(in oklab, var(--accent) 25%, white 75%);
+  --accent-gradient: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--accent) 80%, black 20%) 0%,
+    var(--accent) 55%,
+    color-mix(in oklab, var(--accent) 55%, white 45%) 100%
+  );
+}
+[class*="theme-"].dark {
+  --vortyx-bright: color-mix(in oklab, var(--accent) 70%, white 30%);
+  --vortyx-cyan: color-mix(in oklab, var(--accent) 65%, white 35%);
+  --vortyx-deep: color-mix(in oklab, var(--accent) 60%, black 40%);
+  --vortyx-ultra: color-mix(in oklab, var(--accent) 35%, white 65%);
+  --accent-gradient: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--accent) 80%, black 20%) 0%,
+    var(--accent) 55%,
+    color-mix(in oklab, var(--accent) 65%, white 35%) 100%
+  );
+}
+
+/* =========================================================
+   Gradient themes — five multi-stop palettes that ship a
+   real CSS gradient as their `--accent-gradient`. Every
+   single-color token is set to a representative hue from
+   the gradient so flat surfaces (badges, bars, text-accent)
+   stay coherent with the gradient.
+   ========================================================= */
+
+/* ─── Aurora — teal → indigo → violet ─────────────────────── */
+.theme-aurora {
+  --background: hsl(248 30% 98%);
+  --foreground: hsl(248 25% 12%);
+  --card: hsl(248 30% 100%);
+  --card-foreground: hsl(248 25% 12%);
+  --popover: hsl(248 30% 100%);
+  --popover-foreground: hsl(248 25% 12%);
+  --primary: hsl(248 65% 58%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(248 28% 94%);
+  --secondary-foreground: hsl(248 25% 14%);
+  --muted: hsl(248 22% 95%);
+  --muted-foreground: hsl(248 12% 42%);
+  --accent: hsl(258 70% 60%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(248 22% 88%);
+  --input: hsl(248 22% 93%);
+  --ring: hsl(258 70% 60%);
+  --chart-1: hsl(258 70% 60%);
+  --sidebar: hsl(248 30% 96%);
+  --sidebar-foreground: hsl(248 25% 14%);
+  --sidebar-primary: hsl(258 70% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(248 22% 91%);
+  --sidebar-accent-foreground: hsl(248 25% 14%);
+  --sidebar-border: hsl(248 22% 88%);
+  --sidebar-ring: hsl(258 70% 60%);
+  --vortyx-bright: #8B5CF6;
+  --vortyx-cyan: #14B8A6;
+  --vortyx-deep: #4F46E5;
+  --vortyx-ultra: #C7D2FE;
+  --accent-gradient: linear-gradient(135deg, #14B8A6 0%, #6366F1 55%, #8B5CF6 100%);
+}
+.theme-aurora.dark {
+  --background: hsl(248 22% 6%);
+  --foreground: hsl(248 10% 94%);
+  --card: hsl(248 20% 10%);
+  --card-foreground: hsl(248 10% 94%);
+  --popover: hsl(248 20% 11%);
+  --popover-foreground: hsl(248 10% 94%);
+  --primary: hsl(258 75% 70%);
+  --primary-foreground: hsl(248 30% 10%);
+  --secondary: hsl(248 22% 16%);
+  --secondary-foreground: hsl(248 10% 92%);
+  --muted: hsl(248 22% 14%);
+  --muted-foreground: hsl(248 12% 62%);
+  --accent: hsl(258 78% 72%);
+  --accent-foreground: hsl(248 30% 10%);
+  --border: hsl(248 22% 20%);
+  --input: hsl(248 22% 16%);
+  --ring: hsl(258 78% 72%);
+  --chart-1: hsl(258 78% 72%);
+  --sidebar: hsl(248 24% 6%);
+  --sidebar-foreground: hsl(248 10% 92%);
+  --sidebar-primary: hsl(258 78% 72%);
+  --sidebar-primary-foreground: hsl(248 30% 10%);
+  --sidebar-accent: hsl(248 20% 12%);
+  --sidebar-accent-foreground: hsl(248 10% 94%);
+  --sidebar-border: hsl(248 22% 18%);
+  --sidebar-ring: hsl(258 78% 72%);
+  --vortyx-bright: #A78BFA;
+  --vortyx-cyan: #2DD4BF;
+  --vortyx-deep: #6366F1;
+  --vortyx-ultra: #E0E7FF;
+  --accent-gradient: linear-gradient(135deg, #2DD4BF 0%, #818CF8 55%, #A78BFA 100%);
+}
+
+/* ─── Sunset — orange → rose → pink ───────────────────────── */
+.theme-sunset {
+  --background: hsl(345 40% 98%);
+  --foreground: hsl(345 28% 12%);
+  --card: hsl(345 35% 100%);
+  --card-foreground: hsl(345 28% 12%);
+  --popover: hsl(345 35% 100%);
+  --popover-foreground: hsl(345 28% 12%);
+  --primary: hsl(345 78% 56%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(345 30% 94%);
+  --secondary-foreground: hsl(345 28% 14%);
+  --muted: hsl(345 24% 95%);
+  --muted-foreground: hsl(345 12% 42%);
+  --accent: hsl(340 82% 58%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(345 22% 88%);
+  --input: hsl(345 24% 93%);
+  --ring: hsl(340 82% 58%);
+  --chart-1: hsl(340 82% 58%);
+  --sidebar: hsl(345 40% 96%);
+  --sidebar-foreground: hsl(345 28% 14%);
+  --sidebar-primary: hsl(340 82% 58%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(345 24% 91%);
+  --sidebar-accent-foreground: hsl(345 28% 14%);
+  --sidebar-border: hsl(345 22% 88%);
+  --sidebar-ring: hsl(340 82% 58%);
+  --vortyx-bright: #EC4899;
+  --vortyx-cyan: #F97316;
+  --vortyx-deep: #BE185D;
+  --vortyx-ultra: #FBCFE8;
+  --accent-gradient: linear-gradient(135deg, #F97316 0%, #F43F5E 55%, #EC4899 100%);
+}
+.theme-sunset.dark {
+  --background: hsl(345 22% 6%);
+  --foreground: hsl(345 10% 94%);
+  --card: hsl(345 20% 10%);
+  --card-foreground: hsl(345 10% 94%);
+  --popover: hsl(345 20% 11%);
+  --popover-foreground: hsl(345 10% 94%);
+  --primary: hsl(340 85% 68%);
+  --primary-foreground: hsl(345 30% 10%);
+  --secondary: hsl(345 22% 16%);
+  --secondary-foreground: hsl(345 10% 92%);
+  --muted: hsl(345 22% 14%);
+  --muted-foreground: hsl(345 12% 62%);
+  --accent: hsl(340 88% 68%);
+  --accent-foreground: hsl(345 30% 10%);
+  --border: hsl(345 22% 20%);
+  --input: hsl(345 22% 16%);
+  --ring: hsl(340 88% 68%);
+  --chart-1: hsl(340 88% 68%);
+  --sidebar: hsl(345 24% 6%);
+  --sidebar-foreground: hsl(345 10% 92%);
+  --sidebar-primary: hsl(340 88% 68%);
+  --sidebar-primary-foreground: hsl(345 30% 10%);
+  --sidebar-accent: hsl(345 20% 12%);
+  --sidebar-accent-foreground: hsl(345 10% 94%);
+  --sidebar-border: hsl(345 22% 18%);
+  --sidebar-ring: hsl(340 88% 68%);
+  --vortyx-bright: #F472B6;
+  --vortyx-cyan: #FB923C;
+  --vortyx-deep: #DB2777;
+  --vortyx-ultra: #FCE7F3;
+  --accent-gradient: linear-gradient(135deg, #FB923C 0%, #FB7185 55%, #F472B6 100%);
+}
+
+/* ─── Ocean — cyan → blue → indigo ────────────────────────── */
+.theme-ocean {
+  --background: hsl(210 40% 98%);
+  --foreground: hsl(215 28% 12%);
+  --card: hsl(210 35% 100%);
+  --card-foreground: hsl(215 28% 12%);
+  --popover: hsl(210 35% 100%);
+  --popover-foreground: hsl(215 28% 12%);
+  --primary: hsl(220 80% 52%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 30% 94%);
+  --secondary-foreground: hsl(215 28% 14%);
+  --muted: hsl(210 24% 95%);
+  --muted-foreground: hsl(215 12% 42%);
+  --accent: hsl(215 85% 56%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(210 22% 88%);
+  --input: hsl(210 24% 93%);
+  --ring: hsl(215 85% 56%);
+  --chart-1: hsl(215 85% 56%);
+  --sidebar: hsl(210 40% 96%);
+  --sidebar-foreground: hsl(215 28% 14%);
+  --sidebar-primary: hsl(215 85% 56%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(210 24% 91%);
+  --sidebar-accent-foreground: hsl(215 28% 14%);
+  --sidebar-border: hsl(210 22% 88%);
+  --sidebar-ring: hsl(215 85% 56%);
+  --vortyx-bright: #4F46E5;
+  --vortyx-cyan: #06B6D4;
+  --vortyx-deep: #1E40AF;
+  --vortyx-ultra: #BFDBFE;
+  --accent-gradient: linear-gradient(135deg, #06B6D4 0%, #3B82F6 55%, #4F46E5 100%);
+}
+.theme-ocean.dark {
+  --background: hsl(218 26% 6%);
+  --foreground: hsl(210 10% 94%);
+  --card: hsl(218 22% 10%);
+  --card-foreground: hsl(210 10% 94%);
+  --popover: hsl(218 22% 11%);
+  --popover-foreground: hsl(210 10% 94%);
+  --primary: hsl(215 88% 68%);
+  --primary-foreground: hsl(218 32% 10%);
+  --secondary: hsl(218 22% 16%);
+  --secondary-foreground: hsl(210 10% 92%);
+  --muted: hsl(218 22% 14%);
+  --muted-foreground: hsl(210 12% 62%);
+  --accent: hsl(215 88% 68%);
+  --accent-foreground: hsl(218 32% 10%);
+  --border: hsl(218 22% 20%);
+  --input: hsl(218 22% 16%);
+  --ring: hsl(215 88% 68%);
+  --chart-1: hsl(215 88% 68%);
+  --sidebar: hsl(218 26% 6%);
+  --sidebar-foreground: hsl(210 10% 92%);
+  --sidebar-primary: hsl(215 88% 68%);
+  --sidebar-primary-foreground: hsl(218 32% 10%);
+  --sidebar-accent: hsl(218 22% 12%);
+  --sidebar-accent-foreground: hsl(210 10% 94%);
+  --sidebar-border: hsl(218 22% 18%);
+  --sidebar-ring: hsl(215 88% 68%);
+  --vortyx-bright: #818CF8;
+  --vortyx-cyan: #22D3EE;
+  --vortyx-deep: #4338CA;
+  --vortyx-ultra: #DBEAFE;
+  --accent-gradient: linear-gradient(135deg, #22D3EE 0%, #60A5FA 55%, #818CF8 100%);
+}
+
+/* ─── Plasma — magenta → purple → indigo ──────────────────── */
+.theme-plasma {
+  --background: hsl(285 30% 98%);
+  --foreground: hsl(285 28% 12%);
+  --card: hsl(285 28% 100%);
+  --card-foreground: hsl(285 28% 12%);
+  --popover: hsl(285 28% 100%);
+  --popover-foreground: hsl(285 28% 12%);
+  --primary: hsl(282 72% 56%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(285 26% 94%);
+  --secondary-foreground: hsl(285 28% 14%);
+  --muted: hsl(285 22% 95%);
+  --muted-foreground: hsl(285 12% 42%);
+  --accent: hsl(282 72% 60%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(285 22% 88%);
+  --input: hsl(285 22% 93%);
+  --ring: hsl(282 72% 60%);
+  --chart-1: hsl(282 72% 60%);
+  --sidebar: hsl(285 30% 96%);
+  --sidebar-foreground: hsl(285 28% 14%);
+  --sidebar-primary: hsl(282 72% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(285 22% 91%);
+  --sidebar-accent-foreground: hsl(285 28% 14%);
+  --sidebar-border: hsl(285 22% 88%);
+  --sidebar-ring: hsl(282 72% 60%);
+  --vortyx-bright: #C084FC;
+  --vortyx-cyan: #D946EF;
+  --vortyx-deep: #7E22CE;
+  --vortyx-ultra: #E9D5FF;
+  --accent-gradient: linear-gradient(135deg, #D946EF 0%, #A855F7 55%, #6366F1 100%);
+}
+.theme-plasma.dark {
+  --background: hsl(285 26% 6%);
+  --foreground: hsl(285 10% 94%);
+  --card: hsl(285 22% 10%);
+  --card-foreground: hsl(285 10% 94%);
+  --popover: hsl(285 22% 11%);
+  --popover-foreground: hsl(285 10% 94%);
+  --primary: hsl(282 78% 70%);
+  --primary-foreground: hsl(285 32% 10%);
+  --secondary: hsl(285 22% 16%);
+  --secondary-foreground: hsl(285 10% 92%);
+  --muted: hsl(285 22% 14%);
+  --muted-foreground: hsl(285 12% 62%);
+  --accent: hsl(282 80% 72%);
+  --accent-foreground: hsl(285 32% 10%);
+  --border: hsl(285 22% 20%);
+  --input: hsl(285 22% 16%);
+  --ring: hsl(282 80% 72%);
+  --chart-1: hsl(282 80% 72%);
+  --sidebar: hsl(285 24% 6%);
+  --sidebar-foreground: hsl(285 10% 92%);
+  --sidebar-primary: hsl(282 80% 72%);
+  --sidebar-primary-foreground: hsl(285 32% 10%);
+  --sidebar-accent: hsl(285 22% 12%);
+  --sidebar-accent-foreground: hsl(285 10% 94%);
+  --sidebar-border: hsl(285 22% 18%);
+  --sidebar-ring: hsl(282 80% 72%);
+  --vortyx-bright: #D8B4FE;
+  --vortyx-cyan: #E879F9;
+  --vortyx-deep: #9333EA;
+  --vortyx-ultra: #F3E8FF;
+  --accent-gradient: linear-gradient(135deg, #E879F9 0%, #C084FC 55%, #818CF8 100%);
+}
+
+/* ─── Ember — red → orange → amber ────────────────────────── */
+.theme-ember {
+  --background: hsl(25 40% 98%);
+  --foreground: hsl(22 28% 12%);
+  --card: hsl(25 35% 100%);
+  --card-foreground: hsl(22 28% 12%);
+  --popover: hsl(25 35% 100%);
+  --popover-foreground: hsl(22 28% 12%);
+  --primary: hsl(15 88% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(25 30% 94%);
+  --secondary-foreground: hsl(22 28% 14%);
+  --muted: hsl(25 24% 95%);
+  --muted-foreground: hsl(22 12% 42%);
+  --accent: hsl(18 90% 54%);
+  --accent-foreground: hsl(0 0% 100%);
+  --border: hsl(25 22% 88%);
+  --input: hsl(25 24% 93%);
+  --ring: hsl(18 90% 54%);
+  --chart-1: hsl(18 90% 54%);
+  --sidebar: hsl(25 40% 96%);
+  --sidebar-foreground: hsl(22 28% 14%);
+  --sidebar-primary: hsl(18 90% 54%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(25 24% 91%);
+  --sidebar-accent-foreground: hsl(22 28% 14%);
+  --sidebar-border: hsl(25 22% 88%);
+  --sidebar-ring: hsl(18 90% 54%);
+  --vortyx-bright: #F59E0B;
+  --vortyx-cyan: #DC2626;
+  --vortyx-deep: #B91C1C;
+  --vortyx-ultra: #FED7AA;
+  --accent-gradient: linear-gradient(135deg, #DC2626 0%, #F97316 55%, #F59E0B 100%);
+}
+.theme-ember.dark {
+  --background: hsl(20 28% 6%);
+  --foreground: hsl(25 10% 94%);
+  --card: hsl(20 22% 10%);
+  --card-foreground: hsl(25 10% 94%);
+  --popover: hsl(20 22% 11%);
+  --popover-foreground: hsl(25 10% 94%);
+  --primary: hsl(18 92% 60%);
+  --primary-foreground: hsl(22 32% 10%);
+  --secondary: hsl(20 22% 16%);
+  --secondary-foreground: hsl(25 10% 92%);
+  --muted: hsl(20 22% 14%);
+  --muted-foreground: hsl(25 12% 62%);
+  --accent: hsl(18 92% 62%);
+  --accent-foreground: hsl(22 32% 10%);
+  --border: hsl(20 22% 20%);
+  --input: hsl(20 22% 16%);
+  --ring: hsl(18 92% 62%);
+  --chart-1: hsl(18 92% 62%);
+  --sidebar: hsl(20 24% 6%);
+  --sidebar-foreground: hsl(25 10% 92%);
+  --sidebar-primary: hsl(18 92% 62%);
+  --sidebar-primary-foreground: hsl(22 32% 10%);
+  --sidebar-accent: hsl(20 22% 12%);
+  --sidebar-accent-foreground: hsl(25 10% 94%);
+  --sidebar-border: hsl(20 22% 18%);
+  --sidebar-ring: hsl(18 92% 62%);
+  --vortyx-bright: #FBBF24;
+  --vortyx-cyan: #EF4444;
+  --vortyx-deep: #DC2626;
+  --vortyx-ultra: #FEF3C7;
+  --accent-gradient: linear-gradient(135deg, #EF4444 0%, #FB923C 55%, #FBBF24 100%);
+}
+
 @theme inline {
   --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -1074,6 +1462,40 @@
 .dark .app-canvas {
   background-image:
     radial-gradient(ellipse 60% 50% at 20% 0%, rgba(107, 126, 233, 0.10), transparent 70%);
+}
+
+/**
+ * Theme-aware accent gradient utilities.
+ * `--accent-gradient` is defined per-theme — solid themes get an auto-derived
+ * self-gradient via color-mix, gradient themes (aurora/sunset/ocean/plasma/
+ * ember) ship real multi-stop gradients. Use these on hero surfaces (KPIs,
+ * primary CTAs, sidebar brand mark) so picking a gradient theme produces an
+ * obvious aesthetic swap instead of a subtle accent-hue shift.
+ */
+.bg-accent-gradient {
+  background-image: var(--accent-gradient);
+}
+.text-accent-gradient {
+  background-image: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Fallback so text doesn't vanish if a parent disables clipping. */
+  -webkit-text-fill-color: transparent;
+}
+.border-accent-gradient {
+  position: relative;
+  background-clip: padding-box;
+  border: 1px solid transparent;
+}
+.border-accent-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  margin: -1px;
+  border-radius: inherit;
+  background: var(--accent-gradient);
 }
 
 /** Premium glassmorphic surface — pair with `bg-card/70`. */
@@ -1209,6 +1631,18 @@
 }
 .animate-ticker { animation: ticker-marquee 38s linear infinite; }
 
+/* Live-audio waveform — each bar scales on the Y axis at a different cadence
+   so 5–7 bars side-by-side read as a breathing equaliser. Driven by CSS so
+   it costs nothing on the JS side; bars set their own delay/duration inline. */
+@keyframes waveform-bar {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
+.animate-waveform-bar {
+  animation: waveform-bar 900ms ease-in-out infinite;
+  transform-origin: center;
+}
+
 @keyframes count-tick {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -1228,7 +1662,8 @@
   .animate-radar-sweep,
   .animate-radar-pulse,
   .animate-ticker,
-  .animate-count-tick {
+  .animate-count-tick,
+  .animate-waveform-bar {
     animation: none !important;
   }
 }

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, MapPin, Phone, PhoneIncoming, PhoneMissed, XCircle } from "lucide-react";
 
+import { CallWaveform } from "@/components/live/call-waveform";
 import { Badge } from "@/components/ui/badge";
 import { useNow } from "@/hooks/use-mock-socket";
 import { formatTimer, toE164 } from "@/lib/format";
@@ -83,9 +84,25 @@ export function LiveCallCard({ call, isLive }: LiveCallCardProps) {
         </div>
 
         <div className="flex flex-col items-end">
-          <span className={cn("font-mono text-base font-semibold tabular-nums", isLive && "text-accent")}>
-            {formatTimer(live)}
-          </span>
+          <div className="flex items-center gap-2">
+            {/* In-progress calls show a full waveform; ringing shows a paused
+                low-amplitude waveform as a "audio not yet established" cue. */}
+            {isLive && (call.status === "in-progress" || call.status === "ringing") && (
+              <CallWaveform
+                size="sm"
+                active={call.status === "in-progress"}
+                className="text-accent"
+                label={
+                  call.status === "in-progress"
+                    ? "Call audio active"
+                    : "Call ringing, audio pending"
+                }
+              />
+            )}
+            <span className={cn("font-mono text-base font-semibold tabular-nums", isLive && "text-accent")}>
+              {formatTimer(live)}
+            </span>
+          </div>
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{meta.label}</span>
         </div>
       </div>

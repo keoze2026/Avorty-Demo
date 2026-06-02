@@ -129,8 +129,12 @@ export function ThemeToggle({ className, variant = "menu" }: ThemeToggleProps) {
                   className={cn(
                     "relative inline-flex h-8 w-8 items-center justify-center rounded-full border-2 transition-transform hover:scale-110",
                     active ? "border-foreground" : "border-transparent",
+                    a.gradient && "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]",
                   )}
-                  style={{ backgroundColor: a.swatch }}
+                  // `background` (not backgroundColor) accepts both solid
+                  // colors and CSS gradient strings — gradient themes are
+                  // multi-stop linear gradients.
+                  style={{ background: a.swatch }}
                   aria-label={`Apply ${a.name} theme`}
                   title={a.name}
                 >

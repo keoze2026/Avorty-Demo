@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import { CallWaveform } from "@/components/live/call-waveform";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -193,20 +194,26 @@ export function DestinationSummaryTable({
                       )}
                     </TableCell>
                     <TableCell className="text-xs tabular-nums">
-                      {/* Three fixed slots — pulse dot · current · "/ cap" —
+                      {/* Four fixed slots — waveform · current · "/ cap" —
                           so every row's slash and total line up regardless of
-                          whether the row has a pulsing dot or 1-vs-2-digit
-                          numbers. */}
-                      <div className="flex items-center justify-center gap-1">
+                          whether the row has a live waveform or 1-vs-2-digit
+                          numbers. The waveform color tracks the same green /
+                          amber / red ramp as the current count. */}
+                      <div className="flex items-center justify-center gap-1.5">
                         <span
-                          aria-hidden
                           className={cn(
-                            "inline-block h-1.5 w-1.5 shrink-0 rounded-full",
-                            cc > 0
-                              ? `${ccColor} bg-current animate-pulse opacity-100`
-                              : "opacity-0",
+                            "inline-flex w-4 shrink-0 justify-center",
+                            cc > 0 ? ccColor : "opacity-0",
                           )}
-                        />
+                        >
+                          {cc > 0 && (
+                            <CallWaveform
+                              size="sm"
+                              bars={4}
+                              label={`${cc} live ${cc === 1 ? "call" : "calls"}`}
+                            />
+                          )}
+                        </span>
                         <span
                           className={cn(
                             "w-4 text-right font-medium",

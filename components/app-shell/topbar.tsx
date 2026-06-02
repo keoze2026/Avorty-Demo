@@ -81,14 +81,15 @@ export function Topbar() {
         </div>
       </div>
 
-      {/* Bottom hairline — gradient accent that fades to border */}
+      {/* Bottom hairline — full theme gradient fading to border so every
+          accent change (solid or multi-stop) lights up the topbar edge. */}
       <div aria-hidden className="relative h-px w-full">
         <div className="absolute inset-x-0 top-0 h-px bg-border/60" />
         <div
-          className="absolute left-0 top-0 h-px w-40"
+          className="absolute left-0 top-0 h-px w-64 bg-accent-gradient"
           style={{
-            background:
-              "linear-gradient(to right, var(--accent), transparent)",
+            maskImage: "linear-gradient(to right, black, transparent)",
+            WebkitMaskImage: "linear-gradient(to right, black, transparent)",
           }}
         />
       </div>
@@ -160,7 +161,7 @@ function TopStat({ icon: Icon, label, value, live = false, accent = false }: Top
               live
                 ? `${greenText} font-semibold`
                 : accent
-                  ? "text-accent font-semibold"
+                  ? "text-accent-gradient font-semibold"
                   : "text-muted-foreground",
             )}
           >
@@ -172,7 +173,7 @@ function TopStat({ icon: Icon, label, value, live = false, accent = false }: Top
               live
                 ? `text-[15px] font-bold ${greenText}`
                 : accent
-                  ? "text-[15px] font-bold text-accent"
+                  ? "text-[15px] font-bold text-accent-gradient"
                   : "text-[13px] font-semibold text-foreground",
             )}
           >
@@ -183,7 +184,7 @@ function TopStat({ icon: Icon, label, value, live = false, accent = false }: Top
         <span
           className={cn(
             "text-sm font-semibold tabular-nums",
-            accent ? "text-accent" : "text-foreground",
+            accent ? "text-accent-gradient" : "text-foreground",
           )}
         >
           {value}
