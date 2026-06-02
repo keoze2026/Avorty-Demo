@@ -11,24 +11,26 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_NOTIFICATIONS, type NotificationItem } from "@/lib/mock/notifications";
 import { cn } from "@/lib/utils";
 
 type TabId = "all" | "critical" | "insights";
 
-const TABS: Array<{ id: TabId; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "critical", label: "Alerts" },
-  { id: "insights", label: "Insights" },
-];
-
 /** Cap on the topbar dropdown — the full set lives on /notifications. */
 const POPUP_LIMIT = 6;
 
 export function NotificationsMenu() {
+  const { t } = useTranslation();
   const [tab, setTab] = React.useState<TabId>("all");
   const [items, setItems] = React.useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+
+  const tabs: Array<{ id: TabId; label: string }> = [
+    { id: "all", label: t("notificationsUI.menu.tabs.all") },
+    { id: "critical", label: t("notificationsUI.menu.tabs.alerts") },
+    { id: "insights", label: t("notificationsUI.menu.tabs.insights") },
+  ];
 
   const unread = items.filter((n) => !n.read).length;
 
@@ -51,14 +53,14 @@ export function NotificationsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t("notificationsUI.menu.bellLabel")}>
           <Bell className="h-4 w-4" />
           {unread > 0 && (
             <span className="absolute right-1 top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full border border-background bg-accent px-1 text-[9px] font-bold text-accent-foreground">
               {unread}
             </span>
           )}
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">{t("notificationsUI.menu.srLabel")}</span>
         </Button>
       </DropdownMenuTrigger>
 
@@ -70,9 +72,11 @@ export function NotificationsMenu() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <div>
-            <h3 className="text-sm font-semibold">Notifications</h3>
+            <h3 className="text-sm font-semibold">{t("notificationsUI.menu.title")}</h3>
             <p className="text-xs text-muted-foreground">
-              {unread > 0 ? `${unread} unread` : "All caught up"}
+              {unread > 0
+                ? t("notificationsUI.menu.unreadSuffix").replace("{n}", String(unread))
+                : t("notificationsUI.menu.allCaughtUp")}
             </p>
           </div>
           {unread > 0 && (
@@ -82,7 +86,7 @@ export function NotificationsMenu() {
               className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
             >
               <CheckCheck className="h-3.5 w-3.5" />
-              Mark all read
+              {t("notificationsUI.menu.markAllRead")}
             </button>
           )}
         </div>
@@ -90,13 +94,13 @@ export function NotificationsMenu() {
         {/* Tabs */}
         <div className="px-4 pb-3">
           <div className="flex gap-1 rounded-md border border-border bg-secondary/30 p-0.5">
-            {TABS.map((t) => {
-              const isActive = tab === t.id;
-              const count = counts[t.id];
+            {tabs.map((tabItem) => {
+              const isActive = tab === tabItem.id;
+              const count = counts[tabItem.id];
               return (
                 <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
+                  key={tabItem.id}
+                  onClick={() => setTab(tabItem.id)}
                   className={cn(
                     "inline-flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive
@@ -104,7 +108,7 @@ export function NotificationsMenu() {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {t.label}
+                  {tabItem.label}
                   <span
                     className={cn(
                       "rounded-full px-1.5 text-[10px] tabular-nums",
@@ -124,7 +128,7 @@ export function NotificationsMenu() {
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
               <Inbox className="h-6 w-6 text-muted-foreground/60" />
-              <p className="text-xs text-muted-foreground">No notifications</p>
+              <p className="text-xs text-muted-foreground">{t("notificationsUI.menu.empty")}</p>
             </div>
           ) : (
             <ul className="divide-y divide-border/40">
@@ -141,7 +145,7 @@ export function NotificationsMenu() {
             href={ROUTES.notifications}
             className="inline-flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
-            View all notifications
+            {t("notificationsUI.menu.viewAll")}
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Building2, GitFork, Hash, PhoneIncoming, Sparkles, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { toE164 } from "@/lib/format";
 import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -14,29 +15,32 @@ interface RoutingVisualizerProps {
 }
 
 const STEPS = [
-  { key: "caller", label: "Caller", icon: PhoneIncoming },
-  { key: "publisher", label: "Publisher", icon: Users },
-  { key: "number", label: "Tracking #", icon: Hash },
-  { key: "routing", label: "Routing", icon: GitFork },
-  { key: "buyer", label: "Buyer", icon: Building2 },
+  { key: "caller", labelKey: "liveUI.routing.steps.caller", icon: PhoneIncoming },
+  { key: "publisher", labelKey: "liveUI.routing.steps.publisher", icon: Users },
+  { key: "number", labelKey: "liveUI.routing.steps.number", icon: Hash },
+  { key: "routing", labelKey: "liveUI.routing.steps.routing", icon: GitFork },
+  { key: "buyer", labelKey: "liveUI.routing.steps.buyer", icon: Building2 },
 ] as const;
 
 export function RoutingVisualizer({ call }: RoutingVisualizerProps) {
+  const { t } = useTranslation();
   return (
     <Card className="relative overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-accent" />
-          Routing path
+          {t("liveUI.routing.title")}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          {call ? `Watching ${toE164(call.callerNumber)}` : "Pick a call to follow its path"}
+          {call
+            ? `${t("liveUI.routing.watchingPrefix")} ${toE164(call.callerNumber)}`
+            : t("liveUI.routing.pickToFollow")}
         </p>
       </CardHeader>
       <CardContent>
         {!call ? (
           <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
-            Waiting for an in-flight call…
+            {t("liveUI.routing.waitingInFlight")}
           </div>
         ) : (
           <div className="relative">
@@ -57,7 +61,7 @@ export function RoutingVisualizer({ call }: RoutingVisualizerProps) {
                         ? call.destinationNumber.slice(-7)
                         : s.key === "routing"
                           ? call.campaignName.split(" ")[0]
-                          : call.buyerName ?? "Pending";
+                          : call.buyerName ?? t("liveUI.routing.state.pending");
 
                 return (
                   <li key={s.key} className="flex flex-col items-center text-center">
@@ -78,7 +82,7 @@ export function RoutingVisualizer({ call }: RoutingVisualizerProps) {
                       )}
                     </motion.div>
                     <p className="mt-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                      {s.label}
+                      {t(s.labelKey)}
                     </p>
                     <p className="truncate text-[11px] font-medium">{value}</p>
                   </li>

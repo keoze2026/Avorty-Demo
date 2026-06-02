@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -49,16 +50,27 @@ type PresetId =
   | "lastMonth"
   | "custom";
 
-const PRESETS: Array<{ id: PresetId; label: string }> = [
-  { id: "today", label: "Today" },
-  { id: "yesterday", label: "Yesterday" },
-  { id: "last7", label: "Last 7 days" },
-  { id: "last14", label: "Last 14 days" },
-  { id: "last30", label: "Last 30 days" },
-  { id: "thisMonth", label: "This month" },
-  { id: "lastMonth", label: "Last month" },
-  { id: "custom", label: "Custom" },
+const PRESET_IDS: PresetId[] = [
+  "today",
+  "yesterday",
+  "last7",
+  "last14",
+  "last30",
+  "thisMonth",
+  "lastMonth",
+  "custom",
 ];
+
+const PRESET_KEY: Record<PresetId, string> = {
+  today: "sharedUI.dateRange.today",
+  yesterday: "sharedUI.dateRange.yesterday",
+  last7: "sharedUI.dateRange.last7",
+  last14: "sharedUI.dateRange.last14",
+  last30: "sharedUI.dateRange.last30",
+  thisMonth: "sharedUI.dateRange.thisMonth",
+  lastMonth: "sharedUI.dateRange.lastMonth",
+  custom: "sharedUI.dateRange.custom",
+};
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -103,9 +115,9 @@ function detectPreset(range: DateRange | undefined): PresetId {
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
-  for (const p of PRESETS) {
-    if (p.id === "custom") continue;
-    const candidate = rangeForPreset(p.id);
+  for (const id of PRESET_IDS) {
+    if (id === "custom") continue;
+    const candidate = rangeForPreset(id);
     if (!candidate?.from || !candidate.to) continue;
     if (
       range.from &&
@@ -113,7 +125,7 @@ function detectPreset(range: DateRange | undefined): PresetId {
       sameDate(range.from, candidate.from) &&
       sameDate(range.to, candidate.to)
     ) {
-      return p.id;
+      return id;
     }
   }
   return "custom";
@@ -139,8 +151,10 @@ export function DateRangePicker({
   value,
   onChange,
   className,
-  placeholder = "Select date range",
+  placeholder,
 }: Props) {
+  const { t } = useTranslation();
+  const effectivePlaceholder = placeholder ?? t("sharedUI.dateRange.placeholder");
   const [open, setOpen] = React.useState(false);
 
   // Buffered state — edits live here until the operator hits Apply.
@@ -156,11 +170,11 @@ export function DateRangePicker({
   }, [open, value]);
 
   const label = React.useMemo(() => {
-    if (!value?.from) return placeholder;
+    if (!value?.from) return effectivePlaceholder;
     const from = formatYMD(value.from);
     const to = value.to ? formatYMD(value.to) : from;
     return from === to ? `${from} ~ ${to}` : `${from} ~ ${to}`;
-  }, [value, placeholder]);
+  }, [value, effectivePlaceholder]);
 
   const onPresetChange = (id: PresetId) => {
     setPreset(id);
@@ -205,9 +219,9 @@ export function DateRangePicker({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {PRESETS.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.label}
+              {PRESET_IDS.map((id) => (
+                <SelectItem key={id} value={id}>
+                  {t(PRESET_KEY[id])}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -226,10 +240,10 @@ export function DateRangePicker({
         {/* Action row */}
         <div className="flex items-center justify-end gap-2 border-t border-border p-3">
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {t("sharedUI.dateRange.cancel")}
           </Button>
           <Button size="sm" onClick={onApply}>
-            Apply
+            {t("sharedUI.dateRange.apply")}
           </Button>
         </div>
       </PopoverContent>

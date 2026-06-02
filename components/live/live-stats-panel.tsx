@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountUp } from "@/hooks/use-count-up";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -46,41 +47,42 @@ function Stat({ label, value, formatValue, icon: Icon, tone }: StatProps) {
 }
 
 export function LiveStatsPanel({ totals, inFlightCount }: LiveStatsPanelProps) {
+  const { t } = useTranslation();
   const conversion = totals.started > 0 ? (totals.completed / totals.started) * 100 : 0;
 
   return (
     <Card>
       <CardContent className="space-y-2 p-4">
         <Stat
-          label="In-flight now"
+          label={t("liveUI.session.stats.inFlightNow")}
           value={inFlightCount}
           formatValue={(v) => formatNumber(Math.round(v))}
           icon={PhoneCall}
           tone="bg-accent/15 text-accent"
         />
         <Stat
-          label="Calls started"
+          label={t("liveUI.session.stats.callsStarted")}
           value={totals.started}
           formatValue={(v) => formatNumber(Math.round(v))}
           icon={PhoneCall}
           tone="bg-secondary/60 text-foreground"
         />
         <Stat
-          label="Completed"
+          label={t("liveUI.session.stats.completed")}
           value={totals.completed}
           formatValue={(v) => formatNumber(Math.round(v))}
           icon={CheckCircle2}
           tone="bg-[oklch(0.74_0.18_155)]/15 text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]"
         />
         <Stat
-          label="Missed / Rejected"
+          label={t("liveUI.session.stats.missedRejected")}
           value={totals.missed}
           formatValue={(v) => formatNumber(Math.round(v))}
           icon={PhoneMissed}
           tone="bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)]"
         />
         <Stat
-          label="Revenue earned"
+          label={t("liveUI.session.stats.revenueEarned")}
           value={totals.revenue}
           formatValue={(v) => formatCurrency(v)}
           icon={DollarSign}
@@ -89,7 +91,7 @@ export function LiveStatsPanel({ totals, inFlightCount }: LiveStatsPanelProps) {
 
         <div className="mt-3 rounded-lg border border-border bg-secondary/40 p-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Session conversion</span>
+            <span className="text-muted-foreground">{t("liveUI.session.sessionConversion")}</span>
             <span className="font-mono font-semibold">{conversion.toFixed(1)}%</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary/60">

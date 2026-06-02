@@ -3,10 +3,12 @@
 import { motion } from "framer-motion";
 import { ChevronRight, Phone, Plus, Scale, Zap } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
+
 const featureCards = [
   {
-    title: "Real-time call routing",
-    description: "142ms average decision time",
+    titleKey: "marketingUI.features.routing.title",
+    descriptionKey: "marketingUI.features.routing.description",
     illustration: (
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-lg p-6">
         <div className="relative">
@@ -30,8 +32,8 @@ const featureCards = [
     ),
   },
   {
-    title: "AI-driven optimization",
-    description: "Learn and adapt automatically",
+    titleKey: "marketingUI.features.ai.title",
+    descriptionKey: "marketingUI.features.ai.description",
     illustration: (
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden p-6">
         <div className="flex items-center gap-3">
@@ -48,8 +50,8 @@ const featureCards = [
     ),
   },
   {
-    title: "Compliance built-in",
-    description: "TCPA, HIPAA, SOC 2 ready",
+    titleKey: "marketingUI.features.compliance.title",
+    descriptionKey: "marketingUI.features.compliance.description",
     illustration: (
       <div className="relative w-full h-full flex items-center justify-center overflow-hidden p-6">
         <div className="flex flex-col items-center gap-3">
@@ -74,6 +76,7 @@ const featureCards = [
 ];
 
 export function FeaturesSection() {
+  const { t } = useTranslation();
   return (
     <div id="features" className="relative z-20 py-40">
       <div
@@ -95,7 +98,7 @@ export function FeaturesSection() {
               transition={{ duration: 0.6 }}
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground max-w-md font-medium leading-[1.1] tracking-tight"
             >
-              Built for modern pay-per-call
+              {t("marketingUI.features.heading")}
             </motion.h2>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -105,13 +108,12 @@ export function FeaturesSection() {
               className="max-w-md"
             >
               <p className="text-muted-foreground leading-relaxed">
-                Vortyx replaces a stack of legacy call-tracking tools with a single, real-time
-                control plane — from inbound ring to buyer settlement.{" "}
+                {t("marketingUI.features.description")}{" "}
                 <a
                   href="#"
                   className="text-foreground inline-flex items-center gap-1 hover:underline"
                 >
-                  Learn more <ChevronRight className="w-4 h-4" />
+                  {t("marketingUI.features.learnMore")} <ChevronRight className="w-4 h-4" />
                 </a>
               </p>
             </motion.div>
@@ -121,7 +123,7 @@ export function FeaturesSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {featureCards.map((card, index) => (
               <motion.div
-                key={card.title}
+                key={card.titleKey}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -149,9 +151,9 @@ export function FeaturesSection() {
                 >
                   <div>
                     <h3 className="text-foreground font-medium text-lg leading-tight">
-                      {card.title}
+                      {t(card.titleKey)}
                     </h3>
-                    <p className="text-muted-foreground text-sm mt-1">{card.description}</p>
+                    <p className="text-muted-foreground text-sm mt-1">{t(card.descriptionKey)}</p>
                   </div>
                   <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground group-hover:border-muted-foreground group-hover:text-foreground/85 transition-colors flex-shrink-0">
                     <Plus className="w-4 h-4" />

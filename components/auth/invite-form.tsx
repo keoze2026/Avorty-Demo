@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { ROUTES } from "@/lib/constants";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Invite {
   email: string;
@@ -68,6 +69,7 @@ interface InviteFormProps {
 
 export function InviteForm({ role, token }: InviteFormProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const login = useAuthStore((s) => s.login);
 
   const invite = decodeToken(role, token);
@@ -78,49 +80,56 @@ export function InviteForm({ role, token }: InviteFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
 
+  const roleLabel =
+    role === "buyer"
+      ? t("authUI.invite.roleBuyer")
+      : t("authUI.invite.rolePublisher");
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (pending) return;
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("authUI.invite.validationPasswordShort"));
       return;
     }
     if (password !== confirm) {
-      toast.error("Passwords don't match");
+      toast.error(t("authUI.invite.validationPasswordsDontMatch"));
       return;
     }
     setPending(true);
     try {
       await login(email, password, role);
       toast.success(
-        `Welcome to ${invite.organization} — signed in as ${role}`,
+        t("authUI.invite.toastWelcome")
+          .replace("{org}", invite.organization)
+          .replace("{role}", roleLabel),
       );
       router.push(ROUTES.dashboard);
     } catch {
-      toast.error("Something went wrong — try again");
+      toast.error(t("authUI.invite.toastError"));
     } finally {
       setPending(false);
     }
   };
 
-  const roleLabel = role === "buyer" ? "Buyer" : "Publisher";
-
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="rounded-lg border border-accent/30 bg-accent/8 p-3 text-xs">
         <div className="font-semibold text-foreground">
-          You&apos;re invited as a {roleLabel}
+          {t("authUI.invite.bannerInvited").replace("{role}", roleLabel)}
         </div>
         <p className="mt-0.5 text-muted-foreground">
           <span className="font-medium text-foreground">{invite.inviterName}</span>{" "}
-          at <span className="font-medium text-foreground">{invite.organization}</span>{" "}
-          invited <span className="font-mono text-foreground">{invite.email}</span>{" "}
-          to collaborate.
+          {t("authUI.invite.bannerInviterMiddle")}{" "}
+          <span className="font-medium text-foreground">{invite.organization}</span>{" "}
+          {t("authUI.invite.bannerInviterInvited")}{" "}
+          <span className="font-mono text-foreground">{invite.email}</span>{" "}
+          {t("authUI.invite.bannerInviterEnd")}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="invite-email">Email</Label>
+        <Label htmlFor="invite-email">{t("authUI.invite.labelEmail")}</Label>
         <Input
           id="invite-email"
           type="email"
@@ -129,12 +138,12 @@ export function InviteForm({ role, token }: InviteFormProps) {
           className="cursor-not-allowed bg-secondary/40"
         />
         <p className="text-[10px] text-muted-foreground">
-          The address the invite was sent to — can&apos;t be changed here.
+          {t("authUI.invite.emailHint")}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="invite-pwd">Create password</Label>
+        <Label htmlFor="invite-pwd">{t("authUI.invite.labelCreatePassword")}</Label>
         <div className="relative">
           <Input
             id="invite-pwd"
@@ -149,7 +158,11 @@ export function InviteForm({ role, token }: InviteFormProps) {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={
+              showPassword
+                ? t("authUI.invite.hidePassword")
+                : t("authUI.invite.showPassword")
+            }
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -157,7 +170,7 @@ export function InviteForm({ role, token }: InviteFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="invite-confirm">Confirm password</Label>
+        <Label htmlFor="invite-confirm">{t("authUI.invite.labelConfirmPassword")}</Label>
         <Input
           id="invite-confirm"
           type={showPassword ? "text" : "password"}
@@ -171,18 +184,18 @@ export function InviteForm({ role, token }: InviteFormProps) {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" /> Accepting invite…
+            <Loader2 className="h-4 w-4 animate-spin" /> {t("authUI.invite.submitting")}
           </>
         ) : (
           <>
-            Accept invitation <ArrowRight className="h-4 w-4" />
+            {t("authUI.invite.submit")} <ArrowRight className="h-4 w-4" />
           </>
         )}
       </Button>
 
       <p className="text-[10px] text-muted-foreground">
-        By accepting, you agree to {invite.organization}&apos;s Terms of Service
-        and Privacy Policy.
+        {t("authUI.invite.legalBefore")} {invite.organization}
+        {t("authUI.invite.legalAfter")}
       </p>
     </form>
   );

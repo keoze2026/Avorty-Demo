@@ -13,6 +13,8 @@
 
 import { useSearchParams } from "next/navigation";
 
+import { useTranslation } from "@/hooks/use-translation";
+
 type Role = "buyer" | "publisher";
 
 interface InviteCopy {
@@ -24,48 +26,52 @@ interface InviteCopy {
   what: string[];
 }
 
-const COPY: Record<Role, InviteCopy> = {
-  buyer: {
-    preheader:
-      "Avery Chen at Vortyx invited you to buy calls on their network.",
-    subject: "You're invited to Vortyx — start buying qualified calls",
-    roleLabel: "Buyer",
-    roleLower: "buyer",
-    acceptHref: "/invite/buyer/buyer-demo",
-    what: [
-      "Live view of every routed call, including caller geo and intent signals",
-      "Daily / monthly cap controls and concurrency limits",
-      "Per-vertical bidding with full call recording and dispute tools",
-    ],
-  },
-  publisher: {
-    preheader:
-      "Avery Chen at Vortyx invited you to monetize your traffic with their buyers.",
-    subject: "You're invited to Vortyx — start monetizing your calls",
-    roleLabel: "Publisher",
-    roleLower: "publisher",
-    acceptHref: "/invite/publisher/publisher-demo",
-    what: [
-      "Live revenue, payout share, and per-campaign earnings",
-      "Number provisioning and routing assignment in seconds",
-      "Direct payouts with full transparency on every billable call",
-    ],
-  },
-};
-
 function useRole(): Role {
   const params = useSearchParams();
   const v = params.get("role");
   return v === "publisher" ? "publisher" : "buyer";
 }
 
+function useCopy(): InviteCopy {
+  const { t } = useTranslation();
+  const role = useRole();
+
+  if (role === "buyer") {
+    return {
+      preheader: t("authUI.inviteEmail.buyerPreheader"),
+      subject: t("authUI.inviteEmail.buyerSubject"),
+      roleLabel: t("authUI.invite.roleBuyer"),
+      roleLower: t("authUI.invite.roleBuyerLower"),
+      acceptHref: "/invite/buyer/buyer-demo",
+      what: [
+        t("authUI.inviteEmail.buyerWhat1"),
+        t("authUI.inviteEmail.buyerWhat2"),
+        t("authUI.inviteEmail.buyerWhat3"),
+      ],
+    };
+  }
+  return {
+    preheader: t("authUI.inviteEmail.publisherPreheader"),
+    subject: t("authUI.inviteEmail.publisherSubject"),
+    roleLabel: t("authUI.invite.rolePublisher"),
+    roleLower: t("authUI.invite.rolePublisherLower"),
+    acceptHref: "/invite/publisher/publisher-demo",
+    what: [
+      t("authUI.inviteEmail.publisherWhat1"),
+      t("authUI.inviteEmail.publisherWhat2"),
+      t("authUI.inviteEmail.publisherWhat3"),
+    ],
+  };
+}
+
 export function SubjectLine() {
-  const copy = COPY[useRole()];
+  const copy = useCopy();
   return <>{copy.subject}</>;
 }
 
 export function EmailBody() {
-  const copy = COPY[useRole()];
+  const { t } = useTranslation();
+  const copy = useCopy();
 
   return (
     <div
@@ -114,7 +120,7 @@ export function EmailBody() {
               display: "inline-block",
             }}
           />
-          Vortyx
+          {t("authUI.inviteEmail.brand")}
         </div>
       </div>
 
@@ -127,15 +133,24 @@ export function EmailBody() {
           fontWeight: 600,
         }}
       >
-        You&apos;re invited to Vortyx as a {copy.roleLabel}
+        {t("authUI.inviteEmail.headlineTemplate").replace("{role}", copy.roleLabel)}
       </h2>
 
-      <p style={{ margin: "16px 0 0" }}>Hi there —</p>
+      <p style={{ margin: "16px 0 0" }}>{t("authUI.inviteEmail.greeting")}</p>
 
       <p style={{ margin: "12px 0 0" }}>
-        <strong>Avery Chen</strong> at Vortyx invited you to join their{" "}
-        {copy.roleLower} workspace. Click the button below to accept your
-        invitation, set a password, and get started.
+        {(() => {
+          const parts = t("authUI.inviteEmail.bodyTemplate")
+            .replace("{roleLower}", copy.roleLower)
+            .split("{inviter}");
+          return (
+            <>
+              {parts[0]}
+              <strong>Avery Chen</strong>
+              {parts.slice(1).join("{inviter}")}
+            </>
+          );
+        })()}
       </p>
 
       {/* CTA */}
@@ -153,12 +168,12 @@ export function EmailBody() {
             fontSize: 14,
           }}
         >
-          Accept invitation →
+          {t("authUI.inviteEmail.ctaAccept")}
         </a>
       </div>
 
       <p style={{ margin: "20px 0 6px", fontWeight: 600, fontSize: 13 }}>
-        What you&apos;ll get
+        {t("authUI.inviteEmail.whatHeading")}
       </p>
       <ul style={{ margin: "4px 0 0", paddingLeft: 20, color: "#374151" }}>
         {copy.what.map((line) => (
@@ -181,7 +196,7 @@ export function EmailBody() {
           wordBreak: "break-all",
         }}
       >
-        If the button doesn&apos;t work, paste this URL into your browser:
+        {t("authUI.inviteEmail.fallbackPrompt")}
         <br />
         <span style={{ color: "#0F1117", fontFamily: "monospace" }}>
           https://app.vortyx.io{copy.acceptHref}
@@ -198,18 +213,17 @@ export function EmailBody() {
           fontSize: 12,
         }}
       >
-        This invitation expires in 7 days. If you weren&apos;t expecting this,
-        you can safely ignore the message.
+        {t("authUI.inviteEmail.footerExpiry")}
         <br />
         <br />
-        Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104
+        {t("authUI.inviteEmail.footerAddress")}
         <br />
         <a href="#" style={{ color: "#6B7280", textDecoration: "underline" }}>
-          Unsubscribe
+          {t("authUI.inviteEmail.footerUnsubscribe")}
         </a>{" "}
         ·{" "}
         <a href="#" style={{ color: "#6B7280", textDecoration: "underline" }}>
-          Privacy
+          {t("authUI.inviteEmail.footerPrivacy")}
         </a>
       </div>
     </div>

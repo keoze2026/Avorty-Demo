@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 
 import { BracketCard } from "@/components/shared/bracket-card";
 import { SectionLabel } from "@/components/shared/section-label";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface SessionMeterProps {
   totals: { started: number; completed: number; missed: number; revenue: number };
@@ -16,24 +17,25 @@ interface SessionMeterProps {
 }
 
 export function SessionMeter({ totals, inFlightCount }: SessionMeterProps) {
+  const { t } = useTranslation();
   const conversion =
     totals.started > 0 ? (totals.completed / totals.started) * 100 : 0;
   const reject = totals.started > 0 ? (totals.missed / totals.started) * 100 : 0;
 
   return (
     <BracketCard>
-      <SectionLabel index={4} title="Session meter" meta="real time" />
+      <SectionLabel index={4} title={t("liveUI.session.title")} meta={t("liveUI.session.meta")} />
 
       {/* Radial dial */}
       <div className="flex items-center gap-4">
-        <Dial value={conversion} />
+        <Dial value={conversion} label={t("liveUI.session.conversionLabel")} />
         <div className="min-w-0 flex-1 space-y-1">
-          <RailRow label="Conversion" value={conversion} tone="accent" />
-          <RailRow label="Reject" value={reject} tone="amber" />
+          <RailRow label={t("liveUI.session.conversion")} value={conversion} tone="accent" />
+          <RailRow label={t("liveUI.session.reject")} value={reject} tone="amber" />
           <RailRow
-            label="Active"
+            label={t("liveUI.session.active")}
             value={Math.min(100, inFlightCount * 8)}
-            display={`${inFlightCount} now`}
+            display={t("liveUI.session.activeSuffix").replace("{n}", String(inFlightCount))}
             tone="emerald"
           />
         </div>
@@ -41,16 +43,16 @@ export function SessionMeter({ totals, inFlightCount }: SessionMeterProps) {
 
       {/* Session totals */}
       <div className="mt-4 grid grid-cols-4 gap-2 border-t border-border/40 pt-3 text-center">
-        <Cell label="Start" value={totals.started} />
-        <Cell label="Done" value={totals.completed} />
-        <Cell label="Miss" value={totals.missed} />
-        <Cell label="$" value={`$${Math.round(totals.revenue).toLocaleString()}`} />
+        <Cell label={t("liveUI.session.totals.start")} value={totals.started} />
+        <Cell label={t("liveUI.session.totals.done")} value={totals.completed} />
+        <Cell label={t("liveUI.session.totals.miss")} value={totals.missed} />
+        <Cell label={t("liveUI.session.totals.money")} value={`$${Math.round(totals.revenue).toLocaleString()}`} />
       </div>
     </BracketCard>
   );
 }
 
-function Dial({ value }: { value: number }) {
+function Dial({ value, label }: { value: number; label: string }) {
   const pct = Math.min(100, Math.max(0, value));
   const angle = (pct / 100) * 360;
   return (
@@ -65,7 +67,7 @@ function Dial({ value }: { value: number }) {
       <div className="absolute inset-1.5 rounded-full bg-card" />
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-lg font-bold tabular-nums tracking-tight">{pct.toFixed(0)}%</span>
-        <span className="text-[10px] text-muted-foreground">conversion</span>
+        <span className="text-[10px] text-muted-foreground">{label}</span>
       </div>
     </div>
   );

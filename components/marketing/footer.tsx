@@ -1,15 +1,62 @@
+"use client";
+
 import Link from "next/link";
 
 import { Wordmark } from "@/components/brand/wordmark";
+import { useTranslation } from "@/hooks/use-translation";
 
-const footerLinks: Record<string, string[]> = {
-  Platform: ["Live Monitor", "Routing Builder", "Marketplace", "AI Insights", "Numbers", "Analytics"],
-  Resources: ["Documentation", "API Reference", "Webhooks", "Changelog", "Status", "SDK"],
-  Company: ["About", "Customers", "Careers", "Blog", "Press", "Contact"],
-  Legal: ["Privacy", "Terms", "Security", "TCPA", "HIPAA", "SOC 2"],
-};
+const FOOTER_COLUMNS: {
+  headingKey: string;
+  links: { key: string }[];
+}[] = [
+  {
+    headingKey: "marketingUI.footer.columns.platform",
+    links: [
+      { key: "marketingUI.footer.links.liveMonitor" },
+      { key: "marketingUI.footer.links.routingBuilder" },
+      { key: "marketingUI.footer.links.marketplace" },
+      { key: "marketingUI.footer.links.aiInsights" },
+      { key: "marketingUI.footer.links.numbers" },
+      { key: "marketingUI.footer.links.analytics" },
+    ],
+  },
+  {
+    headingKey: "marketingUI.footer.columns.resources",
+    links: [
+      { key: "marketingUI.footer.links.documentation" },
+      { key: "marketingUI.footer.links.apiReference" },
+      { key: "marketingUI.footer.links.webhooks" },
+      { key: "marketingUI.footer.links.changelog" },
+      { key: "marketingUI.footer.links.status" },
+      { key: "marketingUI.footer.links.sdk" },
+    ],
+  },
+  {
+    headingKey: "marketingUI.footer.columns.company",
+    links: [
+      { key: "marketingUI.footer.links.about" },
+      { key: "marketingUI.footer.links.customers" },
+      { key: "marketingUI.footer.links.careers" },
+      { key: "marketingUI.footer.links.blog" },
+      { key: "marketingUI.footer.links.press" },
+      { key: "marketingUI.footer.links.contact" },
+    ],
+  },
+  {
+    headingKey: "marketingUI.footer.columns.legal",
+    links: [
+      { key: "marketingUI.footer.links.privacy" },
+      { key: "marketingUI.footer.links.terms" },
+      { key: "marketingUI.footer.links.security" },
+      { key: "marketingUI.footer.links.tcpa" },
+      { key: "marketingUI.footer.links.hipaa" },
+      { key: "marketingUI.footer.links.soc2" },
+    ],
+  },
+];
 
 export function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="border-t border-border py-16 px-6">
       <div className="max-w-6xl mx-auto">
@@ -18,23 +65,22 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Wordmark size="sm" uid="footer" gradient={false} />
             <p className="mt-4 text-muted-foreground text-sm leading-relaxed">
-              A real-time call tracking, routing, and analytics platform for modern pay-per-call
-              marketers.
+              {t("marketingUI.footer.tagline")}
             </p>
           </div>
 
           {/* Links */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h3 className="text-foreground font-medium text-sm mb-4">{category}</h3>
+          {FOOTER_COLUMNS.map((column) => (
+            <div key={column.headingKey}>
+              <h3 className="text-foreground font-medium text-sm mb-4">{t(column.headingKey)}</h3>
               <ul className="space-y-3">
-                {links.map((link) => (
-                  <li key={link}>
+                {column.links.map((link) => (
+                  <li key={link.key}>
                     <Link
                       href="#"
                       className="text-muted-foreground hover:text-foreground/85 transition-colors text-sm"
                     >
-                      {link}
+                      {t(link.key)}
                     </Link>
                   </li>
                 ))}
@@ -46,14 +92,14 @@ export function Footer() {
         {/* Bottom row */}
         <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Vortyx Inc. All rights reserved.
+            © {new Date().getFullYear()} {t("marketingUI.footer.copyrightSuffix")}
           </p>
           <Link
             href="#"
             className="text-[color:var(--success)] text-sm flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <span className="w-2 h-2 bg-[color:var(--success)] rounded-full" />
-            ALL SYSTEMS OPERATIONAL
+            {t("marketingUI.footer.allSystemsOperational")}
           </Link>
         </div>
       </div>

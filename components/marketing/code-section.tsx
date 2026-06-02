@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { Activity, Check, ChevronRight, TrendingUp, Zap } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
+
 const integrations = [
   { name: "Twilio", isConnected: true, selected: true, icon: "◇" },
   { name: "HubSpot", isConnected: true, selected: false, icon: "◉" },
@@ -13,6 +15,7 @@ const integrations = [
 ];
 
 export function CodeSection() {
+  const { t } = useTranslation();
   return (
     <div id="code" className="relative z-20 py-40">
       <div
@@ -34,7 +37,7 @@ export function CodeSection() {
             className="flex items-center gap-2 mb-6"
           >
             <div className="w-2 h-2 rounded-full bg-accent" />
-            <span className="text-muted-foreground text-sm">AI-powered intelligence</span>
+            <span className="text-muted-foreground text-sm">{t("marketingUI.code.sectionLabel")}</span>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </motion.div>
 
@@ -46,7 +49,7 @@ export function CodeSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground max-w-3xl mb-8 font-medium leading-[1.1] tracking-tight"
           >
-            AI optimization that learns your network
+            {t("marketingUI.code.heading")}
           </motion.h2>
 
           {/* Description */}
@@ -57,9 +60,7 @@ export function CodeSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-muted-foreground max-w-md mb-8"
           >
-            <span className="text-foreground font-medium">Vortyx AI.</span> Suggests where to
-            scale, pause, rebalance, or alert — automatically based on your network&apos;s
-            performance patterns.
+            <span className="text-foreground font-medium">{t("marketingUI.code.descriptionLead")}</span>{t("marketingUI.code.descriptionRest")}
           </motion.p>
 
           {/* Learn more button */}
@@ -71,7 +72,7 @@ export function CodeSection() {
             type="button"
             className="px-5 py-2.5 bg-secondary text-foreground/85 rounded-lg border border-border hover:bg-secondary/80 transition-colors text-sm flex items-center gap-2 mb-16"
           >
-            Explore AI features
+            {t("marketingUI.code.cta")}
             <ChevronRight className="w-4 h-4" />
           </motion.button>
 
@@ -136,7 +137,7 @@ export function CodeSection() {
 
                 {/* Input field */}
                 <div className="bg-secondary/50 border border-border rounded-t-xl px-5 py-4">
-                  <span className="text-muted-foreground italic">Route to buyer...</span>
+                  <span className="text-muted-foreground italic">{t("marketingUI.code.routePlaceholder")}</span>
                 </div>
 
                 {/* Dropdown options */}
@@ -181,7 +182,7 @@ export function CodeSection() {
                           </span>
                           {integration.isConnected && (
                             <span className="text-xs bg-[color:var(--success)]/20 text-[color:var(--success)] px-2 py-0.5 rounded">
-                              Connected
+                              {t("marketingUI.code.connected")}
                             </span>
                           )}
                         </div>
@@ -206,38 +207,37 @@ export function CodeSection() {
               {/* Left column */}
               <div className="border-t border-r border-b border-border/60 pt-12 pr-12 pb-16">
                 <h3 className="text-foreground/90 font-medium text-xl mb-3">
-                  Smart routing suggestions
+                  {t("marketingUI.code.leftTitle")}
                 </h3>
                 <p className="text-muted-foreground text-base mb-8">
-                  Vortyx analyzes your network patterns and suggests optimizations to maximize
-                  revenue and buyer match rates.
+                  {t("marketingUI.code.leftDescription")}
                 </p>
 
                 <div className="bg-card/30 border border-border/60 rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-5">
                     <Zap className="w-4 h-4 text-accent" />
                     <span className="text-muted-foreground text-sm">
-                      AI <span className="text-foreground/85">Recommendation</span>
+                      {t("marketingUI.code.aiLabel")} <span className="text-foreground/85">{t("marketingUI.code.recommendation")}</span>
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-muted-foreground/70 text-sm w-20">Action</span>
+                    <span className="text-muted-foreground/70 text-sm w-20">{t("marketingUI.code.action")}</span>
                     <span className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm bg-accent">
                       <TrendingUp className="w-3 h-3 text-accent-foreground" />
-                      <span className="text-accent-foreground">Increase cap</span>
+                      <span className="text-accent-foreground">{t("marketingUI.code.increaseCap")}</span>
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-muted-foreground/70 text-sm w-20">Buyer</span>
+                    <span className="text-muted-foreground/70 text-sm w-20">{t("marketingUI.code.buyer")}</span>
                     <span className="text-foreground/85 text-sm">Apex Insurance</span>
                   </div>
 
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-muted-foreground/70 text-sm w-20">Impact</span>
+                    <span className="text-muted-foreground/70 text-sm w-20">{t("marketingUI.code.impact")}</span>
                     <span className="text-[color:var(--success)] text-sm">
-                      +$2,400/day estimated
+                      {t("marketingUI.code.impactValue")}
                     </span>
                   </div>
 
@@ -245,14 +245,13 @@ export function CodeSection() {
                     <div className="flex items-center gap-2 mb-3">
                       <Activity className="w-4 h-4 text-[color:var(--success)]" />
                       <span className="text-foreground/85 text-sm font-medium">
-                        Pattern detected
+                        {t("marketingUI.code.patternDetected")}
                       </span>
                     </div>
 
-                    <p className="text-muted-foreground text-xs mb-2">Why this was suggested</p>
+                    <p className="text-muted-foreground text-xs mb-2">{t("marketingUI.code.whySuggested")}</p>
                     <p className="text-muted-foreground text-sm mb-4">
-                      Apex Insurance has maintained 98% acceptance rate over the past 48 hours with
-                      consistent conversion quality.
+                      {t("marketingUI.code.patternExplanation")}
                     </p>
 
                     <button
@@ -260,7 +259,7 @@ export function CodeSection() {
                       className="w-full flex items-center justify-center gap-2 bg-secondary/70 hover:bg-secondary/90 text-foreground/85 text-sm py-2.5 rounded-md transition-colors"
                     >
                       <Check className="w-4 h-4" />
-                      Apply suggestion
+                      {t("marketingUI.code.applySuggestion")}
                     </button>
                   </div>
                 </div>
@@ -268,10 +267,9 @@ export function CodeSection() {
 
               {/* Right column */}
               <div className="border-t border-b border-border/60 pt-12 pl-12 pb-16">
-                <h3 className="text-foreground/90 font-medium text-xl mb-3">Vortyx SDK</h3>
+                <h3 className="text-foreground/90 font-medium text-xl mb-3">{t("marketingUI.code.rightTitle")}</h3>
                 <p className="text-muted-foreground text-base mb-8">
-                  Every Vortyx capability is reachable from a single typed SDK — and every event
-                  lands on your webhook within milliseconds.
+                  {t("marketingUI.code.rightDescription")}
                 </p>
 
                 <div className="bg-card/30 border border-border/60 rounded-xl p-5 font-mono text-sm">
@@ -314,7 +312,7 @@ export function CodeSection() {
                   </div>
 
                   <div className="bg-secondary/40 rounded-lg p-4">
-                    <p className="text-muted-foreground/60 text-xs mb-2">// Route incoming call</p>
+                    <p className="text-muted-foreground/60 text-xs mb-2">// {t("marketingUI.code.routeIncomingCall")}</p>
                     <p>
                       <span className="text-accent">const</span>
                       <span className="text-foreground/85"> decision </span>

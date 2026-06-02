@@ -10,28 +10,30 @@ import { Building2, GitFork, Hash, PhoneIncoming, Users } from "lucide-react";
 
 import { BracketCard } from "@/components/shared/bracket-card";
 import { SectionLabel } from "@/components/shared/section-label";
+import { useTranslation } from "@/hooks/use-translation";
 import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { key: "caller", label: "Caller", icon: PhoneIncoming },
-  { key: "publisher", label: "Publisher", icon: Users },
-  { key: "number", label: "Tracking #", icon: Hash },
-  { key: "routing", label: "Routing", icon: GitFork },
-  { key: "buyer", label: "Buyer", icon: Building2 },
+  { key: "caller", labelKey: "liveUI.routing.steps.caller", icon: PhoneIncoming },
+  { key: "publisher", labelKey: "liveUI.routing.steps.publisher", icon: Users },
+  { key: "number", labelKey: "liveUI.routing.steps.number", icon: Hash },
+  { key: "routing", labelKey: "liveUI.routing.steps.routing", icon: GitFork },
+  { key: "buyer", labelKey: "liveUI.routing.steps.buyer", icon: Building2 },
 ] as const;
 
 export function RoutingPath({ call }: { call: Call | null }) {
+  const { t } = useTranslation();
   return (
     <BracketCard>
       <SectionLabel
         index={3}
-        title="Routing path"
+        title={t("liveUI.routing.title")}
         meta={call ? call.callerNumber.slice(-7) : "—"}
       />
       {!call ? (
         <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
-          Awaiting in-flight call
+          {t("liveUI.routing.awaitingInFlight")}
         </div>
       ) : (
         <ol className="relative space-y-2">
@@ -51,7 +53,7 @@ export function RoutingPath({ call }: { call: Call | null }) {
                     ? call.destinationNumber.slice(-7)
                     : s.key === "routing"
                       ? call.campaignName.split(" ").slice(0, 2).join(" ")
-                      : call.buyerName ?? "Pending";
+                      : call.buyerName ?? t("liveUI.routing.state.pending");
             const isCurrent =
               (s.key === "caller" && call.status === "ringing") ||
               (s.key === "buyer" && call.status === "in-progress");
@@ -82,7 +84,7 @@ export function RoutingPath({ call }: { call: Call | null }) {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <span className="text-[11px] text-muted-foreground">{s.label}</span>
+                  <span className="text-[11px] text-muted-foreground">{t(s.labelKey)}</span>
                   <p className="truncate text-sm font-medium">{value}</p>
                 </div>
                 <span
@@ -95,7 +97,11 @@ export function RoutingPath({ call }: { call: Call | null }) {
                         : "text-muted-foreground/60",
                   )}
                 >
-                  {isCurrent ? "Active" : isDone ? "Done" : "Waiting"}
+                  {isCurrent
+                    ? t("liveUI.routing.state.active")
+                    : isDone
+                      ? t("liveUI.routing.state.done")
+                      : t("liveUI.routing.state.waiting")}
                 </span>
               </motion.li>
             );

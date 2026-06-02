@@ -2,6 +2,9 @@
  * Pulsing "live" indicator — used in topbar, dashboard headers, monitor.
  */
 
+"use client";
+
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface LiveBadgeProps {
@@ -9,7 +12,9 @@ interface LiveBadgeProps {
   className?: string;
 }
 
-export function LiveBadge({ label = "Live", className }: LiveBadgeProps) {
+export function LiveBadge({ label, className }: LiveBadgeProps) {
+  const { t } = useTranslation();
+  const resolved = label ?? t("liveUI.badge.live");
   return (
     <span
       className={cn(
@@ -21,7 +26,7 @@ export function LiveBadge({ label = "Live", className }: LiveBadgeProps) {
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
         <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
       </span>
-      {label}
+      {resolved}
     </span>
   );
 }

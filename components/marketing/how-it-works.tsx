@@ -2,7 +2,10 @@
 
 import { Activity, BarChart3, ChevronRight, Phone, Users } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
+
 export function HowItWorks() {
+  const { t } = useTranslation();
   return (
     <section id="how-it-works" className="relative py-40 px-6 md:px-12 lg:px-24">
       {/* Gradient overlay at top */}
@@ -19,21 +22,21 @@ export function HowItWorks() {
         {/* Section label */}
         <div className="flex items-center gap-2 mb-6">
           <div className="w-3 h-3 rounded-full bg-[color:var(--success)]" />
-          <span className="text-muted-foreground text-sm">How it works</span>
+          <span className="text-muted-foreground text-sm">{t("marketingUI.howItWorks.sectionLabel")}</span>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </div>
 
         {/* Section heading */}
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-foreground mb-8 max-w-3xl leading-[1.1] tracking-tight">
-          Live in your network by lunch.
+          {t("marketingUI.howItWorks.heading")}
         </h2>
 
         {/* Description */}
         <p className="text-muted-foreground text-lg max-w-md mb-16">
           <span className="text-foreground font-medium">
-            Four steps from &quot;we just signed&quot; to &quot;calls are routing.&quot;
-          </span>{" "}
-          No deployment, no implementation team.
+            {t("marketingUI.howItWorks.descriptionBold")}
+          </span>
+          {t("marketingUI.howItWorks.descriptionRest")}
         </p>
 
         {/* Steps Grid */}
@@ -41,26 +44,26 @@ export function HowItWorks() {
           <StepCard
             number="01"
             icon={Phone}
-            title="Provision numbers"
-            description="Spin up local or toll-free DIDs in bulk. Organize them into pools with rotation rules."
+            title={t("marketingUI.howItWorks.step1Title")}
+            description={t("marketingUI.howItWorks.step1Description")}
           />
           <StepCard
             number="02"
             icon={Activity}
-            title="Build your routing"
-            description="Drag-and-drop ring trees with filters, splits, caps, and fallbacks. No tickets, no waiting."
+            title={t("marketingUI.howItWorks.step2Title")}
+            description={t("marketingUI.howItWorks.step2Description")}
           />
           <StepCard
             number="03"
             icon={Users}
-            title="Connect buyers"
-            description="Invite buyers and publishers. Set bids, caps, and concurrency from a single screen."
+            title={t("marketingUI.howItWorks.step3Title")}
+            description={t("marketingUI.howItWorks.step3Description")}
           />
           <StepCard
             number="04"
             icon={BarChart3}
-            title="Watch it run live"
-            description="Every call, every decision, every dollar — observable on a single real-time dashboard."
+            title={t("marketingUI.howItWorks.step4Title")}
+            description={t("marketingUI.howItWorks.step4Description")}
           />
         </div>
 
@@ -68,30 +71,29 @@ export function HowItWorks() {
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Left column — Visual routing builder */}
           <div className="border-t border-r border-b border-border pt-10 pr-10 pb-16">
-            <h3 className="text-xl font-medium text-foreground/90 mb-3">Visual routing builder</h3>
+            <h3 className="text-xl font-medium text-foreground/90 mb-3">{t("marketingUI.howItWorks.builderTitle")}</h3>
             <p className="text-muted-foreground text-base leading-relaxed mb-8">
-              Drag-and-drop ring trees with conditional filters, weighted splits, caps, and
-              fallbacks.
+              {t("marketingUI.howItWorks.builderDescription")}
             </p>
 
             <div className="rounded-xl border border-border bg-card/50 p-5">
-              <h4 className="text-lg font-medium text-foreground/90 mb-5">Ring Tree Editor</h4>
+              <h4 className="text-lg font-medium text-foreground/90 mb-5">{t("marketingUI.howItWorks.builderEditorTitle")}</h4>
 
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-muted-foreground text-sm w-20">Campaign</span>
+                <span className="text-muted-foreground text-sm w-20">{t("marketingUI.howItWorks.builderCampaign")}</span>
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-secondary text-foreground/85 text-xs">
                     <span className="w-2 h-2 rounded-full bg-[color:var(--success)]" />
                     Health Tier 1
                   </span>
                   <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-secondary text-foreground/85 text-xs">
-                    Live
+                    {t("marketingUI.howItWorks.builderLive")}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-muted-foreground text-sm w-20">Filters</span>
+                <span className="text-muted-foreground text-sm w-20">{t("marketingUI.howItWorks.builderFilters")}</span>
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-secondary text-foreground/85 text-xs">
                     State: TX, FL, CA
@@ -103,7 +105,7 @@ export function HowItWorks() {
               </div>
 
               <div className="flex items-start gap-4">
-                <span className="text-muted-foreground text-sm w-20 pt-1">Buyers</span>
+                <span className="text-muted-foreground text-sm w-20 pt-1">{t("marketingUI.howItWorks.builderBuyers")}</span>
                 <div className="flex flex-col gap-2">
                   <span className="flex items-center gap-2 text-foreground/85 text-sm">
                     <span className="w-2.5 h-2.5 rounded-full bg-[color:var(--success)]" />
@@ -115,7 +117,7 @@ export function HowItWorks() {
                   </span>
                   <span className="flex items-center gap-2 text-muted-foreground text-sm">
                     <span className="w-2.5 h-2.5 rounded-full border border-muted-foreground bg-transparent" />
-                    Fallback Pool <span className="text-muted-foreground">20%</span>
+                    {t("marketingUI.howItWorks.builderFallbackPool")} <span className="text-muted-foreground">20%</span>
                   </span>
                 </div>
               </div>
@@ -124,10 +126,9 @@ export function HowItWorks() {
 
           {/* Right column — Real-time analytics */}
           <div className="border-t border-b border-border pt-10 pl-10 pb-16">
-            <h3 className="text-xl font-medium text-foreground/90 mb-3">Sub-second analytics</h3>
+            <h3 className="text-xl font-medium text-foreground/90 mb-3">{t("marketingUI.howItWorks.analyticsTitle")}</h3>
             <p className="text-muted-foreground text-base leading-relaxed mb-8">
-              Filter call-detail records by hour, geo, publisher, buyer, or tag — and drill all the
-              way down.
+              {t("marketingUI.howItWorks.analyticsDescription")}
             </p>
 
             <div className="relative h-48">
@@ -137,7 +138,7 @@ export function HowItWorks() {
               >
                 <span className="flex items-center gap-2 text-muted-foreground text-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-                  Yesterday
+                  {t("marketingUI.howItWorks.analyticsYesterday")}
                 </span>
               </div>
 
@@ -147,7 +148,7 @@ export function HowItWorks() {
               >
                 <span className="flex items-center gap-2 text-muted-foreground text-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-                  Last hour
+                  {t("marketingUI.howItWorks.analyticsLastHour")}
                 </span>
               </div>
 
@@ -159,12 +160,12 @@ export function HowItWorks() {
                   <span className="w-5 h-5 rounded-full bg-[color:var(--success)]/20 flex items-center justify-center">
                     <span className="w-2 h-2 bg-[color:var(--success)] rounded-full animate-pulse" />
                   </span>
-                  <span className="text-[color:var(--success)] font-medium text-sm">Live</span>
+                  <span className="text-[color:var(--success)] font-medium text-sm">{t("marketingUI.howItWorks.analyticsLive")}</span>
                 </div>
                 <p className="text-foreground/85 text-sm mb-3">
-                  312 calls in flight · $24.3K revenue today
+                  {t("marketingUI.howItWorks.analyticsLiveStat")}
                 </p>
-                <span className="text-muted-foreground text-xs">Updated 2 seconds ago</span>
+                <span className="text-muted-foreground text-xs">{t("marketingUI.howItWorks.analyticsUpdated")}</span>
               </div>
             </div>
           </div>
@@ -172,10 +173,10 @@ export function HowItWorks() {
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16">
-          <StatItem value="142ms" label="Average routing decision" />
-          <StatItem value="1.2B+" label="Calls routed yearly" />
-          <StatItem value="97.4%" label="Buyer match rate" />
-          <StatItem value="12+" label="Verticals supported" />
+          <StatItem value="142ms" label={t("marketingUI.howItWorks.stat1Label")} />
+          <StatItem value="1.2B+" label={t("marketingUI.howItWorks.stat2Label")} />
+          <StatItem value="97.4%" label={t("marketingUI.howItWorks.stat3Label")} />
+          <StatItem value="12+" label={t("marketingUI.howItWorks.stat4Label")} />
         </div>
       </div>
     </section>

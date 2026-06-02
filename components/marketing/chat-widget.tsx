@@ -12,6 +12,7 @@ import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -19,15 +20,14 @@ interface Message {
   content: string;
 }
 
-const GREETING: Message = {
-  role: "assistant",
-  content:
-    "Hey — I'm Vortyx AI. Ask me anything about the platform, or just chat.",
-};
-
 export function ChatWidget() {
+  const { t } = useTranslation();
+  const greeting = React.useMemo<Message>(
+    () => ({ role: "assistant", content: t("marketingUI.chat.greeting") }),
+    [t],
+  );
   const [open, setOpen] = React.useState(false);
-  const [messages, setMessages] = React.useState<Message[]>([GREETING]);
+  const [messages, setMessages] = React.useState<Message[]>([greeting]);
   const [input, setInput] = React.useState("");
   const [pending, setPending] = React.useState(false);
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
@@ -64,15 +64,15 @@ export function ChatWidget() {
       const reply =
         data.reply?.trim() ||
         (data.error
-          ? `Sorry — ${data.error}`
-          : "Sorry, I couldn't reach the model. Try again in a moment.");
+          ? `${t("marketingUI.chat.errorPrefix")}${data.error}`
+          : t("marketingUI.chat.modelUnreachable"));
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
     } catch {
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
-          content: "Network hiccup — please try that again.",
+          content: t("marketingUI.chat.networkError"),
         },
       ]);
     } finally {
@@ -92,7 +92,7 @@ export function ChatWidget() {
       {/* Floating action button */}
       <button
         type="button"
-        aria-label={open ? "Close chat" : "Open chat"}
+        aria-label={open ? t("marketingUI.chat.closeLabel") : t("marketingUI.chat.openLabel")}
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "fixed bottom-5 right-5 z-50 inline-flex h-12 w-12 items-center justify-center rounded-full",
@@ -140,7 +140,7 @@ export function ChatWidget() {
             )}
             style={{ height: "min(32rem, calc(100vh - 7rem))" }}
             role="dialog"
-            aria-label="Vortyx AI chat"
+            aria-label={t("marketingUI.chat.dialogLabel")}
           >
             {/* Header */}
             <div className="flex items-center justify-between gap-3 border-b border-border/80 px-4 py-3">
@@ -150,15 +150,15 @@ export function ChatWidget() {
                   <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-background bg-[oklch(0.78_0.18_155)]" />
                 </div>
                 <div className="leading-tight">
-                  <div className="text-sm font-semibold">Vortyx AI</div>
+                  <div className="text-sm font-semibold">{t("marketingUI.chat.title")}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    Online · usually replies instantly
+                    {t("marketingUI.chat.status")}
                   </div>
                 </div>
               </div>
               <button
                 type="button"
-                aria-label="Close"
+                aria-label={t("marketingUI.chat.closeButton")}
                 onClick={() => setOpen(false)}
                 className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
@@ -177,7 +177,7 @@ export function ChatWidget() {
               {pending && (
                 <div className="flex items-center gap-2 pl-1 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Vortyx AI is typing…
+                  {t("marketingUI.chat.typing")}
                 </div>
               )}
             </div>
@@ -190,7 +190,7 @@ export function ChatWidget() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKey}
-                  placeholder="Ask me anything…"
+                  placeholder={t("marketingUI.chat.placeholder")}
                   rows={1}
                   className={cn(
                     "max-h-32 min-h-[2.25rem] flex-1 resize-none rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm",
@@ -202,7 +202,7 @@ export function ChatWidget() {
                   type="button"
                   onClick={() => void send()}
                   disabled={pending || !input.trim()}
-                  aria-label="Send message"
+                  aria-label={t("marketingUI.chat.sendLabel")}
                   className={cn(
                     "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
                     "bg-accent text-accent-foreground transition-colors hover:bg-accent/90",
@@ -213,7 +213,7 @@ export function ChatWidget() {
                 </button>
               </div>
               <p className="mt-1.5 px-1 text-[10px] text-muted-foreground">
-                Powered by Anthropic · Conversations aren't saved.
+                {t("marketingUI.chat.disclaimer")}
               </p>
             </div>
           </motion.div>

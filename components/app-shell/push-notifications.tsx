@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import {
   usePushNotificationsStore,
   type PushIcon,
@@ -64,6 +65,7 @@ export function PushNotifications() {
 }
 
 function BannerCard({ banner }: { banner: PushNotification }) {
+  const { t } = useTranslation();
   const dismiss = usePushNotificationsStore((s) => s.dismiss);
   const Icon: LucideIcon = banner.icon ? ICONS[banner.icon] : ICONS.alert;
   const duration = banner.durationMs ?? DEFAULT_DURATION_MS;
@@ -115,7 +117,7 @@ function BannerCard({ banner }: { banner: PushNotification }) {
           <button
             type="button"
             onClick={() => dismiss(banner.id)}
-            aria-label="Dismiss"
+            aria-label={t("notificationsUI.push.dismiss")}
             className="-mr-1 -mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />

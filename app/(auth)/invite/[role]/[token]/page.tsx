@@ -1,12 +1,13 @@
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 
 import { AuthCard } from "@/components/auth/auth-card";
 import { InviteForm } from "@/components/auth/invite-form";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
-
-export const metadata: Metadata = { title: "Accept invitation" };
 
 const VALID_ROLES = new Set(["buyer", "publisher"]);
 
@@ -14,22 +15,33 @@ interface PageProps {
   params: Promise<{ role: string; token: string }>;
 }
 
-export default async function InvitePage({ params }: PageProps) {
-  const { role, token } = await params;
+export default function InvitePage({ params }: PageProps) {
+  const { role, token } = use(params);
+  const { t } = useTranslation();
+
   if (!VALID_ROLES.has(role)) notFound();
 
-  const roleLabel = role === "buyer" ? "Buyer" : "Publisher";
+  const roleLabel =
+    role === "buyer"
+      ? t("authUI.invite.roleBuyer")
+      : t("authUI.invite.rolePublisher");
+  const roleLower =
+    role === "buyer"
+      ? t("authUI.invite.roleBuyerLower")
+      : t("authUI.invite.rolePublisherLower");
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center">
       <AuthCard
-        title={`Join Vortyx as a ${roleLabel}`}
-        description={`Accept your invitation and set a password to access the ${roleLabel.toLowerCase()} workspace.`}
+        title={t("authUI.invite.pageTitleTemplate").replace("{role}", roleLabel)}
+        description={t("authUI.invite.pageDescriptionTemplate")
+          .replace("{role}", roleLabel)
+          .replace("{roleLower}", roleLower)}
         footer={
           <>
-            Already have an account?{" "}
+            {t("authUI.invite.footerHasAccount")}{" "}
             <Link href={ROUTES.login} className="text-accent hover:underline">
-              Sign in
+              {t("authUI.invite.footerSignIn")}
             </Link>
           </>
         }

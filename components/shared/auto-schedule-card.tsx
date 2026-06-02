@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   PORTAL_TIMEZONES,
   formatTime12,
@@ -41,6 +42,7 @@ const HOURS_12 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MINUTES = [0, 15, 30, 45];
 
 export function AutoScheduleCard({ target, id, entityLabel }: Props) {
+  const { t } = useTranslation();
   const schedule = useAutoScheduleStore((s) =>
     target === "campaign"
       ? s.campaignSchedules[id]
@@ -62,7 +64,7 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
 
   const labelNoun = entityLabel ?? target;
   const tzLabel =
-    PORTAL_TIMEZONES.find((t) => t.iana === portalTimezone)?.label ?? portalTimezone;
+    PORTAL_TIMEZONES.find((tz) => tz.iana === portalTimezone)?.label ?? portalTimezone;
 
   return (
     <Card className="p-5">
@@ -70,16 +72,16 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
         <div>
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
             <Clock className="mr-1.5 inline h-3 w-3 text-accent" />
-            Auto schedule
+            {t("sharedUI.autoSchedule.heading")}
           </h3>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Automatically play and pause this {labelNoun} based on the portal time zone.
+            {t("sharedUI.autoSchedule.descriptionTemplate").replace("{entity}", labelNoun)}
           </p>
         </div>
         <Switch
           checked={schedule.enabled}
           onCheckedChange={(v) => update({ enabled: Boolean(v) })}
-          aria-label="Enable auto schedule"
+          aria-label={t("sharedUI.autoSchedule.enableAria")}
         />
       </div>
 
@@ -96,8 +98,8 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Play time */}
           <TimeField
-            label="Play at"
-            hint={`Switch this ${labelNoun} to active`}
+            label={t("sharedUI.autoSchedule.playAt")}
+            hint={t("sharedUI.autoSchedule.playHintTemplate").replace("{entity}", labelNoun)}
             hour={play.hour}
             minute={playMinute}
             period={play.period}
@@ -105,8 +107,8 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
           />
           {/* Pause time */}
           <TimeField
-            label="Pause at"
-            hint={`Switch this ${labelNoun} to paused`}
+            label={t("sharedUI.autoSchedule.pauseAt")}
+            hint={t("sharedUI.autoSchedule.pauseHintTemplate").replace("{entity}", labelNoun)}
             hour={pause.hour}
             minute={pauseMinute}
             period={pause.period}
@@ -117,17 +119,18 @@ export function AutoScheduleCard({ target, id, entityLabel }: Props) {
         <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-3 py-2">
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <Globe2 className="h-3 w-3" />
-            Portal time zone
+            {t("sharedUI.autoSchedule.portalTimezone")}
           </span>
           <span className="text-xs font-medium text-foreground">{tzLabel}</span>
         </div>
 
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Currently scheduled: <span className="font-medium text-foreground">{formatTime12(schedule.playHour, playMinute)}</span>
+          {t("sharedUI.autoSchedule.currentlyScheduled")}{" "}
+          <span className="font-medium text-foreground">{formatTime12(schedule.playHour, playMinute)}</span>
           {" → "}
           <span className="font-medium text-foreground">{formatTime12(schedule.pauseHour, pauseMinute)}</span>
           {schedule.playHour === schedule.pauseHour && playMinute === pauseMinute && (
-            <span className="ml-1 text-destructive">(play and pause times must differ)</span>
+            <span className="ml-1 text-destructive">{t("sharedUI.autoSchedule.mustDiffer")}</span>
           )}
         </p>
       </div>

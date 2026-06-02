@@ -7,6 +7,9 @@
 
 import type React from "react";
 import { motion } from "framer-motion";
+
+import { useTranslation } from "@/hooks/use-translation";
+
 import {
   Activity,
   BarChart3,
@@ -32,6 +35,7 @@ import {
 } from "lucide-react";
 
 export function DashboardMockup() {
+  const { t } = useTranslation();
   const containerVariants = {
     hidden: {},
     visible: {
@@ -77,56 +81,56 @@ export function DashboardMockup() {
         <div className="p-3">
           <div className="flex items-center gap-2 px-2.5 py-1.5 bg-secondary/60 rounded-md text-muted-foreground text-xs">
             <Search className="w-3.5 h-3.5" />
-            <span>Search...</span>
+            <span>{t("marketingUI.dashboardMockup.search")}</span>
             <span className="ml-auto text-[10px] bg-secondary px-1.5 py-0.5 rounded">⌘K</span>
           </div>
         </div>
 
         {/* Main nav */}
         <div className="px-3 space-y-0.5">
-          <NavItem icon={Activity} label="Live Monitor" badge={312} active />
-          <NavItem icon={Phone} label="Calls" />
+          <NavItem icon={Activity} label={t("marketingUI.dashboardMockup.navLiveMonitor")} badge={312} active />
+          <NavItem icon={Phone} label={t("marketingUI.dashboardMockup.navCalls")} />
         </div>
 
         {/* Network section */}
         <div className="mt-5 px-3">
           <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-            Network
+            {t("marketingUI.dashboardMockup.sectionNetwork")}
           </div>
           <div className="space-y-0.5 mt-1">
-            <NavItem icon={Layers} label="Campaigns" hasSubmenu />
-            <NavItem icon={Building2} label="Buyers" hasSubmenu />
-            <NavItem icon={Users} label="Publishers" hasSubmenu />
-            <NavItem icon={BarChart3} label="Analytics" hasSubmenu />
+            <NavItem icon={Layers} label={t("marketingUI.dashboardMockup.navCampaigns")} hasSubmenu />
+            <NavItem icon={Building2} label={t("marketingUI.dashboardMockup.navBuyers")} hasSubmenu />
+            <NavItem icon={Users} label={t("marketingUI.dashboardMockup.navPublishers")} hasSubmenu />
+            <NavItem icon={BarChart3} label={t("marketingUI.dashboardMockup.navAnalytics")} hasSubmenu />
           </div>
         </div>
 
         {/* Verticals section */}
         <div className="mt-5 px-3">
           <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-            Verticals
+            {t("marketingUI.dashboardMockup.sectionVerticals")}
           </div>
           <div className="space-y-0.5 mt-1">
-            <NavItem icon={Target} label="Health Insurance" />
-            <NavItem icon={Zap} label="Solar" />
-            <NavItem icon={FileText} label="Legal" />
+            <NavItem icon={Target} label={t("marketingUI.dashboardMockup.navHealthInsurance")} />
+            <NavItem icon={Zap} label={t("marketingUI.dashboardMockup.navSolar")} />
+            <NavItem icon={FileText} label={t("marketingUI.dashboardMockup.navLegal")} />
           </div>
         </div>
 
         {/* Configuration section */}
         <div className="mt-5 px-3 flex-1">
           <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-            Configure
+            {t("marketingUI.dashboardMockup.sectionConfigure")}
           </div>
           <div className="space-y-0.5 mt-1">
-            <NavItem icon={Settings} label="Ring Trees" hasSubmenu />
-            <NavItem icon={Zap} label="Routing Rules" hasSubmenu />
+            <NavItem icon={Settings} label={t("marketingUI.dashboardMockup.navRingTrees")} hasSubmenu />
+            <NavItem icon={Zap} label={t("marketingUI.dashboardMockup.navRoutingRules")} hasSubmenu />
           </div>
         </div>
 
         {/* Bottom */}
         <div className="p-3 border-t border-border/60">
-          <NavItem icon={HelpCircle} label="Documentation" />
+          <NavItem icon={HelpCircle} label={t("marketingUI.dashboardMockup.navDocumentation")} />
         </div>
       </motion.div>
 
@@ -137,10 +141,10 @@ export function DashboardMockup() {
       >
         <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-foreground font-semibold text-sm">Live Calls</h3>
+            <h3 className="text-foreground font-semibold text-sm">{t("marketingUI.dashboardMockup.liveCalls")}</h3>
             <span className="flex items-center gap-1 text-[color:var(--success)] text-xs">
               <span className="w-1.5 h-1.5 bg-[color:var(--success)] rounded-full animate-pulse" />
-              312 active
+              312 {t("marketingUI.dashboardMockup.activeSuffix")}
             </span>
           </div>
           <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -165,16 +169,16 @@ export function DashboardMockup() {
         {/* Header breadcrumb */}
         <div className="px-5 py-3 border-b border-border/60 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground">Vortyx dashboard</span>
+            <span className="text-muted-foreground">{t("marketingUI.dashboardMockup.breadcrumbDashboard")}</span>
             <span className="text-muted-foreground/60">›</span>
-            <span className="text-[color:var(--success)]">Network · 12 verticals</span>
+            <span className="text-[color:var(--success)]">{t("marketingUI.dashboardMockup.breadcrumbNetwork")}</span>
             <span className="text-muted-foreground/60">›</span>
-            <span className="text-foreground/85">142ms decisioning</span>
+            <span className="text-foreground/85">{t("marketingUI.dashboardMockup.breadcrumbDecisioning")}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1.5 text-[color:var(--success)] text-xs font-medium">
               <span className="w-2 h-2 bg-[color:var(--success)] rounded-full animate-pulse" />
-              Live
+              {t("marketingUI.dashboardMockup.live")}
             </span>
             <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
           </div>
@@ -182,10 +186,10 @@ export function DashboardMockup() {
 
         {/* Stats Grid */}
         <div className="p-5 grid grid-cols-4 gap-4">
-          <StatCard icon={Phone} label="Calls in flight" value="312" trend="+24%" />
-          <StatCard icon={Clock} label="Routing latency" value="142ms" trend="-8%" positive />
-          <StatCard icon={DollarSign} label="Revenue today" value="$24.3K" trend="+18%" />
-          <StatCard icon={Target} label="Buyer match rate" value="96.2%" trend="+2.1%" />
+          <StatCard icon={Phone} label={t("marketingUI.dashboardMockup.statCallsInFlight")} value="312" trend="+24%" />
+          <StatCard icon={Clock} label={t("marketingUI.dashboardMockup.statRoutingLatency")} value="142ms" trend="-8%" positive />
+          <StatCard icon={DollarSign} label={t("marketingUI.dashboardMockup.statRevenueToday")} value="$24.3K" trend="+18%" />
+          <StatCard icon={Target} label={t("marketingUI.dashboardMockup.statBuyerMatchRate")} value="96.2%" trend="+2.1%" />
         </div>
 
         {/* Content */}
@@ -193,23 +197,23 @@ export function DashboardMockup() {
           {/* Vertical Mix */}
           <div className="bg-card/80 rounded-lg p-4 mb-5 border border-border/60">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-foreground text-sm font-medium">Vertical Mix</h3>
+              <h3 className="text-foreground text-sm font-medium">{t("marketingUI.dashboardMockup.verticalMix")}</h3>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <TrendingUp className="w-3.5 h-3.5" />
-                <span>312 calls / hr</span>
+                <span>{t("marketingUI.dashboardMockup.callsPerHour")}</span>
               </div>
             </div>
             <div className="space-y-3">
-              <VerticalBar label="Health" percentage={42} />
-              <VerticalBar label="Solar" percentage={24} />
-              <VerticalBar label="Legal" percentage={18} />
-              <VerticalBar label="Auto" percentage={16} />
+              <VerticalBar label={t("marketingUI.dashboardMockup.verticalHealth")} percentage={42} />
+              <VerticalBar label={t("marketingUI.dashboardMockup.verticalSolar")} percentage={24} />
+              <VerticalBar label={t("marketingUI.dashboardMockup.verticalLegal")} percentage={18} />
+              <VerticalBar label={t("marketingUI.dashboardMockup.verticalAuto")} percentage={16} />
             </div>
           </div>
 
           {/* Top Buyers */}
           <div className="bg-card/80 rounded-lg p-4 mb-5 border border-border/60">
-            <h3 className="text-foreground text-sm font-medium mb-4">Top Buyers</h3>
+            <h3 className="text-foreground text-sm font-medium mb-4">{t("marketingUI.dashboardMockup.topBuyers")}</h3>
             <div className="space-y-2">
               <BuyerRow name="Apex Insurance" percentage={48} />
               <BuyerRow name="Solar United" percentage={31} />
@@ -220,12 +224,12 @@ export function DashboardMockup() {
           {/* Activity */}
           <div className="pt-4 border-t border-border/60">
             <div className="text-xs text-muted-foreground font-medium mb-3 uppercase tracking-wider">
-              Recent Activity
+              {t("marketingUI.dashboardMockup.recentActivity")}
             </div>
             <div className="space-y-3">
-              <ActivityItem icon={PhoneIncoming} action="Call routed to" target="Apex Insurance" campaign="Health Tier 1" time="2 sec ago" />
-              <ActivityItem icon={DollarSign} action="Conversion recorded" target="$42.50" campaign="Solar Nationwide" time="15 sec ago" />
-              <ActivityItem icon={PhoneOutgoing} action="Call completed" target="4:23 duration" campaign="Legal Intake" time="1 min ago" />
+              <ActivityItem icon={PhoneIncoming} action={t("marketingUI.dashboardMockup.actionRoutedTo")} target="Apex Insurance" campaign="Health Tier 1" time={t("marketingUI.dashboardMockup.timeSecAgo")} />
+              <ActivityItem icon={DollarSign} action={t("marketingUI.dashboardMockup.actionConversionRecorded")} target="$42.50" campaign="Solar Nationwide" time={t("marketingUI.dashboardMockup.time15SecAgo")} />
+              <ActivityItem icon={PhoneOutgoing} action={t("marketingUI.dashboardMockup.actionCallCompleted")} target={`4:23 ${t("marketingUI.dashboardMockup.durationSuffix")}`} campaign="Legal Intake" time={t("marketingUI.dashboardMockup.time1MinAgo")} />
             </div>
           </div>
         </div>

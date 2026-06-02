@@ -1,21 +1,22 @@
+"use client";
+
 import Link from "next/link";
-import type { Metadata } from "next";
 
 import { AuthCard } from "@/components/auth/auth-card";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 
-export const metadata: Metadata = { title: "Reset your password" };
-
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center">
       <AuthCard
-        title="Reset password"
-        description="We'll send you a secure link to set a new one."
+        title={t("authUI.forgot.pageTitle")}
+        description={t("authUI.forgot.pageDescription")}
         footer={
           <Link href={ROUTES.login} className="text-accent hover:underline">
-            Back to sign in
+            {t("authUI.forgot.backToSignIn")}
           </Link>
         }
       >

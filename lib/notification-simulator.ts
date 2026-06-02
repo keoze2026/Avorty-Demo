@@ -14,83 +14,109 @@
 
 import * as React from "react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import type { PushNotification } from "@/lib/store/push-notifications-store";
 import { pushNotification } from "@/lib/store/push-notifications-store";
 
 type Template = Omit<PushNotification, "id" | "pushedAt">;
 
-const TEMPLATES: Template[] = [
+interface TemplateKeys {
+  severity: PushNotification["severity"];
+  icon: PushNotification["icon"];
+  /** i18n key root, e.g. "notificationsUI.simulator.lowAht" */
+  root: string;
+  /** Whether the action label key exists for this template. */
+  hasAction: boolean;
+  /** Optional token replacements for title/body. */
+  tokens?: Record<string, string>;
+}
+
+const TEMPLATE_KEYS: TemplateKeys[] = [
   {
     severity: "warn",
     icon: "phone",
-    title: "Low AHT alert on this TFN",
-    source: "+18883241868 · Mass Tort — Injury Intake",
-    body: "Avg call length over the last 10 calls is 0:32 (target ≥ 1:30). Buyer may be screening early.",
-    action: "Investigate",
+    root: "notificationsUI.simulator.lowAht",
+    hasAction: true,
   },
   {
     severity: "critical",
     icon: "alert",
-    title: "This TFN cap is over",
-    source: "+18884481136 · Solar Leads — Nationwide",
-    body: "Daily cap 80 reached. Routing temporarily paused — 6 calls rerouted to fallback Tier-2.",
-    action: "Raise cap",
+    root: "notificationsUI.simulator.tfnCapOver",
+    hasAction: true,
   },
   {
     severity: "critical",
     icon: "shield",
-    title: "TCPA litigator match",
-    source: "+12135550190 · Federal DNC scrub",
-    body: "Caller flagged on Provider123 (TCPA Litigator). Call blocked before routing.",
-    action: "View block",
+    root: "notificationsUI.simulator.tcpaMatch",
+    hasAction: true,
   },
   {
     severity: "info",
     icon: "spark",
-    title: "Health Tier 1 spiked 24%",
-    source: "Conversion · last hour",
-    body: "3 publishers contributing — DialSurge, Quartz Calls, and Coast Media all up >18%.",
-    action: "Scale up",
+    root: "notificationsUI.simulator.healthSpike",
+    hasAction: true,
   },
   {
     severity: "warn",
     icon: "shield",
-    title: "VoIP Shield blocked 14 calls",
-    source: "Bandwidth.com · past hour",
-    body: "Bot-net signatures triggered on the “Repeat caller fraud” list. Costs avoided: $0.14.",
-    action: "Review",
+    root: "notificationsUI.simulator.voipShield",
+    hasAction: true,
+    tokens: { "{n}": "14", "{amount}": "$0.14" },
   },
   {
     severity: "critical",
     icon: "dollar",
-    title: "Buyer Apex hit daily cap",
-    source: "Apex Solutions",
-    body: "Cap reached at 600 paid calls. Routing now rolling to Tier-2 buyers automatically.",
-    action: "Raise cap",
+    root: "notificationsUI.simulator.buyerCap",
+    hasAction: true,
   },
   {
     severity: "info",
     icon: "phone",
-    title: "New TFN provisioned",
-    source: "+14155550177 · Bandwidth",
-    body: "Number purchased and attached to “Health Insurance — Tier 1”. Live in ~30s.",
+    root: "notificationsUI.simulator.newTfn",
+    hasAction: false,
   },
 ];
+
+function interpolate(input: string, tokens?: Record<string, string>) {
+  if (!tokens) return input;
+  return Object.entries(tokens).reduce(
+    (acc, [token, value]) => acc.split(token).join(value),
+    input,
+  );
+}
 
 function jitter(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
 export function useNotificationSimulator() {
+  const { t } = useTranslation();
+
+  // Hold the latest `t` in a ref so the interval closure always reads from the
+  // current locale without forcing a remount when the language switches.
+  const tRef = React.useRef(t);
   React.useEffect(() => {
-    let idx = Math.floor(Math.random() * TEMPLATES.length);
+    tRef.current = t;
+  }, [t]);
+
+  React.useEffect(() => {
+    let idx = Math.floor(Math.random() * TEMPLATE_KEYS.length);
     let cancelled = false;
 
     const fire = () => {
       if (cancelled) return;
-      const t = TEMPLATES[idx % TEMPLATES.length];
+      const tNow = tRef.current;
+      const k = TEMPLATE_KEYS[idx % TEMPLATE_KEYS.length];
       idx += 1;
-      pushNotification(t);
+      const template: Template = {
+        severity: k.severity,
+        icon: k.icon,
+        title: interpolate(tNow(`${k.root}.title`), k.tokens),
+        source: tNow(`${k.root}.source`),
+        body: interpolate(tNow(`${k.root}.body`), k.tokens),
+        ...(k.hasAction ? { action: tNow(`${k.root}.action`) } : {}),
+      };
+      pushNotification(template);
       // Schedule the next pop somewhere between 25s and 45s out.
       const next = jitter(25_000, 45_000);
       timer = window.setTimeout(fire, next);

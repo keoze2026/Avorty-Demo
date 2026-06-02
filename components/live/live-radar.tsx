@@ -16,6 +16,7 @@ import { CheckCircle2, DollarSign, PhoneCall, PhoneMissed, Radar } from "lucide-
 
 import { LiveCallCard } from "@/components/live/live-call-card";
 import { useCountUp } from "@/hooks/use-count-up";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ interface LiveRadarProps {
 }
 
 export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
+  const { t } = useTranslation();
   const animated = useCountUp(inFlight.length, { duration: 350 });
 
   return (
@@ -79,12 +81,12 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
             {/* Center display */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[10px] font-medium uppercase tracking-wider text-accent">
-                In-flight
+                {t("liveUI.radar.inFlight")}
               </span>
               <span className="mt-1 text-5xl font-semibold tabular-nums leading-none tracking-tight">
                 {Math.round(animated)}
               </span>
-              <span className="mt-1 text-[11px] text-muted-foreground">active calls</span>
+              <span className="mt-1 text-[11px] text-muted-foreground">{t("liveUI.radar.activeCalls")}</span>
             </div>
           </div>
 
@@ -103,28 +105,28 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
                 <Radar className="h-4 w-4" />
               </span>
               <div>
-                <h2 className="text-sm font-semibold">Live Radar</h2>
-                <p className="text-xs text-muted-foreground">All routes · all geos</p>
+                <h2 className="text-sm font-semibold">{t("liveUI.radar.title")}</h2>
+                <p className="text-xs text-muted-foreground">{t("liveUI.radar.subtitle")}</p>
               </div>
             </div>
             <span className="text-xs text-muted-foreground">
-              Session ·{" "}
+              {t("liveUI.radar.sessionPrefix")}{" "}
               {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           </header>
 
           {/* Session telemetry — 4 instrument tiles */}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Telemetry icon={PhoneCall} label="Started" value={totals.started} tone="accent" />
-            <Telemetry icon={CheckCircle2} label="Completed" value={totals.completed} tone="emerald" />
-            <Telemetry icon={PhoneMissed} label="Missed" value={totals.missed} tone="amber" />
-            <Telemetry icon={DollarSign} label="Revenue" value={totals.revenue} tone="accent" money />
+            <Telemetry icon={PhoneCall} label={t("liveUI.radar.started")} value={totals.started} tone="accent" />
+            <Telemetry icon={CheckCircle2} label={t("liveUI.radar.completed")} value={totals.completed} tone="emerald" />
+            <Telemetry icon={PhoneMissed} label={t("liveUI.radar.missed")} value={totals.missed} tone="amber" />
+            <Telemetry icon={DollarSign} label={t("liveUI.radar.revenue")} value={totals.revenue} tone="accent" money />
           </div>
 
           {/* Featured call */}
           <div className="rounded-xl border border-border bg-secondary/30 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-medium text-accent">Featured · longest active</span>
+              <span className="text-xs font-medium text-accent">{t("liveUI.radar.featured")}</span>
               <span className="font-mono text-[11px] text-muted-foreground">
                 {featured ? featured.id.slice(-6).toUpperCase() : "—"}
               </span>
@@ -133,7 +135,7 @@ export function LiveRadar({ inFlight, featured, totals }: LiveRadarProps) {
               <LiveCallCard call={featured} isLive={inFlight.includes(featured)} />
             ) : (
               <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
-                Awaiting first call…
+                {t("liveUI.radar.awaitingFirst")}
               </div>
             )}
           </div>

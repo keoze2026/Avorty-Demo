@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -31,6 +32,7 @@ export function Pagination({
   pageSizeOptions = [25, 50, 100, 250],
   className,
 }: Props) {
+  const { t } = useTranslation();
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(Math.max(0, page), pageCount - 1);
   const from = total === 0 ? 0 : safePage * pageSize + 1;
@@ -39,13 +41,16 @@ export function Pagination({
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
       <p className="text-[11px] font-mono text-muted-foreground">
-        Showing {from}–{to} of {total}
+        {t("sharedUI.pagination.showingTemplate")
+          .replace("{from}", String(from))
+          .replace("{to}", String(to))
+          .replace("{total}", String(total))}
       </p>
 
       <div className="flex items-center gap-2">
         {onPageSize && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="hidden sm:inline">Per page</span>
+            <span className="hidden sm:inline">{t("sharedUI.pagination.perPage")}</span>
             <Select value={pageSize.toString()} onValueChange={(v) => onPageSize(parseInt(v, 10))}>
               <SelectTrigger size="sm" className="h-8 w-20 font-mono">
                 <SelectValue />
@@ -67,7 +72,7 @@ export function Pagination({
           className="h-8"
           onClick={() => onPage(Math.max(0, safePage - 1))}
           disabled={safePage === 0}
-          aria-label="Previous page"
+          aria-label={t("sharedUI.pagination.previousPage")}
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
@@ -80,7 +85,7 @@ export function Pagination({
           className="h-8"
           onClick={() => onPage(Math.min(pageCount - 1, safePage + 1))}
           disabled={safePage >= pageCount - 1}
-          aria-label="Next page"
+          aria-label={t("sharedUI.pagination.nextPage")}
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>

@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { Phone } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
+
 const integrations = [
   "Twilio",
   "HubSpot",
@@ -15,6 +17,7 @@ const integrations = [
 ];
 
 export function IntegrationsSection() {
+  const { t } = useTranslation();
   return (
     <div className="relative z-20 pb-24 pt-8">
       <div className="w-full flex justify-center px-6">
@@ -26,7 +29,7 @@ export function IntegrationsSection() {
             transition={{ duration: 0.6 }}
             className="text-lg text-foreground/85 mb-2"
           >
-            Powering the networks regulators ask about.
+            {t("marketingUI.integrations.tagline")}
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -35,7 +38,7 @@ export function IntegrationsSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-muted-foreground mb-16"
           >
-            Plays well with your existing stack.
+            {t("marketingUI.integrations.subtagline")}
           </motion.p>
 
           <motion.div
@@ -58,7 +61,7 @@ export function IntegrationsSection() {
             {/* Hover overlay button */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
               <div className="px-5 py-2.5 bg-secondary/80 backdrop-blur-sm border border-border rounded-full text-sm text-foreground/85 flex items-center gap-2">
-                View all integrations
+                {t("marketingUI.integrations.viewAll")}
                 <span aria-hidden="true">›</span>
               </div>
             </div>

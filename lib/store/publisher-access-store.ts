@@ -219,19 +219,25 @@ export interface PermissionDef {
 
 export interface ReportingColumnDef {
   key: ReportingColumnKey;
+  /** English fallback (used when t() can't resolve the key). */
   label: string;
+  /** English fallback description. */
   description: string;
+  /** Dotted translation key under `sharedUI.reportingVisibility.columns.<key>.label`. */
+  labelKey: string;
+  /** Dotted translation key under `sharedUI.reportingVisibility.columns.<key>.description`. */
+  descriptionKey: string;
 }
 
 export const REPORTING_COLUMNS: ReportingColumnDef[] = [
-  { key: "incoming", label: "Incoming", description: "Total inbound call attempts." },
-  { key: "connected", label: "Connected", description: "Calls that reached a destination." },
-  { key: "qualified", label: "Qualified", description: "Calls that met the buyer's quality criteria." },
-  { key: "converted", label: "Converted", description: "Calls that converted into a paid event." },
-  { key: "notConnected", label: "Not Connected", description: "Calls that failed to reach a destination." },
-  { key: "acl", label: "ACL", description: "Average call length across delivered calls." },
-  { key: "tcl", label: "TCL", description: "Total call length aggregated across delivered calls." },
-  { key: "cost", label: "Cost", description: "Spend / payout figures on each call." },
+  { key: "incoming",     label: "Incoming",      description: "Total inbound call attempts.",                          labelKey: "sharedUI.reportingVisibility.columns.incoming.label",     descriptionKey: "sharedUI.reportingVisibility.columns.incoming.description" },
+  { key: "connected",    label: "Connected",     description: "Calls that reached a destination.",                     labelKey: "sharedUI.reportingVisibility.columns.connected.label",    descriptionKey: "sharedUI.reportingVisibility.columns.connected.description" },
+  { key: "qualified",    label: "Qualified",     description: "Calls that met the buyer's quality criteria.",          labelKey: "sharedUI.reportingVisibility.columns.qualified.label",    descriptionKey: "sharedUI.reportingVisibility.columns.qualified.description" },
+  { key: "converted",    label: "Converted",     description: "Calls that converted into a paid event.",               labelKey: "sharedUI.reportingVisibility.columns.converted.label",    descriptionKey: "sharedUI.reportingVisibility.columns.converted.description" },
+  { key: "notConnected", label: "Not Connected", description: "Calls that failed to reach a destination.",             labelKey: "sharedUI.reportingVisibility.columns.notConnected.label", descriptionKey: "sharedUI.reportingVisibility.columns.notConnected.description" },
+  { key: "acl",          label: "ACL",           description: "Average call length across delivered calls.",           labelKey: "sharedUI.reportingVisibility.columns.acl.label",          descriptionKey: "sharedUI.reportingVisibility.columns.acl.description" },
+  { key: "tcl",          label: "TCL",           description: "Total call length aggregated across delivered calls.",  labelKey: "sharedUI.reportingVisibility.columns.tcl.label",          descriptionKey: "sharedUI.reportingVisibility.columns.tcl.description" },
+  { key: "cost",         label: "Cost",          description: "Spend / payout figures on each call.",                  labelKey: "sharedUI.reportingVisibility.columns.cost.label",         descriptionKey: "sharedUI.reportingVisibility.columns.cost.description" },
 ];
 
 export const PERMISSIONS: PermissionDef[] = [

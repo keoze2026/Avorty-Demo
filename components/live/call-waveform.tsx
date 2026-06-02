@@ -11,6 +11,7 @@
 
 import * as React from "react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface CallWaveformProps {
@@ -49,8 +50,10 @@ export function CallWaveform({
   size = "sm",
   className,
   active = true,
-  label = "Live audio waveform",
+  label,
 }: CallWaveformProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t("liveUI.card.waveformLabel");
   const ref = React.useRef<HTMLSpanElement | null>(null);
   const [visible, setVisible] = React.useState(true);
 
@@ -72,7 +75,7 @@ export function CallWaveform({
     <span
       ref={ref}
       role="img"
-      aria-label={label}
+      aria-label={resolvedLabel}
       className={cn(
         "inline-flex items-center",
         sz.wrap,

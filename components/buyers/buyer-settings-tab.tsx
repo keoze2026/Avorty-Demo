@@ -312,10 +312,10 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
                     />
                     <div className="min-w-0">
                       <div className="text-sm font-medium leading-tight">
-                        {col.label}
+                        {t(col.labelKey)}
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        {col.description}
+                        {t(col.descriptionKey)}
                       </div>
                     </div>
                   </label>

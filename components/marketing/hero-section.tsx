@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, Play, Shield, Star } from "lucide-react";
 
 import { DashboardMockup } from "@/components/marketing/dashboard-mockup";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 
 /**
@@ -14,6 +15,7 @@ import { ROUTES } from "@/lib/constants";
  * background comes from the marketing layout's bg-background.
  */
 export function HeroSection() {
+  const { t } = useTranslation();
   const [yOffset, setYOffset] = useState(0);
 
   useEffect(() => {
@@ -60,9 +62,9 @@ export function HeroSection() {
               transition={{ duration: 0.6 }}
               className="flex items-center gap-2 text-sm text-muted-foreground mb-6"
             >
-              <span className="text-foreground/85">500+ networks</span>
+              <span className="text-foreground/85">{t("marketingUI.hero.trustChipCount")}</span>
               <span className="text-muted-foreground/60">·</span>
-              <span>routing live on Vortyx</span>
+              <span>{t("marketingUI.hero.trustChipSuffix")}</span>
             </motion.div>
 
             <motion.h1
@@ -71,7 +73,7 @@ export function HeroSection() {
               transition={{ duration: 0.6 }}
               className="text-3xl md:text-4xl lg:text-5xl font-medium text-foreground leading-[1.1] text-balance"
             >
-              Turn every ring
+              {t("marketingUI.hero.headlinePart1")}
               <br />
               <span
                 className="text-transparent bg-clip-text"
@@ -82,7 +84,7 @@ export function HeroSection() {
                   backgroundClip: "text",
                 }}
               >
-                into revenue.
+                {t("marketingUI.hero.headlineGradient")}
               </span>
             </motion.h1>
 
@@ -92,8 +94,7 @@ export function HeroSection() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="mt-6 text-lg text-muted-foreground max-w-xl"
             >
-              The most intelligent call-tracking platform — real-time routing, live monitoring,
-              and AI-driven optimization for the modern pay-per-call network.
+              {t("marketingUI.hero.subhead")}
             </motion.p>
 
             <motion.div
@@ -106,7 +107,7 @@ export function HeroSection() {
                 href={ROUTES.signup}
                 className="px-5 py-2.5 bg-foreground text-background font-medium rounded-lg hover:bg-foreground/90 transition-colors text-sm inline-flex items-center gap-2"
               >
-                Start free
+                {t("marketingUI.hero.ctaPrimary")}
                 <span aria-hidden="true">→</span>
               </Link>
               <button
@@ -114,7 +115,7 @@ export function HeroSection() {
                 className="text-foreground/85 font-medium hover:text-foreground transition-colors inline-flex items-center gap-2 text-sm border border-border px-4 py-2.5 rounded-lg hover:bg-secondary/50"
               >
                 <Play className="w-4 h-4" />
-                Watch 90-sec demo
+                {t("marketingUI.hero.ctaSecondary")}
               </button>
             </motion.div>
 

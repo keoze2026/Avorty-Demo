@@ -30,7 +30,7 @@ export default function LivePage() {
         description={t("page.live.description")}
         actions={
           <>
-            <LiveBadge label={paused ? "Paused" : "Streaming"} />
+            <LiveBadge label={paused ? t("liveUI.badge.paused") : t("liveUI.badge.streaming")} />
             <LiveControls paused={paused} onTogglePause={() => setPaused((p) => !p)} />
           </>
         }

@@ -13,58 +13,61 @@ import {
   Sun,
 } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
+
 const verticalCards = [
   {
     id: 1,
-    category: "Health Insurance",
+    categoryKey: "marketingUI.verticals.health.category",
     stat: "$42",
-    statLabel: "AVG PAYOUT / QUALIFIED CALL",
-    title: "Medicare AEP, ACA, supplemental — high-intent, qualified intake.",
+    statLabelKey: "marketingUI.verticals.health.statLabel",
+    titleKey: "marketingUI.verticals.health.title",
     icon: Heart,
   },
   {
     id: 2,
-    category: "Solar & Home Services",
+    categoryKey: "marketingUI.verticals.solar.category",
     stat: "+11%",
-    statLabel: "CONVERSION VS LEGACY STACKS",
-    title: "Roof-owner verification, dayparting, and geo-routing built in.",
+    statLabelKey: "marketingUI.verticals.solar.statLabel",
+    titleKey: "marketingUI.verticals.solar.title",
     icon: Sun,
   },
   {
     id: 3,
-    category: "Legal",
+    categoryKey: "marketingUI.verticals.legal.category",
     stat: "$120",
-    statLabel: "AVG PAYOUT / QUALIFIED CALL",
-    title: "Mass tort intake with consent capture and per-firm caps.",
+    statLabelKey: "marketingUI.verticals.legal.statLabel",
+    titleKey: "marketingUI.verticals.legal.title",
     icon: Scale,
   },
   {
     id: 4,
-    category: "Auto Warranty",
+    categoryKey: "marketingUI.verticals.auto.category",
     stat: "<150ms",
-    statLabel: "BUYER MATCH DECISION",
-    title: "Off-warranty vehicle owners, geo + tag filters, capacity-aware.",
+    statLabelKey: "marketingUI.verticals.auto.statLabel",
+    titleKey: "marketingUI.verticals.auto.title",
     icon: Car,
   },
   {
     id: 5,
-    category: "Mortgage & Refi",
+    categoryKey: "marketingUI.verticals.mortgage.category",
     stat: "23",
-    statLabel: "PRE-BUILT FILTERS",
-    title: "Soft-pull pre-quals, debt-thresholds, FICO-aware routing.",
+    statLabelKey: "marketingUI.verticals.mortgage.statLabel",
+    titleKey: "marketingUI.verticals.mortgage.title",
     icon: Home,
   },
   {
     id: 6,
-    category: "Finance",
+    categoryKey: "marketingUI.verticals.finance.category",
     stat: "44%",
-    statLabel: "AVG CONVERSION RATE",
-    title: "Debt consolidation, personal loans, tax relief — soft-pull qualifying.",
+    statLabelKey: "marketingUI.verticals.finance.statLabel",
+    titleKey: "marketingUI.verticals.finance.title",
     icon: Banknote,
   },
 ];
 
 function VerticalCard({ card }: { card: (typeof verticalCards)[0] }) {
+  const { t } = useTranslation();
   const Icon = card.icon;
 
   return (
@@ -76,7 +79,7 @@ function VerticalCard({ card }: { card: (typeof verticalCards)[0] }) {
             <Icon className="w-4 h-4 text-accent" />
             <span className="text-2xl font-semibold text-accent">{card.stat}</span>
           </div>
-          <p className="text-muted-foreground text-xs uppercase tracking-wider">{card.statLabel}</p>
+          <p className="text-muted-foreground text-xs uppercase tracking-wider">{t(card.statLabelKey)}</p>
 
           <div
             className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
@@ -90,8 +93,8 @@ function VerticalCard({ card }: { card: (typeof verticalCards)[0] }) {
         <div className="p-4 border-t border-border/40">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground mb-1">{card.category}</p>
-              <p className="text-sm text-foreground/90 leading-snug">{card.title}</p>
+              <p className="text-xs text-muted-foreground mb-1">{t(card.categoryKey)}</p>
+              <p className="text-sm text-foreground/90 leading-snug">{t(card.titleKey)}</p>
             </div>
             <button
               type="button"
@@ -107,6 +110,7 @@ function VerticalCard({ card }: { card: (typeof verticalCards)[0] }) {
 }
 
 export function VerticalsSection() {
+  const { t } = useTranslation();
   const [scrollPosition, setScrollPosition] = useState(0);
 
   const scrollLeft = () => setScrollPosition(Math.max(0, scrollPosition - 1));
@@ -130,20 +134,19 @@ export function VerticalsSection() {
           <div className="lg:max-w-xl">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-2 h-2 rounded-full bg-[color:var(--warning)]" />
-              <span className="text-sm text-muted-foreground">Verticals</span>
+              <span className="text-sm text-muted-foreground">{t("marketingUI.verticals.sectionLabel")}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
             </div>
 
             <h2 className="text-3xl md:text-4xl font-medium text-foreground leading-[1.1] tracking-tight">
-              Built for the calls
+              {t("marketingUI.verticals.headingPart1")}
               <br />
-              that pay
+              {t("marketingUI.verticals.headingPart2")}
             </h2>
           </div>
 
           <p className="text-muted-foreground lg:max-w-sm lg:pt-12">
-            Every vertical Vortyx supports ships with the filters, tags, and consent capture that
-            vertical actually needs — so you&apos;re not gluing yours together from scratch.
+            {t("marketingUI.verticals.description")}
           </p>
         </div>
 

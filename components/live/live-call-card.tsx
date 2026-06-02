@@ -6,27 +6,51 @@ import { CheckCircle2, MapPin, Phone, PhoneIncoming, PhoneMissed, XCircle } from
 import { CallWaveform } from "@/components/live/call-waveform";
 import { Badge } from "@/components/ui/badge";
 import { useNow } from "@/hooks/use-mock-socket";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatTimer, toE164 } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const STATUS_META: Record<CallStatus, { icon: typeof Phone; bg: string; ring: string; label: string }> = {
-  ringing: { icon: PhoneIncoming, bg: "bg-accent/15 text-accent", ring: "ring-accent/40", label: "Ringing" },
-  "in-progress": { icon: Phone, bg: "bg-accent/15 text-accent", ring: "ring-accent/40", label: "In progress" },
+const STATUS_META: Record<
+  CallStatus,
+  { icon: typeof Phone; bg: string; ring: string; labelKey: string }
+> = {
+  ringing: {
+    icon: PhoneIncoming,
+    bg: "bg-accent/15 text-accent",
+    ring: "ring-accent/40",
+    labelKey: "liveUI.card.status.ringing",
+  },
+  "in-progress": {
+    icon: Phone,
+    bg: "bg-accent/15 text-accent",
+    ring: "ring-accent/40",
+    labelKey: "liveUI.card.status.inProgress",
+  },
   completed: {
     icon: CheckCircle2,
     bg: "bg-[oklch(0.74_0.18_155)]/15 text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]",
     ring: "ring-[oklch(0.74_0.18_155)]/30",
-    label: "Won",
+    labelKey: "liveUI.card.status.won",
   },
   missed: {
     icon: PhoneMissed,
     bg: "bg-[oklch(0.78_0.16_75)]/15 text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)]",
     ring: "ring-[oklch(0.78_0.16_75)]/30",
-    label: "Missed",
+    labelKey: "liveUI.card.status.missed",
   },
-  rejected: { icon: XCircle, bg: "bg-destructive/15 text-destructive", ring: "ring-destructive/30", label: "Rejected" },
-  failed: { icon: XCircle, bg: "bg-destructive/15 text-destructive", ring: "ring-destructive/30", label: "Failed" },
+  rejected: {
+    icon: XCircle,
+    bg: "bg-destructive/15 text-destructive",
+    ring: "ring-destructive/30",
+    labelKey: "liveUI.card.status.rejected",
+  },
+  failed: {
+    icon: XCircle,
+    bg: "bg-destructive/15 text-destructive",
+    ring: "ring-destructive/30",
+    labelKey: "liveUI.card.status.failed",
+  },
 };
 
 interface LiveCallCardProps {
@@ -35,6 +59,7 @@ interface LiveCallCardProps {
 }
 
 export function LiveCallCard({ call, isLive }: LiveCallCardProps) {
+  const { t } = useTranslation();
   const now = useNow(1000);
   const live = isLive ? Math.max(0, Math.floor((now - call.startedAt) / 1000)) : call.durationSec;
   const meta = STATUS_META[call.status];
@@ -76,7 +101,7 @@ export function LiveCallCard({ call, isLive }: LiveCallCardProps) {
             </Badge>
             {call.publisherName && (
               <span className="hidden text-[10px] font-mono text-muted-foreground sm:inline">
-                via {call.publisherName}
+                {t("liveUI.card.via")} {call.publisherName}
               </span>
             )}
           </div>
@@ -94,8 +119,8 @@ export function LiveCallCard({ call, isLive }: LiveCallCardProps) {
                 className="text-accent"
                 label={
                   call.status === "in-progress"
-                    ? "Call audio active"
-                    : "Call ringing, audio pending"
+                    ? t("liveUI.card.audioActive")
+                    : t("liveUI.card.audioPending")
                 }
               />
             )}
@@ -103,7 +128,7 @@ export function LiveCallCard({ call, isLive }: LiveCallCardProps) {
               {formatTimer(live)}
             </span>
           </div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{meta.label}</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t(meta.labelKey)}</span>
         </div>
       </div>
     </motion.div>
