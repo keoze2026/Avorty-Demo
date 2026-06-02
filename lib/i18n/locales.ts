@@ -7,7 +7,7 @@
  *   3. Importing + registering it in `lib/i18n/index.ts`.
  */
 
-export type LocaleId = "en" | "ru" | "ja";
+export type LocaleId = "en" | "ru" | "ja" | "zh";
 
 export interface LocaleDef {
   id: LocaleId;
@@ -22,9 +22,10 @@ export interface LocaleDef {
 }
 
 export const LOCALES: LocaleDef[] = [
-  { id: "en", label: "English",  english: "English",  htmlLang: "en", flag: "🇺🇸" },
-  { id: "ru", label: "Русский",  english: "Russian",  htmlLang: "ru", flag: "🇷🇺" },
-  { id: "ja", label: "日本語",     english: "Japanese", htmlLang: "ja", flag: "🇯🇵" },
+  { id: "en", label: "English",  english: "English",  htmlLang: "en",    flag: "🇺🇸" },
+  { id: "ru", label: "Русский",  english: "Russian",  htmlLang: "ru",    flag: "🇷🇺" },
+  { id: "ja", label: "日本語",     english: "Japanese", htmlLang: "ja",    flag: "🇯🇵" },
+  { id: "zh", label: "简体中文",   english: "Chinese",  htmlLang: "zh-CN", flag: "🇨🇳" },
 ];
 
 export const DEFAULT_LOCALE: LocaleId = "en";

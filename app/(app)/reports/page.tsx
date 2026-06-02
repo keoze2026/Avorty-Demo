@@ -94,7 +94,7 @@ export default function ReportsPage() {
       <ReportsToolbar
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
-        onRefresh={() => toast.success("Reports refreshed")}
+        onRefresh={() => toast.success(t("page.reports.refreshed"))}
         filters={filters}
         onFiltersChange={setFilters}
       />

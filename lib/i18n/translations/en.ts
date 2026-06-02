@@ -65,6 +65,7 @@ export const en = {
     reports: {
       title: "Reporting",
       description: "Calls, performance, and detail logs.",
+      refreshed: "Reports refreshed",
     },
     callLogs: {
       title: "Call Logs",

@@ -8,14 +8,15 @@
 import { en, type TranslationShape } from "./translations/en";
 import { ja } from "./translations/ja";
 import { ru } from "./translations/ru";
+import { zh } from "./translations/zh";
 import type { LocaleId } from "./locales";
 
-export { en, ja, ru };
+export { en, ja, ru, zh };
 export type { TranslationShape };
 export type { LocaleId, LocaleDef } from "./locales";
 export { LOCALES, DEFAULT_LOCALE, findLocale } from "./locales";
 
-const TRANSLATIONS: Record<LocaleId, TranslationShape> = { en, ru, ja };
+const TRANSLATIONS: Record<LocaleId, TranslationShape> = { en, ru, ja, zh };
 
 export function getTranslation(locale: LocaleId): TranslationShape {
   return TRANSLATIONS[locale] ?? en;

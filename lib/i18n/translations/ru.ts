@@ -57,6 +57,7 @@ export const ru: TranslationShape = {
     reports: {
       title: "Отчётность",
       description: "Звонки, эффективность и детальные журналы.",
+      refreshed: "Отчёты обновлены",
     },
     callLogs: {
       title: "Журнал звонков",

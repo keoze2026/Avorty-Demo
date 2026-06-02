@@ -57,6 +57,7 @@ export const ja: TranslationShape = {
     reports: {
       title: "レポート",
       description: "通話、パフォーマンス、詳細ログ。",
+      refreshed: "レポートを更新しました",
     },
     callLogs: {
       title: "通話ログ",
