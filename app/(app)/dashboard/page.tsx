@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
-import { CallsChart } from "@/components/dashboard/calls-chart";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
 import { VerticalDonut } from "@/components/dashboard/vertical-donut";
+import { HourlyDistribution } from "@/components/reports/hourly-distribution";
 import { ExportMenu } from "@/components/shared/export-menu";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -108,10 +108,12 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Row 1 — Hourly CALLS chart (primary) + donut on the right */}
+      {/* Row 1 — Hourly CALLS chart (primary) + donut on the right.
+          Uses the same composed-chart component as the Reports page so the
+          two surfaces share an identical visual language. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CallsChart calls={scopedCalls} />
+          <HourlyDistribution calls={scopedCalls} />
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <VerticalDonut calls={scopedCalls} />

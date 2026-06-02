@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+import { ExpensesCard } from "@/components/billing/expenses-card";
 import { InvoicesTable } from "@/components/billing/invoices-table";
 import { PaymentMethodCard } from "@/components/billing/payment-method-card";
+import { RatesCard } from "@/components/billing/rates-card";
 import { SubscriptionHero } from "@/components/billing/subscription-hero";
 import { UsageGrid } from "@/components/billing/usage-grid";
 import { PageHeader } from "@/components/shared/page-header";
@@ -26,6 +28,9 @@ export default function BillingPage() {
           <PaymentMethodCard />
         </div>
       </div>
+
+      <RatesCard />
+      <ExpensesCard />
 
       <InvoicesTable />
     </>
