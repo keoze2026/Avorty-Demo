@@ -59,7 +59,7 @@ function TwoFactorCard() {
           {t("settings.securitySection.twoFactor")}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Require a Google Authenticator code on every portal sign-in.
+          {t("settings.securitySection.twoFactorRequire")}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -96,9 +96,9 @@ function TwoFactorCard() {
                 <Smartphone className="h-4 w-4" />
               </span>
               <div>
-                <div className="text-sm font-medium">Add Google Authenticator</div>
+                <div className="text-sm font-medium">{t("settings.securitySection.addGoogleAuth")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  Scan a QR with your phone and confirm a code to enable.
+                  {t("settings.securitySection.addGoogleAuthHint")}
                 </div>
               </div>
             </div>
@@ -276,8 +276,7 @@ function ReportsPinCard() {
           {t("settings.securitySection.reportsPin")}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          A 4-digit code that gates historical reports. Today&apos;s data is
-          always visible — yesterday and earlier require the PIN.
+          {t("settings.securitySection.reportsPinFullDescription")}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -288,9 +287,9 @@ function ReportsPinCard() {
                 <Check className="h-4 w-4" />
               </span>
               <div>
-                <div className="text-sm font-medium">PIN is set</div>
+                <div className="text-sm font-medium">{t("settings.securitySection.pinIsSet")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  Required once per session before viewing past-date reports.
+                  {t("settings.securitySection.pinIsSetHint")}
                 </div>
               </div>
             </div>
@@ -302,7 +301,7 @@ function ReportsPinCard() {
                 className="h-8"
               >
                 <KeyRound className="h-3.5 w-3.5" />
-                Change
+                {t("settings.securitySection.change")}
               </Button>
               <Button
                 variant="ghost"

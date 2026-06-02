@@ -36,7 +36,7 @@ import {
   type RecommendationKind,
   type RecommendationStatus,
 } from "@/lib/types";
-import { formatRelativeTime } from "@/lib/format";
+import { formatRelativeTimeT } from "@/lib/format";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +112,29 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
   const Icon = meta.icon;
   const [expanded, setExpanded] = useState(false);
 
+  // Resolve translated copy with English fallback so the cards translate even
+  // though `title`/`body`/`impactLabel` come from a static mock data array.
+  const translateOrFallback = (key: string, fallback: string) => {
+    const resolved = t(key);
+    return resolved === key ? fallback : resolved;
+  };
+  const translatedTitle = translateOrFallback(
+    `toolsUI.insights.recommendations.data.${r.id}.title`,
+    r.title,
+  );
+  const translatedBody = translateOrFallback(
+    `toolsUI.insights.recommendations.data.${r.id}.body`,
+    r.body,
+  );
+  const translatedImpactLabel = translateOrFallback(
+    `toolsUI.insights.recommendations.data.${r.id}.impactLabel`,
+    r.impact.label,
+  );
+  const translatedScopeType = translateOrFallback(
+    `toolsUI.insights.recommendations.scope.${r.scope.type}`,
+    r.scope.type,
+  );
+
   // Build the chart series with a "where baseline ends, projected starts" gap
   const data = [
     ...r.baseline.map((v, i) => ({ i, baseline: v, projected: null as number | null })),
@@ -120,7 +143,7 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
 
   const apply = () => {
     onAction(r.id, "applied");
-    toast.success(t("toolsUI.insights.recommendations.card.toastApplied"), { description: r.title });
+    toast.success(t("toolsUI.insights.recommendations.card.toastApplied"), { description: translatedTitle });
   };
   const snooze = () => {
     onAction(r.id, "snoozed");
@@ -159,11 +182,11 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
                   {t(meta.labelKey)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {r.scope.type} · {r.scope.name}
+                  {translatedScopeType} · {r.scope.name}
                 </span>
               </div>
-              <h3 className="mt-2 text-base font-semibold leading-snug">{r.title}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{r.body}</p>
+              <h3 className="mt-2 text-base font-semibold leading-snug">{translatedTitle}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{translatedBody}</p>
             </div>
           </div>
 
@@ -174,7 +197,7 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
         {/* Impact + chart */}
         <div className="mt-4 grid grid-cols-1 items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)]">
           <ImpactStat
-            label={r.impact.label}
+            label={translatedImpactLabel}
             value={r.impact.value}
             direction={r.impact.direction}
             tone={meta.tone}
@@ -196,7 +219,7 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
           <div className="ml-auto flex items-center gap-2">
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
-              {formatRelativeTime(r.createdAt)}
+              {formatRelativeTimeT(t, r.createdAt)}
             </span>
             <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={dismiss}>
               <X className="h-3.5 w-3.5" /> {t("toolsUI.insights.recommendations.card.dismiss")}

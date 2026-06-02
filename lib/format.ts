@@ -76,6 +76,31 @@ export function formatRelativeTime(timestamp: number, now = Date.now()) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+/**
+ * Translation-aware variant — pass `t` from `useTranslation()` and the same
+ * timestamp; resolves into the active locale via `common.relativeTime.*` keys.
+ * Falls back to the English `formatRelativeTime()` output if those keys are
+ * missing in the chosen locale.
+ */
+export function formatRelativeTimeT(
+  t: (key: string) => string,
+  timestamp: number,
+  now = Date.now(),
+) {
+  const diff = Math.max(0, Math.floor((now - timestamp) / 1000));
+  const fallback = formatRelativeTime(timestamp, now);
+  const resolve = (key: string, value: number | undefined) => {
+    const r = t(key);
+    if (r === key) return fallback; // not translated → English
+    return value === undefined ? r : r.replace("{n}", String(value));
+  };
+  if (diff < 10) return resolve("common.relativeTime.justNow", undefined);
+  if (diff < 60) return resolve("common.relativeTime.secondsAgo", diff);
+  if (diff < 3600) return resolve("common.relativeTime.minutesAgo", Math.floor(diff / 60));
+  if (diff < 86400) return resolve("common.relativeTime.hoursAgo", Math.floor(diff / 3600));
+  return resolve("common.relativeTime.daysAgo", Math.floor(diff / 86400));
+}
+
 // Reference to avoid unused-import warning if a consumer only takes the array.
 void RELATIVE_THRESHOLDS;
 

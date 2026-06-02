@@ -170,6 +170,13 @@ export const en = {
     filter: "Filter",
     settings: "Settings",
     loading: "Loading…",
+    relativeTime: {
+      justNow: "just now",
+      secondsAgo: "{n}s ago",
+      minutesAgo: "{n}m ago",
+      hoursAgo: "{n}h ago",
+      daysAgo: "{n}d ago",
+    },
   },
 
   /* ─── Login ──────────────────────────────────────────────── */
@@ -317,6 +324,14 @@ export const en = {
       twoFactorDisabled: "Two-factor disabled",
       twoFactorEnabled: "Two-factor authentication enabled",
       secretCopied: "Secret copied",
+      twoFactorRequire: "Require a Google Authenticator code on every portal sign-in.",
+      addGoogleAuth: "Add Google Authenticator",
+      addGoogleAuthHint: "Scan a QR with your phone and confirm a code to enable.",
+      reportsPinFullDescription:
+        "A 4-digit code that gates historical reports. Today's data is always visible — yesterday and earlier require the PIN.",
+      pinIsSet: "PIN is set",
+      pinIsSetHint: "Required once per session before viewing past-date reports.",
+      change: "Change",
     },
 
     apiKeysSection: {
@@ -379,6 +394,29 @@ export const en = {
       rejectedCall: "Rejected Call",
       callerIdentity: "Caller Identity",
       callRecording: "Call Recording",
+    },
+    usageMetrics: {
+      calls: "Calls routed",
+      numbers: "Tracking numbers",
+      publishers: "Active publishers",
+      integrations: "Integrations",
+    },
+    rateRows: {
+      "rent-local": "Rent Local Number",
+      "rent-tf": "Rent Toll Free Number",
+      "min-local": "Minute Local Number",
+      "min-tf": "Minute Toll Free Number",
+      "min-byoc": "Minute BYOC Number",
+      rec: "Minute Call Recording",
+      voip: "VoIP Shield",
+      reject: "Rejected Call",
+      identity: "Caller Identity",
+    },
+    countries: {
+      US: "United States",
+      CA: "Canada",
+      UK: "United Kingdom",
+      AU: "Australia",
     },
   },
 
@@ -2683,6 +2721,44 @@ export const en = {
           toastSnoozed: "Snoozed for 24 hours",
           toastDismissed: "Dismissed",
         },
+        scope: {
+          campaign: "campaign",
+          buyer: "buyer",
+          publisher: "publisher",
+          network: "network",
+        },
+        data: {
+          rec_001: {
+            title: "Scale Health Tier 1 publisher mix",
+            body: "Conversion is up 24% over the last 6h. Three buyers have spare capacity.",
+            impactLabel: "Projected revenue / day",
+          },
+          rec_002: {
+            title: "Pause Auto Warranty in OH, MI",
+            body: "Acceptance has dropped below 18% in those geos for the past 48h.",
+            impactLabel: "Save / day",
+          },
+          rec_003: {
+            title: "Rebalance Solar to morning slots",
+            body: "07:00–11:00 calls convert 2.3× higher than the overall average.",
+            impactLabel: "Conversion lift",
+          },
+          rec_004: {
+            title: "Buyer Apex hit daily cap early",
+            body: "Apex hit cap at 14:12 today vs the 18:30 historical median.",
+            impactLabel: "Calls / day at risk",
+          },
+          rec_005: {
+            title: "Tighten qualify duration on Legal Intake",
+            body: "Raising the qualify-duration to 200s drops noise without hurting payouts.",
+            impactLabel: "Refund-rate ↓",
+          },
+          rec_006: {
+            title: "Add a backup buyer for Finance Q2",
+            body: "Single-buyer concentration is risky during Lendly's morning lulls.",
+            impactLabel: "Match-rate ↑",
+          },
+        },
       },
       autopilot: {
         title: "Autopilot",
@@ -2801,6 +2877,25 @@ export const en = {
         silver: "Silver",
         gold: "Gold",
         platinum: "Platinum",
+      },
+      benefits: {
+        demoDataOnly: "Demo data only",
+        noPayouts: "No payouts",
+        callsPerDay100: "100 calls / day",
+        callsPerDay500: "500 calls / day",
+        callsPerDay5k: "5,000 calls / day",
+        manualPayouts: "Manual payouts",
+        marketplaceBrowse: "Marketplace browse",
+        autoPayoutsWeekly: "Auto payouts (weekly)",
+        marketplaceBid: "Marketplace bid",
+        unlimitedRouting: "Unlimited routing",
+        dailyPayouts: "Daily payouts",
+        featuredMarketplaceSlot: "Featured marketplace slot",
+        prioritySupport: "Priority support",
+        whiteGloveSupport: "White-glove support",
+        customRateCards: "Custom rate cards",
+        directApiQuota: "Direct API quota",
+        vortyxVerifiedBadge: "Vortyx Verified badge",
       },
       vectors: {
         identity: {

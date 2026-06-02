@@ -51,7 +51,13 @@ export function UsageGrid() {
                     / {formatCompact(m.included)}
                   </span>
                 </div>
-                <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{m.label}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {(() => {
+                    const key = `billing.usageMetrics.${m.key}`;
+                    const resolved = t(key);
+                    return resolved === key ? m.label : resolved;
+                  })()}
+                </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary/60">
                   <motion.div
                     initial={{ width: 0 }}

@@ -19,6 +19,28 @@ import {
 } from "@/lib/store/kyc-store";
 import { cn } from "@/lib/utils";
 
+/** Map each English tier-benefit string to its translation key. Falls back
+ *  to the raw string if a benefit is missing here. */
+const BENEFIT_KEYS: Record<string, string> = {
+  "Demo data only": "toolsUI.trustEngine.benefits.demoDataOnly",
+  "No payouts": "toolsUI.trustEngine.benefits.noPayouts",
+  "100 calls / day": "toolsUI.trustEngine.benefits.callsPerDay100",
+  "500 calls / day": "toolsUI.trustEngine.benefits.callsPerDay500",
+  "5,000 calls / day": "toolsUI.trustEngine.benefits.callsPerDay5k",
+  "Manual payouts": "toolsUI.trustEngine.benefits.manualPayouts",
+  "Marketplace browse": "toolsUI.trustEngine.benefits.marketplaceBrowse",
+  "Auto payouts (weekly)": "toolsUI.trustEngine.benefits.autoPayoutsWeekly",
+  "Marketplace bid": "toolsUI.trustEngine.benefits.marketplaceBid",
+  "Unlimited routing": "toolsUI.trustEngine.benefits.unlimitedRouting",
+  "Daily payouts": "toolsUI.trustEngine.benefits.dailyPayouts",
+  "Featured marketplace slot": "toolsUI.trustEngine.benefits.featuredMarketplaceSlot",
+  "Priority support": "toolsUI.trustEngine.benefits.prioritySupport",
+  "White-glove support": "toolsUI.trustEngine.benefits.whiteGloveSupport",
+  "Custom rate cards": "toolsUI.trustEngine.benefits.customRateCards",
+  "Direct API quota": "toolsUI.trustEngine.benefits.directApiQuota",
+  "Vortyx Verified badge": "toolsUI.trustEngine.benefits.vortyxVerifiedBadge",
+};
+
 const TIER_LABEL_KEYS: Record<string, string> = {
   sandbox: "toolsUI.trustEngine.tiers.sandbox",
   bronze: "toolsUI.trustEngine.tiers.bronze",
@@ -120,21 +142,26 @@ export default function KycPage() {
                         </span>
                       </div>
                       <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                        {tierDef.benefits.map((b) => (
-                          <li
-                            key={b}
-                            className="inline-flex items-center gap-1"
-                          >
-                            <span
-                              aria-hidden
-                              className={cn(
-                                "inline-block h-1 w-1 rounded-full",
-                                reached ? "bg-accent" : "bg-border",
-                              )}
-                            />
-                            {b}
-                          </li>
-                        ))}
+                        {tierDef.benefits.map((b) => {
+                          const key = BENEFIT_KEYS[b];
+                          const translated = key ? t(key) : b;
+                          const label = translated === key ? b : translated;
+                          return (
+                            <li
+                              key={b}
+                              className="inline-flex items-center gap-1"
+                            >
+                              <span
+                                aria-hidden
+                                className={cn(
+                                  "inline-block h-1 w-1 rounded-full",
+                                  reached ? "bg-accent" : "bg-border",
+                                )}
+                              />
+                              {label}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </li>

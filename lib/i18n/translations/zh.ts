@@ -161,6 +161,13 @@ export const zh: TranslationShape = {
     filter: "筛选",
     settings: "设置",
     loading: "加载中…",
+    relativeTime: {
+      justNow: "刚刚",
+      secondsAgo: "{n} 秒前",
+      minutesAgo: "{n} 分钟前",
+      hoursAgo: "{n} 小时前",
+      daysAgo: "{n} 天前",
+    },
   },
 
   login: {
@@ -301,6 +308,16 @@ export const zh: TranslationShape = {
       twoFactorDisabled: "双重验证已禁用",
       twoFactorEnabled: "双重验证已启用",
       secretCopied: "密钥已复制",
+      twoFactorRequire:
+        "每次登录门户都需输入 Google Authenticator 验证码。",
+      addGoogleAuth: "添加 Google Authenticator",
+      addGoogleAuthHint:
+        "用手机扫描 QR 码并确认验证码以启用。",
+      reportsPinFullDescription:
+        "用于访问历史报表的 4 位数 PIN。今日数据始终可见 — 昨日及更早需要 PIN。",
+      pinIsSet: "PIN 已设置",
+      pinIsSetHint: "每次会话查看过往报表前需输入一次。",
+      change: "更改",
     },
 
     apiKeysSection: {
@@ -362,6 +379,29 @@ export const zh: TranslationShape = {
       rejectedCall: "拒接通话",
       callerIdentity: "来电者身份",
       callRecording: "通话录音",
+    },
+    usageMetrics: {
+      calls: "已路由通话",
+      numbers: "追踪号码",
+      publishers: "活跃发布商",
+      integrations: "集成",
+    },
+    rateRows: {
+      "rent-local": "本地号码租赁",
+      "rent-tf": "免费电话租赁",
+      "min-local": "本地号码 / 分钟",
+      "min-tf": "免费电话 / 分钟",
+      "min-byoc": "BYOC 号码 / 分钟",
+      rec: "通话录音 / 分钟",
+      voip: "VoIP 防护",
+      reject: "拒接通话",
+      identity: "来电者身份",
+    },
+    countries: {
+      US: "美国",
+      CA: "加拿大",
+      UK: "英国",
+      AU: "澳大利亚",
     },
   },
 
@@ -2659,6 +2699,44 @@ export const zh: TranslationShape = {
           toastSnoozed: "已稍后提醒 24 小时",
           toastDismissed: "已忽略",
         },
+        scope: {
+          campaign: "营销活动",
+          buyer: "买家",
+          publisher: "发布商",
+          network: "网络",
+        },
+        data: {
+          rec_001: {
+            title: "扩大 Health Tier 1 发布商组合",
+            body: "过去 6 小时转化率上升 24%。三家买家仍有空余容量。",
+            impactLabel: "预计每日收入",
+          },
+          rec_002: {
+            title: "在 OH、MI 暂停 Auto Warranty",
+            body: "过去 48 小时这两个地区的接受率已跌破 18%。",
+            impactLabel: "每日节省",
+          },
+          rec_003: {
+            title: "将 Solar 重新分配至早间时段",
+            body: "07:00–11:00 通话的转化率比全天平均高 2.3 倍。",
+            impactLabel: "转化提升",
+          },
+          rec_004: {
+            title: "买家 Apex 提前触达每日上限",
+            body: "Apex 今日 14:12 触达上限,而历史中位数为 18:30。",
+            impactLabel: "每日风险通话",
+          },
+          rec_005: {
+            title: "收紧 Legal Intake 的 qualify-duration",
+            body: "将 qualify-duration 提升至 200 秒可在不影响分成的情况下过滤噪声。",
+            impactLabel: "退款率 ↓",
+          },
+          rec_006: {
+            title: "为 Finance Q2 增加备用买家",
+            body: "在 Lendly 早间低谷期间,单一买家集中风险较高。",
+            impactLabel: "匹配率 ↑",
+          },
+        },
       },
       autopilot: {
         title: "Autopilot",
@@ -2777,6 +2855,25 @@ export const zh: TranslationShape = {
         silver: "Silver",
         gold: "Gold",
         platinum: "Platinum",
+      },
+      benefits: {
+        demoDataOnly: "仅演示数据",
+        noPayouts: "无分成",
+        callsPerDay100: "100 通话 / 天",
+        callsPerDay500: "500 通话 / 天",
+        callsPerDay5k: "5,000 通话 / 天",
+        manualPayouts: "手动分成",
+        marketplaceBrowse: "市场浏览",
+        autoPayoutsWeekly: "自动分成 (每周)",
+        marketplaceBid: "市场出价",
+        unlimitedRouting: "无限路由",
+        dailyPayouts: "每日分成",
+        featuredMarketplaceSlot: "市场特色展位",
+        prioritySupport: "优先支持",
+        whiteGloveSupport: "贴心管家服务",
+        customRateCards: "定制费率卡",
+        directApiQuota: "直连 API 配额",
+        vortyxVerifiedBadge: "Vortyx Verified 徽章",
       },
       vectors: {
         identity: {

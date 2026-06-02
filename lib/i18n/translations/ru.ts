@@ -161,6 +161,13 @@ export const ru: TranslationShape = {
     filter: "Фильтр",
     settings: "Настройки",
     loading: "Загрузка…",
+    relativeTime: {
+      justNow: "только что",
+      secondsAgo: "{n} с назад",
+      minutesAgo: "{n} мин назад",
+      hoursAgo: "{n} ч назад",
+      daysAgo: "{n} дн назад",
+    },
   },
 
   login: {
@@ -300,6 +307,17 @@ export const ru: TranslationShape = {
       twoFactorDisabled: "Двухфакторная аутентификация отключена",
       twoFactorEnabled: "Двухфакторная аутентификация включена",
       secretCopied: "Секрет скопирован",
+      twoFactorRequire:
+        "Требовать код Google Authenticator при каждом входе в портал.",
+      addGoogleAuth: "Добавить Google Authenticator",
+      addGoogleAuthHint:
+        "Отсканируйте QR-код телефоном и подтвердите код для включения.",
+      reportsPinFullDescription:
+        "4-значный код, ограничивающий доступ к историческим отчётам. Сегодняшние данные видны всегда — для вчерашних и более ранних нужен PIN.",
+      pinIsSet: "PIN установлен",
+      pinIsSetHint:
+        "Запрашивается один раз за сессию перед просмотром отчётов прошлых дат.",
+      change: "Изменить",
     },
 
     apiKeysSection: {
@@ -358,6 +376,29 @@ export const ru: TranslationShape = {
       rejectedCall: "Отклонённый звонок",
       callerIdentity: "Идентификация",
       callRecording: "Запись звонков",
+    },
+    usageMetrics: {
+      calls: "Звонков обработано",
+      numbers: "Отслеживаемые номера",
+      publishers: "Активные издатели",
+      integrations: "Интеграции",
+    },
+    rateRows: {
+      "rent-local": "Аренда местного номера",
+      "rent-tf": "Аренда бесплатного номера",
+      "min-local": "Минута на местный номер",
+      "min-tf": "Минута на бесплатный номер",
+      "min-byoc": "Минута BYOC-номера",
+      rec: "Минута записи звонка",
+      voip: "VoIP Защита",
+      reject: "Отклонённый звонок",
+      identity: "Идентификация звонящего",
+    },
+    countries: {
+      US: "США",
+      CA: "Канада",
+      UK: "Великобритания",
+      AU: "Австралия",
     },
   },
 
@@ -2655,6 +2696,44 @@ export const ru: TranslationShape = {
           toastSnoozed: "Отложено на 24 часа",
           toastDismissed: "Отклонено",
         },
+        scope: {
+          campaign: "кампания",
+          buyer: "покупатель",
+          publisher: "издатель",
+          network: "сеть",
+        },
+        data: {
+          rec_001: {
+            title: "Масштабировать публишер-микс Health Tier 1",
+            body: "Конверсия выросла на 24% за последние 6 часов. У трёх покупателей есть запас по ёмкости.",
+            impactLabel: "Прогноз выручки в день",
+          },
+          rec_002: {
+            title: "Поставить на паузу Auto Warranty в OH, MI",
+            body: "Приём упал ниже 18% в этих гео за последние 48 часов.",
+            impactLabel: "Экономия в день",
+          },
+          rec_003: {
+            title: "Перераспределить Solar на утренние слоты",
+            body: "Звонки в 07:00–11:00 конвертируются в 2.3× выше среднего по дню.",
+            impactLabel: "Прирост конверсии",
+          },
+          rec_004: {
+            title: "Покупатель Apex рано достиг суточного лимита",
+            body: "Apex упёрся в лимит в 14:12 — против исторической медианы 18:30.",
+            impactLabel: "Звонков в день под риском",
+          },
+          rec_005: {
+            title: "Ужесточить qualify-duration для Legal Intake",
+            body: "Подняв qualify-duration до 200 с, отсечём шум без потерь по выплатам.",
+            impactLabel: "Возвраты ↓",
+          },
+          rec_006: {
+            title: "Добавить резервного покупателя для Finance Q2",
+            body: "Концентрация на одном покупателе рискованна в утренние просадки Lendly.",
+            impactLabel: "Match-rate ↑",
+          },
+        },
       },
       autopilot: {
         title: "Автопилот",
@@ -2773,6 +2852,25 @@ export const ru: TranslationShape = {
         silver: "Серебро",
         gold: "Золото",
         platinum: "Платина",
+      },
+      benefits: {
+        demoDataOnly: "Только демо-данные",
+        noPayouts: "Без выплат",
+        callsPerDay100: "100 звонков / день",
+        callsPerDay500: "500 звонков / день",
+        callsPerDay5k: "5 000 звонков / день",
+        manualPayouts: "Ручные выплаты",
+        marketplaceBrowse: "Просмотр маркетплейса",
+        autoPayoutsWeekly: "Авто-выплаты (еженедельно)",
+        marketplaceBid: "Ставки на маркетплейсе",
+        unlimitedRouting: "Безлимитная маршрутизация",
+        dailyPayouts: "Ежедневные выплаты",
+        featuredMarketplaceSlot: "Витрина маркетплейса",
+        prioritySupport: "Приоритетная поддержка",
+        whiteGloveSupport: "Персональный менеджер",
+        customRateCards: "Индивидуальные тарифы",
+        directApiQuota: "Прямая API-квота",
+        vortyxVerifiedBadge: "Бейдж Vortyx Verified",
       },
       vectors: {
         identity: {

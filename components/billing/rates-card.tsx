@@ -113,11 +113,15 @@ export function RatesCard() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {COUNTRIES.map((c) => (
-              <SelectItem key={c.code} value={c.code}>
-                {c.label}
-              </SelectItem>
-            ))}
+            {COUNTRIES.map((c) => {
+              const key = `billing.countries.${c.code}`;
+              const resolved = t(key);
+              return (
+                <SelectItem key={c.code} value={c.code}>
+                  {resolved === key ? c.label : resolved}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -129,6 +133,7 @@ export function RatesCard() {
               key={r.key}
               row={r}
               borderClass={borderFor(i, rates.length)}
+              t={t}
             />
           ))}
         </ul>
@@ -142,16 +147,21 @@ export function RatesCard() {
 function RateTile({
   row,
   borderClass,
+  t,
 }: {
   row: RateRow;
   borderClass: string;
+  t: (key: string) => string;
 }) {
   const Icon = row.icon;
+  const key = `billing.rateRows.${row.key}`;
+  const resolved = t(key);
+  const label = resolved === key ? row.label : resolved;
   return (
     <li className={`flex flex-col gap-1 p-4 ${borderClass}`}>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Icon className="h-3.5 w-3.5 text-accent" />
-        {row.label}
+        {label}
       </div>
       <div className="flex items-baseline gap-0.5 font-mono text-lg font-semibold tabular-nums">
         ${row.amount.toFixed(row.decimals)}

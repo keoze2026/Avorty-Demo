@@ -161,6 +161,13 @@ export const ja: TranslationShape = {
     filter: "フィルター",
     settings: "設定",
     loading: "読み込み中…",
+    relativeTime: {
+      justNow: "たった今",
+      secondsAgo: "{n} 秒前",
+      minutesAgo: "{n} 分前",
+      hoursAgo: "{n} 時間前",
+      daysAgo: "{n} 日前",
+    },
   },
 
   login: {
@@ -300,6 +307,17 @@ export const ja: TranslationShape = {
       twoFactorDisabled: "二要素認証を無効化しました",
       twoFactorEnabled: "二要素認証を有効化しました",
       secretCopied: "シークレットをコピーしました",
+      twoFactorRequire:
+        "ポータルへのサインインごとに Google Authenticator のコードを要求します。",
+      addGoogleAuth: "Google Authenticator を追加",
+      addGoogleAuthHint:
+        "スマホで QR コードをスキャンし、コードを確認して有効化します。",
+      reportsPinFullDescription:
+        "履歴レポートへのアクセスをガードする 4 桁の PIN。本日のデータは常に表示されますが、昨日以前のデータには PIN が必要です。",
+      pinIsSet: "PIN 設定済み",
+      pinIsSetHint:
+        "過去日のレポートを表示する前に、セッションごとに 1 回入力が必要です。",
+      change: "変更",
     },
 
     apiKeysSection: {
@@ -358,6 +376,29 @@ export const ja: TranslationShape = {
       rejectedCall: "拒否通話",
       callerIdentity: "発信者識別",
       callRecording: "通話録音",
+    },
+    usageMetrics: {
+      calls: "ルーティング済み通話",
+      numbers: "トラッキング番号",
+      publishers: "稼働中のパブリッシャー",
+      integrations: "連携",
+    },
+    rateRows: {
+      "rent-local": "ローカル番号レンタル",
+      "rent-tf": "フリーダイヤルレンタル",
+      "min-local": "ローカル番号 / 分",
+      "min-tf": "フリーダイヤル / 分",
+      "min-byoc": "BYOC 番号 / 分",
+      rec: "通話録音 / 分",
+      voip: "VoIP シールド",
+      reject: "拒否通話",
+      identity: "発信者識別",
+    },
+    countries: {
+      US: "アメリカ合衆国",
+      CA: "カナダ",
+      UK: "イギリス",
+      AU: "オーストラリア",
     },
   },
 
@@ -2655,6 +2696,44 @@ export const ja: TranslationShape = {
           toastSnoozed: "24時間スヌーズしました",
           toastDismissed: "却下しました",
         },
+        scope: {
+          campaign: "キャンペーン",
+          buyer: "バイヤー",
+          publisher: "パブリッシャー",
+          network: "ネットワーク",
+        },
+        data: {
+          rec_001: {
+            title: "Health Tier 1 のパブリッシャーミックスを拡大",
+            body: "直近 6 時間でコンバージョンが 24% 上昇。3 社のバイヤーに空き容量あり。",
+            impactLabel: "予測収益 / 日",
+          },
+          rec_002: {
+            title: "OH、MI の Auto Warranty を一時停止",
+            body: "対象地域の受入率が 48 時間にわたり 18% を下回っています。",
+            impactLabel: "節約 / 日",
+          },
+          rec_003: {
+            title: "Solar を朝の時間帯にリバランス",
+            body: "07:00–11:00 の通話は全体平均より 2.3 倍コンバートします。",
+            impactLabel: "コンバージョン改善",
+          },
+          rec_004: {
+            title: "バイヤー Apex が日次上限に早期到達",
+            body: "Apex は本日 14:12 に上限到達 — 過去中央値の 18:30 より大幅に早い。",
+            impactLabel: "リスクのある通話 / 日",
+          },
+          rec_005: {
+            title: "Legal Intake の qualify-duration を厳格化",
+            body: "qualify-duration を 200 秒に引き上げれば、支払いに影響せずノイズを除去できます。",
+            impactLabel: "返金率 ↓",
+          },
+          rec_006: {
+            title: "Finance Q2 にバックアップバイヤーを追加",
+            body: "Lendly の朝の落ち込み時、単一バイヤー集中はリスクです。",
+            impactLabel: "Match-rate ↑",
+          },
+        },
       },
       autopilot: {
         title: "オートパイロット",
@@ -2773,6 +2852,25 @@ export const ja: TranslationShape = {
         silver: "シルバー",
         gold: "ゴールド",
         platinum: "プラチナ",
+      },
+      benefits: {
+        demoDataOnly: "デモデータのみ",
+        noPayouts: "支払いなし",
+        callsPerDay100: "100 通話 / 日",
+        callsPerDay500: "500 通話 / 日",
+        callsPerDay5k: "5,000 通話 / 日",
+        manualPayouts: "手動支払い",
+        marketplaceBrowse: "マーケットプレイス閲覧",
+        autoPayoutsWeekly: "自動支払い (週次)",
+        marketplaceBid: "マーケットプレイス入札",
+        unlimitedRouting: "ルーティング無制限",
+        dailyPayouts: "毎日支払い",
+        featuredMarketplaceSlot: "マーケットプレイス特集枠",
+        prioritySupport: "優先サポート",
+        whiteGloveSupport: "ホワイトグローブサポート",
+        customRateCards: "カスタムレート",
+        directApiQuota: "直接 API クォータ",
+        vortyxVerifiedBadge: "Vortyx Verified バッジ",
       },
       vectors: {
         identity: {
