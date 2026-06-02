@@ -7,18 +7,19 @@ import { Flame, Search, X } from "lucide-react";
 import { ListingCard } from "./listing-card";
 import { Input } from "@/components/ui/input";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import type { VerticalKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const VERTICAL_TABS: Array<{ id: "all" | "hot" | VerticalKey; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "hot", label: "Hot" },
-  { id: "Health", label: "Health" },
-  { id: "Solar", label: "Solar" },
-  { id: "Legal", label: "Legal" },
-  { id: "Auto", label: "Auto" },
-  { id: "Finance", label: "Finance" },
-  { id: "Home", label: "Home" },
+const VERTICAL_TABS: Array<{ id: "all" | "hot" | VerticalKey; labelKey: string }> = [
+  { id: "all", labelKey: "toolsUI.marketplace.grid.tabs.all" },
+  { id: "hot", labelKey: "toolsUI.marketplace.grid.tabs.hot" },
+  { id: "Health", labelKey: "toolsUI.marketplace.grid.tabs.health" },
+  { id: "Solar", labelKey: "toolsUI.marketplace.grid.tabs.solar" },
+  { id: "Legal", labelKey: "toolsUI.marketplace.grid.tabs.legal" },
+  { id: "Auto", labelKey: "toolsUI.marketplace.grid.tabs.auto" },
+  { id: "Finance", labelKey: "toolsUI.marketplace.grid.tabs.finance" },
+  { id: "Home", labelKey: "toolsUI.marketplace.grid.tabs.home" },
 ];
 
 export function ListingsGrid({
@@ -28,6 +29,7 @@ export function ListingsGrid({
   featuredId: string | null;
   onFocus: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const listings = useMarketplaceStore((s) => s.listings);
   const [tab, setTab] = useState<(typeof VERTICAL_TABS)[number]["id"]>("all");
   const [query, setQuery] = useState("");
@@ -55,9 +57,9 @@ export function ListingsGrid({
   return (
     <section className="@container/listings space-y-3">
       <header className="flex flex-wrap items-center gap-2">
-        <h3 className="font-sans text-base font-semibold">Open listings</h3>
+        <h3 className="font-sans text-base font-semibold">{t("toolsUI.marketplace.grid.openListings")}</h3>
         <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
-          {filtered.length} active
+          {t("toolsUI.marketplace.grid.activeCount").replace("{count}", String(filtered.length))}
         </span>
 
         <div className="relative ml-auto w-full max-w-xs sm:w-64">
@@ -65,7 +67,7 @@ export function ListingsGrid({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter by campaign, state, vertical…"
+            placeholder={t("toolsUI.marketplace.grid.searchPlaceholder")}
             className="h-8 w-full pl-8 text-xs"
           />
           {query && (
@@ -73,7 +75,7 @@ export function ListingsGrid({
               type="button"
               onClick={() => setQuery("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Clear"
+              aria-label={t("toolsUI.marketplace.grid.clearAria")}
             >
               <X className="h-3 w-3" />
             </button>
@@ -82,20 +84,20 @@ export function ListingsGrid({
       </header>
 
       <div className="flex flex-wrap gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
-        {VERTICAL_TABS.map((t) => (
+        {VERTICAL_TABS.map((vt) => (
           <button
-            key={t.id}
+            key={vt.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(vt.id)}
             className={cn(
               "inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-mono transition-colors",
-              tab === t.id
+              tab === vt.id
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {t.id === "hot" && <Flame className="h-3 w-3" />}
-            {t.label}
+            {vt.id === "hot" && <Flame className="h-3 w-3" />}
+            {t(vt.labelKey)}
           </button>
         ))}
       </div>

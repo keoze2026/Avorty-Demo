@@ -14,18 +14,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 import type { PayoutStatus } from "@/lib/types";
 
-const STATUS_BADGE: Record<PayoutStatus, { variant: React.ComponentProps<typeof Badge>["variant"]; label: string; icon: typeof CheckCircle2 }> = {
-  paid: { variant: "success", label: "Paid", icon: CheckCircle2 },
-  pending: { variant: "outline", label: "Pending", icon: Clock },
-  processing: { variant: "warning", label: "Processing", icon: Loader2 },
-  failed: { variant: "destructive", label: "Failed", icon: Receipt },
+const STATUS_BADGE: Record<PayoutStatus, { variant: React.ComponentProps<typeof Badge>["variant"]; labelKey: string; icon: typeof CheckCircle2 }> = {
+  paid: { variant: "success", labelKey: "networkUI.publishers.payouts.paid", icon: CheckCircle2 },
+  pending: { variant: "outline", labelKey: "networkUI.publishers.payouts.pending", icon: Clock },
+  processing: { variant: "warning", labelKey: "networkUI.publishers.payouts.processing", icon: Loader2 },
+  failed: { variant: "destructive", labelKey: "networkUI.publishers.payouts.failed", icon: Receipt },
 };
 
 export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
+  const { t } = useTranslation();
   const payouts = usePublishersStore((s) => s.payoutsFor(publisherId));
   const publisher = usePublishersStore((s) => s.getById(publisherId));
 
@@ -39,33 +41,33 @@ export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
       {/* Summary cards */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <SummaryCard
-          label="Pending balance"
+          label={t("networkUI.publishers.payouts.pendingBalance")}
           value={formatCurrency(publisher.pendingPayout)}
           accent="bg-[color:var(--warning)]/15 text-[color:var(--warning)]"
           icon={Clock}
-          subtitle={upcomingDate ? `Next payout ${new Date(upcomingDate).toLocaleDateString()}` : "—"}
+          subtitle={upcomingDate ? t("networkUI.publishers.payouts.nextPayout").replace("{date}", new Date(upcomingDate).toLocaleDateString()) : "—"}
         />
         <SummaryCard
-          label="Paid this quarter"
+          label={t("networkUI.publishers.payouts.paidThisQuarter")}
           value={formatCurrency(totalPaid)}
           accent="bg-[color:var(--success)]/15 text-[color:var(--success)]"
           icon={CheckCircle2}
-          subtitle={`${payouts.filter((p) => p.status === "paid").length} payouts`}
+          subtitle={t("networkUI.publishers.payouts.payoutsCount").replace("{count}", String(payouts.filter((p) => p.status === "paid").length))}
         />
         <SummaryCard
-          label="Lifetime revenue"
+          label={t("networkUI.publishers.payouts.lifetimeRevenue")}
           value={formatCurrency(publisher.lifetimeRevenue)}
           accent="bg-accent/15 text-accent"
           icon={Receipt}
-          subtitle={`${formatCompact(publisher.callsMonth)} calls / mo`}
+          subtitle={t("networkUI.publishers.payouts.callsPerMo").replace("{count}", formatCompact(publisher.callsMonth))}
         />
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">Payout history</CardTitle>
+          <CardTitle className="text-base">{t("networkUI.publishers.payouts.history")}</CardTitle>
           <Button size="sm" variant="outline">
-            <FileDown className="h-3.5 w-3.5" /> Export
+            <FileDown className="h-3.5 w-3.5" /> {t("networkUI.publishers.payouts.exportBtn")}
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -73,11 +75,11 @@ export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-secondary/40">
-                  <TableHead>Period</TableHead>
-                  <TableHead>Calls</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Paid / scheduled</TableHead>
+                  <TableHead>{t("networkUI.publishers.payouts.period")}</TableHead>
+                  <TableHead>{t("networkUI.publishers.payouts.calls")}</TableHead>
+                  <TableHead>{t("networkUI.publishers.payouts.amount")}</TableHead>
+                  <TableHead>{t("networkUI.publishers.payouts.status")}</TableHead>
+                  <TableHead>{t("networkUI.publishers.payouts.paidScheduled")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,7 +103,7 @@ export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
                       <TableCell>
                         <Badge variant={meta.variant} className="gap-1">
                           <Icon className={`h-3 w-3 ${animate ? "animate-spin" : ""}`} />
-                          {meta.label}
+                          {t(meta.labelKey)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs font-mono text-muted-foreground">

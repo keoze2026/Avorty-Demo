@@ -3,9 +3,11 @@
 import { NodeFrame } from "./node-frame";
 import { NODE_META } from "../node-meta";
 import type { RFNodeProps } from "./types";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 export function InboundNode({ data, selected }: RFNodeProps<"inbound">) {
+  const { t } = useTranslation();
   const meta = NODE_META.inbound;
   const cfg = data.inbound;
   const campaign = useCampaignsStore((s) =>
@@ -15,7 +17,7 @@ export function InboundNode({ data, selected }: RFNodeProps<"inbound">) {
   return (
     <NodeFrame
       icon={meta.icon}
-      title={meta.label}
+      title={t("trafficUI.routing.nodes.inbound.label")}
       tone={meta.tone}
       selected={selected}
       hasInput={false}
@@ -28,7 +30,7 @@ export function InboundNode({ data, selected }: RFNodeProps<"inbound">) {
             <div className="mt-0.5 font-mono text-[10px]">{campaign.vertical}</div>
           </>
         ) : (
-          <span className="italic">Not bound to a campaign</span>
+          <span className="italic">{t("trafficUI.routing.nodes.inbound.notBound")}</span>
         )}
       </div>
     </NodeFrame>

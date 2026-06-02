@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { Bell, KeyRound, Monitor, ShieldCheck, UserCog } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 export type SettingsSection =
@@ -15,17 +16,19 @@ export type SettingsSection =
 
 interface RailItem {
   id: SettingsSection;
-  label: string;
-  description: string;
+  /** Dotted translation key under `settings.rail.*.label`. */
+  labelKey: string;
+  /** Dotted translation key under `settings.rail.*.description`. */
+  descriptionKey: string;
   icon: LucideIcon;
 }
 
 const ITEMS: RailItem[] = [
-  { id: "profile", label: "Profile", description: "Personal account", icon: UserCog },
-  { id: "security", label: "Security", description: "2FA + reports PIN", icon: ShieldCheck },
-  { id: "api-keys", label: "API keys", description: "Programmatic access", icon: KeyRound },
-  { id: "notifications", label: "Notifications", description: "Channels + alerts", icon: Bell },
-  { id: "sessions", label: "Sessions", description: "Active devices", icon: Monitor },
+  { id: "profile",       labelKey: "settings.rail.profile.label",       descriptionKey: "settings.rail.profile.description",       icon: UserCog },
+  { id: "security",      labelKey: "settings.rail.security.label",      descriptionKey: "settings.rail.security.description",      icon: ShieldCheck },
+  { id: "api-keys",      labelKey: "settings.rail.apiKeys.label",       descriptionKey: "settings.rail.apiKeys.description",       icon: KeyRound },
+  { id: "notifications", labelKey: "settings.rail.notifications.label", descriptionKey: "settings.rail.notifications.description", icon: Bell },
+  { id: "sessions",      labelKey: "settings.rail.sessions.label",      descriptionKey: "settings.rail.sessions.description",      icon: Monitor },
 ];
 
 interface Props {
@@ -34,10 +37,11 @@ interface Props {
 }
 
 export function SettingsRail({ active, onSelect }: Props) {
+  const { t } = useTranslation();
   return (
     <aside className="space-y-1.5">
       <h2 className="px-1 text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-        Settings
+        {t("settings.rail.title")}
       </h2>
       <ul className="space-y-1">
         {ITEMS.map((item, i) => {
@@ -78,9 +82,9 @@ export function SettingsRail({ active, onSelect }: Props) {
                 </span>
                 <div className="min-w-0">
                   <div className={cn("text-sm font-medium", isActive && "text-foreground")}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </div>
-                  <div className="mt-0.5 text-[10px] text-muted-foreground">{item.description}</div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground">{t(item.descriptionKey)}</div>
                 </div>
               </button>
             </motion.li>

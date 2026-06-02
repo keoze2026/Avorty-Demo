@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { CallStatusBadge } from "./call-status-badge";
+import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -79,6 +80,7 @@ function enrich(call: Call): CallEnrichment {
 }
 
 export function CallDetailSheet({ call, onOpenChange }: Props) {
+  const { t } = useTranslation();
   const open = !!call;
   const enrichment = call ? enrich(call) : null;
   return (
@@ -103,14 +105,14 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
             <div className="flex-1 overflow-y-auto px-6 py-4">
               {/* Headline KPIs */}
               <div className="grid grid-cols-3 gap-2 text-center">
-                <Stat label="Duration" value={call.durationSec > 0 ? formatDuration(call.durationSec) : "—"} />
+                <Stat label={t("toolsUI.callLogs.detail.duration")} value={call.durationSec > 0 ? formatDuration(call.durationSec) : "—"} />
                 <Stat
-                  label="Payout"
+                  label={t("toolsUI.callLogs.detail.payout")}
                   value={call.payout > 0 ? formatCurrency(call.payout, true) : "—"}
                   highlight={call.payout > 0}
                 />
                 <Stat
-                  label="Revenue"
+                  label={t("toolsUI.callLogs.detail.revenue")}
                   value={call.revenue > 0 ? formatCurrency(call.revenue, true) : "—"}
                 />
               </div>
@@ -118,38 +120,38 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
               {/* Routing timeline */}
               <section className="mt-6">
                 <h3 className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-                  Routing path
+                  {t("toolsUI.callLogs.detail.routingPath")}
                 </h3>
                 <ol className="mt-3 space-y-3">
                   <Step
                     icon={PhoneIncoming}
-                    label="Caller"
+                    label={t("toolsUI.callLogs.detail.caller")}
                     value={toE164(call.callerNumber)}
-                    sub={call.geo.state ? `${call.geo.city}, ${call.geo.state}` : "Unknown geo"}
+                    sub={call.geo.state ? `${call.geo.city}, ${call.geo.state}` : t("toolsUI.callLogs.detail.unknownGeo")}
                   />
                   <Step
                     icon={Users}
-                    label="Publisher"
+                    label={t("toolsUI.callLogs.detail.publisher")}
                     value={call.publisherName ?? "—"}
                     sub={call.publisherId}
                     href={call.publisherId ? `${ROUTES.publishers}/${call.publisherId}` : undefined}
                   />
                   <Step
                     icon={Hash}
-                    label="Tracking number"
+                    label={t("toolsUI.callLogs.detail.trackingNumber")}
                     value={toE164(call.destinationNumber)}
                   />
                   <Step
                     icon={Tag}
-                    label="Campaign"
+                    label={t("toolsUI.callLogs.detail.campaign")}
                     value={call.campaignName}
                     sub={call.campaignId}
                     href={`${ROUTES.campaigns}/${call.campaignId}`}
                   />
                   <Step
                     icon={Building2}
-                    label="Buyer"
-                    value={call.buyerName ?? "Unmatched"}
+                    label={t("toolsUI.callLogs.detail.buyer")}
+                    value={call.buyerName ?? t("toolsUI.callLogs.detail.unmatched")}
                     sub={call.buyerId}
                     href={call.buyerId ? `${ROUTES.buyers}/${call.buyerId}` : undefined}
                     final
@@ -160,16 +162,16 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
 
               {/* Geo + caller meta */}
               <section className="mt-6 grid grid-cols-2 gap-3">
-                <MetaCell icon={MapPin} label="Location">
+                <MetaCell icon={MapPin} label={t("toolsUI.callLogs.detail.location")}>
                   {call.geo.state ? `${call.geo.city}, ${call.geo.state}` : "—"}
                 </MetaCell>
-                <MetaCell icon={Phone} label="Destination">
+                <MetaCell icon={Phone} label={t("toolsUI.callLogs.detail.destination")}>
                   <span className="font-mono">{toE164(call.destinationNumber)}</span>
                 </MetaCell>
-                <MetaCell icon={CheckCircle2} label="Outcome">
-                  {call.status === "completed" ? "Qualified · paid" : call.status}
+                <MetaCell icon={CheckCircle2} label={t("toolsUI.callLogs.detail.outcome")}>
+                  {call.status === "completed" ? t("toolsUI.callLogs.detail.outcomeQualified") : call.status}
                 </MetaCell>
-                <MetaCell icon={DollarSign} label="Revenue · payout">
+                <MetaCell icon={DollarSign} label={t("toolsUI.callLogs.detail.revenuePayout")}>
                   <span className="font-mono">
                     {call.revenue > 0 ? formatCurrency(call.revenue, true) : "—"} /{" "}
                     {call.payout > 0 ? formatCurrency(call.payout, true) : "—"}
@@ -180,16 +182,16 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                     per-call hash so the same call always shows the same data. */}
                 {enrichment && (
                   <>
-                    <MetaCell icon={Flag} label="Country">
+                    <MetaCell icon={Flag} label={t("toolsUI.callLogs.detail.country")}>
                       <span className="inline-flex items-center gap-1.5">
                         <span aria-hidden>{enrichment.country.flag}</span>
                         {enrichment.country.name}
                       </span>
                     </MetaCell>
-                    <MetaCell icon={Radio} label="Carrier">
+                    <MetaCell icon={Radio} label={t("toolsUI.callLogs.detail.carrier")}>
                       {enrichment.carrier}
                     </MetaCell>
-                    <MetaCell icon={Signal} label="Line type">
+                    <MetaCell icon={Signal} label={t("toolsUI.callLogs.detail.lineType")}>
                       <span className="inline-flex items-center gap-1.5">
                         <span
                           aria-hidden
@@ -214,7 +216,7 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
               <section className="mt-6 rounded-lg border border-dashed border-border/60 bg-secondary/30 p-4 text-center">
                 <PlayCircle className="mx-auto h-6 w-6 text-accent" />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Recording playback ships with the call recording feature in a later phase.
+                  {t("toolsUI.callLogs.detail.recordingNote")}
                 </p>
               </section>
             </div>

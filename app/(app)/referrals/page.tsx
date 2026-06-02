@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ReferralSpendChart } from "@/components/referrals/referral-spend-chart";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
+import { useTranslation } from "@/hooks/use-translation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function ReferralsPage() {
+  const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
   const [pageSize, setPageSize] = React.useState(25);
   const [page, setPage] = React.useState(0);
@@ -60,10 +62,10 @@ export default function ReferralsPage() {
     try {
       await navigator.clipboard.writeText(MOCK_REFERRAL_LINK);
       setCopied(true);
-      toast.success("Referral link copied");
+      toast.success(t("toolsUI.referrals.toastCopied"));
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error("Couldn't copy to clipboard");
+      toast.error(t("toolsUI.referrals.toastCopyError"));
     }
   };
 
@@ -72,8 +74,8 @@ export default function ReferralsPage() {
   return (
     <>
       <PageHeader
-        title="Referral Program"
-        description={`Earn ${commissionPct} of every client's lifetime spend when you bring them onto Vortyx.`}
+        title={t("toolsUI.referrals.pageTitle")}
+        description={t("toolsUI.referrals.pageDescription").replace("{pct}", commissionPct)}
       />
 
       {/* Hero — referral link + share CTA */}
@@ -82,21 +84,20 @@ export default function ReferralsPage() {
           <CardContent className="space-y-3 p-6">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-accent/45 bg-accent/12 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
               <Gift className="h-3 w-3" />
-              Referral Partner
+              {t("toolsUI.referrals.partnerBadge")}
             </div>
             <h2 className="text-lg font-semibold leading-tight">
-              Refer a client. We&apos;ll send you{" "}
-              <span className="text-accent">{commissionPct}</span> of every dollar they spend — forever.
+              {t("toolsUI.referrals.heroTitleBefore")}
+              <span className="text-accent">{commissionPct}</span>
+              {t("toolsUI.referrals.heroTitleAfter")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Share your unique link with any agency or buyer. The moment they sign up
-              through it, every payout they make to the network earns you a {commissionPct} partner
-              commission. Paid out automatically with your monthly settlement.
+              {t("toolsUI.referrals.heroBody").replace("{pct}", commissionPct)}
             </p>
 
             <div className="mt-2 flex items-center gap-2 rounded-lg border border-border bg-secondary/30 p-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Your link
+                {t("toolsUI.referrals.yourLink")}
               </span>
               <span className="flex-1 truncate font-mono text-xs text-foreground">
                 {MOCK_REFERRAL_LINK}
@@ -104,18 +105,18 @@ export default function ReferralsPage() {
               <Button size="sm" variant="outline" onClick={onCopy} className="gap-1.5">
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5" /> Copied
+                    <Check className="h-3.5 w-3.5" /> {t("toolsUI.referrals.copied")}
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" /> Copy
+                    <Copy className="h-3.5 w-3.5" /> {t("toolsUI.referrals.copy")}
                   </>
                 )}
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                Code
+                {t("toolsUI.referrals.codeLabel")}
               </span>
               <span className="font-mono text-xs text-foreground">{MOCK_REFERRAL_CODE}</span>
               <span className="mx-2 h-3 w-px self-center bg-border" />
@@ -123,9 +124,9 @@ export default function ReferralsPage() {
                 size="sm"
                 variant="ghost"
                 className="h-7 gap-1.5 text-xs"
-                onClick={() => toast.success("Invite email composer — coming soon")}
+                onClick={() => toast.success(t("toolsUI.referrals.toastInviteSoon"))}
               >
-                <Mail className="h-3.5 w-3.5" /> Email a contact
+                <Mail className="h-3.5 w-3.5" /> {t("toolsUI.referrals.emailContact")}
               </Button>
             </div>
           </CardContent>
@@ -133,13 +134,13 @@ export default function ReferralsPage() {
           {/* Lifetime earnings hero number */}
           <div className="flex flex-col justify-center gap-1 border-l border-border bg-secondary/20 p-6">
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Lifetime earnings
+              {t("toolsUI.referrals.lifetimeEarnings")}
             </span>
             <span className="text-3xl font-semibold tabular-nums text-foreground">
               {formatCurrency(stats.lifetimeEarnings)}
             </span>
             <span className="text-[11px] text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
-              ↑ {formatCurrency(stats.monthEarnings)} earned this month
+              {t("toolsUI.referrals.earnedThisMonth").replace("{amount}", formatCurrency(stats.monthEarnings))}
             </span>
           </div>
         </div>
@@ -149,22 +150,22 @@ export default function ReferralsPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard
           icon={Users}
-          label="Total referrals"
+          label={t("toolsUI.referrals.stats.totalReferrals")}
           value={formatNumber(stats.clientCount)}
         />
         <StatCard
           icon={Users}
-          label="Active referrals"
+          label={t("toolsUI.referrals.stats.activeReferrals")}
           value={formatNumber(stats.activeCount)}
         />
         <StatCard
           icon={Gift}
-          label="Commission rate"
+          label={t("toolsUI.referrals.stats.commissionRate")}
           value={`${(REFERRAL_COMMISSION_RATE * 100).toFixed(0)}%`}
         />
         <StatCard
           icon={Gift}
-          label="This month"
+          label={t("toolsUI.referrals.stats.thisMonth")}
           value={formatCurrency(stats.monthEarnings)}
         />
       </div>
@@ -172,23 +173,22 @@ export default function ReferralsPage() {
       {/* Referred clients table */}
       <Card className="overflow-hidden p-0">
         <div className="border-b border-border px-6 py-4">
-          <h3 className="text-base font-semibold">Referred clients</h3>
+          <h3 className="text-base font-semibold">{t("toolsUI.referrals.table.title")}</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Every client signed up through your link, with their lifetime spend and your{" "}
-            {commissionPct} commission share.
+            {t("toolsUI.referrals.table.description").replace("{pct}", commissionPct)}
           </p>
         </div>
         <div className="overflow-x-auto">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6 text-left">Client</TableHead>
-                <TableHead className="text-left">Vertical</TableHead>
-                <TableHead className="text-left">Joined</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>30-day spend</TableHead>
-                <TableHead>Lifetime spend</TableHead>
-                <TableHead className="pr-6">Your commission</TableHead>
+                <TableHead className="pl-6 text-left">{t("toolsUI.referrals.table.columns.client")}</TableHead>
+                <TableHead className="text-left">{t("toolsUI.referrals.table.columns.vertical")}</TableHead>
+                <TableHead className="text-left">{t("toolsUI.referrals.table.columns.joined")}</TableHead>
+                <TableHead>{t("toolsUI.referrals.table.columns.status")}</TableHead>
+                <TableHead>{t("toolsUI.referrals.table.columns.monthSpend")}</TableHead>
+                <TableHead>{t("toolsUI.referrals.table.columns.lifetimeSpend")}</TableHead>
+                <TableHead className="pr-6">{t("toolsUI.referrals.table.columns.yourCommission")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

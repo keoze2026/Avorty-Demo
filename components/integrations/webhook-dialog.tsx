@@ -22,15 +22,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Webhook } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
-const EVENT_CATALOG = [
-  { key: "call.completed", description: "Settled call (pays out)" },
-  { key: "call.qualified", description: "Passed qualify duration" },
-  { key: "call.rejected", description: "Buyer rejected" },
-  { key: "buyer.capped", description: "Buyer hit a cap" },
-  { key: "publisher.spike", description: "Publisher volume spike" },
-  { key: "bid.placed", description: "New marketplace bid" },
+const EVENT_CATALOG: Array<{ key: string; descriptionKey: string }> = [
+  { key: "call.completed", descriptionKey: "toolsUI.integrations.webhooks.eventCatalog.completed" },
+  { key: "call.qualified", descriptionKey: "toolsUI.integrations.webhooks.eventCatalog.qualified" },
+  { key: "call.rejected", descriptionKey: "toolsUI.integrations.webhooks.eventCatalog.rejected" },
+  { key: "buyer.capped", descriptionKey: "toolsUI.integrations.webhooks.eventCatalog.capped" },
+  { key: "publisher.spike", descriptionKey: "toolsUI.integrations.webhooks.eventCatalog.spike" },
+  { key: "bid.placed", descriptionKey: "toolsUI.integrations.webhooks.eventCatalog.bidPlaced" },
 ];
 
 export interface WebhookDraft {
@@ -60,6 +61,7 @@ function randomSecret() {
 }
 
 export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [secret, setSecret] = useState("");
@@ -100,14 +102,16 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
 
   const onTest = async () => {
     if (!canSubmit) {
-      toast.error("Add a valid URL + at least one event first");
+      toast.error(t("toolsUI.integrations.webhooks.dialog.errorInvalid"));
       return;
     }
     setTesting(true);
     await new Promise((r) => setTimeout(r, 700));
     setTesting(false);
-    toast.success("Test event delivered", {
-      description: `${url} responded 200 · ${80 + Math.floor(Math.random() * 80)}ms`,
+    toast.success(t("toolsUI.integrations.webhooks.dialog.toastTestDelivered"), {
+      description: t("toolsUI.integrations.webhooks.dialog.toastTestDeliveredDesc")
+        .replace("{url}", url)
+        .replace("{ms}", String(80 + Math.floor(Math.random() * 80))),
     });
   };
 
@@ -126,7 +130,7 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
       initial?.id,
     );
     setSaving(false);
-    toast.success(isEdit ? "Webhook updated" : "Webhook created");
+    toast.success(isEdit ? t("toolsUI.integrations.webhooks.dialog.toastUpdated") : t("toolsUI.integrations.webhooks.dialog.toastCreated"));
     onOpenChange(false);
   };
 
@@ -139,9 +143,9 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
               <WebhookIcon className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>{isEdit ? "Edit webhook" : "Add webhook"}</DialogTitle>
+              <DialogTitle>{isEdit ? t("toolsUI.integrations.webhooks.dialog.editTitle") : t("toolsUI.integrations.webhooks.dialog.createTitle")}</DialogTitle>
               <DialogDescription>
-                Vortyx posts a JSON payload to your URL for each selected event.
+                {t("toolsUI.integrations.webhooks.dialog.description")}
               </DialogDescription>
             </div>
           </div>
@@ -150,30 +154,30 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
         <div className="space-y-4 py-1">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_2fr]">
             <div className="space-y-2">
-              <Label htmlFor="wh-name">Name</Label>
+              <Label htmlFor="wh-name">{t("toolsUI.integrations.webhooks.dialog.nameLabel")}</Label>
               <Input
                 id="wh-name"
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="CRM postback"
+                placeholder={t("toolsUI.integrations.webhooks.dialog.namePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="wh-url">URL</Label>
+              <Label htmlFor="wh-url">{t("toolsUI.integrations.webhooks.dialog.urlLabel")}</Label>
               <Input
                 id="wh-url"
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com/vortyx/events"
+                placeholder={t("toolsUI.integrations.webhooks.dialog.urlPlaceholder")}
                 className="font-mono"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Events</Label>
+            <Label>{t("toolsUI.integrations.webhooks.dialog.eventsLabel")}</Label>
             <div className="grid gap-1.5">
               {EVENT_CATALOG.map((e) => {
                 const on = selectedEvents.has(e.key);
@@ -191,7 +195,7 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
                   >
                     <div className="min-w-0">
                       <div className="font-mono">{e.key}</div>
-                      <div className="mt-0.5 text-[10px] text-muted-foreground">{e.description}</div>
+                      <div className="mt-0.5 text-[10px] text-muted-foreground">{t(e.descriptionKey)}</div>
                     </div>
                     <span
                       className={cn(
@@ -208,15 +212,15 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wh-secret">Signing secret</Label>
+            <Label htmlFor="wh-secret">{t("toolsUI.integrations.webhooks.dialog.secretLabel")}</Label>
             <div className="flex gap-2">
               <Input id="wh-secret" value={secret} readOnly className="font-mono text-xs" />
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Copy secret"
+                aria-label={t("toolsUI.integrations.webhooks.dialog.copySecretAria")}
                 onClick={() => {
-                  navigator.clipboard?.writeText(secret).then(() => toast.success("Secret copied"));
+                  navigator.clipboard?.writeText(secret).then(() => toast.success(t("toolsUI.integrations.webhooks.dialog.toastSecretCopied")));
                 }}
               >
                 <Copy className="h-3 w-3" />
@@ -224,41 +228,40 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Regenerate secret"
+                aria-label={t("toolsUI.integrations.webhooks.dialog.regenSecretAria")}
                 onClick={() => setSecret(randomSecret())}
               >
                 <RefreshCw className="h-3 w-3" />
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Verify the <span className="font-mono text-foreground">X-Vortyx-Signature</span> header
-              on your endpoint using HMAC-SHA256.
+              {t("toolsUI.integrations.webhooks.dialog.secretHintBefore")}<span className="font-mono text-foreground">X-Vortyx-Signature</span>{t("toolsUI.integrations.webhooks.dialog.secretHintMid")}
             </p>
           </div>
 
           {/* Optional headers */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Custom headers (optional)</Label>
+              <Label>{t("toolsUI.integrations.webhooks.dialog.customHeaders")}</Label>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
                 onClick={() => setHeaders((h) => [...h, { k: "", v: "" }])}
               >
-                <Plus className="h-3 w-3" /> Add header
+                <Plus className="h-3 w-3" /> {t("toolsUI.integrations.webhooks.dialog.addHeader")}
               </Button>
             </div>
             {headers.length === 0 ? (
               <p className="rounded-md border border-dashed border-border/60 bg-secondary/30 px-2 py-1.5 text-[10px] text-muted-foreground">
-                None. Add e.g. an Authorization or X-Source header.
+                {t("toolsUI.integrations.webhooks.dialog.noHeaders")}
               </p>
             ) : (
               <div className="space-y-1.5">
                 {headers.map((h, i) => (
                   <div key={i} className="grid grid-cols-[1fr_2fr_auto] gap-2">
                     <Input
-                      placeholder="Header"
+                      placeholder={t("toolsUI.integrations.webhooks.dialog.headerPlaceholder")}
                       value={h.k}
                       onChange={(e) =>
                         setHeaders((hs) => hs.map((x, j) => (j === i ? { ...x, k: e.target.value } : x)))
@@ -266,7 +269,7 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
                       className="font-mono text-xs"
                     />
                     <Input
-                      placeholder="Value"
+                      placeholder={t("toolsUI.integrations.webhooks.dialog.valuePlaceholder")}
                       value={h.v}
                       onChange={(e) =>
                         setHeaders((hs) => hs.map((x, j) => (j === i ? { ...x, v: e.target.value } : x)))
@@ -278,7 +281,7 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
                       size="icon"
                       className="h-9 w-9 text-destructive"
                       onClick={() => setHeaders((hs) => hs.filter((_, j) => j !== i))}
-                      aria-label="Remove header"
+                      aria-label={t("toolsUI.integrations.webhooks.dialog.removeHeaderAria")}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -293,28 +296,28 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
           <Button variant="outline" size="sm" onClick={onTest} disabled={testing || !canSubmit}>
             {testing ? (
               <>
-                <Loader2 className="h-3 w-3 animate-spin" /> Testing…
+                <Loader2 className="h-3 w-3 animate-spin" /> {t("toolsUI.integrations.webhooks.dialog.testing")}
               </>
             ) : (
               <>
-                <Zap className="h-3 w-3" /> Send test event
+                <Zap className="h-3 w-3" /> {t("toolsUI.integrations.webhooks.dialog.testSendCta")}
               </>
             )}
           </Button>
 
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("toolsUI.integrations.webhooks.dialog.cancel")}
             </Button>
             <Button onClick={onSubmit} disabled={!canSubmit || saving}>
               {saving ? (
                 <>
-                  <Loader2 className="h-3 w-3 animate-spin" /> Saving…
+                  <Loader2 className="h-3 w-3 animate-spin" /> {t("toolsUI.integrations.webhooks.dialog.saving")}
                 </>
               ) : isEdit ? (
-                "Save changes"
+                t("toolsUI.integrations.webhooks.dialog.saveCta")
               ) : (
-                "Create webhook"
+                t("toolsUI.integrations.webhooks.dialog.createCta")
               )}
             </Button>
           </div>

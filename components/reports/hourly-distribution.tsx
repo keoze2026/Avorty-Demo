@@ -14,6 +14,7 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import type { Call } from "@/lib/types";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -141,6 +142,7 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
 }
 
 export function HourlyDistribution({ calls }: HourlyDistributionProps) {
+  const { t } = useTranslation();
   const [grain, setGrain] = React.useState<Grain>("H");
   const data = React.useMemo(() => bucketize(calls, grain), [calls, grain]);
 
@@ -164,7 +166,7 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
           ))}
         </div>
         <div className="flex-1 text-center text-xs text-muted-foreground">
-          Calls by {grain === "H" ? "hour" : grain === "D" ? "day" : "month"}
+          {t("dashboard.chart.callsByHour")}
         </div>
       </CardHeader>
       <CardContent>
@@ -204,19 +206,19 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
               />
               <Tooltip
                 cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
-                content={<HourlyTooltip grain={grain} />}
+                content={<HourlyTooltipWrapper grain={grain} />}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
                 iconSize={8}
                 formatter={(v) =>
                   v === "converted"
-                    ? "Converted"
+                    ? t("toolsUI.reports.hourly.legend.converted")
                     : v === "notConverted"
-                      ? "Not converted"
+                      ? t("toolsUI.reports.hourly.legend.notConverted")
                       : v === "noAnswer"
-                        ? "No answer"
-                        : "Revenue"
+                        ? t("toolsUI.reports.hourly.legend.noAnswer")
+                        : t("toolsUI.reports.hourly.legend.revenue")
                 }
               />
               <Bar
@@ -276,7 +278,7 @@ interface HourlyTooltipProps {
 const DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function headerForBucket(b: Bucket, grain: Grain): string {
+function headerForBucket(b: Bucket, grain: Grain, weekOfLabel: string): string {
   const d = new Date(b.ts);
   if (grain === "H") {
     // "Friday, May 29, 13:00"
@@ -287,27 +289,32 @@ function headerForBucket(b: Bucket, grain: Grain): string {
     return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
   }
   // M: "Week of May 22"
-  return `Week of ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return `${weekOfLabel} ${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
 
-function HourlyTooltip({ active, payload, grain }: HourlyTooltipProps) {
+function HourlyTooltipWrapper(props: HourlyTooltipProps) {
+  const { t } = useTranslation();
+  return <HourlyTooltipInner {...props} t={t} />;
+}
+
+function HourlyTooltipInner({ active, payload, grain, t }: HourlyTooltipProps & { t: (k: string) => string }) {
   if (!active || !payload || payload.length === 0) return null;
   const b = payload[0]?.payload;
   if (!b) return null;
 
   const total = b.converted + b.notConverted + b.noAnswer;
   const rows: Array<{ color: string; label: string; value: string }> = [
-    { color: "var(--muted-foreground)", label: "Total calls", value: formatNumber(total) },
-    { color: COLOR_CONVERTED, label: "Converted", value: formatNumber(b.converted) },
-    { color: COLOR_NOTCONV, label: "Not Converted", value: formatNumber(b.notConverted) },
-    { color: COLOR_NOANS, label: "No Answer", value: formatNumber(b.noAnswer) },
-    { color: COLOR_REVENUE, label: "Revenue", value: formatCurrency(b.revenue, true) },
+    { color: "var(--muted-foreground)", label: t("toolsUI.reports.hourly.tooltip.totalCalls"), value: formatNumber(total) },
+    { color: COLOR_CONVERTED, label: t("toolsUI.reports.hourly.tooltip.converted"), value: formatNumber(b.converted) },
+    { color: COLOR_NOTCONV, label: t("toolsUI.reports.hourly.tooltip.notConverted"), value: formatNumber(b.notConverted) },
+    { color: COLOR_NOANS, label: t("toolsUI.reports.hourly.tooltip.noAnswer"), value: formatNumber(b.noAnswer) },
+    { color: COLOR_REVENUE, label: t("toolsUI.reports.hourly.tooltip.revenue"), value: formatCurrency(b.revenue, true) },
   ];
 
   return (
     <div className="rounded-md border border-border bg-popover/95 px-3 py-2 text-xs shadow-lg backdrop-blur-md">
       <div className="mb-1.5 font-semibold text-foreground">
-        {headerForBucket(b, grain)}
+        {headerForBucket(b, grain, t("toolsUI.reports.hourly.tooltip.weekOf"))}
       </div>
       <ul className="space-y-1">
         {rows.map((r) => (

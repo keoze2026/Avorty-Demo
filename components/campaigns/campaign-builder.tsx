@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { VERTICALS } from "@/lib/mock/campaigns";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
@@ -43,14 +44,21 @@ interface CampaignBuilderProps {
 const STEPS = ["Basics", "Payout & caps", "Schedule", "Review"] as const;
 type Step = (typeof STEPS)[number];
 
-const DAY_LABELS: Array<{ id: Weekday; label: string }> = [
-  { id: 0, label: "Sun" },
-  { id: 1, label: "Mon" },
-  { id: 2, label: "Tue" },
-  { id: 3, label: "Wed" },
-  { id: 4, label: "Thu" },
-  { id: 5, label: "Fri" },
-  { id: 6, label: "Sat" },
+const STEP_KEYS: Record<Step, string> = {
+  Basics: "trafficUI.campaigns.builder.steps.basics",
+  "Payout & caps": "trafficUI.campaigns.builder.steps.payout",
+  Schedule: "trafficUI.campaigns.builder.steps.schedule",
+  Review: "trafficUI.campaigns.builder.steps.review",
+};
+
+const DAY_KEYS: Array<{ id: Weekday; key: string }> = [
+  { id: 0, key: "trafficUI.common.days.sun" },
+  { id: 1, key: "trafficUI.common.days.mon" },
+  { id: 2, key: "trafficUI.common.days.tue" },
+  { id: 3, key: "trafficUI.common.days.wed" },
+  { id: 4, key: "trafficUI.common.days.thu" },
+  { id: 5, key: "trafficUI.common.days.fri" },
+  { id: 6, key: "trafficUI.common.days.sat" },
 ];
 
 interface FormState {
@@ -84,8 +92,10 @@ const EMPTY: FormState = {
 };
 
 export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const add = useCampaignsStore((s) => s.add);
+  const DAY_LABELS: Array<{ id: Weekday; label: string }> = DAY_KEYS.map((d) => ({ id: d.id, label: t(d.key) }));
 
   const [stepIdx, setStepIdx] = useState(0);
   const [form, setForm] = useState<FormState>(EMPTY);
@@ -140,8 +150,8 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
       revenueToday: 0,
       conversionRate: 0,
     });
-    toast.success(`Campaign "${created.name}" created`, {
-      description: "Add tracking numbers and buyers to start receiving calls.",
+    toast.success(t("trafficUI.campaigns.toast.created").replace("{name}", created.name), {
+      description: t("trafficUI.campaigns.toast.createdDescription"),
     });
     onClose(false);
     router.push(`${ROUTES.campaigns}/${created.id}`);
@@ -162,8 +172,8 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
               <Megaphone className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>New campaign</DialogTitle>
-              <DialogDescription>Spin up a new pay-per-call campaign in four steps.</DialogDescription>
+              <DialogTitle>{t("trafficUI.campaigns.builder.title")}</DialogTitle>
+              <DialogDescription>{t("trafficUI.campaigns.builder.description")}</DialogDescription>
             </div>
           </div>
           {/* Step indicator */}
@@ -185,7 +195,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                       done || current ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
-                    {i + 1}. {s}
+                    {i + 1}. {t(STEP_KEYS[s])}
                   </div>
                 </div>
               );
@@ -205,17 +215,17 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
               {step === "Basics" && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cb-name">Name</Label>
+                    <Label htmlFor="cb-name">{t("trafficUI.campaigns.builder.labels.name")}</Label>
                     <Input
                       id="cb-name"
                       value={form.name}
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Health Insurance — Tier 1"
+                      placeholder={t("trafficUI.campaigns.builder.placeholders.name")}
                       autoFocus
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cb-vert">Vertical</Label>
+                    <Label htmlFor="cb-vert">{t("trafficUI.campaigns.builder.labels.vertical")}</Label>
                     <Select
                       value={form.vertical}
                       onValueChange={(v) => setForm((f) => ({ ...f, vertical: v }))}
@@ -233,12 +243,12 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cb-desc">Description</Label>
+                    <Label htmlFor="cb-desc">{t("trafficUI.campaigns.builder.labels.description")}</Label>
                     <Textarea
                       id="cb-desc"
                       value={form.description}
                       onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                      placeholder="Who is this campaign for and what qualifies a call?"
+                      placeholder={t("trafficUI.campaigns.builder.placeholders.description")}
                       rows={3}
                     />
                   </div>
@@ -249,7 +259,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="cb-payout">Payout (USD)</Label>
+                      <Label htmlFor="cb-payout">{t("trafficUI.campaigns.builder.labels.payout")}</Label>
                       <div className="relative">
                         <DollarSign className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input
@@ -264,7 +274,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Payout model</Label>
+                      <Label>{t("trafficUI.campaigns.builder.labels.payoutModel")}</Label>
                       <Select
                         value={form.payoutModel}
                         onValueChange={(v) => setForm((f) => ({ ...f, payoutModel: v as PayoutModel }))}
@@ -273,16 +283,16 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="per-call">Per call</SelectItem>
-                          <SelectItem value="per-qualified">Per qualified call</SelectItem>
-                          <SelectItem value="per-minute">Per minute</SelectItem>
+                          <SelectItem value="per-call">{t("trafficUI.campaigns.builder.payoutModel.perCall")}</SelectItem>
+                          <SelectItem value="per-qualified">{t("trafficUI.campaigns.builder.payoutModel.perQualified")}</SelectItem>
+                          <SelectItem value="per-minute">{t("trafficUI.campaigns.builder.payoutModel.perMinute")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   {form.payoutModel === "per-qualified" && (
                     <div className="space-y-2">
-                      <Label htmlFor="cb-qual">Qualify duration (seconds)</Label>
+                      <Label htmlFor="cb-qual">{t("trafficUI.campaigns.builder.labels.qualifyDuration")}</Label>
                       <Input
                         id="cb-qual"
                         type="number"
@@ -294,13 +304,13 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                         className="font-mono"
                       />
                       <p className="text-[10px] text-muted-foreground">
-                        Calls shorter than this duration won't trigger a payout.
+                        {t("trafficUI.campaigns.builder.qualifyHint")}
                       </p>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="cb-daily">Daily cap</Label>
+                      <Label htmlFor="cb-daily">{t("trafficUI.campaigns.builder.labels.dailyCap")}</Label>
                       <Input
                         id="cb-daily"
                         type="number"
@@ -309,10 +319,10 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                         onChange={(e) => setForm((f) => ({ ...f, dailyCap: parseInt(e.target.value) || 0 }))}
                         className="font-mono"
                       />
-                      <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
+                      <p className="text-[10px] text-muted-foreground">{t("trafficUI.common.hint.zeroUnlimited")}</p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cb-monthly">Monthly cap</Label>
+                      <Label htmlFor="cb-monthly">{t("trafficUI.campaigns.builder.labels.monthlyCap")}</Label>
                       <Input
                         id="cb-monthly"
                         type="number"
@@ -321,7 +331,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                         onChange={(e) => setForm((f) => ({ ...f, monthlyCap: parseInt(e.target.value) || 0 }))}
                         className="font-mono"
                       />
-                      <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
+                      <p className="text-[10px] text-muted-foreground">{t("trafficUI.common.hint.zeroUnlimited")}</p>
                     </div>
                   </div>
                 </div>
@@ -330,7 +340,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
               {step === "Schedule" && (
                 <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label>Active days</Label>
+                    <Label>{t("trafficUI.campaigns.builder.labels.activeDays")}</Label>
                     <div className="flex flex-wrap gap-2">
                       {DAY_LABELS.map((d) => {
                         const active = form.days.includes(d.id);
@@ -354,7 +364,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="cb-start">Start hour</Label>
+                      <Label htmlFor="cb-start">{t("trafficUI.campaigns.builder.labels.startHour")}</Label>
                       <div className="relative">
                         <Clock className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input
@@ -369,7 +379,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cb-end">End hour</Label>
+                      <Label htmlFor="cb-end">{t("trafficUI.campaigns.builder.labels.endHour")}</Label>
                       <div className="relative">
                         <Clock className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input
@@ -385,7 +395,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Timezone</Label>
+                    <Label>{t("trafficUI.campaigns.builder.labels.timezone")}</Label>
                     <Select
                       value={form.timezone}
                       onValueChange={(v) => setForm((f) => ({ ...f, timezone: v as FormState["timezone"] }))}
@@ -394,11 +404,11 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="auto">Auto (caller's local time)</SelectItem>
-                        <SelectItem value="America/New_York">Eastern · America/New_York</SelectItem>
-                        <SelectItem value="America/Chicago">Central · America/Chicago</SelectItem>
-                        <SelectItem value="America/Denver">Mountain · America/Denver</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific · America/Los_Angeles</SelectItem>
+                        <SelectItem value="auto">{t("trafficUI.common.timezones.callerLocalAuto")}</SelectItem>
+                        <SelectItem value="America/New_York">{t("trafficUI.common.timezones.eastern")}</SelectItem>
+                        <SelectItem value="America/Chicago">{t("trafficUI.common.timezones.central")}</SelectItem>
+                        <SelectItem value="America/Denver">{t("trafficUI.common.timezones.mountain")}</SelectItem>
+                        <SelectItem value="America/Los_Angeles">{t("trafficUI.common.timezones.pacific")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -410,38 +420,38 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                   <div className="rounded-lg border border-border bg-secondary/30 p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold">
                       <Sparkles className="h-3.5 w-3.5 text-accent" />
-                      {form.name || "Untitled"}
+                      {form.name || t("trafficUI.campaigns.builder.untitled")}
                     </div>
                     {form.description && (
                       <p className="mt-1 text-xs text-muted-foreground">{form.description}</p>
                     )}
                     <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                      <Field label="Vertical" value={form.vertical} />
-                      <Field label="Payout model" value={form.payoutModel} />
-                      <Field label="Payout" value={`$${form.payout.toFixed(2)}`} />
+                      <Field label={t("trafficUI.campaigns.builder.labels.vertical")} value={form.vertical} />
+                      <Field label={t("trafficUI.campaigns.builder.labels.payoutModel")} value={form.payoutModel} />
+                      <Field label={t("trafficUI.campaigns.builder.labels.payoutLabel")} value={`$${form.payout.toFixed(2)}`} />
                       <Field
-                        label="Qualify"
+                        label={t("trafficUI.campaigns.builder.labels.qualify")}
                         value={form.payoutModel === "per-qualified" ? `${form.qualifyDurationSec}s` : "—"}
                       />
-                      <Field label="Daily cap" value={form.dailyCap === 0 ? "Unlimited" : form.dailyCap.toString()} />
+                      <Field label={t("trafficUI.campaigns.builder.labels.dailyCap")} value={form.dailyCap === 0 ? t("trafficUI.campaigns.builder.unlimited") : form.dailyCap.toString()} />
                       <Field
-                        label="Monthly cap"
-                        value={form.monthlyCap === 0 ? "Unlimited" : form.monthlyCap.toString()}
+                        label={t("trafficUI.campaigns.builder.labels.monthlyCap")}
+                        value={form.monthlyCap === 0 ? t("trafficUI.campaigns.builder.unlimited") : form.monthlyCap.toString()}
                       />
                       <Field
-                        label="Hours"
+                        label={t("trafficUI.campaigns.builder.labels.hours")}
                         value={`${form.startHour.toString().padStart(2, "0")}:00 – ${form.endHour.toString().padStart(2, "0")}:00`}
                       />
                       <Field
-                        label="Days"
+                        label={t("trafficUI.campaigns.builder.labels.days")}
                         value={DAY_LABELS.filter((d) => form.days.includes(d.id)).map((d) => d.label).join(", ")}
                       />
-                      <Field label="Timezone" value={form.timezone === "auto" ? "Caller-local" : form.timezone} />
+                      <Field label={t("trafficUI.campaigns.builder.labels.timezone")} value={form.timezone === "auto" ? t("trafficUI.common.timezones.callerLocal") : form.timezone} />
                     </dl>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    The campaign will be created in <span className="font-mono text-foreground">Draft</span> status.
-                    Add numbers and buyers, then flip it active when you're ready.
+                    {t("trafficUI.campaigns.builder.createdInDraft")} <span className="font-mono text-foreground">{t("trafficUI.common.draft")}</span>
+                    {t("trafficUI.campaigns.builder.createdInDraftSuffix")}
                   </p>
                 </div>
               )}
@@ -451,21 +461,21 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
 
         <div className="flex items-center justify-between border-t border-border/60 px-6 py-3">
           <Button variant="ghost" size="sm" onClick={prev} disabled={stepIdx === 0}>
-            <ArrowLeft className="h-3.5 w-3.5" /> Back
+            <ArrowLeft className="h-3.5 w-3.5" /> {t("trafficUI.common.back")}
           </Button>
           {step !== "Review" ? (
             <Button size="sm" onClick={next} disabled={!canAdvance}>
-              Continue <ArrowRight className="h-3.5 w-3.5" />
+              {t("trafficUI.common.continue")} <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           ) : (
             <Button size="sm" onClick={onSubmit} disabled={submitting}>
               {submitting ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("trafficUI.campaigns.builder.creating")}
                 </>
               ) : (
                 <>
-                  Create campaign <Check className="h-3.5 w-3.5" />
+                  {t("trafficUI.campaigns.createCampaign")} <Check className="h-3.5 w-3.5" />
                 </>
               )}
             </Button>

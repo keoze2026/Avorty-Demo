@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { useRoutingStore } from "@/lib/store/routing-store";
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export function NewPlanDialog({ open, onOpenChange, defaultCampaignId }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const campaigns = useCampaignsStore((s) => s.campaigns);
   const add = useRoutingStore((s) => s.add);
@@ -78,7 +80,7 @@ export function NewPlanDialog({ open, onOpenChange, defaultCampaignId }: Props) 
       ],
       edges: [],
     });
-    toast.success(`Plan "${created.name}" created`);
+    toast.success(t("trafficUI.routing.newDialog.created").replace("{name}", created.name));
     onClose(false);
     router.push(`${ROUTES.routing}/${created.id}`);
   };
@@ -92,31 +94,31 @@ export function NewPlanDialog({ open, onOpenChange, defaultCampaignId }: Props) 
               <GitFork className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>New routing plan</DialogTitle>
-              <DialogDescription>Starts with an empty canvas ready to build.</DialogDescription>
+              <DialogTitle>{t("trafficUI.routing.newDialog.title")}</DialogTitle>
+              <DialogDescription>{t("trafficUI.routing.newDialog.description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-3 py-2">
           <div className="space-y-2">
-            <Label htmlFor="plan-name">Name</Label>
+            <Label htmlFor="plan-name">{t("trafficUI.routing.newDialog.name")}</Label>
             <Input
               id="plan-name"
               autoFocus
-              placeholder="e.g. Health — Q3 routing"
+              placeholder={t("trafficUI.routing.newDialog.namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label>Campaign (optional)</Label>
+            <Label>{t("trafficUI.routing.newDialog.campaign")}</Label>
             <Select value={campaignId} onValueChange={setCampaignId}>
               <SelectTrigger>
-                <SelectValue placeholder="Unbound plan" />
+                <SelectValue placeholder={t("trafficUI.routing.newDialog.unboundPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Unbound —</SelectItem>
+                <SelectItem value="none">{t("trafficUI.routing.newDialog.unboundItem")}</SelectItem>
                 {campaigns.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -126,28 +128,28 @@ export function NewPlanDialog({ open, onOpenChange, defaultCampaignId }: Props) 
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="plan-desc">Description</Label>
+            <Label htmlFor="plan-desc">{t("trafficUI.routing.newDialog.description2")}</Label>
             <Textarea
               id="plan-desc"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What does this plan do?"
+              placeholder={t("trafficUI.routing.newDialog.descPlaceholder")}
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(false)}>
-            Cancel
+            {t("trafficUI.common.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting || !name.trim()}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("trafficUI.routing.newDialog.creating")}
               </>
             ) : (
-              "Create plan"
+              t("trafficUI.routing.newDialog.create")
             )}
           </Button>
         </DialogFooter>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ interface Props {
 
 /** Single-input "Shield name" dialog launched from the VoIP Shield page's Create button. */
 export function CreateVoipShieldDialog({ open, onOpenChange, onCreate }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = React.useState("");
 
   React.useEffect(() => {
@@ -46,16 +48,16 @@ export function CreateVoipShieldDialog({ open, onOpenChange, onCreate }: Props) 
               <ShieldPlus className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>New VoIP Shield</DialogTitle>
+              <DialogTitle>{t("toolsUI.suppression.voipShield.createDialog.title")}</DialogTitle>
               <DialogDescription>
-                You can attach protected campaigns and blocked carriers after creating it.
+                {t("toolsUI.suppression.voipShield.createDialog.description")}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-2 py-2">
-          <Label htmlFor="vs-name">Shield name</Label>
+          <Label htmlFor="vs-name">{t("toolsUI.suppression.voipShield.createDialog.nameLabel")}</Label>
           <Input
             id="vs-name"
             autoFocus
@@ -64,16 +66,16 @@ export function CreateVoipShieldDialog({ open, onOpenChange, onCreate }: Props) 
             onKeyDown={(e) => {
               if (e.key === "Enter") onSubmit();
             }}
-            placeholder="e.g. Bot net signatures"
+            placeholder={t("toolsUI.suppression.voipShield.createDialog.namePlaceholder")}
           />
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("toolsUI.suppression.removeConfirm.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={!trimmed}>
-            Create
+            {t("toolsUI.suppression.voipShield.createCta")}
           </Button>
         </DialogFooter>
       </DialogContent>

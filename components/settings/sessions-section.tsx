@@ -9,22 +9,24 @@ import { SectionShell } from "./profile-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatRelativeTime } from "@/lib/format";
 import { MOCK_SESSIONS } from "@/lib/mock/settings";
 
 export function SessionsSection() {
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState(MOCK_SESSIONS);
 
   const revoke = (id: string) => {
     setSessions((ss) => ss.filter((s) => s.id !== id));
-    toast.success("Session revoked");
+    toast.success(t("settings.sessionsSection.sessionRevoked"));
   };
 
   return (
     <SectionShell
-      eyebrow="Sessions"
-      title="Active devices"
-      description="Where you're signed in right now. Revoke anything that looks unfamiliar."
+      eyebrow={t("settings.sessionsSection.eyebrow")}
+      title={t("settings.sessionsSection.title")}
+      description={t("settings.sessionsSection.description")}
     >
       <Card>
         <CardContent className="divide-y divide-border/60 p-0">
@@ -47,7 +49,7 @@ export function SessionsSection() {
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-medium">{s.device}</span>
                     {s.current && (
-                      <Badge variant="success">This device</Badge>
+                      <Badge variant="success">{t("workspaceUI.sessions.thisDevice")}</Badge>
                     )}
                   </div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground font-mono">
@@ -56,7 +58,7 @@ export function SessionsSection() {
                   </div>
                 </div>
                 <div className="hidden text-right text-[11px] text-muted-foreground sm:block">
-                  Active {formatRelativeTime(s.lastActiveAt)}
+                  {t("workspaceUI.sessions.activeRelative").replace("{time}", formatRelativeTime(s.lastActiveAt))}
                 </div>
                 <Button
                   variant="outline"
@@ -66,7 +68,7 @@ export function SessionsSection() {
                   onClick={() => revoke(s.id)}
                 >
                   <LogOut className="h-3 w-3" />
-                  Revoke
+                  {t("settings.sessionsSection.revoke")}
                 </Button>
               </motion.div>
             );
@@ -81,10 +83,10 @@ export function SessionsSection() {
           className="text-destructive"
           onClick={() => {
             setSessions((ss) => ss.filter((s) => s.current));
-            toast.success("All other sessions revoked");
+            toast.success(t("settings.sessionsSection.allOthersRevoked"));
           }}
         >
-          Sign out of everywhere else
+          {t("settings.sessionsSection.revokeAllOthers")}
         </Button>
       </div>
     </SectionShell>

@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VERTICAL_PALETTE } from "@/lib/mock/marketplace";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MarketListing } from "@/lib/types";
@@ -32,6 +33,7 @@ export function FeaturedAuction({ listing }: { listing: MarketListing | null }) 
 }
 
 function FeaturedInner({ listing }: { listing: MarketListing }) {
+  const { t } = useTranslation();
   const placeBid = useMarketplaceStore((s) => s.placeBid);
   const myLast = useMarketplaceStore((s) =>
     s.positions.find((p) => p.listingId === listing.id),
@@ -47,11 +49,11 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
 
   const submit = (amount: number) => {
     if (amount <= listing.topBid) {
-      toast.error("Bid must beat the current top");
+      toast.error(t("toolsUI.marketplace.featured.toastBidTooLow"));
       return;
     }
     placeBid(listing, amount);
-    toast.success(`Bid placed at ${formatCurrency(amount, true)}`, {
+    toast.success(t("toolsUI.marketplace.featured.toastBidPlaced").replace("{amount}", formatCurrency(amount, true)), {
       description: `${listing.vertical} · ${listing.campaignName}`,
     });
   };
@@ -91,7 +93,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
             {listing.hot && (
               <span className="inline-flex items-center gap-1 rounded-full border border-[oklch(0.78_0.16_75)]/40 bg-[oklch(0.78_0.16_75)]/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-[oklch(0.6_0.16_75)] dark:text-[oklch(0.82_0.16_75)]">
                 <Star className="h-2.5 w-2.5 fill-current" />
-                Hot
+                {t("toolsUI.marketplace.featured.hot")}
               </span>
             )}
             <span className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
@@ -103,18 +105,18 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
 
           <div>
             <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
-              Current top bid
+              {t("toolsUI.marketplace.featured.currentTopBid")}
             </p>
             <div className="mt-1 flex items-baseline gap-3">
               <AnimatedPrice value={listing.topBid} size="lg" />
               <span className="text-xs text-muted-foreground">
-                from <span className="font-mono text-foreground">{listing.topBidder || "—"}</span>
+                {t("toolsUI.marketplace.featured.from")} <span className="font-mono text-foreground">{listing.topBidder || "—"}</span>
               </span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Floor {formatCurrency(listing.floorBid, true)} ·{" "}
+              {t("toolsUI.marketplace.featured.floor")} {formatCurrency(listing.floorBid, true)} ·{" "}
               <span className="text-foreground">{listing.campaignName}</span> ·{" "}
-              Est. payout {formatCurrency(listing.estimatedPayout, true)}
+              {t("toolsUI.marketplace.featured.estPayout")} {formatCurrency(listing.estimatedPayout, true)}
             </p>
           </div>
 
@@ -132,9 +134,9 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
 
           {/* Bottom strip */}
           <div className="grid grid-cols-3 gap-2">
-            <Stat label="Quality" value={formatPercent(listing.qualityScore * 100, 0)} />
-            <Stat label="Bidders" value={listing.bidderCount.toString()} icon={Users} />
-            <Stat label="Timer" custom={<CountdownTimer endsAt={listing.endsAt} variant="lg" />} />
+            <Stat label={t("toolsUI.marketplace.featured.quality")} value={formatPercent(listing.qualityScore * 100, 0)} />
+            <Stat label={t("toolsUI.marketplace.featured.bidders")} value={listing.bidderCount.toString()} icon={Users} />
+            <Stat label={t("toolsUI.marketplace.featured.timer")} custom={<CountdownTimer endsAt={listing.endsAt} variant="lg" />} />
           </div>
         </div>
 
@@ -144,7 +146,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-accent">
               <Gavel className="h-3.5 w-3.5" />
             </span>
-            <span className="text-sm font-semibold">Place a bid</span>
+            <span className="text-sm font-semibold">{t("toolsUI.marketplace.featured.placeBid")}</span>
           </header>
 
           {/* Quick bumps */}
@@ -184,11 +186,11 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
                 onClick={() => submit(parseFloat(customBid))}
                 className="shrink-0 font-semibold"
               >
-                Bid
+                {t("toolsUI.marketplace.featured.bid")}
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Minimum to lead: <span className="font-mono">{formatCurrency(minBid, true)}</span>
+              {t("toolsUI.marketplace.featured.minimumToLead")} <span className="font-mono">{formatCurrency(minBid, true)}</span>
             </p>
           </div>
 
@@ -211,12 +213,12 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
                 <div className="flex items-center justify-between">
                   <span className="font-mono uppercase tracking-wider">
                     {myLast.status === "leading"
-                      ? "Leading"
+                      ? t("toolsUI.marketplace.featured.leading")
                       : myLast.status === "outbid"
-                        ? "Outbid"
+                        ? t("toolsUI.marketplace.featured.outbid")
                         : myLast.status === "won"
-                          ? "Won"
-                          : "Lost"}
+                          ? t("toolsUI.marketplace.featured.won")
+                          : t("toolsUI.marketplace.featured.lost")}
                   </span>
                   <span className="font-mono">{formatCurrency(myLast.myBid, true)}</span>
                 </div>
@@ -230,11 +232,11 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
       <div className="relative mt-6 flex flex-col gap-3 rounded-lg border border-border/60 bg-secondary/30 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            Price trajectory
+            {t("toolsUI.marketplace.featured.priceTrajectory")}
           </p>
           <p className="mt-0.5 text-xs">
             <span className="font-mono text-muted-foreground">
-              {listing.bidHistory.length} bids ·
+              {listing.bidHistory.length} {t("toolsUI.marketplace.featured.bids")} ·
             </span>{" "}
             <span className="font-mono">
               +{formatPercent(
@@ -242,7 +244,7 @@ function FeaturedInner({ listing }: { listing: MarketListing }) {
                 1,
               )}
             </span>{" "}
-            <span className="text-muted-foreground">from floor</span>
+            <span className="text-muted-foreground">{t("toolsUI.marketplace.featured.fromFloor")}</span>
           </p>
         </div>
         {/* Fluid sparkline — fills the remaining track on narrow viewports */}
@@ -283,11 +285,12 @@ function Stat({
 }
 
 function FeaturedSkeleton() {
+  const { t } = useTranslation();
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-6">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Sparkles className="h-3.5 w-3.5 text-accent animate-pulse" />
-        Picking the next listing…
+        {t("toolsUI.marketplace.featured.pickingNext")}
       </div>
       <div className="mt-6 h-12 w-48 rounded-md bg-secondary/50 animate-pulse" />
       <div className="mt-3 h-4 w-72 rounded-md bg-secondary/40 animate-pulse" />

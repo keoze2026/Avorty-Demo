@@ -28,6 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 export type BuyerTableSortKey = "spend" | "calls" | "bid" | "recent";
@@ -40,12 +41,12 @@ export type BuyerTableStatusFilter =
 
 export type BuyerColumnKey = "hourly" | "daily" | "monthly" | "global" | "status";
 
-export const BUYER_COLUMNS: Array<{ id: BuyerColumnKey; label: string }> = [
-  { id: "hourly", label: "Hourly" },
-  { id: "daily", label: "Daily" },
-  { id: "monthly", label: "Monthly" },
-  { id: "global", label: "Global" },
-  { id: "status", label: "Status" },
+export const BUYER_COLUMNS: Array<{ id: BuyerColumnKey; labelKey: string }> = [
+  { id: "hourly", labelKey: "networkUI.common.hourly" },
+  { id: "daily", labelKey: "networkUI.common.daily" },
+  { id: "monthly", labelKey: "networkUI.common.monthly" },
+  { id: "global", labelKey: "networkUI.common.global" },
+  { id: "status", labelKey: "networkUI.common.status" },
 ];
 
 export const ALL_BUYER_COLUMNS: Record<BuyerColumnKey, boolean> =
@@ -54,19 +55,19 @@ export const ALL_BUYER_COLUMNS: Record<BuyerColumnKey, boolean> =
     {} as Record<BuyerColumnKey, boolean>,
   );
 
-const SORT_OPTIONS: Array<{ id: BuyerTableSortKey; label: string }> = [
-  { id: "recent", label: "Most recent" },
-  { id: "spend", label: "Spend today" },
-  { id: "calls", label: "Calls today" },
-  { id: "bid", label: "Bid amount" },
+const SORT_OPTIONS: Array<{ id: BuyerTableSortKey; labelKey: string }> = [
+  { id: "recent", labelKey: "networkUI.buyers.toolbar.sortOptions.recent" },
+  { id: "spend", labelKey: "networkUI.buyers.toolbar.sortOptions.spend" },
+  { id: "calls", labelKey: "networkUI.buyers.toolbar.sortOptions.calls" },
+  { id: "bid", labelKey: "networkUI.buyers.toolbar.sortOptions.bid" },
 ];
 
-const STATUS_OPTIONS: Array<{ id: BuyerTableStatusFilter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "active", label: "Active" },
-  { id: "paused", label: "Paused" },
-  { id: "capped", label: "Capped" },
-  { id: "pending", label: "Pending" },
+const STATUS_OPTIONS: Array<{ id: BuyerTableStatusFilter; labelKey: string }> = [
+  { id: "all", labelKey: "networkUI.buyers.toolbar.statusOptions.all" },
+  { id: "active", labelKey: "networkUI.buyers.toolbar.statusOptions.active" },
+  { id: "paused", labelKey: "networkUI.buyers.toolbar.statusOptions.paused" },
+  { id: "capped", labelKey: "networkUI.buyers.toolbar.statusOptions.capped" },
+  { id: "pending", labelKey: "networkUI.buyers.toolbar.statusOptions.pending" },
 ];
 
 interface BuyersToolbarProps {
@@ -98,6 +99,7 @@ export function BuyersTableToolbar({
   onRefresh,
   onCreate,
 }: BuyersToolbarProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-end gap-1">
       {/* Search */}
@@ -110,7 +112,7 @@ export function BuyersTableToolbar({
               "relative h-8 w-8 text-muted-foreground hover:text-foreground",
               query && "text-foreground",
             )}
-            aria-label="Search"
+            aria-label={t("networkUI.common.search")}
           >
             <Search className="h-4 w-4" />
             {query && (
@@ -120,7 +122,7 @@ export function BuyersTableToolbar({
         </PopoverTrigger>
         <PopoverContent align="end" className="w-72 p-3">
           <Label htmlFor="buyer-search" className="text-xs text-muted-foreground">
-            Search buyers
+            {t("networkUI.buyers.toolbar.searchLabel")}
           </Label>
           <div className="relative mt-1.5">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -129,14 +131,14 @@ export function BuyersTableToolbar({
               autoFocus
               value={query}
               onChange={(e) => onQuery(e.target.value)}
-              placeholder="Search by name, org, or contact…"
+              placeholder={t("networkUI.buyers.toolbar.searchPlaceholder")}
               className="h-9 pl-7"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => onQuery("")}
-                aria-label="Clear search"
+                aria-label={t("networkUI.common.clearSearch")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" />
@@ -153,13 +155,13 @@ export function BuyersTableToolbar({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            aria-label="Sort"
+            aria-label={t("networkUI.common.sort")}
           >
             <ArrowUpDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("networkUI.common.sortBy")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {SORT_OPTIONS.map((o) => (
             <DropdownMenuItem
@@ -167,7 +169,7 @@ export function BuyersTableToolbar({
               onSelect={() => onSort(o.id)}
               className={cn(sort === o.id && "text-accent")}
             >
-              {o.label}
+              {t(o.labelKey)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -183,7 +185,7 @@ export function BuyersTableToolbar({
               "relative h-8 w-8 text-muted-foreground hover:text-foreground",
               status !== "all" && "text-foreground",
             )}
-            aria-label="Filter"
+            aria-label={t("networkUI.common.filter")}
           >
             <Filter className="h-4 w-4" />
             {status !== "all" && (
@@ -192,7 +194,7 @@ export function BuyersTableToolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("networkUI.common.filterByStatus")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {STATUS_OPTIONS.map((o) => (
             <DropdownMenuItem
@@ -200,7 +202,7 @@ export function BuyersTableToolbar({
               onSelect={() => onStatus(o.id)}
               className={cn(status === o.id && "text-accent")}
             >
-              {o.label}
+              {t(o.labelKey)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -211,7 +213,7 @@ export function BuyersTableToolbar({
         variant="ghost"
         size="icon"
         className="h-8 w-8 text-muted-foreground hover:text-foreground"
-        aria-label="Refresh"
+        aria-label={t("networkUI.common.refresh")}
         onClick={onRefresh}
       >
         <RefreshCw className="h-4 w-4" />
@@ -224,20 +226,20 @@ export function BuyersTableToolbar({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            aria-label="Column settings"
+            aria-label={t("networkUI.common.columnSettings")}
           >
             <Settings className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-56 p-0">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <span className="text-sm font-semibold">Columns</span>
+            <span className="text-sm font-semibold">{t("networkUI.common.columns")}</span>
             <button
               type="button"
               onClick={() => onColumns(ALL_BUYER_COLUMNS)}
               className="text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              Show all
+              {t("networkUI.common.showAll")}
             </button>
           </div>
           <div className="max-h-72 overflow-y-auto px-2 py-2">
@@ -256,7 +258,7 @@ export function BuyersTableToolbar({
                       onColumns({ ...columns, [col.id]: !columns[col.id] })
                     }
                   />
-                  <span>{col.label}</span>
+                  <span>{t(col.labelKey)}</span>
                 </Label>
               );
             })}
@@ -268,7 +270,7 @@ export function BuyersTableToolbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="ml-2 h-8 gap-1.5 px-3">
-            On page {pageSize}
+            {t("networkUI.common.onPage").replace("{count}", String(pageSize))}
             <ChevronDown className="h-3 w-3 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
@@ -287,7 +289,7 @@ export function BuyersTableToolbar({
 
       {/* Create */}
       <Button size="sm" className="ml-1 h-8 px-4" onClick={onCreate}>
-        Create
+        {t("networkUI.common.create")}
       </Button>
     </div>
   );

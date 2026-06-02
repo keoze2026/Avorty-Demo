@@ -8,9 +8,11 @@ import { PublisherDetailHeader } from "@/components/publishers/publisher-detail-
 import { PublisherSettingsTab } from "@/components/publishers/publisher-settings-tab";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
+import { useTranslation } from "@/hooks/use-translation";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 
 export default function PublisherDetailPage() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const publisher = usePublishersStore((s) => s.getById(params.id));
@@ -29,8 +31,8 @@ export default function PublisherDetailPage() {
       <EmptyState
         icon={Users}
         tone="violet"
-        title="Publisher not found"
-        description="It may have been removed. Sending you back to the publishers list…"
+        title={t("networkUI.publishers.empty.notFound")}
+        description={t("networkUI.publishers.empty.notFoundDesc")}
       />
     );
   }

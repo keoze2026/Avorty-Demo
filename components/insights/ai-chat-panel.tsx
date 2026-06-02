@@ -12,6 +12,7 @@ import { ArrowUp, Sparkles, User } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CHAT_REPLIES, MOCK_CHAT_SUGGESTIONS } from "@/lib/mock/insights";
@@ -39,13 +40,14 @@ function pickCategoryFor(text: string): ChatSuggestion["category"] {
 }
 
 export function AiChatPanel() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "m_intro",
       role: "assistant",
       bubbles: [
-        "Hi — I&apos;m the Vortyx Copilot. Ask me anything about your network.",
-        "I can pull from every campaign, call, and bid you&apos;ve handled. Try one of the prompts below.",
+        t("toolsUI.insights.chat.introLine1"),
+        t("toolsUI.insights.chat.introLine2"),
       ],
       text: "",
     },
@@ -89,14 +91,14 @@ export function AiChatPanel() {
       <CardHeader className="border-b border-border/60 pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-accent" />
-          Vortyx Copilot
+          {t("toolsUI.insights.chat.title")}
           <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-accent">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-            Online
+            {t("toolsUI.insights.chat.online")}
           </span>
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Ask about performance, anomalies, or what to do next.
+          {t("toolsUI.insights.chat.description")}
         </p>
       </CardHeader>
 
@@ -133,7 +135,7 @@ export function AiChatPanel() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything…"
+            placeholder={t("toolsUI.insights.chat.inputPlaceholder")}
             disabled={thinking}
             className="h-10"
           />
@@ -142,7 +144,7 @@ export function AiChatPanel() {
           </Button>
         </form>
         <p className="text-center text-[11px] text-muted-foreground/70">
-          Co-pilot answers are simulated in this demo.
+          {t("toolsUI.insights.chat.demoNote")}
         </p>
       </CardContent>
     </Card>

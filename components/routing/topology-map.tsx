@@ -8,6 +8,7 @@
 
 "use client";
 
+import { useTranslation } from "@/hooks/use-translation";
 import type { RoutingPlan, RoutingNode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const KIND_COLOR: Record<RoutingNode["type"], string> = {
 };
 
 export function TopologyMap({ plan, className }: TopologyMapProps) {
+  const { t } = useTranslation();
   const W = 320;
   const H = 130;
   const PAD = 16;
@@ -44,7 +46,7 @@ export function TopologyMap({ plan, className }: TopologyMapProps) {
         )}
       >
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          no nodes
+          {t("trafficUI.routing.map.noNodes")}
         </span>
       </div>
     );
@@ -227,21 +229,21 @@ export function TopologyMap({ plan, className }: TopologyMapProps) {
             className="h-1.5 w-1.5 rounded-full"
             style={{ background: "var(--accent)" }}
           />
-          inbound
+          {t("trafficUI.routing.map.inbound")}
         </span>
         <span className="inline-flex items-center gap-1">
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ background: "oklch(0.7 0.16 75)" }}
           />
-          filter
+          {t("trafficUI.routing.map.filter")}
         </span>
         <span className="inline-flex items-center gap-1">
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ background: "oklch(0.65 0.18 155)" }}
           />
-          buyer
+          {t("trafficUI.routing.map.buyer")}
         </span>
       </div>
     </div>

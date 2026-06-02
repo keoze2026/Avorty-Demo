@@ -23,10 +23,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 export default function DestinationDetailPage() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const destination = useDestinationsStore((s) => s.getById(params.id));
@@ -47,8 +49,8 @@ export default function DestinationDetailPage() {
       <EmptyState
         icon={Target}
         tone="cyan"
-        title="Destination not found"
-        description="It may have been removed. Sending you back to the destinations list…"
+        title={t("networkUI.destinations.empty.notFound")}
+        description={t("networkUI.destinations.empty.notFoundDesc")}
       />
     );
   }
@@ -64,13 +66,13 @@ export default function DestinationDetailPage() {
       <Tabs defaultValue="overview" className="gap-4">
         <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
           <TabsTrigger value="overview">
-            <LayoutDashboard className="h-3.5 w-3.5" /> Overview
+            <LayoutDashboard className="h-3.5 w-3.5" /> {t("networkUI.destinations.tabs.overview")}
           </TabsTrigger>
           <TabsTrigger value="calls">
-            <PhoneCall className="h-3.5 w-3.5" /> Calls
+            <PhoneCall className="h-3.5 w-3.5" /> {t("networkUI.destinations.tabs.calls")}
           </TabsTrigger>
           <TabsTrigger value="settings">
-            <SettingsIcon className="h-3.5 w-3.5" /> Settings
+            <SettingsIcon className="h-3.5 w-3.5" /> {t("networkUI.destinations.tabs.settings")}
           </TabsTrigger>
         </TabsList>
 

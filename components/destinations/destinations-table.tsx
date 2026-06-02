@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
@@ -99,6 +100,7 @@ export function DestinationsTable({
   destinations,
   onToggle,
 }: DestinationsTableProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const rows = useMemo(() => buildRows(destinations), [destinations]);
 
@@ -109,31 +111,31 @@ export function DestinationsTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-6 text-left uppercase tracking-wider text-[11px]">
-                Name
+                {t("networkUI.destinations.table.name")}
               </TableHead>
               <TableHead className="text-left uppercase tracking-wider text-[11px]">
-                Buyer
+                {t("networkUI.destinations.table.buyer")}
               </TableHead>
               <TableHead className="uppercase tracking-wider text-[11px]">
-                Destination
+                {t("networkUI.destinations.table.destination")}
               </TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">
-                Live
+                {t("networkUI.destinations.table.live")}
               </TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">
-                Hourly
+                {t("networkUI.destinations.table.hourly")}
               </TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">
-                Daily
+                {t("networkUI.destinations.table.daily")}
               </TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">
-                Monthly
+                {t("networkUI.destinations.table.monthly")}
               </TableHead>
               <TableHead className="text-center uppercase tracking-wider text-[11px]">
-                Global
+                {t("networkUI.destinations.table.global")}
               </TableHead>
               <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">
-                Status
+                {t("networkUI.destinations.table.status")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -144,7 +146,7 @@ export function DestinationsTable({
                   colSpan={9}
                   className="pl-6 py-10 text-center text-sm text-muted-foreground"
                 >
-                  No destinations match the current filters.
+                  {t("networkUI.destinations.table.noResults")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -178,7 +180,7 @@ export function DestinationsTable({
                         {atCap && (
                           <AlertTriangle
                             className="h-3.5 w-3.5 text-[color:var(--warning)]"
-                            aria-label="At cap"
+                            aria-label={t("networkUI.destinations.table.atCapAria")}
                           />
                         )}
                       </Link>
@@ -265,8 +267,8 @@ export function DestinationsTable({
                         onCheckedChange={() => onToggle?.(destination.id)}
                         aria-label={
                           destination.enabled
-                            ? `Disable ${destination.name}`
-                            : `Enable ${destination.name}`
+                            ? t("networkUI.destinations.table.disableAria").replace("{name}", destination.name)
+                            : t("networkUI.destinations.table.enableAria").replace("{name}", destination.name)
                         }
                       />
                     </TableCell>

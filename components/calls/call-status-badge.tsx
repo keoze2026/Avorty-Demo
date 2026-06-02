@@ -1,22 +1,24 @@
 import { CheckCircle2, Phone, PhoneIncoming, PhoneMissed, XCircle, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/use-translation";
 import type { CallStatus } from "@/lib/types";
 
 const META: Record<CallStatus, {
   icon: LucideIcon;
   variant: React.ComponentProps<typeof Badge>["variant"];
-  label: string;
+  labelKey: string;
 }> = {
-  ringing: { icon: PhoneIncoming, variant: "default", label: "Ringing" },
-  "in-progress": { icon: Phone, variant: "default", label: "Live" },
-  completed: { icon: CheckCircle2, variant: "success", label: "Won" },
-  missed: { icon: PhoneMissed, variant: "warning", label: "Missed" },
-  rejected: { icon: XCircle, variant: "destructive", label: "Rejected" },
-  failed: { icon: XCircle, variant: "destructive", label: "Failed" },
+  ringing: { icon: PhoneIncoming, variant: "default", labelKey: "toolsUI.callLogs.statusBadge.ringing" },
+  "in-progress": { icon: Phone, variant: "default", labelKey: "toolsUI.callLogs.statusBadge.live" },
+  completed: { icon: CheckCircle2, variant: "success", labelKey: "toolsUI.callLogs.statusBadge.won" },
+  missed: { icon: PhoneMissed, variant: "warning", labelKey: "toolsUI.callLogs.statusBadge.missed" },
+  rejected: { icon: XCircle, variant: "destructive", labelKey: "toolsUI.callLogs.statusBadge.rejected" },
+  failed: { icon: XCircle, variant: "destructive", labelKey: "toolsUI.callLogs.statusBadge.failed" },
 };
 
 export function CallStatusBadge({ status }: { status: CallStatus }) {
+  const { t } = useTranslation();
   const meta = META[status];
   const Icon = meta.icon;
   const live = status === "ringing" || status === "in-progress";
@@ -30,7 +32,7 @@ export function CallStatusBadge({ status }: { status: CallStatus }) {
       ) : (
         <Icon className="h-3 w-3" />
       )}
-      {meta.label}
+      {t(meta.labelKey)}
     </Badge>
   );
 }

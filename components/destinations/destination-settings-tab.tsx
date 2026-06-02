@@ -7,6 +7,7 @@ import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { formatCompact, toE164 } from "@/lib/format";
@@ -21,6 +22,7 @@ export function DestinationSettingsTab({
   destination,
   onEdit,
 }: DestinationSettingsTabProps) {
+  const { t } = useTranslation();
   const buyer = useBuyersStore((s) => s.buyers.find((b) => b.id === destination.buyerId));
 
   return (
@@ -34,21 +36,21 @@ export function DestinationSettingsTab({
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
           <div>
-            <CardTitle className="text-base">Configuration</CardTitle>
+            <CardTitle className="text-base">{t("networkUI.destinations.settings.configurationTitle")}</CardTitle>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Editable via the destination builder.
+            {t("networkUI.destinations.settings.configurationDesc")}
           </p>
         </div>
         <Button size="sm" onClick={onEdit}>
-          <Pencil className="h-3.5 w-3.5" /> Edit settings
+          <Pencil className="h-3.5 w-3.5" /> {t("networkUI.destinations.settings.editSettings")}
         </Button>
       </CardHeader>
       <CardContent>
         <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-          <Row label="Name" value={<span>{destination.name}</span>} />
-          <Row label="TFN" value={<span className="font-mono">{toE164(destination.tfn)}</span>} />
+          <Row label={t("networkUI.destinations.settings.name")} value={<span>{destination.name}</span>} />
+          <Row label={t("networkUI.destinations.settings.tfn")} value={<span className="font-mono">{toE164(destination.tfn)}</span>} />
           <Row
-            label="Buyer"
+            label={t("networkUI.destinations.settings.buyer")}
             value={
               buyer ? (
                 <Link
@@ -63,21 +65,21 @@ export function DestinationSettingsTab({
             }
           />
           <Row
-            label="Status"
+            label={t("networkUI.destinations.settings.status")}
             value={
               destination.enabled ? (
-                <Badge variant="success">Active</Badge>
+                <Badge variant="success">{t("networkUI.destinations.settings.active")}</Badge>
               ) : (
-                <Badge variant="outline">Disabled</Badge>
+                <Badge variant="outline">{t("networkUI.destinations.settings.disabled")}</Badge>
               )
             }
           />
           <Row
-            label="Concurrency cap"
+            label={t("networkUI.destinations.settings.concurrencyCap")}
             value={<span className="font-mono">{destination.concurrencyCap}</span>}
           />
           <Row
-            label="Daily cap"
+            label={t("networkUI.destinations.settings.dailyCap")}
             value={
               <span className="font-mono">
                 {destination.dailyCap === 0 ? "∞" : formatCompact(destination.dailyCap)}
@@ -85,7 +87,7 @@ export function DestinationSettingsTab({
             }
           />
           <Row
-            label="Monthly cap"
+            label={t("networkUI.destinations.settings.monthlyCap")}
             value={
               <span className="font-mono">
                 {destination.monthlyCap === 0 ? "∞" : formatCompact(destination.monthlyCap)}
@@ -93,7 +95,7 @@ export function DestinationSettingsTab({
             }
           />
           <Row
-            label="Destination ID"
+            label={t("networkUI.destinations.settings.destinationId")}
             value={
               <span className="font-mono text-xs text-muted-foreground">{destination.id}</span>
             }

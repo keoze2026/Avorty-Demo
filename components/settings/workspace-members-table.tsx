@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { MOCK_MEMBERS } from "@/lib/mock/settings";
 import type { Member, MemberRole } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface WorkspaceMembersTableProps {
   members: Member[];
@@ -37,6 +38,7 @@ interface WorkspaceMembersTableProps {
 }
 
 export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMembersTableProps) {
+  const { t } = useTranslation();
   const [inviteOpen, setInviteOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Member | null>(null);
   const [removing, setRemoving] = React.useState<Member | null>(null);
@@ -98,7 +100,7 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
 
   const onRemove = (m: Member) => {
     onMembersChange(members.filter((x) => x.id !== m.id));
-    toast.success(`Removed ${m.name}`);
+    toast.success(t("workspaceUI.members.removed").replace("{name}", m.name));
     setRemoving(null);
   };
 
@@ -110,13 +112,15 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
       <Card className="overflow-hidden p-0">
         <CardHeader className="flex flex-row items-center justify-between gap-2 border-b border-border bg-secondary/20 px-4 py-3 space-y-0">
           <div>
-            <CardTitle className="text-base">Members</CardTitle>
+            <CardTitle className="text-base">{t("workspaceUI.members.title")}</CardTitle>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {activeCount} active · {invitedCount} pending
+              {t("workspaceUI.members.countSummary")
+                .replace("{active}", String(activeCount))
+                .replace("{invited}", String(invitedCount))}
             </p>
           </div>
           <Button size="sm" onClick={() => setInviteOpen(true)}>
-            <Plus className="h-3.5 w-3.5" /> Invite member
+            <Plus className="h-3.5 w-3.5" /> {t("workspaceUI.members.invite")}
           </Button>
         </CardHeader>
 
@@ -125,11 +129,11 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
             <Table className="min-w-[700px]">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="pl-4 text-left">Name</TableHead>
-                  <TableHead className="text-left">Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="pr-4">Action</TableHead>
+                  <TableHead className="pl-4 text-left">{t("workspaceUI.members.columnName")}</TableHead>
+                  <TableHead className="text-left">{t("workspaceUI.members.columnEmail")}</TableHead>
+                  <TableHead>{t("workspaceUI.members.columnRole")}</TableHead>
+                  <TableHead>{t("workspaceUI.members.columnStatus")}</TableHead>
+                  <TableHead className="pr-4">{t("workspaceUI.members.columnActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,7 +157,7 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
                     <TableCell className="text-left font-mono text-[11px] text-muted-foreground">
                       {m.email}
                     </TableCell>
-                    <TableCell className="capitalize">{m.role}</TableCell>
+                    <TableCell>{t(`workspaceUI.members.role.${m.role}`)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -163,9 +167,8 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
                               ? "outline"
                               : "destructive"
                         }
-                        className="capitalize"
                       >
-                        {m.status}
+                        {t(`workspaceUI.members.status.${m.status}`)}
                       </Badge>
                     </TableCell>
                     <TableCell className="pr-4">
@@ -176,7 +179,7 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
                           className="h-7 px-2 text-xs"
                           onClick={() => setEditing(m)}
                         >
-                          <Pencil className="h-3.5 w-3.5" /> Edit
+                          <Pencil className="h-3.5 w-3.5" /> {t("workspaceUI.members.edit")}
                         </Button>
                         <Button
                           variant="ghost"
@@ -184,7 +187,7 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
                           className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => setRemoving(m)}
                         >
-                          <Trash2 className="h-3.5 w-3.5" /> Remove
+                          <Trash2 className="h-3.5 w-3.5" /> {t("workspaceUI.members.remove")}
                         </Button>
                       </div>
                     </TableCell>
@@ -220,18 +223,20 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
       <AlertDialog open={removing !== null} onOpenChange={(next) => !next && setRemoving(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove {removing?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("workspaceUI.members.removeConfirmTitle").replace("{name}", removing?.name ?? "")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {removing?.name} will lose access to this workspace immediately. This cannot be undone.
+              {t("workspaceUI.members.removeConfirmDescription").replace("{name}", removing?.name ?? "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("workspaceUI.members.removeCancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removing && onRemove(removing)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Remove
+              {t("workspaceUI.members.remove")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

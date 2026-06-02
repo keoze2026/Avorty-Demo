@@ -18,10 +18,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Hash } from "lucide-react";
+import { useTranslation } from "@/hooks/use-translation";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import { formatCurrency, toE164 } from "@/lib/format";
 
 export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   // Stable selector + useMemo to avoid the new-ref-per-render Zustand loop.
   const allNumbers = useNumbersStore((s) => s.numbers);
   const setNumberStatus = useNumbersStore((s) => s.setNumberStatus);
@@ -34,13 +36,13 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
     <section className="space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h2 className="text-[13px] font-semibold uppercase tracking-wider">Tracking Numbers</h2>
+          <h2 className="text-[13px] font-semibold uppercase tracking-wider">{t("trafficUI.campaigns.settings.trackingNumbers.title")}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Set up unique phone numbers to track calls from your marketing campaigns.
+            {t("trafficUI.campaigns.settings.trackingNumbers.description")}
           </p>
         </div>
-        <Button size="sm" onClick={() => toast.info("Provision number — coming soon")}>
-          <Plus className="h-4 w-4" /> Add
+        <Button size="sm" onClick={() => toast.info(t("trafficUI.campaigns.settings.trackingNumbers.provisionSoon"))}>
+          <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.trackingNumbers.add")}
         </Button>
       </div>
 
@@ -48,11 +50,11 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
         <EmptyState
           icon={Hash}
           tone="violet"
-          title="No tracking numbers"
-          description="Provision a number or attach an existing one to start routing calls into this campaign."
+          title={t("trafficUI.campaigns.settings.trackingNumbers.empty.title")}
+          description={t("trafficUI.campaigns.settings.trackingNumbers.empty.description")}
           actions={
             <Button size="sm">
-              <Plus className="h-4 w-4" /> Add tracking number
+              <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.trackingNumbers.addTracking")}
             </Button>
           }
         />
@@ -61,12 +63,12 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6 uppercase tracking-wider text-[11px]">Number</TableHead>
-                <TableHead className="uppercase tracking-wider text-[11px]">Type</TableHead>
-                <TableHead className="uppercase tracking-wider text-[11px]">Name</TableHead>
-                <TableHead className="uppercase tracking-wider text-[11px]">Vendor</TableHead>
-                <TableHead className="uppercase tracking-wider text-[11px]">Payout</TableHead>
-                <TableHead className="text-center uppercase tracking-wider text-[11px]">Status</TableHead>
+                <TableHead className="pl-6 uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.number")}</TableHead>
+                <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.type")}</TableHead>
+                <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.name")}</TableHead>
+                <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.vendor")}</TableHead>
+                <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.payout")}</TableHead>
+                <TableHead className="text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -93,10 +95,12 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
                       onCheckedChange={(v) => {
                         setNumberStatus(n.id, v ? "active" : "paused");
                         toast.success(
-                          v ? `Activated ${toE164(n.number)}` : `Paused ${toE164(n.number)}`,
+                          v
+                            ? t("trafficUI.campaigns.settings.trackingNumbers.toast.activated").replace("{number}", toE164(n.number))
+                            : t("trafficUI.campaigns.settings.trackingNumbers.toast.paused").replace("{number}", toE164(n.number)),
                         );
                       }}
-                      aria-label={`Toggle ${toE164(n.number)}`}
+                      aria-label={t("trafficUI.numbers.pools.toggle").replace("{name}", toE164(n.number))}
                     />
                   </TableCell>
                 </TableRow>

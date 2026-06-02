@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact } from "@/lib/format";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { MOCK_CALLS } from "@/lib/mock/calls";
@@ -25,6 +26,7 @@ import { useDestinationsStore } from "@/lib/store/destinations-store";
 type StatusFilter = "all" | "active" | "disabled";
 
 export default function DestinationsPage() {
+  const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
   const remove = useDestinationsStore((s) => s.remove);
@@ -102,24 +104,28 @@ export default function DestinationsPage() {
     const d = destinations.find((x) => x.id === id);
     if (!d) return;
     setEnabled(id, !d.enabled);
-    toast.success(d.enabled ? `Paused ${d.name}` : `Enabled ${d.name}`);
+    toast.success(
+      d.enabled
+        ? t("networkUI.destinations.toast.paused").replace("{name}", d.name)
+        : t("networkUI.destinations.toast.enabled").replace("{name}", d.name),
+    );
   };
 
   const handleDelete = (id: string) => {
     const d = destinations.find((x) => x.id === id);
     if (!d) return;
     remove(id);
-    toast.success(`Removed ${d.name}`);
+    toast.success(t("networkUI.destinations.toast.removed").replace("{name}", d.name));
   };
 
   return (
     <>
       <PageHeader
-        title="Destinations"
-        description="Buyer-owned dial targets, each with its own CC and cap."
+        title={t("networkUI.destinations.page.title")}
+        description={t("networkUI.destinations.page.description")}
         actions={
           <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" /> New destination
+            <Plus className="h-4 w-4" /> {t("networkUI.destinations.page.newDestination")}
           </Button>
         }
       />
@@ -131,7 +137,7 @@ export default function DestinationsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search destinations, TFN, or buyer…"
+            placeholder={t("networkUI.destinations.page.searchPlaceholder")}
             className="h-9 w-72 pl-8"
           />
         </div>
@@ -140,9 +146,9 @@ export default function DestinationsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="disabled">Disabled</SelectItem>
+            <SelectItem value="all">{t("networkUI.destinations.page.allStatuses")}</SelectItem>
+            <SelectItem value="active">{t("networkUI.destinations.page.active")}</SelectItem>
+            <SelectItem value="disabled">{t("networkUI.destinations.page.disabled")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={buyerFilter} onValueChange={setBuyerFilter}>
@@ -150,7 +156,7 @@ export default function DestinationsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All buyers</SelectItem>
+            <SelectItem value="all">{t("networkUI.destinations.page.allBuyers")}</SelectItem>
             {MOCK_BUYERS.map((b) => (
               <SelectItem key={b.id} value={b.id}>
                 {b.name}
@@ -162,11 +168,11 @@ export default function DestinationsPage() {
         {/* Inline summary stats — one bordered card, all 5 stats split by hairlines */}
         <div className="ml-auto inline-flex h-9 items-stretch divide-x divide-border overflow-hidden rounded-md border border-border bg-card">
           {[
-            { label: "Active Live", value: formatCompact(stats.activeLive) },
-            { label: "Total Live", value: formatCompact(stats.totalLive) },
-            { label: "Total CC", value: formatCompact(stats.totalCC) },
-            { label: "Active TFN's", value: formatCompact(stats.activeTFNs) },
-            { label: "Vacant CC", value: formatCompact(stats.vacantCC) },
+            { label: t("networkUI.destinations.page.activeLive"), value: formatCompact(stats.activeLive) },
+            { label: t("networkUI.destinations.page.totalLive"), value: formatCompact(stats.totalLive) },
+            { label: t("networkUI.destinations.page.totalCC"), value: formatCompact(stats.totalCC) },
+            { label: t("networkUI.destinations.page.activeTFNs"), value: formatCompact(stats.activeTFNs) },
+            { label: t("networkUI.destinations.page.vacantCC"), value: formatCompact(stats.vacantCC) },
           ].map((s) => (
             <div
               key={s.label}

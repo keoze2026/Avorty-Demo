@@ -78,10 +78,10 @@ export default function DashboardPage() {
           <>
             <Select value={destinationTfn} onValueChange={setDestinationTfn}>
               <SelectTrigger size="sm" className="w-[20rem]">
-                <SelectValue placeholder="All destinations" />
+                <SelectValue placeholder={t("dashboard.allDestinations")} />
               </SelectTrigger>
               <SelectContent align="end" className="max-h-80">
-                <SelectItem value={ALL_DEST}>All destinations</SelectItem>
+                <SelectItem value={ALL_DEST}>{t("dashboard.allDestinations")}</SelectItem>
                 {destinations.map((d) => {
                   const buyer = BUYER_BY_ID.get(d.buyerId);
                   const calls = CALLS_TODAY_BY_TFN.get(d.tfn) ?? 0;
@@ -93,7 +93,7 @@ export default function DashboardPage() {
                           {d.tfn}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
-                          {buyer?.name ?? "—"} · {calls} calls
+                          {buyer?.name ?? "—"} · {calls} {t("dashboard.callsToday")}
                         </span>
                       </span>
                     </SelectItem>

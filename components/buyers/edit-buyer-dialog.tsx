@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 
 interface EditBuyerDialogProps {
@@ -25,6 +26,7 @@ interface EditBuyerDialogProps {
 }
 
 export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps) {
+  const { t } = useTranslation();
   const buyers = useBuyersStore((s) => s.buyers);
   const update = useBuyersStore((s) => s.update);
 
@@ -66,7 +68,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
       monthlyCap: dailyCap * 25,
     });
     setSubmitting(false);
-    toast.success(`${name.trim()} updated`);
+    toast.success(t("networkUI.buyers.edit.updated").replace("{name}", name.trim()));
     onOpenChange(false);
   };
 
@@ -79,8 +81,8 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
               <Pencil className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Edit buyer</DialogTitle>
-              <DialogDescription>Update the buyer&apos;s details.</DialogDescription>
+              <DialogTitle>{t("networkUI.buyers.edit.title")}</DialogTitle>
+              <DialogDescription>{t("networkUI.buyers.edit.description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -88,11 +90,11 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="eb-name">Buyer name</Label>
+              <Label htmlFor="eb-name">{t("networkUI.buyers.edit.buyerName")}</Label>
               <Input id="eb-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="eb-org">Organization</Label>
+              <Label htmlFor="eb-org">{t("networkUI.buyers.edit.organization")}</Label>
               <Input
                 id="eb-org"
                 value={organization}
@@ -102,7 +104,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="eb-contact">Contact name</Label>
+              <Label htmlFor="eb-contact">{t("networkUI.buyers.edit.contactName")}</Label>
               <Input
                 id="eb-contact"
                 value={contactName}
@@ -110,7 +112,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="eb-email">Email</Label>
+              <Label htmlFor="eb-email">{t("networkUI.buyers.edit.email")}</Label>
               <Input
                 id="eb-email"
                 type="email"
@@ -121,7 +123,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="eb-bid">Bid per call ($)</Label>
+              <Label htmlFor="eb-bid">{t("networkUI.buyers.edit.bidPerCall")}</Label>
               <Input
                 id="eb-bid"
                 type="number"
@@ -133,7 +135,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="eb-cap">Daily cap</Label>
+              <Label htmlFor="eb-cap">{t("networkUI.buyers.edit.dailyCap")}</Label>
               <Input
                 id="eb-cap"
                 type="number"
@@ -145,20 +147,20 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="eb-desc">Notes</Label>
+            <Label htmlFor="eb-desc">{t("networkUI.buyers.edit.notes")}</Label>
             <Textarea
               id="eb-desc"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Vertical, geo, anything routing-affecting."
+              placeholder={t("networkUI.buyers.edit.notesPh")}
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("networkUI.buyers.edit.cancel")}
           </Button>
           <Button
             onClick={onSubmit}
@@ -166,10 +168,10 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
           >
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.buyers.edit.saving")}
               </>
             ) : (
-              "Save changes"
+              t("networkUI.buyers.edit.save")
             )}
           </Button>
         </DialogFooter>

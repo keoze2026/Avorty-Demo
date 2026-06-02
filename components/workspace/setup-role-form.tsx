@@ -21,6 +21,7 @@ import {
   seedForRole,
 } from "@/lib/workspace-permissions";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface SetupRoleFormProps {
   /** Used only to seed the form with sensible defaults per built-in role. */
@@ -29,6 +30,7 @@ interface SetupRoleFormProps {
 
 export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [state, setState] = React.useState<PermissionState>(() => seedForRole(roleId));
 
   // Determine if every permission across every group is enabled.
@@ -67,7 +69,7 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
   };
 
   const onSave = () => {
-    toast.success("Role permissions saved");
+    toast.success(t("workspaceUI.setupRole.saved"));
     router.push(ROUTES.workspace);
   };
 
@@ -76,13 +78,13 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
       <CardHeader className="flex flex-row items-start justify-between gap-3 border-b border-border bg-secondary/20 px-5 py-4 space-y-0">
         <div>
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Permissions
+            {t("workspaceUI.setupRole.eyebrow")}
           </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">Select user permissions</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("workspaceUI.setupRole.caption")}</p>
         </div>
         <Label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary/50">
           <Checkbox checked={allEnabled} onCheckedChange={(v) => setAll(Boolean(v))} />
-          Enable all
+          {t("workspaceUI.setupRole.enableAll")}
         </Label>
       </CardHeader>
 
@@ -95,6 +97,7 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
             const allOn = enabledCount === totalCount;
             const someOn = enabledCount > 0 && enabledCount < totalCount;
 
+            const groupLabel = t(`workspaceUI.setupRole.groups.${group.id}`);
             return (
               <Collapsible
                 key={group.id}
@@ -107,14 +110,14 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
                       checked={allOn ? true : someOn ? "indeterminate" : false}
                       onCheckedChange={(v) => setGroup(group.id, Boolean(v))}
                     />
-                    {group.label}
+                    {groupLabel}
                   </Label>
                   <CollapsibleTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground"
-                      aria-label={`Toggle ${group.label}`}
+                      aria-label={t("workspaceUI.setupRole.toggleGroup").replace("{group}", groupLabel)}
                     >
                       <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/perm:rotate-180" />
                     </Button>
@@ -141,7 +144,7 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
                             checked={checked}
                             onCheckedChange={(v) => setPermission(group.id, p.id, Boolean(v))}
                           />
-                          {p.label}
+                          {t(`workspaceUI.setupRole.permissions.${p.id}`)}
                         </Label>
                       );
                     })}
@@ -154,9 +157,9 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
 
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/10 px-5 py-3">
           <Button variant="outline" onClick={() => router.push(ROUTES.workspace)}>
-            Cancel
+            {t("workspaceUI.setupRole.cancel")}
           </Button>
-          <Button onClick={onSave}>Save changes</Button>
+          <Button onClick={onSave}>{t("workspaceUI.setupRole.save")}</Button>
         </div>
       </CardContent>
     </Card>

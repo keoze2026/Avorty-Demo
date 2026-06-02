@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Activity, DollarSign, Gauge, PhoneCall } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Destination } from "@/lib/types";
@@ -12,6 +13,7 @@ interface DestinationStatsRowProps {
 }
 
 export function DestinationStatsRow({ destination }: DestinationStatsRowProps) {
+  const { t } = useTranslation();
   const stats = useMemo(() => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -35,22 +37,22 @@ export function DestinationStatsRow({ destination }: DestinationStatsRowProps) {
   const tiles = [
     {
       icon: PhoneCall,
-      label: "Calls today",
+      label: t("networkUI.destinations.stats.callsToday"),
       value: formatCompact(stats.calls),
     },
     {
       icon: DollarSign,
-      label: "Revenue today",
+      label: t("networkUI.destinations.stats.revenueToday"),
       value: formatCurrency(stats.revenue),
     },
     {
       icon: Activity,
-      label: "Concurrent now",
+      label: t("networkUI.destinations.stats.concurrentNow"),
       value: `${stats.cc} / ${destination.concurrencyCap}`,
     },
     {
       icon: Gauge,
-      label: "CC utilization",
+      label: t("networkUI.destinations.stats.ccUtilization"),
       value: formatPercent(stats.ccPct, 0),
     },
   ];

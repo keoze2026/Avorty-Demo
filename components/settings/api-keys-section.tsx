@@ -6,6 +6,7 @@ import { Copy, Eye, EyeOff, KeyRound, Loader2, MoreVertical, Plus, RefreshCw, Tr
 import { toast } from "sonner";
 
 import { SectionShell } from "./profile-section";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ const SCOPE_TONE: Record<ApiScope, string> = {
 };
 
 export function ApiKeysSection() {
+  const { t } = useTranslation();
   const [keys, setKeys] = useState<ApiKey[]>(MOCK_API_KEYS);
   const [createOpen, setCreateOpen] = useState(false);
   const [revealed, setRevealed] = useState<{ id: string; token: string } | null>(null);
@@ -67,7 +69,9 @@ export function ApiKeysSection() {
     );
     setRotating(null);
     setRevealed({ id: key.id, token });
-    toast.success(`Rotated "${key.name}"`, { description: "Previous token is now invalid." });
+    toast.success(t("workspaceUI.apiKeys.rotated").replace("{name}", key.name), {
+      description: t("workspaceUI.apiKeys.rotatedDescription"),
+    });
   };
 
   const onCreate = (input: { name: string; scopes: ApiScope[] }) => {
@@ -97,21 +101,23 @@ export function ApiKeysSection() {
     });
 
   const copyToken = (token: string) => {
-    navigator.clipboard?.writeText(token).then(() => toast.success("Copied to clipboard"));
+    navigator.clipboard?.writeText(token).then(() => toast.success(t("workspaceUI.apiKeys.copied")));
   };
 
   return (
     <SectionShell
-      eyebrow="API keys"
-      title="Programmatic access"
-      description="Keys authenticate the SDK + REST API. Reveal once on creation — store them somewhere safe."
+      eyebrow={t("settings.apiKeysSection.eyebrow")}
+      title={t("settings.apiKeysSection.title")}
+      description={t("settings.apiKeysSection.description")}
     >
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-mono text-muted-foreground">
-          {keys.length} keys · {keys.filter((k) => k.scopes.includes("admin")).length} admin
+          {t("workspaceUI.apiKeys.countSummary")
+            .replace("{total}", String(keys.length))
+            .replace("{admin}", String(keys.filter((k) => k.scopes.includes("admin")).length))}
         </p>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> New API key
+          <Plus className="h-3.5 w-3.5" /> {t("workspaceUI.apiKeys.newKey")}
         </Button>
       </div>
 
@@ -152,7 +158,7 @@ export function ApiKeysSection() {
                       type="button"
                       onClick={() => toggleReveal(k.id)}
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Toggle reveal"
+                      aria-label={t("workspaceUI.apiKeys.toggleReveal")}
                     >
                       {revealsExpanded.has(k.id) ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                     </button>
@@ -160,7 +166,7 @@ export function ApiKeysSection() {
                       type="button"
                       onClick={() => copyToken(k.prefix)}
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Copy prefix"
+                      aria-label={t("workspaceUI.apiKeys.copyPrefix")}
                     >
                       <Copy className="h-3 w-3" />
                     </button>
@@ -168,28 +174,32 @@ export function ApiKeysSection() {
                 </div>
 
                 <div className="hidden text-right text-[10px] font-mono uppercase tracking-wider text-muted-foreground sm:block">
-                  <div>{k.lastUsedAt ? `Used ${formatRelativeTime(k.lastUsedAt)}` : "Never used"}</div>
-                  <div>by {k.createdByName}</div>
+                  <div>
+                    {k.lastUsedAt
+                      ? t("workspaceUI.apiKeys.usedRelative").replace("{time}", formatRelativeTime(k.lastUsedAt))
+                      : t("workspaceUI.apiKeys.neverUsed")}
+                  </div>
+                  <div>{t("workspaceUI.apiKeys.byUser").replace("{name}", k.createdByName ?? "")}</div>
                 </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="API key actions">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("workspaceUI.apiKeys.keyActions")}>
                       <MoreVertical className="h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => setRotating(k)}>
-                      <RefreshCw className="h-4 w-4" /> Rotate
+                      <RefreshCw className="h-4 w-4" /> {t("workspaceUI.apiKeys.menuRotate")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() => {
                         setKeys((ks) => ks.filter((x) => x.id !== k.id));
-                        toast.success(`Revoked "${k.name}"`);
+                        toast.success(t("workspaceUI.apiKeys.revoked").replace("{name}", k.name));
                       }}
                       className="text-destructive focus:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4" /> Revoke
+                      <Trash2 className="h-4 w-4" /> {t("workspaceUI.apiKeys.menuRevoke")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -209,19 +219,17 @@ export function ApiKeysSection() {
             <AlertDialogTitle>
               <span className="inline-flex items-center gap-2">
                 <RefreshCw className="h-4 w-4 text-accent" />
-                Rotate &ldquo;{rotating?.name}&rdquo;?
+                {t("workspaceUI.apiKeys.rotateConfirmTitle").replace("{name}", rotating?.name ?? "")}
               </span>
             </AlertDialogTitle>
             <AlertDialogDescription>
-              The current token becomes invalid the moment you confirm. Any service still using
-              the old token will start failing. We&apos;ll show the new token once — store it
-              somewhere safe.
+              {t("workspaceUI.apiKeys.rotateConfirmDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("workspaceUI.apiKeys.rotateCancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => rotating && onRotate(rotating)}>
-              Rotate now
+              {t("workspaceUI.apiKeys.rotateNow")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -239,6 +247,7 @@ function CreateKeyDialog({
   onOpenChange: (open: boolean) => void;
   onCreate: (input: { name: string; scopes: ApiScope[] }) => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [scopes, setScopes] = useState<Set<ApiScope>>(new Set(["read"]));
   const [submitting, setSubmitting] = useState(false);
@@ -270,9 +279,9 @@ function CreateKeyDialog({
               <KeyRound className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Create API key</DialogTitle>
+              <DialogTitle>{t("workspaceUI.apiKeys.create.title")}</DialogTitle>
               <DialogDescription>
-                Pick a descriptive name and the scopes this key should grant.
+                {t("workspaceUI.apiKeys.create.description")}
               </DialogDescription>
             </div>
           </div>
@@ -280,18 +289,18 @@ function CreateKeyDialog({
 
         <div className="space-y-3 py-2">
           <div className="space-y-2">
-            <Label htmlFor="ck-name">Name</Label>
+            <Label htmlFor="ck-name">{t("workspaceUI.apiKeys.create.nameLabel")}</Label>
             <Input
               id="ck-name"
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Production server"
+              placeholder={t("workspaceUI.apiKeys.create.namePlaceholder")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Scopes</Label>
+            <Label>{t("workspaceUI.apiKeys.create.scopesLabel")}</Label>
             <div className="grid grid-cols-3 gap-2">
               {(["read", "write", "admin"] as ApiScope[]).map((s) => {
                 const active = scopes.has(s);
@@ -309,9 +318,9 @@ function CreateKeyDialog({
                   >
                     <div className="font-mono uppercase tracking-wider">{s}</div>
                     <div className="mt-0.5 text-[10px] opacity-70">
-                      {s === "read" && "Read calls, reports, listings"}
-                      {s === "write" && "Place bids, edit campaigns"}
-                      {s === "admin" && "Manage members + billing"}
+                      {s === "read" && t("workspaceUI.apiKeys.create.readDescription")}
+                      {s === "write" && t("workspaceUI.apiKeys.create.writeDescription")}
+                      {s === "admin" && t("workspaceUI.apiKeys.create.adminDescription")}
                     </div>
                   </button>
                 );
@@ -322,15 +331,15 @@ function CreateKeyDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(false)}>
-            Cancel
+            {t("workspaceUI.apiKeys.create.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting || !name.trim()}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("workspaceUI.apiKeys.create.creating")}
               </>
             ) : (
-              "Create key"
+              t("workspaceUI.apiKeys.create.submit")
             )}
           </Button>
         </DialogFooter>
@@ -346,6 +355,7 @@ function RevealDialog({
   revealed: { id: string; token: string } | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={!!revealed} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent>
@@ -355,9 +365,9 @@ function RevealDialog({
               <KeyRound className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Save this key now</DialogTitle>
+              <DialogTitle>{t("workspaceUI.apiKeys.reveal.title")}</DialogTitle>
               <DialogDescription>
-                This is the only time we&apos;ll show the full token. Store it in your secret manager.
+                {t("workspaceUI.apiKeys.reveal.description")}
               </DialogDescription>
             </div>
           </div>
@@ -374,7 +384,7 @@ function RevealDialog({
                   className="h-8 w-8 shrink-0"
                   onClick={() => {
                     navigator.clipboard?.writeText(revealed.token).then(() =>
-                      toast.success("Token copied"),
+                      toast.success(t("workspaceUI.apiKeys.tokenCopied")),
                     );
                   }}
                 >
@@ -383,13 +393,13 @@ function RevealDialog({
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              We hash this token after you close this dialog — it can&apos;t be recovered.
+              {t("workspaceUI.apiKeys.reveal.warning")}
             </p>
           </div>
         )}
 
         <DialogFooter>
-          <Button onClick={onClose}>I&apos;ve saved it</Button>
+          <Button onClick={onClose}>{t("workspaceUI.apiKeys.reveal.confirm")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

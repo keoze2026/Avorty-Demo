@@ -20,31 +20,32 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_ANOMALIES } from "@/lib/mock/insights";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatRelativeTime } from "@/lib/format";
 import type { Anomaly, AnomalySeverity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SEVERITY: Record<
   AnomalySeverity,
-  { dot: string; ring: string; chip: string; label: string }
+  { dot: string; ring: string; chip: string; labelKey: string }
 > = {
   critical: {
     dot: "bg-destructive",
     ring: "ring-destructive/30",
     chip: "border-destructive/40 bg-destructive/10 text-destructive",
-    label: "Critical",
+    labelKey: "toolsUI.insights.anomalies.critical",
   },
   warning: {
     dot: "bg-[color:var(--warning)]",
     ring: "ring-[color:var(--warning)]/30",
     chip: "border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 text-[color:var(--warning)]",
-    label: "Warning",
+    labelKey: "toolsUI.insights.anomalies.warning",
   },
   info: {
     dot: "bg-accent",
     ring: "ring-accent/30",
     chip: "border-accent/30 bg-accent/10 text-accent",
-    label: "Info",
+    labelKey: "toolsUI.insights.anomalies.info",
   },
 };
 
@@ -57,15 +58,16 @@ const SCOPE_HREF = (a: Anomaly): string | undefined => {
 };
 
 export function AnomalyStream() {
+  const { t } = useTranslation();
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Bell className="h-4 w-4 text-accent" />
-          Anomaly stream
+          {t("toolsUI.insights.anomalies.title")}
           <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-muted-foreground">
             <Sigma className="h-3 w-3" />
-            Last 24h · {MOCK_ANOMALIES.length} detected
+            {t("toolsUI.insights.anomalies.last24h")} · {t("toolsUI.insights.anomalies.detected").replace("{count}", String(MOCK_ANOMALIES.length))}
           </span>
         </CardTitle>
       </CardHeader>
@@ -100,7 +102,7 @@ export function AnomalyStream() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", sev.chip)}>
-                      {sev.label}
+                      {t(sev.labelKey)}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {a.scope.type} · {a.scope.name}
@@ -129,7 +131,7 @@ export function AnomalyStream() {
                       href={href}
                       className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-accent"
                     >
-                      Investigate
+                      {t("toolsUI.insights.anomalies.investigate")}
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                   )}

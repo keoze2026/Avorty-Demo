@@ -16,6 +16,7 @@ import {
   TCPA_PROVIDER_TYPES,
   type TcpaProviderType,
 } from "@/lib/mock/suppression";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -27,6 +28,7 @@ interface Props {
 
 /** "Create provider" dialog launched from the TCPA Shield page. */
 export function CreateTcpaShieldDialog({ open, onOpenChange, onCreate }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = React.useState("");
   const [type, setType] = React.useState<TcpaProviderType>(TCPA_PROVIDER_TYPES[0]);
 
@@ -49,13 +51,13 @@ export function CreateTcpaShieldDialog({ open, onOpenChange, onCreate }: Props) 
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-[13px] font-semibold uppercase tracking-wider">
-            Create provider
+            {t("toolsUI.suppression.tcpaShield.createDialog.title")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="tp-name">Provider name</Label>
+            <Label htmlFor="tp-name">{t("toolsUI.suppression.tcpaShield.createDialog.nameLabel")}</Label>
             <Input
               id="tp-name"
               autoFocus
@@ -64,12 +66,12 @@ export function CreateTcpaShieldDialog({ open, onOpenChange, onCreate }: Props) 
               onKeyDown={(e) => {
                 if (e.key === "Enter") onSubmit();
               }}
-              placeholder="e.g. Provider234"
+              placeholder={t("toolsUI.suppression.tcpaShield.createDialog.namePlaceholder")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Choose Type</Label>
+            <Label>{t("toolsUI.suppression.tcpaShield.createDialog.chooseType")}</Label>
             <div className="inline-flex w-full overflow-hidden rounded-md border border-border bg-secondary/40 p-0.5">
               {TCPA_PROVIDER_TYPES.map((t) => {
                 const active = t === type;
@@ -97,10 +99,10 @@ export function CreateTcpaShieldDialog({ open, onOpenChange, onCreate }: Props) 
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("toolsUI.suppression.removeConfirm.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={!trimmed}>
-            Create
+            {t("toolsUI.suppression.tcpaShield.createCta")}
           </Button>
         </DialogFooter>
       </DialogContent>

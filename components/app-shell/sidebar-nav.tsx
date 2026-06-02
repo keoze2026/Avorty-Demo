@@ -212,6 +212,7 @@ function SidebarItem({
 /* ─────────────────────────────────────────────────────────────────── */
 
 function StatusFooter({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation();
   if (collapsed) {
     return (
       <div className="flex flex-col items-center gap-1.5 py-3">
@@ -234,15 +235,15 @@ function StatusFooter({ collapsed }: { collapsed: boolean }) {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
           </span>
-          live
+          {t("sidebar.live")}
         </span>
         <span className="text-accent tabular-nums">v0.1</span>
       </div>
 
       <div className="mt-2 grid grid-cols-3 gap-1.5">
-        <Stat label="rtt" value="14ms" />
-        <Stat label="active" value="247" />
-        <Stat label="q" value="0" />
+        <Stat label={t("sidebar.rtt")} value="14ms" />
+        <Stat label={t("sidebar.active")} value="247" />
+        <Stat label={t("sidebar.queue")} value="0" />
       </div>
     </div>
   );

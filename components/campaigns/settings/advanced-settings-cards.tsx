@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignSettingsStore } from "@/lib/store/campaign-settings-store";
 import type {
   AutoRecordSettings,
@@ -63,14 +64,14 @@ import { cn } from "@/lib/utils";
 
 /* ─── tiny generic helpers ──────────────────────────────────────── */
 
-const DAYS = [
-  { id: 0, label: "Sun" },
-  { id: 1, label: "Mon" },
-  { id: 2, label: "Tue" },
-  { id: 3, label: "Wed" },
-  { id: 4, label: "Thu" },
-  { id: 5, label: "Fri" },
-  { id: 6, label: "Sat" },
+const DAY_KEYS_LOCAL = [
+  { id: 0, key: "trafficUI.common.days.sun" },
+  { id: 1, key: "trafficUI.common.days.mon" },
+  { id: 2, key: "trafficUI.common.days.tue" },
+  { id: 3, key: "trafficUI.common.days.wed" },
+  { id: 4, key: "trafficUI.common.days.thu" },
+  { id: 5, key: "trafficUI.common.days.fri" },
+  { id: 6, key: "trafficUI.common.days.sat" },
 ];
 
 function NumField({
@@ -146,33 +147,34 @@ function useSetting<K extends keyof CampaignAdvancedSettings>(
 /* ─── 1. Call Queue ─────────────────────────────────────────────── */
 
 export function CallQueueCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "callQueue");
   const patch = (p: Partial<CallQueueSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={Headphones}
-      title="Call Queue"
-      description="Don't miss calls — just place them in the call queue."
+      title={t("trafficUI.campaigns.settings.cards.callQueue.title")}
+      description={t("trafficUI.campaigns.settings.cards.callQueue.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <NumField
-          label="Max queue size"
+          label={t("trafficUI.campaigns.settings.cards.callQueue.maxQueueSize")}
           value={s.maxQueueSize}
           onChange={(v) => patch({ maxQueueSize: v })}
         />
         <NumField
-          label="Max wait time"
+          label={t("trafficUI.campaigns.settings.cards.callQueue.maxWaitTime")}
           value={s.maxWaitSec}
           onChange={(v) => patch({ maxWaitSec: v })}
-          suffix="sec"
+          suffix={t("trafficUI.common.sec")}
         />
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label className="text-xs">Hold-music URL (mp3)</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.callQueue.holdMusic")}</Label>
           <Input
-            placeholder="https://cdn.example.com/hold-music.mp3"
+            placeholder={t("trafficUI.campaigns.settings.cards.callQueue.holdMusicPlaceholder")}
             value={s.musicUrl}
             onChange={(e) => patch({ musicUrl: e.target.value })}
           />
@@ -185,26 +187,27 @@ export function CallQueueCard({ campaignId }: { campaignId: string }) {
 /* ─── 2. Auto Record Calls ─────────────────────────────────────── */
 
 export function AutoRecordCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "autoRecord");
   const patch = (p: Partial<AutoRecordSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={Disc}
-      title="Auto Record Calls"
-      description="Automatically records all incoming calls."
+      title={t("trafficUI.campaigns.settings.cards.autoRecord.title")}
+      description={t("trafficUI.campaigns.settings.cards.autoRecord.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <NumField
-          label="Retention (days)"
+          label={t("trafficUI.campaigns.settings.cards.autoRecord.retention")}
           value={s.storeForDays}
           onChange={(v) => patch({ storeForDays: v })}
-          suffix="days"
+          suffix={t("trafficUI.common.daysSuffix")}
         />
         <div className="grid gap-1.5">
-          <Label className="text-xs">Quality</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.autoRecord.quality")}</Label>
           <Select
             value={s.quality}
             onValueChange={(v) => patch({ quality: v as AutoRecordSettings["quality"] })}
@@ -213,14 +216,14 @@ export function AutoRecordCard({ campaignId }: { campaignId: string }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="standard">Standard (8 kHz mono)</SelectItem>
-              <SelectItem value="hd">HD (16 kHz stereo)</SelectItem>
+              <SelectItem value="standard">{t("trafficUI.campaigns.settings.cards.autoRecord.qualityStandard")}</SelectItem>
+              <SelectItem value="hd">{t("trafficUI.campaigns.settings.cards.autoRecord.qualityHd")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="sm:col-span-2">
           <ToggleRow
-            label="Notify the buyer when a recording is ready"
+            label={t("trafficUI.campaigns.settings.cards.autoRecord.notifyBuyer")}
             checked={s.notifyBuyer}
             onChange={(notifyBuyer) => patch({ notifyBuyer })}
           />
@@ -240,6 +243,7 @@ const US_STATES = [
 ];
 
 export function SpamFilterCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "spamFilter");
   const patch = (p: Partial<SpamFilterSettings>) => setS({ ...s, ...p });
   const toggleState = (code: string) => {
@@ -254,28 +258,28 @@ export function SpamFilterCard({ campaignId }: { campaignId: string }) {
   return (
     <AdvancedSettingShell
       icon={ShieldX}
-      title="Spam Filter"
-      description="Block unwanted calls by enabling the spam filter."
+      title={t("trafficUI.campaigns.settings.cards.spamFilter.title")}
+      description={t("trafficUI.campaigns.settings.cards.spamFilter.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4">
         <ToggleRow
-          label="Block calls flagged by the carrier as spam"
+          label={t("trafficUI.campaigns.settings.cards.spamFilter.blockCarrier")}
           checked={s.blockCarrierSpam}
           onChange={(blockCarrierSpam) => patch({ blockCarrierSpam })}
         />
         <div className="grid gap-1.5">
-          <Label className="text-xs">Blocked numbers (one per line)</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.spamFilter.blockedNumbers")}</Label>
           <Textarea
             rows={3}
-            placeholder="+15551234567"
+            placeholder={t("trafficUI.campaigns.settings.cards.spamFilter.blockedNumbersPlaceholder")}
             value={s.blockedNumbers}
             onChange={(e) => patch({ blockedNumbers: e.target.value })}
           />
         </div>
         <div>
-          <Label className="text-xs">Blocked states ({s.blockedStates.length})</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.spamFilter.blockedStates").replace("{count}", String(s.blockedStates.length))}</Label>
           <div className="mt-1.5 flex max-h-32 flex-wrap gap-1 overflow-y-auto rounded-md border border-border bg-card p-2">
             {US_STATES.map((st) => {
               const on = s.blockedStates.includes(st);
@@ -309,87 +313,87 @@ export function SpamFilterCard({ campaignId }: { campaignId: string }) {
 
 /** Parameter dropdown — grouped by source (Call, Caller Profile, etc.). */
 const FILTER_PARAMETERS: Array<{
-  group: string;
-  items: Array<{ value: string; label: string }>;
+  groupKey: string;
+  items: Array<{ value: string; labelKey: string }>;
 }> = [
   {
-    group: "Call",
+    groupKey: "trafficUI.campaigns.settings.cards.filter.groups.call",
     items: [
-      { value: "call.duration", label: "Duration (s)" },
-      { value: "call.status", label: "Status" },
-      { value: "call.startedAtHour", label: "Started at hour (0-23)" },
-      { value: "call.callerNumber", label: "Caller number" },
-      { value: "call.destinationNumber", label: "Destination number" },
-      { value: "call.publisherId", label: "Publisher" },
-      { value: "call.campaignId", label: "Campaign" },
+      { value: "call.duration", labelKey: "trafficUI.campaigns.settings.cards.filter.params.callDuration" },
+      { value: "call.status", labelKey: "trafficUI.campaigns.settings.cards.filter.params.callStatus" },
+      { value: "call.startedAtHour", labelKey: "trafficUI.campaigns.settings.cards.filter.params.callStartedAtHour" },
+      { value: "call.callerNumber", labelKey: "trafficUI.campaigns.settings.cards.filter.params.callerNumber" },
+      { value: "call.destinationNumber", labelKey: "trafficUI.campaigns.settings.cards.filter.params.destinationNumber" },
+      { value: "call.publisherId", labelKey: "trafficUI.campaigns.settings.cards.filter.params.publisher" },
+      { value: "call.campaignId", labelKey: "trafficUI.campaigns.settings.cards.filter.params.campaign" },
     ],
   },
   {
-    group: "Caller Profile",
+    groupKey: "trafficUI.campaigns.settings.cards.filter.groups.callerProfile",
     items: [
-      { value: "caller.country", label: "Country" },
-      { value: "caller.state", label: "State" },
-      { value: "caller.city", label: "City" },
-      { value: "caller.zipcode", label: "Zip code" },
-      { value: "caller.carrier", label: "Carrier" },
-      { value: "caller.lineType", label: "Line type (mobile/voip/landline)" },
-      { value: "caller.areaCode", label: "Area code" },
-      { value: "caller.timezone", label: "Timezone" },
-      { value: "caller.fraudScore", label: "Fraud score (0-100)" },
+      { value: "caller.country", labelKey: "trafficUI.campaigns.settings.cards.filter.params.country" },
+      { value: "caller.state", labelKey: "trafficUI.campaigns.settings.cards.filter.params.state" },
+      { value: "caller.city", labelKey: "trafficUI.campaigns.settings.cards.filter.params.city" },
+      { value: "caller.zipcode", labelKey: "trafficUI.campaigns.settings.cards.filter.params.zipcode" },
+      { value: "caller.carrier", labelKey: "trafficUI.campaigns.settings.cards.filter.params.carrier" },
+      { value: "caller.lineType", labelKey: "trafficUI.campaigns.settings.cards.filter.params.lineType" },
+      { value: "caller.areaCode", labelKey: "trafficUI.campaigns.settings.cards.filter.params.areaCode" },
+      { value: "caller.timezone", labelKey: "trafficUI.campaigns.settings.cards.filter.params.timezone" },
+      { value: "caller.fraudScore", labelKey: "trafficUI.campaigns.settings.cards.filter.params.fraudScore" },
     ],
   },
   {
-    group: "Custom Parameters",
+    groupKey: "trafficUI.campaigns.settings.cards.filter.groups.custom",
     items: [
-      { value: "param.vertical", label: "Vertical" },
-      { value: "param.trafficSource", label: "Traffic source" },
-      { value: "param.partnerId", label: "Partner id" },
-      { value: "param.leadId", label: "Lead id" },
-      { value: "param.utmSource", label: "UTM source" },
-      { value: "param.utmMedium", label: "UTM medium" },
-      { value: "param.utmCampaign", label: "UTM campaign" },
+      { value: "param.vertical", labelKey: "trafficUI.campaigns.settings.cards.filter.params.vertical" },
+      { value: "param.trafficSource", labelKey: "trafficUI.campaigns.settings.cards.filter.params.trafficSource" },
+      { value: "param.partnerId", labelKey: "trafficUI.campaigns.settings.cards.filter.params.partnerId" },
+      { value: "param.leadId", labelKey: "trafficUI.campaigns.settings.cards.filter.params.leadId" },
+      { value: "param.utmSource", labelKey: "trafficUI.campaigns.settings.cards.filter.params.utmSource" },
+      { value: "param.utmMedium", labelKey: "trafficUI.campaigns.settings.cards.filter.params.utmMedium" },
+      { value: "param.utmCampaign", labelKey: "trafficUI.campaigns.settings.cards.filter.params.utmCampaign" },
     ],
   },
   {
-    group: "Session Data",
+    groupKey: "trafficUI.campaigns.settings.cards.filter.groups.session",
     items: [
-      { value: "session.id", label: "Session id" },
-      { value: "session.referrer", label: "Referrer" },
-      { value: "session.landingPage", label: "Landing page" },
-      { value: "session.userAgent", label: "User agent" },
-      { value: "session.deviceType", label: "Device type" },
-      { value: "session.pagesViewed", label: "Pages viewed" },
-      { value: "session.timeOnSite", label: "Time on site (s)" },
+      { value: "session.id", labelKey: "trafficUI.campaigns.settings.cards.filter.params.sessionId" },
+      { value: "session.referrer", labelKey: "trafficUI.campaigns.settings.cards.filter.params.referrer" },
+      { value: "session.landingPage", labelKey: "trafficUI.campaigns.settings.cards.filter.params.landingPage" },
+      { value: "session.userAgent", labelKey: "trafficUI.campaigns.settings.cards.filter.params.userAgent" },
+      { value: "session.deviceType", labelKey: "trafficUI.campaigns.settings.cards.filter.params.deviceType" },
+      { value: "session.pagesViewed", labelKey: "trafficUI.campaigns.settings.cards.filter.params.pagesViewed" },
+      { value: "session.timeOnSite", labelKey: "trafficUI.campaigns.settings.cards.filter.params.timeOnSite" },
     ],
   },
   {
-    group: "SIP Headers",
+    groupKey: "trafficUI.campaigns.settings.cards.filter.groups.sip",
     items: [
-      { value: "sip.fromHost", label: "From host" },
-      { value: "sip.toHost", label: "To host" },
-      { value: "sip.contact", label: "Contact" },
-      { value: "sip.userAgent", label: "User agent" },
-      { value: "sip.diversion", label: "Diversion" },
-      { value: "sip.pAssertedIdentity", label: "P-Asserted-Identity" },
+      { value: "sip.fromHost", labelKey: "trafficUI.campaigns.settings.cards.filter.params.fromHost" },
+      { value: "sip.toHost", labelKey: "trafficUI.campaigns.settings.cards.filter.params.toHost" },
+      { value: "sip.contact", labelKey: "trafficUI.campaigns.settings.cards.filter.params.contact" },
+      { value: "sip.userAgent", labelKey: "trafficUI.campaigns.settings.cards.filter.params.sipUserAgent" },
+      { value: "sip.diversion", labelKey: "trafficUI.campaigns.settings.cards.filter.params.diversion" },
+      { value: "sip.pAssertedIdentity", labelKey: "trafficUI.campaigns.settings.cards.filter.params.pAssertedIdentity" },
     ],
   },
 ];
 
-const FILTER_OPERATORS: Array<{ value: string; label: string }> = [
-  { value: "equals", label: "equals" },
-  { value: "notEquals", label: "does not equal" },
-  { value: "contains", label: "contains" },
-  { value: "notContains", label: "does not contain" },
-  { value: "startsWith", label: "starts with" },
-  { value: "endsWith", label: "ends with" },
-  { value: "in", label: "is in list" },
-  { value: "notIn", label: "is not in list" },
-  { value: "greaterThan", label: ">" },
-  { value: "lessThan", label: "<" },
-  { value: "greaterOrEqual", label: "≥" },
-  { value: "lessOrEqual", label: "≤" },
-  { value: "exists", label: "exists" },
-  { value: "notExists", label: "does not exist" },
+const FILTER_OPERATORS: Array<{ value: string; labelKey: string }> = [
+  { value: "equals", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.equals" },
+  { value: "notEquals", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.notEquals" },
+  { value: "contains", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.contains" },
+  { value: "notContains", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.notContains" },
+  { value: "startsWith", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.startsWith" },
+  { value: "endsWith", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.endsWith" },
+  { value: "in", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.in" },
+  { value: "notIn", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.notIn" },
+  { value: "greaterThan", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.greaterThan" },
+  { value: "lessThan", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.lessThan" },
+  { value: "greaterOrEqual", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.greaterOrEqual" },
+  { value: "lessOrEqual", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.lessOrEqual" },
+  { value: "exists", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.exists" },
+  { value: "notExists", labelKey: "trafficUI.campaigns.settings.cards.filter.ops.notExists" },
 ];
 
 const cid = () =>
@@ -405,6 +409,7 @@ function newGroup(): FilterGroup {
 }
 
 export function FilterCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "filter");
   const patch = (p: Partial<FilterSettings>) => setS({ ...s, ...p });
 
@@ -450,14 +455,14 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
   const onSave = () => {
     // For demo purposes — in production this would also POST the settings
     // back to the server. We just toast a confirmation.
-    toast.success("Filter saved");
+    toast.success(t("trafficUI.campaigns.settings.cards.filter.saved"));
   };
 
   return (
     <AdvancedSettingShell
       icon={FilterIcon}
-      title="Filter"
-      description="Set filter to deliver targeted audience."
+      title={t("trafficUI.campaigns.settings.cards.filter.title")}
+      description={t("trafficUI.campaigns.settings.cards.filter.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
@@ -466,10 +471,10 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-foreground">
-              Continue only if:
+              {t("trafficUI.campaigns.settings.cards.filter.continueOnlyIf")}
             </div>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              All groups of conditions are met.
+              {t("trafficUI.campaigns.settings.cards.filter.allGroupsMet")}
             </p>
           </div>
           <Button
@@ -478,7 +483,7 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
             className="h-8 text-xs"
             onClick={clearAll}
           >
-            Clear all
+            {t("trafficUI.campaigns.settings.cards.filter.clearAll")}
           </Button>
         </div>
 
@@ -498,7 +503,7 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
                 <div className="my-3 flex items-center gap-3">
                   <div className="h-px flex-1 bg-border" />
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    AND
+                    {t("trafficUI.campaigns.settings.cards.filter.and")}
                   </span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
@@ -513,13 +518,13 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
           className="inline-flex items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent/80"
         >
           <Plus className="h-3.5 w-3.5" />
-          Add group
+          {t("trafficUI.campaigns.settings.cards.filter.addGroup")}
         </button>
 
         {/* When the rule fails + Save */}
         <div className="border-t border-border pt-4">
           <div className="grid gap-1.5">
-            <Label className="text-xs">When the rule fails</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.filter.whenFails")}</Label>
             <Select
               value={s.onFail}
               onValueChange={(v) =>
@@ -530,15 +535,15 @@ export function FilterCard({ campaignId }: { campaignId: string }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="reject">Reject the call</SelectItem>
-                <SelectItem value="voicemail">Send to voicemail</SelectItem>
-                <SelectItem value="deadEnd">Send to dead-end</SelectItem>
+                <SelectItem value="reject">{t("trafficUI.campaigns.settings.cards.filter.failActions.reject")}</SelectItem>
+                <SelectItem value="voicemail">{t("trafficUI.campaigns.settings.cards.filter.failActions.voicemail")}</SelectItem>
+                <SelectItem value="deadEnd">{t("trafficUI.campaigns.settings.cards.filter.failActions.deadEnd")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="mt-4 flex justify-end">
             <Button size="sm" onClick={onSave}>
-              Save
+              {t("trafficUI.campaigns.settings.cards.filter.save")}
             </Button>
           </div>
         </div>
@@ -564,17 +569,18 @@ function FilterGroupBlock({
   onRemoveCondition: (cIdx: number) => void;
   onRemoveGroup: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-border bg-secondary/20 p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Group of conditions
+          {t("trafficUI.campaigns.settings.cards.filter.groupOfConditions")}
         </div>
         {showDelete && (
           <button
             type="button"
             onClick={onRemoveGroup}
-            aria-label="Delete group"
+            aria-label={t("trafficUI.campaigns.settings.cards.filter.deleteGroup")}
             className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -593,7 +599,7 @@ function FilterGroupBlock({
             />
             {cIdx < group.conditions.length - 1 && (
               <div className="my-1.5 ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                OR
+                {t("trafficUI.campaigns.settings.cards.filter.or")}
               </div>
             )}
           </div>
@@ -606,7 +612,7 @@ function FilterGroupBlock({
         className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent/80"
       >
         <Plus className="h-3.5 w-3.5" />
-        Add condition
+        {t("trafficUI.campaigns.settings.cards.filter.addCondition")}
       </button>
     </div>
   );
@@ -625,6 +631,7 @@ function ConditionRow({
   onRemove: () => void;
   showRemove: boolean;
 }) {
+  const { t } = useTranslation();
   // Some operators don't need a right-hand value (exists / does not exist).
   // We grey-out the value cell in those cases.
   const valueDisabled =
@@ -634,24 +641,24 @@ function ConditionRow({
     <div className="grid grid-cols-1 items-end gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
       <div className="grid gap-1">
         <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Parameter
+          {t("trafficUI.campaigns.settings.cards.filter.parameter")}
         </Label>
         <Select
           value={condition.parameter}
           onValueChange={(v) => onUpdate({ parameter: v })}
         >
           <SelectTrigger size="sm">
-            <SelectValue placeholder="Select parameter" />
+            <SelectValue placeholder={t("trafficUI.campaigns.settings.cards.filter.selectParameter")} />
           </SelectTrigger>
           <SelectContent className="max-h-72">
             {FILTER_PARAMETERS.map((g) => (
-              <SelectGroup key={g.group}>
+              <SelectGroup key={g.groupKey}>
                 <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {g.group}
+                  {t(g.groupKey)}
                 </SelectLabel>
                 {g.items.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -662,19 +669,19 @@ function ConditionRow({
 
       <div className="grid gap-1">
         <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Operator
+          {t("trafficUI.campaigns.settings.cards.filter.operator")}
         </Label>
         <Select
           value={condition.operator}
           onValueChange={(v) => onUpdate({ operator: v })}
         >
           <SelectTrigger size="sm">
-            <SelectValue placeholder="Select operator" />
+            <SelectValue placeholder={t("trafficUI.campaigns.settings.cards.filter.selectOperator")} />
           </SelectTrigger>
           <SelectContent>
             {FILTER_OPERATORS.map((op) => (
               <SelectItem key={op.value} value={op.value}>
-                {op.label}
+                {t(op.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -683,12 +690,12 @@ function ConditionRow({
 
       <div className="grid gap-1">
         <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Value
+          {t("trafficUI.campaigns.settings.cards.filter.value")}
         </Label>
         <Input
           value={condition.value}
           onChange={(e) => onUpdate({ value: e.target.value })}
-          placeholder={valueDisabled ? "—" : "Type value"}
+          placeholder={valueDisabled ? "—" : t("trafficUI.campaigns.settings.cards.filter.typeValue")}
           disabled={valueDisabled}
           className={cn("h-9 text-xs", valueDisabled && "opacity-50")}
         />
@@ -698,7 +705,7 @@ function ConditionRow({
         type="button"
         onClick={onRemove}
         disabled={!showRemove}
-        aria-label="Remove condition"
+        aria-label={t("trafficUI.campaigns.settings.cards.filter.removeCondition")}
         className={cn(
           "inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors",
           showRemove
@@ -715,40 +722,41 @@ function ConditionRow({
 /* ─── 5. VoIP Shield ───────────────────────────────────────────── */
 
 export function VoipShieldCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "voipShield");
   const patch = (p: Partial<VoipShieldSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={Shield}
-      title="VoIP Shield"
-      description="Block incoming VoIP callers."
+      title={t("trafficUI.campaigns.settings.cards.voipShield.title")}
+      description={t("trafficUI.campaigns.settings.cards.voipShield.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4">
         <ToggleRow
-          label="Block all VoIP callers"
+          label={t("trafficUI.campaigns.settings.cards.voipShield.blockAll")}
           checked={s.blockAllVoip}
           onChange={(blockAllVoip) => patch({ blockAllVoip })}
         />
         <div className="grid gap-1.5">
-          <Label className="text-xs">Allow-list providers (comma-separated)</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.voipShield.allowList")}</Label>
           <Input
-            placeholder="twilio, bandwidth, telnyx"
+            placeholder={t("trafficUI.campaigns.settings.cards.voipShield.allowListPlaceholder")}
             value={s.allowList}
             onChange={(e) => patch({ allowList: e.target.value })}
           />
         </div>
         <div className="grid gap-1.5">
-          <Label className="text-xs">Blocked-call action</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.voipShield.blockedAction")}</Label>
           <Select value={s.action} onValueChange={(v) => patch({ action: v as VoipShieldSettings["action"] })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="drop">Drop the call</SelectItem>
-              <SelectItem value="voicemail">Send to voicemail</SelectItem>
+              <SelectItem value="drop">{t("trafficUI.campaigns.settings.cards.voipShield.actions.drop")}</SelectItem>
+              <SelectItem value="voicemail">{t("trafficUI.campaigns.settings.cards.voipShield.actions.voicemail")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -760,24 +768,26 @@ export function VoipShieldCard({ campaignId }: { campaignId: string }) {
 /* ─── 6. Business Hours ────────────────────────────────────────── */
 
 export function BusinessHoursCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "businessHours");
   const patch = (p: Partial<BusinessHoursSettings>) => setS({ ...s, ...p });
   const toggleDay = (d: number) => {
     const has = s.days.includes(d);
     patch({ days: has ? s.days.filter((x) => x !== d) : [...s.days, d].sort() });
   };
+  const DAYS = DAY_KEYS_LOCAL.map((d) => ({ id: d.id, label: t(d.key) }));
 
   return (
     <AdvancedSettingShell
       icon={ClockAlert}
-      title="Business Hours"
-      description="Control how your campaign works at different times of day."
+      title={t("trafficUI.campaigns.settings.cards.businessHours.title")}
+      description={t("trafficUI.campaigns.settings.cards.businessHours.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4">
         <div>
-          <Label className="text-xs">Days</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.businessHours.days")}</Label>
           <div className="mt-1.5 flex flex-wrap gap-1">
             {DAYS.map((d) => {
               const on = s.days.includes(d.id);
@@ -797,26 +807,26 @@ export function BusinessHoursCard({ campaignId }: { campaignId: string }) {
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
-          <NumField label="Start hour" value={s.startHour} onChange={(v) => patch({ startHour: v })} min={0} suffix=":00" />
-          <NumField label="End hour" value={s.endHour} onChange={(v) => patch({ endHour: v })} min={0} suffix=":00" />
+          <NumField label={t("trafficUI.campaigns.settings.cards.businessHours.startHour")} value={s.startHour} onChange={(v) => patch({ startHour: v })} min={0} suffix=":00" />
+          <NumField label={t("trafficUI.campaigns.settings.cards.businessHours.endHour")} value={s.endHour} onChange={(v) => patch({ endHour: v })} min={0} suffix=":00" />
           <div className="grid gap-1.5">
-            <Label className="text-xs">Timezone</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.businessHours.timezone")}</Label>
             <Select value={s.timezone} onValueChange={(timezone) => patch({ timezone })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="auto">Caller-local</SelectItem>
-                <SelectItem value="America/New_York">Eastern</SelectItem>
-                <SelectItem value="America/Chicago">Central</SelectItem>
-                <SelectItem value="America/Denver">Mountain</SelectItem>
-                <SelectItem value="America/Los_Angeles">Pacific</SelectItem>
+                <SelectItem value="auto">{t("trafficUI.common.timezones.callerLocal")}</SelectItem>
+                <SelectItem value="America/New_York">{t("trafficUI.common.timezones.easternShort")}</SelectItem>
+                <SelectItem value="America/Chicago">{t("trafficUI.common.timezones.centralShort")}</SelectItem>
+                <SelectItem value="America/Denver">{t("trafficUI.common.timezones.mountainShort")}</SelectItem>
+                <SelectItem value="America/Los_Angeles">{t("trafficUI.common.timezones.pacificShort")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <div className="grid gap-1.5">
-          <Label className="text-xs">Outside-hours action</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.businessHours.outsideAction")}</Label>
           <Select
             value={s.outsideHoursAction}
             onValueChange={(v) =>
@@ -827,9 +837,9 @@ export function BusinessHoursCard({ campaignId }: { campaignId: string }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="voicemail">Send to voicemail</SelectItem>
-              <SelectItem value="reject">Reject the call</SelectItem>
-              <SelectItem value="rollover">Roll over to next campaign</SelectItem>
+              <SelectItem value="voicemail">{t("trafficUI.campaigns.settings.cards.businessHours.actions.voicemail")}</SelectItem>
+              <SelectItem value="reject">{t("trafficUI.campaigns.settings.cards.businessHours.actions.reject")}</SelectItem>
+              <SelectItem value="rollover">{t("trafficUI.campaigns.settings.cards.businessHours.actions.rollover")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -841,20 +851,21 @@ export function BusinessHoursCard({ campaignId }: { campaignId: string }) {
 /* ─── 7. Greetings Message ─────────────────────────────────────── */
 
 export function GreetingsMessageCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "greetingsMessage");
   const patch = (p: Partial<GreetingsMessageSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={Speech}
-      title="Greetings Message"
-      description="Play a message to the caller. Usually used to notify the caller about call recording."
+      title={t("trafficUI.campaigns.settings.cards.greetings.title")}
+      description={t("trafficUI.campaigns.settings.cards.greetings.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4">
         <div className="grid gap-1.5">
-          <Label className="text-xs">Message (TTS)</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.greetings.message")}</Label>
           <Textarea
             rows={3}
             value={s.message}
@@ -863,19 +874,19 @@ export function GreetingsMessageCard({ campaignId }: { campaignId: string }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5">
-            <Label className="text-xs">Voice</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.greetings.voice")}</Label>
             <Select value={s.voice} onValueChange={(v) => patch({ voice: v as GreetingsMessageSettings["voice"] })}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">{t("trafficUI.campaigns.settings.cards.greetings.voiceFemale")}</SelectItem>
+                <SelectItem value="male">{t("trafficUI.campaigns.settings.cards.greetings.voiceMale")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <ToggleRow
-            label="Play before connecting"
+            label={t("trafficUI.campaigns.settings.cards.greetings.playBefore")}
             checked={s.playBeforeConnect}
             onChange={(playBeforeConnect) => patch({ playBeforeConnect })}
           />
@@ -888,20 +899,21 @@ export function GreetingsMessageCard({ campaignId }: { campaignId: string }) {
 /* ─── 8. Voicemail ─────────────────────────────────────────────── */
 
 export function VoicemailCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "voicemail");
   const patch = (p: Partial<VoicemailSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={VoicemailIcon}
-      title="Voicemail"
-      description="Customize the campaign's voicemail for when you miss a call."
+      title={t("trafficUI.campaigns.settings.cards.voicemail.title")}
+      description={t("trafficUI.campaigns.settings.cards.voicemail.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4">
         <div className="grid gap-1.5">
-          <Label className="text-xs">Greeting</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.voicemail.greeting")}</Label>
           <Textarea
             rows={2}
             value={s.greeting}
@@ -910,16 +922,16 @@ export function VoicemailCard({ campaignId }: { campaignId: string }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <NumField
-            label="Max recording length"
+            label={t("trafficUI.campaigns.settings.cards.voicemail.maxLength")}
             value={s.maxLengthSec}
             onChange={(v) => patch({ maxLengthSec: v })}
-            suffix="sec"
+            suffix={t("trafficUI.common.sec")}
           />
           <div className="grid gap-1.5">
-            <Label className="text-xs">Notification email</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.voicemail.notifyEmail")}</Label>
             <Input
               type="email"
-              placeholder="ops@example.com"
+              placeholder={t("trafficUI.campaigns.settings.cards.voicemail.notifyEmailPlaceholder")}
               value={s.notificationEmail}
               onChange={(e) => patch({ notificationEmail: e.target.value })}
             />
@@ -933,19 +945,20 @@ export function VoicemailCard({ campaignId }: { campaignId: string }) {
 /* ─── 9. Whisper Message ───────────────────────────────────────── */
 
 export function WhisperMessageCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "whisperMessage");
   const patch = (p: Partial<WhisperMessageSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={MessagesSquare}
-      title="Whisper Message"
-      description="Create customized messages for your destinations."
+      title={t("trafficUI.campaigns.settings.cards.whisper.title")}
+      description={t("trafficUI.campaigns.settings.cards.whisper.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-1.5">
-        <Label className="text-xs">Whisper text (played to the buyer agent before connecting)</Label>
+        <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.whisper.text")}</Label>
         <Textarea
           rows={3}
           value={s.message}
@@ -959,37 +972,38 @@ export function WhisperMessageCard({ campaignId }: { campaignId: string }) {
 /* ─── 10. Cap Settings ─────────────────────────────────────────── */
 
 export function CapSettingsCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "capSettings");
   const patch = (p: Partial<CapSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={ListChecks}
-      title="Cap Settings"
-      description="Manage capacity limits for campaign."
+      title={t("trafficUI.campaigns.settings.cards.caps.title")}
+      description={t("trafficUI.campaigns.settings.cards.caps.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <NumField label="Hourly cap" value={s.hourlyCap} onChange={(v) => patch({ hourlyCap: v })} />
-          <NumField label="Daily cap" value={s.dailyCap} onChange={(v) => patch({ dailyCap: v })} />
-          <NumField label="Monthly cap" value={s.monthlyCap} onChange={(v) => patch({ monthlyCap: v })} />
+          <NumField label={t("trafficUI.campaigns.settings.cards.caps.hourlyCap")} value={s.hourlyCap} onChange={(v) => patch({ hourlyCap: v })} />
+          <NumField label={t("trafficUI.campaigns.settings.cards.caps.dailyCap")} value={s.dailyCap} onChange={(v) => patch({ dailyCap: v })} />
+          <NumField label={t("trafficUI.campaigns.settings.cards.caps.monthlyCap")} value={s.monthlyCap} onChange={(v) => patch({ monthlyCap: v })} />
         </div>
         <div className="grid gap-1.5">
-          <Label className="text-xs">Scope</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.caps.scope")}</Label>
           <Select value={s.scope} onValueChange={(v) => patch({ scope: v as CapSettings["scope"] })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="campaign">Apply to entire campaign</SelectItem>
-              <SelectItem value="destination">Apply to each destination</SelectItem>
+              <SelectItem value="campaign">{t("trafficUI.campaigns.settings.cards.caps.scopeCampaign")}</SelectItem>
+              <SelectItem value="destination">{t("trafficUI.campaigns.settings.cards.caps.scopeDestination")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <p className="text-xs text-muted-foreground">
-          Use <span className="font-mono">0</span> for unlimited on any field.
+          <span className="font-mono">0</span> {t("trafficUI.campaigns.settings.cards.caps.unlimitedHint")}
         </p>
       </div>
     </AdvancedSettingShell>
@@ -999,26 +1013,27 @@ export function CapSettingsCard({ campaignId }: { campaignId: string }) {
 /* ─── 11. Revenue Saver ────────────────────────────────────────── */
 
 export function RevenueSaverCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "revenueSaver");
   const patch = (p: Partial<RevenueSaverSettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={Sparkles}
-      title="Revenue Saver"
-      description="Automatically reroutes short or dropped calls to recover revenue."
+      title={t("trafficUI.campaigns.settings.cards.revenueSaver.title")}
+      description={t("trafficUI.campaigns.settings.cards.revenueSaver.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <NumField
-          label="Minimum revenue threshold"
+          label={t("trafficUI.campaigns.settings.cards.revenueSaver.minRevenue")}
           value={s.minRevenue}
           onChange={(v) => patch({ minRevenue: v })}
           suffix="$"
         />
         <div className="grid gap-1.5">
-          <Label className="text-xs">Fallback action</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.revenueSaver.fallback")}</Label>
           <Select
             value={s.fallback}
             onValueChange={(v) => patch({ fallback: v as RevenueSaverSettings["fallback"] })}
@@ -1027,15 +1042,15 @@ export function RevenueSaverCard({ campaignId }: { campaignId: string }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="deadEnd">Dead-end the call</SelectItem>
-              <SelectItem value="voicemail">Send to voicemail</SelectItem>
-              <SelectItem value="reroute">Reroute to another campaign</SelectItem>
+              <SelectItem value="deadEnd">{t("trafficUI.campaigns.settings.cards.revenueSaver.actions.deadEnd")}</SelectItem>
+              <SelectItem value="voicemail">{t("trafficUI.campaigns.settings.cards.revenueSaver.actions.voicemail")}</SelectItem>
+              <SelectItem value="reroute">{t("trafficUI.campaigns.settings.cards.revenueSaver.actions.reroute")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         {s.fallback === "reroute" && (
           <div className="grid gap-1.5 sm:col-span-2">
-            <Label className="text-xs">Reroute campaign ID</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.revenueSaver.rerouteId")}</Label>
             <Input
               placeholder="c_xxxxx"
               value={s.rerouteCampaignId}
@@ -1052,25 +1067,26 @@ export function RevenueSaverCard({ campaignId }: { campaignId: string }) {
 /* ─── 12. Concurrency Settings ─────────────────────────────────── */
 
 export function ConcurrencyCard({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const [s, setS] = useSetting(campaignId, "concurrency");
   const patch = (p: Partial<ConcurrencySettings>) => setS({ ...s, ...p });
 
   return (
     <AdvancedSettingShell
       icon={Timer}
-      title="Concurrency Settings"
-      description="Limit the quantity of concurrent calls."
+      title={t("trafficUI.campaigns.settings.cards.concurrency.title")}
+      description={t("trafficUI.campaigns.settings.cards.concurrency.description")}
       enabled={s.enabled}
       onEnabledChange={(enabled) => patch({ enabled })}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <NumField
-          label="Max concurrent calls"
+          label={t("trafficUI.campaigns.settings.cards.concurrency.maxConcurrent")}
           value={s.maxConcurrent}
           onChange={(v) => patch({ maxConcurrent: v })}
         />
         <div className="grid gap-1.5">
-          <Label className="text-xs">Overflow action</Label>
+          <Label className="text-xs">{t("trafficUI.campaigns.settings.cards.concurrency.overflow")}</Label>
           <Select
             value={s.overflowAction}
             onValueChange={(v) =>
@@ -1081,9 +1097,9 @@ export function ConcurrencyCard({ campaignId }: { campaignId: string }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="queue">Queue the call</SelectItem>
-              <SelectItem value="reject">Reject the call</SelectItem>
-              <SelectItem value="voicemail">Send to voicemail</SelectItem>
+              <SelectItem value="queue">{t("trafficUI.campaigns.settings.cards.concurrency.actions.queue")}</SelectItem>
+              <SelectItem value="reject">{t("trafficUI.campaigns.settings.cards.concurrency.actions.reject")}</SelectItem>
+              <SelectItem value="voicemail">{t("trafficUI.campaigns.settings.cards.concurrency.actions.voicemail")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -32,6 +32,7 @@ import {
 import type { Call } from "@/lib/types";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { formatCurrency, formatNumber, formatPercent, formatTimer, toE164 } from "@/lib/format";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 type GroupKey =
@@ -101,112 +102,112 @@ interface TabConfig {
   /** The default group key when the tab is selected. For dropdown tabs this
    *  is also the first sub-option, so clicking the parent activates a sane default. */
   id: GroupKey;
-  label: string;
+  labelKey: string;
   /** When present, the tab renders as a dropdown trigger with these sub-options. */
-  sub?: Array<{ id: GroupKey; label: string }>;
+  sub?: Array<{ id: GroupKey; labelKey: string }>;
 }
 
 const TABS: TabConfig[] = [
-  { id: "campaign", label: "Campaign" },
-  { id: "publisher", label: "Publisher" },
-  { id: "dialed", label: "Dialed" },
-  { id: "numberPool", label: "Number Pool" },
-  { id: "destination", label: "Destination" },
-  { id: "buyer", label: "Buyer" },
+  { id: "campaign", labelKey: "toolsUI.reports.summary.tabs.campaign" },
+  { id: "publisher", labelKey: "toolsUI.reports.summary.tabs.publisher" },
+  { id: "dialed", labelKey: "toolsUI.reports.summary.tabs.dialed" },
+  { id: "numberPool", labelKey: "toolsUI.reports.summary.tabs.numberPool" },
+  { id: "destination", labelKey: "toolsUI.reports.summary.tabs.destination" },
+  { id: "buyer", labelKey: "toolsUI.reports.summary.tabs.buyer" },
   {
     id: "date",
-    label: "Date",
+    labelKey: "toolsUI.reports.summary.tabs.date",
     sub: [
-      { id: "date", label: "By day" },
-      { id: "date-week", label: "By week" },
-      { id: "date-month", label: "By month" },
-      { id: "date-hour", label: "By hour" },
-      { id: "date-dow", label: "By weekday" },
+      { id: "date", labelKey: "toolsUI.reports.summary.subOptions.byDay" },
+      { id: "date-week", labelKey: "toolsUI.reports.summary.subOptions.byWeek" },
+      { id: "date-month", labelKey: "toolsUI.reports.summary.subOptions.byMonth" },
+      { id: "date-hour", labelKey: "toolsUI.reports.summary.subOptions.byHour" },
+      { id: "date-dow", labelKey: "toolsUI.reports.summary.subOptions.byWeekday" },
     ],
   },
-  { id: "trafficSource", label: "Traffic Source" },
+  { id: "trafficSource", labelKey: "toolsUI.reports.summary.tabs.trafficSource" },
   {
     id: "param-source",
-    label: "Parameters",
+    labelKey: "toolsUI.reports.summary.tabs.parameters",
     sub: [
-      { id: "param-source", label: "UTM source" },
-      { id: "param-medium", label: "UTM medium" },
-      { id: "param-campaign", label: "UTM campaign" },
-      { id: "param-term", label: "UTM term" },
-      { id: "param-content", label: "UTM content" },
+      { id: "param-source", labelKey: "toolsUI.reports.summary.subOptions.utmSource" },
+      { id: "param-medium", labelKey: "toolsUI.reports.summary.subOptions.utmMedium" },
+      { id: "param-campaign", labelKey: "toolsUI.reports.summary.subOptions.utmCampaign" },
+      { id: "param-term", labelKey: "toolsUI.reports.summary.subOptions.utmTerm" },
+      { id: "param-content", labelKey: "toolsUI.reports.summary.subOptions.utmContent" },
     ],
   },
   {
     id: "custom-vertical",
-    label: "Custom Parameters",
+    labelKey: "toolsUI.reports.summary.tabs.customParameters",
     sub: [
-      { id: "custom-vertical", label: "Vertical" },
-      { id: "custom-lead-id", label: "Lead ID" },
-      { id: "custom-partner-id", label: "Partner ID" },
+      { id: "custom-vertical", labelKey: "toolsUI.reports.summary.subOptions.vertical" },
+      { id: "custom-lead-id", labelKey: "toolsUI.reports.summary.subOptions.leadId" },
+      { id: "custom-partner-id", labelKey: "toolsUI.reports.summary.subOptions.partnerId" },
     ],
   },
   {
     id: "profile-carrier",
-    label: "Caller Profile",
+    labelKey: "toolsUI.reports.summary.tabs.callerProfile",
     sub: [
-      { id: "profile-carrier", label: "Carrier" },
-      { id: "profile-linetype", label: "Line type" },
-      { id: "profile-country", label: "Country" },
-      { id: "profile-city", label: "City" },
-      { id: "profile-zipcode", label: "Zip code" },
-      { id: "profile-region", label: "Region" },
-      { id: "profile-timezone", label: "Timezone" },
-      { id: "profile-fraudscore", label: "Fraud score" },
+      { id: "profile-carrier", labelKey: "toolsUI.reports.summary.subOptions.carrier" },
+      { id: "profile-linetype", labelKey: "toolsUI.reports.summary.subOptions.lineType" },
+      { id: "profile-country", labelKey: "toolsUI.reports.summary.subOptions.country" },
+      { id: "profile-city", labelKey: "toolsUI.reports.summary.subOptions.city" },
+      { id: "profile-zipcode", labelKey: "toolsUI.reports.summary.subOptions.zipCode" },
+      { id: "profile-region", labelKey: "toolsUI.reports.summary.subOptions.region" },
+      { id: "profile-timezone", labelKey: "toolsUI.reports.summary.subOptions.timezone" },
+      { id: "profile-fraudscore", labelKey: "toolsUI.reports.summary.subOptions.fraudScore" },
     ],
   },
   {
     id: "identity-age",
-    label: "Caller Identity",
+    labelKey: "toolsUI.reports.summary.tabs.callerIdentity",
     sub: [
-      { id: "identity-age", label: "Age range" },
-      { id: "identity-gender", label: "Gender" },
-      { id: "identity-city", label: "City" },
-      { id: "identity-email", label: "Email" },
-      { id: "identity-emails", label: "Emails" },
-      { id: "identity-firstname", label: "First name" },
-      { id: "identity-lastname", label: "Last name" },
-      { id: "identity-address1", label: "Address 1" },
-      { id: "identity-address2", label: "Address 2" },
-      { id: "identity-carrier", label: "Carrier" },
-      { id: "identity-linetype", label: "Line type" },
-      { id: "identity-phone", label: "Phone number" },
-      { id: "identity-zipcode", label: "Zip code" },
-      { id: "identity-state", label: "State" },
+      { id: "identity-age", labelKey: "toolsUI.reports.summary.subOptions.ageRange" },
+      { id: "identity-gender", labelKey: "toolsUI.reports.summary.subOptions.gender" },
+      { id: "identity-city", labelKey: "toolsUI.reports.summary.subOptions.city" },
+      { id: "identity-email", labelKey: "toolsUI.reports.summary.subOptions.email" },
+      { id: "identity-emails", labelKey: "toolsUI.reports.summary.subOptions.emails" },
+      { id: "identity-firstname", labelKey: "toolsUI.reports.summary.subOptions.firstName" },
+      { id: "identity-lastname", labelKey: "toolsUI.reports.summary.subOptions.lastName" },
+      { id: "identity-address1", labelKey: "toolsUI.reports.summary.subOptions.address1" },
+      { id: "identity-address2", labelKey: "toolsUI.reports.summary.subOptions.address2" },
+      { id: "identity-carrier", labelKey: "toolsUI.reports.summary.subOptions.carrier" },
+      { id: "identity-linetype", labelKey: "toolsUI.reports.summary.subOptions.lineType" },
+      { id: "identity-phone", labelKey: "toolsUI.reports.summary.subOptions.phoneNumber" },
+      { id: "identity-zipcode", labelKey: "toolsUI.reports.summary.subOptions.zipCode" },
+      { id: "identity-state", labelKey: "toolsUI.reports.summary.subOptions.state" },
     ],
   },
   {
     id: "session-ip",
-    label: "Session Data",
+    labelKey: "toolsUI.reports.summary.tabs.sessionData",
     sub: [
-      { id: "session-ip", label: "IP" },
-      { id: "session-continent", label: "Continent" },
-      { id: "session-continentcode", label: "Continent code" },
-      { id: "session-country", label: "Country" },
-      { id: "session-countrycode", label: "Country code" },
-      { id: "session-region", label: "Region" },
-      { id: "session-regioncode", label: "Region code" },
-      { id: "session-city", label: "City" },
-      { id: "session-zipcode", label: "Zip code" },
-      { id: "session-browser", label: "Browser" },
-      { id: "session-device", label: "Device" },
-      { id: "session-referrerurl", label: "Referrer URL" },
-      { id: "session-useragent", label: "User agent" },
+      { id: "session-ip", labelKey: "toolsUI.reports.summary.subOptions.ip" },
+      { id: "session-continent", labelKey: "toolsUI.reports.summary.subOptions.continent" },
+      { id: "session-continentcode", labelKey: "toolsUI.reports.summary.subOptions.continentCode" },
+      { id: "session-country", labelKey: "toolsUI.reports.summary.subOptions.country" },
+      { id: "session-countrycode", labelKey: "toolsUI.reports.summary.subOptions.countryCode" },
+      { id: "session-region", labelKey: "toolsUI.reports.summary.subOptions.region" },
+      { id: "session-regioncode", labelKey: "toolsUI.reports.summary.subOptions.regionCode" },
+      { id: "session-city", labelKey: "toolsUI.reports.summary.subOptions.city" },
+      { id: "session-zipcode", labelKey: "toolsUI.reports.summary.subOptions.zipCode" },
+      { id: "session-browser", labelKey: "toolsUI.reports.summary.subOptions.browser" },
+      { id: "session-device", labelKey: "toolsUI.reports.summary.subOptions.device" },
+      { id: "session-referrerurl", labelKey: "toolsUI.reports.summary.subOptions.referrerUrl" },
+      { id: "session-useragent", labelKey: "toolsUI.reports.summary.subOptions.userAgent" },
     ],
   },
 ];
 
-/** Flat lookup: every GroupKey → its display label (for the column header). */
-const KEY_LABEL = new Map<GroupKey, string>();
-for (const t of TABS) {
-  if (t.sub) {
-    for (const s of t.sub) KEY_LABEL.set(s.id, s.label);
+/** Flat lookup: every GroupKey → its display label key (for the column header). */
+const KEY_LABEL_KEYS = new Map<GroupKey, string>();
+for (const tab of TABS) {
+  if (tab.sub) {
+    for (const s of tab.sub) KEY_LABEL_KEYS.set(s.id, s.labelKey);
   } else {
-    KEY_LABEL.set(t.id, t.label);
+    KEY_LABEL_KEYS.set(tab.id, tab.labelKey);
   }
 }
 
@@ -244,6 +245,24 @@ const COLUMNS: Array<{ id: ColumnKey; label: string }> = [
   { id: "profit", label: "Profit" },
   { id: "cost", label: "Cost" },
 ];
+
+const COLUMN_LABEL_KEYS: Record<ColumnKey, string> = {
+  live: "toolsUI.reports.summary.columns.live",
+  incoming: "toolsUI.reports.summary.columns.incoming",
+  connected: "toolsUI.reports.summary.columns.connected",
+  qualified: "toolsUI.reports.summary.columns.qualified",
+  paid: "toolsUI.reports.summary.columns.paid",
+  converted: "toolsUI.reports.summary.columns.converted",
+  noConnect: "toolsUI.reports.summary.columns.noConnect",
+  dupe: "toolsUI.reports.summary.columns.dupe",
+  conversionRate: "toolsUI.reports.summary.columns.conversionRate",
+  tcl: "toolsUI.reports.summary.columns.tcl",
+  acl: "toolsUI.reports.summary.columns.acl",
+  payout: "toolsUI.reports.summary.columns.payout",
+  revenue: "toolsUI.reports.summary.columns.revenue",
+  profit: "toolsUI.reports.summary.columns.profit",
+  cost: "toolsUI.reports.summary.columns.cost",
+};
 
 /* Cost is publisher payout plus a small operational/carrier surcharge:
  *   $0.05 per incoming call (routing + queuing infra)
@@ -659,10 +678,10 @@ function groupCalls(calls: Call[], group: GroupKey): SummaryRow[] {
   return Array.from(m.values()).sort((a, b) => b.revenue - a.revenue);
 }
 
-function totalsOf(rows: SummaryRow[]): SummaryRow {
+function totalsOf(rows: SummaryRow[], totalsLabel: string): SummaryRow {
   const t: SummaryRow = {
     key: "_totals",
-    label: "Totals",
+    label: totalsLabel,
     live: 0,
     incoming: 0,
     connected: 0,
@@ -748,6 +767,7 @@ function sortValue(r: SummaryRow, key: SummarySortKey): number | string {
 }
 
 export function CallSummaryTable({ calls }: CallSummaryTableProps) {
+  const { t } = useTranslation();
   const [tab, setTab] = React.useState<GroupKey>("campaign");
   const [visible, setVisible] = React.useState<Record<ColumnKey, boolean>>(ALL_VISIBLE);
   const [pageSize, setPageSize] = React.useState(25);
@@ -779,7 +799,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
 
   // Totals always reflect the full result set, not just the current page —
   // the operator expects "Totals" to summarise everything they filtered to.
-  const totals = React.useMemo(() => totalsOf(allRows), [allRows]);
+  const totals = React.useMemo(() => totalsOf(allRows, t("toolsUI.reports.summary.totals")), [allRows, t]);
   const rows = React.useMemo(
     () => allRows.slice(page * pageSize, page * pageSize + pageSize),
     [allRows, page, pageSize],
@@ -810,38 +830,43 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
 
   const onExport = (format: ExportFormat) => {
     // Only the columns the operator can currently see make it into the export.
+    const tabKey = KEY_LABEL_KEYS.get(tab);
     const labelCol: ExportColumn<SummaryRow> = {
-      label: KEY_LABEL.get(tab) ?? "Group",
+      label: tabKey ? t(tabKey) : t("toolsUI.reports.summary.columns.group"),
       value: (r) => r.label,
     };
     const dataCols: ExportColumn<SummaryRow>[] = COLUMNS.filter((c) => visible[c.id]).map(
       (c) => ({
-        label: c.label,
+        label: t(COLUMN_LABEL_KEYS[c.id]),
         value: (r) => summaryCellValue(r, c.id),
       }),
     );
     const stem = dateStamped(`vortyx-call-summary-${tab}`);
     // Export the entire filtered result set, not just the current page.
     downloadRows(format, [labelCol, ...dataCols], allRows, stem, "Call summary");
-    toast.success(`Exported ${allRows.length} rows to ${format.toUpperCase()}`);
+    toast.success(
+      t("toolsUI.reports.summary.toastExport")
+        .replace("{count}", String(allRows.length))
+        .replace("{format}", format.toUpperCase()),
+    );
   };
 
   return (
     <Card className="overflow-hidden p-0">
       {/* Section title */}
-      <div className="px-6 pt-5 text-sm font-semibold text-foreground">Call summary</div>
+      <div className="px-6 pt-5 text-sm font-semibold text-foreground">{t("toolsUI.reports.summary.title")}</div>
 
       {/* Tabs + right actions */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-4">
         <div className="no-scrollbar flex overflow-x-auto">
-          {TABS.map((t) => {
+          {TABS.map((tabDef) => {
             // A dropdown tab is "active" when the current tab is any of its sub-options.
-            const subIds = t.sub?.map((s) => s.id) ?? [t.id];
+            const subIds = tabDef.sub?.map((s) => s.id) ?? [tabDef.id];
             const active = subIds.includes(tab);
 
-            if (t.sub) {
+            if (tabDef.sub) {
               return (
-                <DropdownMenu key={t.label}>
+                <DropdownMenu key={tabDef.labelKey}>
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
@@ -849,7 +874,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                         active ? "text-accent" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      {t.label}
+                      {t(tabDef.labelKey)}
                       <ChevronDown className="h-3 w-3 opacity-70" />
                       {active && (
                         <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-accent" />
@@ -857,13 +882,13 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    {t.sub.map((s) => (
+                    {tabDef.sub.map((s) => (
                       <DropdownMenuItem
                         key={s.id}
                         onSelect={() => setTab(s.id)}
                         className={cn(tab === s.id && "text-accent")}
                       >
-                        {s.label}
+                        {t(s.labelKey)}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -873,14 +898,14 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
 
             return (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                key={tabDef.id}
+                onClick={() => setTab(tabDef.id)}
                 className={cn(
                   "relative whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none",
                   active ? "text-accent" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t.label}
+                {t(tabDef.labelKey)}
                 {active && (
                   <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-accent" />
                 )}
@@ -891,19 +916,19 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
         <div className="flex items-center gap-1">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Column settings">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("toolsUI.reports.callLog.columnSettings")}>
                 <Settings className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-60 p-0">
               <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="text-sm font-semibold">Columns</span>
+                <span className="text-sm font-semibold">{t("toolsUI.callLogs.toolbar.columns")}</span>
                 <button
                   type="button"
                   onClick={() => setVisible(ALL_VISIBLE)}
                   className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  Show all
+                  {t("toolsUI.reports.callLog.showAll")}
                 </button>
               </div>
               <div className="max-h-72 overflow-y-auto px-2 py-2">
@@ -920,7 +945,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                         checked={visible[col.id]}
                         onCheckedChange={() => toggleColumn(col.id)}
                       />
-                      <span>{col.label}</span>
+                      <span>{t(COLUMN_LABEL_KEYS[col.id])}</span>
                     </Label>
                   );
                 })}
@@ -928,7 +953,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
             </PopoverContent>
           </Popover>
           <ExportMenu onExport={onExport}>
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Export">
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("toolsUI.callLogs.toolbar.export")}>
               <Download className="h-4 w-4" />
             </Button>
           </ExportMenu>
@@ -942,7 +967,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6 text-left">
                   <SortHeader
-                    label={TABS.find((t) => t.id === tab)?.label ?? "Group"}
+                    label={(() => { const k = TABS.find((td) => td.id === tab)?.labelKey; return k ? t(k) : t("toolsUI.reports.summary.columns.group"); })()}
                     sortKey="label"
                     active={sortKey}
                     dir={sortDir}
@@ -950,28 +975,28 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                     align="left"
                   />
                 </TableHead>
-                {visible.live && <TableHead className="text-center"><SortHeader label="Live" sortKey="live" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.incoming && <TableHead className="text-center"><SortHeader label="Incoming" sortKey="incoming" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.connected && <TableHead className="text-center"><SortHeader label="Connected" sortKey="connected" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.qualified && <TableHead className="text-center"><SortHeader label="Qualified" sortKey="qualified" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.paid && <TableHead className="text-center"><SortHeader label="Paid" sortKey="paid" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.converted && <TableHead className="text-center"><SortHeader label="Converted" sortKey="converted" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.noConnect && <TableHead className="text-center"><SortHeader label="Not Connected" sortKey="noConnect" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.dupe && <TableHead className="text-center"><SortHeader label="Dupe" sortKey="dupe" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.conversionRate && <TableHead className="text-center"><SortHeader label="Conv. rate" sortKey="conversionRate" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.tcl && <TableHead className="text-center"><SortHeader label="TCL" sortKey="tcl" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.acl && <TableHead className="text-center"><SortHeader label="ACL" sortKey="acl" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
-                {visible.payout && <TableHead className="text-right"><SortHeader label="Payout" sortKey="payout" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
-                {visible.revenue && <TableHead className="text-right"><SortHeader label="Revenue" sortKey="revenue" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
-                {visible.profit && <TableHead className="text-right"><SortHeader label="Profit" sortKey="profit" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
-                {visible.cost && <TableHead className="pr-6 text-right"><SortHeader label="Cost" sortKey="cost" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.live && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.live")} sortKey="live" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.incoming && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.incoming")} sortKey="incoming" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.connected && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.connected")} sortKey="connected" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.qualified && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.qualified")} sortKey="qualified" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.paid && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.paid")} sortKey="paid" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.converted && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.converted")} sortKey="converted" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.noConnect && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.noConnect")} sortKey="noConnect" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.dupe && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.dupe")} sortKey="dupe" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.conversionRate && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.conversionRate")} sortKey="conversionRate" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.tcl && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.tcl")} sortKey="tcl" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.acl && <TableHead className="text-center"><SortHeader label={t("toolsUI.reports.summary.columns.acl")} sortKey="acl" active={sortKey} dir={sortDir} onClick={requestSort} /></TableHead>}
+                {visible.payout && <TableHead className="text-right"><SortHeader label={t("toolsUI.reports.summary.columns.payout")} sortKey="payout" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.revenue && <TableHead className="text-right"><SortHeader label={t("toolsUI.reports.summary.columns.revenue")} sortKey="revenue" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.profit && <TableHead className="text-right"><SortHeader label={t("toolsUI.reports.summary.columns.profit")} sortKey="profit" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
+                {visible.cost && <TableHead className="pr-6 text-right"><SortHeader label={t("toolsUI.reports.summary.columns.cost")} sortKey="cost" active={sortKey} dir={sortDir} onClick={requestSort} align="right" /></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {allRows.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={colSpan} className="pl-6 py-6 text-sm text-muted-foreground">
-                    No calls in this range.
+                    {t("toolsUI.reports.summary.empty")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -1044,7 +1069,7 @@ export function CallSummaryTable({ calls }: CallSummaryTableProps) {
                   current page, so paginating doesn't make the footer shift. */}
               {allRows.length > 0 && (
                 <TableRow className="border-t-2 border-border bg-muted/40 hover:bg-muted/40 font-semibold">
-                  <TableCell className="pl-6 text-left">Totals</TableCell>
+                  <TableCell className="pl-6 text-left">{t("toolsUI.reports.summary.totals")}</TableCell>
                   {visible.live && (
                     <TableCell className="text-center tabular-nums">{formatNumber(totals.live)}</TableCell>
                   )}

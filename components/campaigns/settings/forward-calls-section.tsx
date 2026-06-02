@@ -33,6 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
@@ -91,10 +92,27 @@ interface ForwardCallsSectionProps {
 }
 
 export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
+  void campaignId;
+  const { t } = useTranslation();
   const [routing, setRouting] = useState<RoutingOption>("Standard");
   const [duplicate, setDuplicate] = useState<DuplicateHandling>("Different");
   const [direction, setDirection] = useState<DirectionScope>("Destination");
   const [strict, setStrict] = useState(true);
+  const routingLabel: Record<RoutingOption, string> = {
+    Standard: t("trafficUI.campaigns.settings.forward.options.standard"),
+    Menu: t("trafficUI.campaigns.settings.forward.options.menu"),
+    "Call Flow": t("trafficUI.campaigns.settings.forward.options.callFlow"),
+    Revenue: t("trafficUI.campaigns.settings.forward.options.revenue"),
+  };
+  const duplicateLabel: Record<DuplicateHandling, string> = {
+    Normal: t("trafficUI.campaigns.settings.forward.options.normal"),
+    Original: t("trafficUI.campaigns.settings.forward.options.original"),
+    Different: t("trafficUI.campaigns.settings.forward.options.different"),
+  };
+  const directionLabel: Record<DirectionScope, string> = {
+    Destination: t("trafficUI.campaigns.settings.forward.options.destination"),
+    Buyer: t("trafficUI.campaigns.settings.forward.options.buyer"),
+  };
 
   const allDestinations = useDestinationsStore((s) => s.destinations);
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
@@ -131,53 +149,56 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
     setPriorities((prev) => ({ ...prev, [id]: next.priority }));
     setWeights((prev) => ({ ...prev, [id]: next.weight }));
     closeEdit();
-    toast.success("Conversion settings saved");
+    toast.success(t("trafficUI.campaigns.settings.forward.toast.convSaved"));
   };
 
   const onDetach = (id: string, name: string) => {
     // Demo behavior: flip the destination to disabled so it drops out of the
     // routed list (the section already filters by `enabled`).
     setEnabled(id, false);
-    toast.success(`${name} detached from this campaign`);
+    toast.success(t("trafficUI.campaigns.settings.forward.toast.detached").replace("{name}", name));
   };
 
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-[13px] font-semibold uppercase tracking-wider">Forward Calls To</h2>
+        <h2 className="text-[13px] font-semibold uppercase tracking-wider">{t("trafficUI.campaigns.settings.forward.title")}</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Automatically forward all incoming calls to destinations or groups in this campaign.
+          {t("trafficUI.campaigns.settings.forward.description")}
         </p>
       </div>
 
       <Card className="space-y-5 p-5">
         <ChoiceRow
-          label="Routing Option"
-          description="Select the routing type for your calls"
+          label={t("trafficUI.campaigns.settings.forward.routingOption")}
+          description={t("trafficUI.campaigns.settings.forward.routingOptionHint")}
           value={routing}
           options={ROUTING_OPTIONS}
+          labels={routingLabel}
           onChange={setRouting}
         />
         <ChoiceRow
-          label="Duplicate Handling"
-          description="Select how to route duplicate calls in the campaign"
+          label={t("trafficUI.campaigns.settings.forward.duplicateHandling")}
+          description={t("trafficUI.campaigns.settings.forward.duplicateHandlingHint")}
           value={duplicate}
           options={DUPLICATE_OPTIONS}
+          labels={duplicateLabel}
           onChange={setDuplicate}
         />
         <ChoiceRow
-          label="Direction Scope"
-          description="Defines whether duplicate routing is applied at the Destination or Buyer level of the original call"
+          label={t("trafficUI.campaigns.settings.forward.directionScope")}
+          description={t("trafficUI.campaigns.settings.forward.directionScopeHint")}
           value={direction}
           options={DIRECTION_OPTIONS}
+          labels={directionLabel}
           onChange={setDirection}
         />
         <div className="flex items-start justify-between gap-3 border-t border-border pt-4">
           <div>
-            <div className="text-xs font-medium">Use Strict Mode</div>
-            <div className="text-[11px] text-muted-foreground">Connect repeat calls to new destinations only</div>
+            <div className="text-xs font-medium">{t("trafficUI.campaigns.settings.forward.strictMode")}</div>
+            <div className="text-[11px] text-muted-foreground">{t("trafficUI.campaigns.settings.forward.strictModeHint")}</div>
           </div>
-          <Switch checked={strict} onCheckedChange={setStrict} aria-label="Use strict mode" />
+          <Switch checked={strict} onCheckedChange={setStrict} aria-label={t("trafficUI.campaigns.settings.forward.toggleStrict")} />
         </div>
       </Card>
 
@@ -185,33 +206,33 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
       <Card className="overflow-hidden p-0">
         <div className="flex items-center justify-between border-b border-border px-6 py-3">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Routed destinations
+            {t("trafficUI.campaigns.settings.forward.routedDestinations")}
           </div>
           <Button
             size="sm"
-            onClick={() => toast.info("Attach destination — coming soon")}
+            onClick={() => toast.info(t("trafficUI.campaigns.settings.forward.addDestSoon"))}
           >
-            <Plus className="h-4 w-4" /> Add
+            <Plus className="h-4 w-4" /> {t("trafficUI.common.add")}
           </Button>
         </div>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6 uppercase tracking-wider text-[11px]">Priority</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">Weight</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">Name</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">Number</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">Type</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">Revenue</TableHead>
-              <TableHead className="text-center uppercase tracking-wider text-[11px]">Status</TableHead>
-              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">Actions</TableHead>
+              <TableHead className="pl-6 uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.priority")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.weight")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.name")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.number")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.type")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.revenue")}</TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.status")}</TableHead>
+              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {destinations.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={8} className="pl-6 py-6 text-sm text-muted-foreground">
-                  No destinations routed to this campaign yet.
+                  {t("trafficUI.campaigns.settings.forward.empty")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -276,26 +297,30 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                         checked={d.enabled}
                         onCheckedChange={(v) => {
                           setEnabled(d.id, v);
-                          toast.success(v ? `Enabled ${d.name}` : `Disabled ${d.name}`);
+                          toast.success(
+                            v
+                              ? t("trafficUI.campaigns.settings.forward.row.enabled").replace("{name}", d.name)
+                              : t("trafficUI.campaigns.settings.forward.row.disabled").replace("{name}", d.name),
+                          );
                         }}
-                        aria-label={`Toggle ${d.name}`}
+                        aria-label={t("trafficUI.campaigns.settings.forward.row.toggle").replace("{name}", d.name)}
                       />
                     </TableCell>
                     <TableCell className="pr-6">
                       <div className="inline-flex items-center gap-0.5">
                         <RowAction
                           icon={ExternalLink}
-                          label={`Open ${d.name}`}
+                          label={t("trafficUI.campaigns.settings.forward.row.open").replace("{name}", d.name)}
                           asLink={`${ROUTES.destinations}/${d.id}`}
                         />
                         <RowAction
                           icon={Pencil}
-                          label={`Edit conversion settings for ${d.name}`}
+                          label={t("trafficUI.campaigns.settings.forward.row.editConversion").replace("{name}", d.name)}
                           onClick={() => openEdit(d.id)}
                         />
                         <RowAction
                           icon={Unlink}
-                          label={`Detach ${d.name} from campaign`}
+                          label={t("trafficUI.campaigns.settings.forward.row.detach").replace("{name}", d.name)}
                           tone="destructive"
                           onClick={() => onDetach(d.id, d.name)}
                         />
@@ -339,12 +364,14 @@ function ChoiceRow<T extends string>({
   description,
   value,
   options,
+  labels,
   onChange,
 }: {
   label: string;
   description: string;
   value: T;
   options: readonly T[];
+  labels?: Record<T, string>;
   onChange: (v: T) => void;
 }) {
   return (
@@ -366,7 +393,7 @@ function ChoiceRow<T extends string>({
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {opt}
+            {labels?.[opt] ?? opt}
           </button>
         ))}
       </div>
@@ -432,8 +459,20 @@ function ConversionSettingsDialog({
   initial,
   onConfirm,
 }: ConversionSettingsDialogProps) {
+  const { t } = useTranslation();
   // Buffered form state — discarded on cancel, written on confirm.
   const [name, setName] = useState(destinationName);
+  const convertEventLabel: Record<ConvertEvent, string> = {
+    "Call Connected": t("trafficUI.campaigns.settings.forward.conversion.events.callConnected"),
+    "Call Length": t("trafficUI.campaigns.settings.forward.conversion.events.callLength"),
+    "Incoming Call": t("trafficUI.campaigns.settings.forward.conversion.events.incomingCall"),
+    Webhook: t("trafficUI.campaigns.settings.forward.conversion.events.webhook"),
+  };
+  const dupeLabel: Record<DupeRevenue, string> = {
+    Disabled: t("trafficUI.campaigns.settings.forward.conversion.dupe.disabled"),
+    Enabled: t("trafficUI.campaigns.settings.forward.conversion.dupe.enabled"),
+    "Time Limit": t("trafficUI.campaigns.settings.forward.conversion.dupe.timeLimit"),
+  };
   const [rate, setRate] = useState<number>(initial.rate);
   const [convertOn, setConvertOn] = useState<ConvertEvent>(initial.convertOn);
   const [lengthSec, setLengthSec] = useState<number>(initial.lengthSec);
@@ -476,7 +515,7 @@ function ConversionSettingsDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-[13px] font-semibold uppercase tracking-wider">
-            Conversion Settings
+            {t("trafficUI.campaigns.settings.forward.conversion.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -484,7 +523,7 @@ function ConversionSettingsDialog({
           {/* Destination name */}
           <div className="space-y-1.5">
             <Label htmlFor="cs-name" className="text-xs font-medium">
-              Destination Name
+              {t("trafficUI.campaigns.settings.forward.conversion.destName")}
             </Label>
             <Input
               id="cs-name"
@@ -498,10 +537,10 @@ function ConversionSettingsDialog({
             <div className="flex items-end justify-between gap-3">
               <div>
                 <Label htmlFor="cs-rate" className="text-xs font-medium">
-                  Rate
+                  {t("trafficUI.campaigns.settings.forward.conversion.rate")}
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Enter the payout rate per qualified call
+                  {t("trafficUI.campaigns.settings.forward.conversion.rateHint")}
                 </p>
               </div>
               <div className="relative w-28">
@@ -523,7 +562,7 @@ function ConversionSettingsDialog({
 
           {/* Convert ON */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Convert ON</Label>
+            <Label className="text-xs font-medium">{t("trafficUI.campaigns.settings.forward.conversion.convertOn")}</Label>
             <Select value={convertOn} onValueChange={(v) => setConvertOn(v as ConvertEvent)}>
               <SelectTrigger>
                 <SelectValue />
@@ -532,10 +571,10 @@ function ConversionSettingsDialog({
                 {CONVERT_EVENTS.map((e) => (
                   <SelectItem key={e} value={e}>
                     <span className="inline-flex items-center gap-2">
-                      {e}
+                      {convertEventLabel[e]}
                       {e === "Webhook" && (
                         <Badge variant="outline" className="px-1.5 py-0 text-[9px]">
-                          Beta
+                          {t("trafficUI.campaigns.settings.forward.conversion.beta")}
                         </Badge>
                       )}
                     </span>
@@ -555,15 +594,15 @@ function ConversionSettingsDialog({
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <Label htmlFor="cs-length" className="text-xs font-medium">
-                    Length
+                    {t("trafficUI.campaigns.settings.forward.conversion.length")}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    Set the minimum call duration
+                    {t("trafficUI.campaigns.settings.forward.conversion.lengthHint")}
                   </p>
                 </div>
                 <div className="relative w-28">
                   <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    sec
+                    {t("trafficUI.common.sec")}
                   </span>
                   <Input
                     id="cs-length"
@@ -580,10 +619,10 @@ function ConversionSettingsDialog({
 
           {convertOn === "Webhook" && (
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Webhook</Label>
+              <Label className="text-xs font-medium">{t("trafficUI.campaigns.settings.forward.conversion.webhook")}</Label>
               <Select value={webhookId} onValueChange={setWebhookId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder={t("trafficUI.campaigns.settings.forward.conversion.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {WORKSPACE_WEBHOOKS.map((w) => (
@@ -595,7 +634,7 @@ function ConversionSettingsDialog({
               </Select>
               {webhookId === "" && (
                 <p className="text-[11px] text-destructive">
-                  Pick a webhook to record conversions against.
+                  {t("trafficUI.campaigns.settings.forward.conversion.webhookRequired")}
                 </p>
               )}
             </div>
@@ -603,7 +642,7 @@ function ConversionSettingsDialog({
 
           {/* Duplicate revenue options */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Duplicate revenue Options</Label>
+            <Label className="text-xs font-medium">{t("trafficUI.campaigns.settings.forward.conversion.dupeRevenue")}</Label>
             <div className="inline-flex w-full rounded-md border border-border bg-muted p-0.5">
               {DUPE_REVENUE_OPTIONS.map((opt) => (
                 <button
@@ -617,7 +656,7 @@ function ConversionSettingsDialog({
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {opt}
+                  {dupeLabel[opt]}
                 </button>
               ))}
             </div>
@@ -629,10 +668,10 @@ function ConversionSettingsDialog({
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <Label htmlFor="cs-days" className="text-xs font-medium">
-                    Days
+                    {t("trafficUI.campaigns.settings.forward.conversion.days")}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
-                    Set a specific time limit within which duplicate calls will not be charged
+                    {t("trafficUI.campaigns.settings.forward.conversion.daysHint")}
                   </p>
                 </div>
                 <Input
@@ -651,7 +690,7 @@ function ConversionSettingsDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="cs-priority" className="text-xs font-medium">
-                Priority
+                {t("trafficUI.campaigns.settings.forward.conversion.priority")}
               </Label>
               <Input
                 id="cs-priority"
@@ -664,7 +703,7 @@ function ConversionSettingsDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cs-weight" className="text-xs font-medium">
-                Weight
+                {t("trafficUI.campaigns.settings.forward.conversion.weight")}
               </Label>
               <Input
                 id="cs-weight"
@@ -681,9 +720,9 @@ function ConversionSettingsDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("trafficUI.common.cancel")}
           </Button>
-          <Button onClick={submit} disabled={!canSubmit}>Confirm</Button>
+          <Button onClick={submit} disabled={!canSubmit}>{t("trafficUI.common.confirm")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

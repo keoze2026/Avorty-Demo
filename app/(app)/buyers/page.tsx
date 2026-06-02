@@ -18,10 +18,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 
 export default function BuyersPage() {
+  const { t } = useTranslation();
   const buyers = useBuyersStore((s) => s.buyers);
   const setBuyerStatus = useBuyersStore((s) => s.setStatus);
   const remove = useBuyersStore((s) => s.remove);
@@ -81,30 +83,34 @@ export default function BuyersPage() {
     if (!b) return;
     const next = b.status === "active" ? "paused" : "active";
     setBuyerStatus(id, next);
-    toast.success(next === "active" ? `${b.name} activated` : `${b.name} paused`);
+    toast.success(
+      next === "active"
+        ? t("networkUI.buyers.toast.activated").replace("{name}", b.name)
+        : t("networkUI.buyers.toast.paused").replace("{name}", b.name),
+    );
   };
 
   const onArchive = (id: string) => {
     const b = buyers.find((x) => x.id === id);
     if (!b) return;
     remove(id);
-    toast.success(`${b.name} removed`);
+    toast.success(t("networkUI.buyers.toast.removed").replace("{name}", b.name));
   };
 
   return (
     <>
       <PageHeader
-        title="Buyers"
-        description="Every buyer in your network — their bids, caps, and performance."
+        title={t("networkUI.buyers.page.title")}
+        description={t("networkUI.buyers.page.description")}
       />
 
       {/* Inventory summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Total buyers", value: formatCompact(stats.total) },
-          { label: "Active", value: formatCompact(stats.active) },
-          { label: "Capped today", value: formatCompact(stats.capped) },
-          { label: "Spend today", value: formatCurrency(stats.spend) },
+          { label: t("networkUI.buyers.stats.total"), value: formatCompact(stats.total) },
+          { label: t("networkUI.buyers.stats.active"), value: formatCompact(stats.active) },
+          { label: t("networkUI.buyers.stats.capped"), value: formatCompact(stats.capped) },
+          { label: t("networkUI.buyers.stats.spendToday"), value: formatCurrency(stats.spend) },
         ].map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4">
@@ -126,7 +132,7 @@ export default function BuyersPage() {
         onPageSize={setPageSize}
         columns={columns}
         onColumns={setColumns}
-        onRefresh={() => toast.success("Buyers refreshed")}
+        onRefresh={() => toast.success(t("networkUI.buyers.toast.refreshed"))}
         onCreate={() => setInviteOpen(true)}
       />
 
@@ -134,8 +140,8 @@ export default function BuyersPage() {
         <EmptyState
           icon={Building2}
           tone="emerald"
-          title="No buyers match"
-          description="Try clearing the search box or relaxing your status filter."
+          title={t("networkUI.buyers.empty.title")}
+          description={t("networkUI.buyers.empty.description")}
         />
       ) : (
         <>

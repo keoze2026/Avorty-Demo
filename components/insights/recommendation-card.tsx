@@ -37,15 +37,16 @@ import {
   type RecommendationStatus,
 } from "@/lib/types";
 import { formatRelativeTime } from "@/lib/format";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const KIND_META: Record<
   RecommendationKind,
-  { icon: LucideIcon; label: string; tone: { text: string; bg: string; ring: string; border: string; line: string } }
+  { icon: LucideIcon; labelKey: string; tone: { text: string; bg: string; ring: string; border: string; line: string } }
 > = {
   scale: {
     icon: TrendingUp,
-    label: "Scale up",
+    labelKey: "toolsUI.insights.recommendations.card.kindScale",
     tone: {
       text: "text-[color:var(--success)]",
       bg: "bg-[color:var(--success)]/12",
@@ -56,7 +57,7 @@ const KIND_META: Record<
   },
   pause: {
     icon: PauseCircle,
-    label: "Pause",
+    labelKey: "toolsUI.insights.recommendations.card.kindPause",
     tone: {
       text: "text-[color:var(--warning)]",
       bg: "bg-[color:var(--warning)]/12",
@@ -67,7 +68,7 @@ const KIND_META: Record<
   },
   rebalance: {
     icon: Scale,
-    label: "Rebalance",
+    labelKey: "toolsUI.insights.recommendations.card.kindRebalance",
     tone: {
       text: "text-[color:var(--chart-3)]",
       bg: "bg-[color:var(--chart-3)]/12",
@@ -78,7 +79,7 @@ const KIND_META: Record<
   },
   alert: {
     icon: AlertTriangle,
-    label: "Alert",
+    labelKey: "toolsUI.insights.recommendations.card.kindAlert",
     tone: {
       text: "text-destructive",
       bg: "bg-destructive/12",
@@ -89,7 +90,7 @@ const KIND_META: Record<
   },
   optimize: {
     icon: Sparkles,
-    label: "Optimize",
+    labelKey: "toolsUI.insights.recommendations.card.kindOptimize",
     tone: {
       text: "text-accent",
       bg: "bg-accent/12",
@@ -106,6 +107,7 @@ interface Props {
 }
 
 export function RecommendationCard({ recommendation: r, onAction }: Props) {
+  const { t } = useTranslation();
   const meta = KIND_META[r.kind];
   const Icon = meta.icon;
   const [expanded, setExpanded] = useState(false);
@@ -118,15 +120,15 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
 
   const apply = () => {
     onAction(r.id, "applied");
-    toast.success("Applied", { description: r.title });
+    toast.success(t("toolsUI.insights.recommendations.card.toastApplied"), { description: r.title });
   };
   const snooze = () => {
     onAction(r.id, "snoozed");
-    toast.success("Snoozed for 24 hours");
+    toast.success(t("toolsUI.insights.recommendations.card.toastSnoozed"));
   };
   const dismiss = () => {
     onAction(r.id, "dismissed");
-    toast.success("Dismissed");
+    toast.success(t("toolsUI.insights.recommendations.card.toastDismissed"));
   };
 
   return (
@@ -154,7 +156,7 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", meta.tone.bg, meta.tone.text)}>
-                  {meta.label}
+                  {t(meta.labelKey)}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {r.scope.type} · {r.scope.name}
@@ -188,7 +190,7 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
-            {expanded ? "Hide rationale" : "Why this?"}
+            {expanded ? t("toolsUI.insights.recommendations.card.hideRationale") : t("toolsUI.insights.recommendations.card.whyThis")}
           </button>
 
           <div className="ml-auto flex items-center gap-2">
@@ -197,13 +199,13 @@ export function RecommendationCard({ recommendation: r, onAction }: Props) {
               {formatRelativeTime(r.createdAt)}
             </span>
             <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={dismiss}>
-              <X className="h-3.5 w-3.5" /> Dismiss
+              <X className="h-3.5 w-3.5" /> {t("toolsUI.insights.recommendations.card.dismiss")}
             </Button>
             <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={snooze}>
-              <Clock className="h-3.5 w-3.5" /> Snooze
+              <Clock className="h-3.5 w-3.5" /> {t("toolsUI.insights.recommendations.card.snooze")}
             </Button>
             <Button size="sm" className="h-8 px-3 text-xs" onClick={apply}>
-              <Check className="h-3.5 w-3.5" /> Apply
+              <Check className="h-3.5 w-3.5" /> {t("toolsUI.insights.recommendations.card.apply")}
             </Button>
           </div>
         </div>
@@ -265,10 +267,15 @@ function ConfidenceRing({ value, tone }: { value: number; tone: string }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
         <span className="text-sm font-bold tabular-nums">{Math.round(value * 100)}</span>
-        <span className="text-[9px] text-muted-foreground">conf</span>
+        <ConfLabel />
       </div>
     </div>
   );
+}
+
+function ConfLabel() {
+  const { t } = useTranslation();
+  return <span className="text-[9px] text-muted-foreground">{t("toolsUI.insights.recommendations.card.confLabel")}</span>;
 }
 
 function ImpactStat({

@@ -1,4 +1,7 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "@/hooks/use-translation";
 import type { CampaignStatus } from "@/lib/types";
 
 const VARIANT: Record<CampaignStatus, React.ComponentProps<typeof Badge>["variant"]> = {
@@ -8,19 +11,19 @@ const VARIANT: Record<CampaignStatus, React.ComponentProps<typeof Badge>["varian
   archived: "secondary",
 };
 
-const LABEL: Record<CampaignStatus, string> = {
-  active: "Active",
-  paused: "Paused",
-  draft: "Draft",
-  archived: "Archived",
-};
-
 interface Props {
   status: CampaignStatus;
   className?: string;
 }
 
 export function CampaignStatusBadge({ status, className }: Props) {
+  const { t } = useTranslation();
+  const LABEL: Record<CampaignStatus, string> = {
+    active: t("trafficUI.campaigns.status.active"),
+    paused: t("trafficUI.campaigns.status.paused"),
+    draft: t("trafficUI.campaigns.status.draft"),
+    archived: t("trafficUI.campaigns.status.archived"),
+  };
   return (
     <Badge variant={VARIANT[status]} className={className}>
       {status === "active" && (

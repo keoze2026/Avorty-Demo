@@ -7,6 +7,7 @@ import { TrustScoreGauge } from "@/components/kyc/trust-score-gauge";
 import { VectorGrid } from "@/components/kyc/vector-cards";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   selectNextTier,
   selectTier,
@@ -18,7 +19,16 @@ import {
 } from "@/lib/store/kyc-store";
 import { cn } from "@/lib/utils";
 
+const TIER_LABEL_KEYS: Record<string, string> = {
+  sandbox: "toolsUI.trustEngine.tiers.sandbox",
+  bronze: "toolsUI.trustEngine.tiers.bronze",
+  silver: "toolsUI.trustEngine.tiers.silver",
+  gold: "toolsUI.trustEngine.tiers.gold",
+  platinum: "toolsUI.trustEngine.tiers.platinum",
+};
+
 export default function KycPage() {
+  const { t } = useTranslation();
   // Subscribe to vectors so the gauge / tier ladder re-renders on every
   // verify. We can't pass `useKycStore.getState` because that would skip
   // re-renders — Zustand selectors handle reactivity for us.
@@ -35,8 +45,8 @@ export default function KycPage() {
   return (
     <>
       <PageHeader
-        title="Trust Engine"
-        description="A continuous five-vector verification. Climb tiers to unlock higher caps, faster payouts, and marketplace access."
+        title={t("toolsUI.trustEngine.pageTitle")}
+        description={t("toolsUI.trustEngine.pageDescription")}
       />
 
       {/* Hero — gauge + tier ladder */}
@@ -46,7 +56,9 @@ export default function KycPage() {
           <div className="flex flex-col items-center justify-center gap-3 border-b border-border bg-secondary/15 p-6 lg:border-b-0 lg:border-r">
             <TrustScoreGauge score={score} tier={tier} next={next} />
             <div className="text-center text-[11px] text-muted-foreground">
-              {verifiedCount} of {totalCount} vectors verified
+              {t("toolsUI.trustEngine.vectorsVerified")
+                .replace("{verified}", String(verifiedCount))
+                .replace("{total}", String(totalCount))}
             </div>
           </div>
 
@@ -54,15 +66,15 @@ export default function KycPage() {
           <CardContent className="p-6">
             <div className="mb-3 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-accent" />
-              <h2 className="text-sm font-semibold">Your tier ladder</h2>
+              <h2 className="text-sm font-semibold">{t("toolsUI.trustEngine.tierLadder")}</h2>
             </div>
             <ol className="relative space-y-3 before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-px before:bg-border">
-              {TIERS.map((t) => {
-                const reached = score >= t.minScore;
-                const current = t.id === tier.id;
+              {TIERS.map((tierDef) => {
+                const reached = score >= tierDef.minScore;
+                const current = tierDef.id === tier.id;
                 return (
                   <li
-                    key={t.id}
+                    key={tierDef.id}
                     className={cn(
                       "relative flex items-start gap-3 rounded-lg border p-3 transition-colors",
                       current
@@ -84,7 +96,7 @@ export default function KycPage() {
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       ) : (
                         <span className="font-mono text-[10px] tabular-nums">
-                          {t.minScore}
+                          {tierDef.minScore}
                         </span>
                       )}
                     </span>
@@ -93,22 +105,22 @@ export default function KycPage() {
                         <span
                           className={cn(
                             "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]",
-                            t.badgeClass,
+                            tierDef.badgeClass,
                           )}
                         >
-                          {t.label}
+                          {t(TIER_LABEL_KEYS[tierDef.id] ?? "")}
                         </span>
                         {current && (
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-                            ← You are here
+                            {t("toolsUI.trustEngine.youAreHere")}
                           </span>
                         )}
                         <span className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground">
-                          {t.minScore}+ pts
+                          {tierDef.minScore}{t("toolsUI.trustEngine.pointsSuffix")}
                         </span>
                       </div>
                       <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                        {t.benefits.map((b) => (
+                        {tierDef.benefits.map((b) => (
                           <li
                             key={b}
                             className="inline-flex items-center gap-1"
@@ -137,16 +149,16 @@ export default function KycPage() {
       <div className="space-y-3">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="text-base font-semibold">Verification vectors</h2>
+            <h2 className="text-base font-semibold">{t("toolsUI.trustEngine.vectorsGridTitle")}</h2>
             <p className="text-xs text-muted-foreground">
-              Complete any combination — points stack, no order required.
+              {t("toolsUI.trustEngine.vectorsGridDescription")}
             </p>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span className="font-mono tabular-nums text-foreground">
               {score} / 100
             </span>
-            <span>pts</span>
+            <span>{t("toolsUI.trustEngine.ptsLabel")}</span>
           </div>
         </div>
         <VectorGrid />
@@ -155,13 +167,13 @@ export default function KycPage() {
       {/* Why the Trust Engine is different */}
       <Card className="bg-secondary/10 p-5">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Why a Trust Engine, not a one-time KYC
+          {t("toolsUI.trustEngine.whyTitle")}
         </h3>
         <ul className="mt-3 grid grid-cols-1 gap-3 text-xs text-muted-foreground sm:grid-cols-3">
-          {WHY.map((w) => (
-            <li key={w.title} className="rounded-md border border-border bg-card p-3">
-              <div className="text-foreground font-medium">{w.title}</div>
-              <p className="mt-1 leading-relaxed">{w.body}</p>
+          {WHY_KEYS.map((w) => (
+            <li key={w.id} className="rounded-md border border-border bg-card p-3">
+              <div className="text-foreground font-medium">{t(w.titleKey)}</div>
+              <p className="mt-1 leading-relaxed">{t(w.bodyKey)}</p>
             </li>
           ))}
         </ul>
@@ -170,18 +182,21 @@ export default function KycPage() {
   );
 }
 
-const WHY = [
+const WHY_KEYS = [
   {
-    title: "Continuous, not one-shot",
-    body: "Reputation accrues from real call quality every 24 h. You can climb tiers without re-uploading anything.",
+    id: "continuous",
+    titleKey: "toolsUI.trustEngine.whyCards.continuous.title",
+    bodyKey: "toolsUI.trustEngine.whyCards.continuous.body",
   },
   {
-    title: "Stackable vectors",
-    body: "Five independent verifications, each worth points. Complete them in any order, no blocking dependencies.",
+    id: "stackable",
+    titleKey: "toolsUI.trustEngine.whyCards.stackable.title",
+    bodyKey: "toolsUI.trustEngine.whyCards.stackable.body",
   },
   {
-    title: "Auto-approval in seconds",
-    body: "Biometric match + EIN lookup + Plaid resolve instantly. No back-office queue, no waiting on email.",
+    id: "autoApproval",
+    titleKey: "toolsUI.trustEngine.whyCards.autoApproval.title",
+    bodyKey: "toolsUI.trustEngine.whyCards.autoApproval.body",
   },
 ];
 

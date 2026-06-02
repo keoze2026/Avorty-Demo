@@ -13,24 +13,26 @@ import { BuyerOverviewTab } from "@/components/buyers/buyer-overview-tab";
 import { BuyerSettingsTab } from "@/components/buyers/buyer-settings-tab";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
+import { useTranslation } from "@/hooks/use-translation";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { cn } from "@/lib/utils";
 
 type TabId = "overview" | "campaigns" | "destinations" | "caps" | "settings";
 
-const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "campaigns", label: "Campaigns", icon: Megaphone },
-  { id: "destinations", label: "Destinations", icon: Target },
-  { id: "caps", label: "Caps & pacing", icon: Gauge },
-  { id: "settings", label: "Settings", icon: SettingsIcon },
-];
-
 export default function BuyerDetailPage() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const buyer = useBuyersStore((s) => s.getById(params.id));
   const [tab, setTab] = useState<TabId>("overview");
+
+  const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+    { id: "overview", label: t("networkUI.buyers.tabs.overview"), icon: LayoutDashboard },
+    { id: "campaigns", label: t("networkUI.buyers.tabs.campaigns"), icon: Megaphone },
+    { id: "destinations", label: t("networkUI.buyers.tabs.destinations"), icon: Target },
+    { id: "caps", label: t("networkUI.buyers.tabs.capsPacing"), icon: Gauge },
+    { id: "settings", label: t("networkUI.buyers.tabs.settings"), icon: SettingsIcon },
+  ];
 
   useBreadcrumbOverride(buyer?.name);
 
@@ -46,8 +48,8 @@ export default function BuyerDetailPage() {
       <EmptyState
         icon={Building2}
         tone="emerald"
-        title="Buyer not found"
-        description="It may have been removed. Sending you back to the buyers list…"
+        title={t("networkUI.buyers.empty.notFound")}
+        description={t("networkUI.buyers.empty.notFoundDesc")}
       />
     );
   }

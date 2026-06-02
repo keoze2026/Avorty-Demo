@@ -11,8 +11,10 @@ import { ArrowUpRight, Calendar, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MOCK_PLAN, MOCK_USAGE } from "@/lib/mock/billing";
 import { formatCompact, formatCurrency } from "@/lib/format";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function SubscriptionHero() {
+  const { t } = useTranslation();
   const callsMetric = MOCK_USAGE.find((m) => m.key === "calls")!;
   const pct = Math.min(1, callsMetric.used / callsMetric.included);
   const renews = new Date(MOCK_PLAN.renewsAt);
@@ -44,11 +46,11 @@ export function SubscriptionHero() {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/15 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent">
               <Sparkles className="h-2.5 w-2.5" />
-              Current plan
+              {t("toolsUI.billing.subscription.currentPlan")}
             </span>
             <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              Renews {renews.toLocaleDateString()}
+              {t("toolsUI.billing.subscription.renews").replace("{date}", renews.toLocaleDateString())}
             </span>
           </div>
 
@@ -57,33 +59,29 @@ export function SubscriptionHero() {
           </h2>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="font-mono text-xl font-semibold">{formatCurrency(MOCK_PLAN.monthlyCost)}</span>
-            <span className="text-[13px] text-muted-foreground">/ month</span>
+            <span className="text-[13px] text-muted-foreground">{t("toolsUI.billing.subscription.perMonth")}</span>
           </div>
 
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
-            {formatCompact(MOCK_PLAN.callsIncluded)} calls included. Overage billed at{" "}
+            {t("toolsUI.billing.subscription.callsBefore").replace("{calls}", formatCompact(MOCK_PLAN.callsIncluded))}
             <span className="font-mono text-foreground">
-              {formatCurrency(MOCK_PLAN.overageRatePerCall, true)} / call
+              {formatCurrency(MOCK_PLAN.overageRatePerCall, true)}{t("toolsUI.billing.subscription.callsAfter")}
             </span>
             .{overage > 0 && (
-              <>
-                {" "}
-                Projected overage this cycle:{" "}
-                <span className="font-mono text-foreground">{formatCurrency(overage)}</span>.
-              </>
+              <>{t("toolsUI.billing.subscription.projectedOverage").replace("{amount}", formatCurrency(overage))}</>
             )}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
             <Button size="sm" className="gap-1.5">
               <ArrowUpRight className="h-3.5 w-3.5" />
-              Upgrade to Scale
+              {t("toolsUI.billing.subscription.upgrade")}
             </Button>
             <Button size="sm" variant="outline">
-              Manage plan
+              {t("toolsUI.billing.subscription.managePlan")}
             </Button>
             <Button size="sm" variant="ghost" className="text-muted-foreground">
-              Cancel
+              {t("toolsUI.billing.subscription.cancel")}
             </Button>
           </div>
         </div>
@@ -106,6 +104,7 @@ export function SubscriptionHero() {
  * matches the brand accent + theme automatically.
  */
 function UsageRing({ pct, used, included }: { pct: number; used: number; included: number }) {
+  const { t } = useTranslation();
   const size = 200;
   const radius = 80;
   const stroke = 14;
@@ -148,7 +147,7 @@ function UsageRing({ pct, used, included }: { pct: number; used: number; include
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-mono text-2xl font-semibold tabular-nums">{Math.round(pct * 100)}%</span>
         <span className="mt-0.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-          Calls used
+          {t("toolsUI.billing.subscription.callsUsed")}
         </span>
         <span className="mt-1 font-mono text-[11px] text-foreground">
           {formatCompact(used)} / {formatCompact(included)}

@@ -23,6 +23,7 @@ import {
   formatTokenPrice,
   type TokenEntry,
 } from "@/lib/mock/tokens";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 type SortKey =
@@ -54,6 +55,17 @@ const COLUMNS: ColumnDef[] = [
   { id: "circulatingSupply", label: "Circulating Supply", numeric: true },
 ];
 
+const COLUMN_LABEL_KEYS: Record<SortKey, string> = {
+  rank: "toolsUI.news.tokens.columns.rank",
+  price: "toolsUI.news.tokens.columns.price",
+  change1h: "toolsUI.news.tokens.columns.change1h",
+  change24h: "toolsUI.news.tokens.columns.change24h",
+  change7d: "toolsUI.news.tokens.columns.change7d",
+  marketCap: "toolsUI.news.tokens.columns.marketCap",
+  volume24h: "toolsUI.news.tokens.columns.volume24h",
+  circulatingSupply: "toolsUI.news.tokens.columns.circulatingSupply",
+};
+
 interface Props {
   tokens: TokenEntry[];
   pageSize?: number;
@@ -75,6 +87,7 @@ export function TokensTable({
   loading = false,
   onPageChange,
 }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [sortKey, setSortKey] = React.useState<SortKey>("rank");
   const [sortDir, setSortDir] = React.useState<SortDir>("asc");
@@ -136,16 +149,20 @@ export function TokensTable({
     <section>
       <header className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Tokens</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("toolsUI.news.tokens.title")}</h2>
           <p className="text-xs text-muted-foreground">
-            {formatNumber(filtered.length)} assets · sorted by{" "}
-            {COLUMNS.find((c) => c.id === sortKey)?.label.toLowerCase() ?? "rank"}
+            {t("toolsUI.news.tokens.countSummary")
+              .replace("{count}", formatNumber(filtered.length))
+              .replace(
+                "{sort}",
+                t(COLUMN_LABEL_KEYS[sortKey] ?? "toolsUI.news.tokens.columns.rank").toLowerCase(),
+              )}
           </p>
         </div>
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name or symbol…"
+          placeholder={t("toolsUI.news.tokens.searchPlaceholder")}
           className="h-9 w-64 text-xs"
         />
       </header>
@@ -158,24 +175,24 @@ export function TokensTable({
                 <TableHead className="pl-3 w-8 text-left"></TableHead>
                 <TableHead className="w-12 text-left">
                   <SortHeader
-                    label="#"
+                    label={t("toolsUI.news.tokens.columns.rank")}
                     active={sortKey === "rank"}
                     dir={sortDir}
                     onClick={() => requestSort("rank")}
                   />
                 </TableHead>
-                <TableHead className="text-left">Name</TableHead>
+                <TableHead className="text-left">{t("toolsUI.news.tokens.columns.name")}</TableHead>
                 {COLUMNS.map((col) => (
                   <TableHead key={col.id} className="text-right">
                     <SortHeader
-                      label={col.label}
+                      label={t(COLUMN_LABEL_KEYS[col.id])}
                       active={sortKey === col.id}
                       dir={sortDir}
                       onClick={() => requestSort(col.id)}
                     />
                   </TableHead>
                 ))}
-                <TableHead className="pr-4 text-right">Last 7 Days</TableHead>
+                <TableHead className="pr-4 text-right">{t("toolsUI.news.tokens.columns.last7Days")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -185,16 +202,16 @@ export function TokensTable({
                     colSpan={4 + COLUMNS.length}
                     className="py-10 text-center text-xs text-muted-foreground"
                   >
-                    No tokens match the current search.
+                    {t("toolsUI.news.tokens.empty")}
                   </TableCell>
                 </TableRow>
               ) : (
-                visible.map((t) => (
+                visible.map((tk) => (
                   <TokenRow
-                    key={t.symbol}
-                    token={t}
-                    favorite={favorites.has(t.symbol)}
-                    onToggleFav={() => toggleFav(t.symbol)}
+                    key={tk.symbol}
+                    token={tk}
+                    favorite={favorites.has(tk.symbol)}
+                    onToggleFav={() => toggleFav(tk.symbol)}
                   />
                 ))
               )}
@@ -212,7 +229,7 @@ export function TokensTable({
 
       {loading && (
         <div className="text-center text-[11px] text-muted-foreground">
-          Loading more tokens…
+          {t("toolsUI.news.tokens.loadingMore")}
         </div>
       )}
     </section>
@@ -233,6 +250,7 @@ function TokenRow({
   favorite: boolean;
   onToggleFav: () => void;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   // Use the 7-day move to color both the change pills and the sparkline.
   const sparkColor =
@@ -261,7 +279,7 @@ function TokenRow({
         <button
           type="button"
           onClick={onToggleFav}
-          aria-label={favorite ? "Unstar" : "Star"}
+          aria-label={favorite ? t("toolsUI.news.tokens.unstarAria") : t("toolsUI.news.tokens.starAria")}
           className={cn(
             "inline-flex h-6 w-6 items-center justify-center rounded transition-colors",
             favorite

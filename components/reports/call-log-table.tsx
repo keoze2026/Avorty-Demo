@@ -39,6 +39,7 @@ import { Pagination } from "@/components/shared/pagination";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { formatCurrency, formatHMS, toE164 } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 type ColumnKey =
@@ -74,6 +75,32 @@ const COLUMNS: Array<{ id: ColumnKey; label: string }> = [
   { id: "recording", label: "Recording" },
 ];
 
+const COLUMN_LABEL_KEYS: Record<ColumnKey, string> = {
+  campaign: "toolsUI.reports.callLog.columns.campaign",
+  publisher: "toolsUI.reports.callLog.columns.publisher",
+  caller: "toolsUI.reports.callLog.columns.callerId",
+  dialed: "toolsUI.reports.callLog.columns.dialed",
+  buyer: "toolsUI.reports.callLog.columns.buyer",
+  revenue: "toolsUI.reports.callLog.columns.revenue",
+  payout: "toolsUI.reports.callLog.columns.payout",
+  ttc: "toolsUI.reports.callLog.columns.ttc",
+  duration: "toolsUI.reports.callLog.columns.duration",
+  hangUp: "toolsUI.reports.callLog.columns.hangUp",
+  tag: "toolsUI.reports.callLog.columns.tag",
+  status: "toolsUI.reports.callLog.columns.status",
+  failReason: "toolsUI.reports.callLog.columns.failReason",
+  recording: "toolsUI.reports.callLog.columns.recording",
+};
+
+const STATUS_LABEL_KEYS: Record<CallStatus, string> = {
+  ringing: "toolsUI.reports.callLog.statusLabel.ringing",
+  "in-progress": "toolsUI.reports.callLog.statusLabel.live",
+  completed: "toolsUI.reports.callLog.statusLabel.completed",
+  missed: "toolsUI.reports.callLog.statusLabel.missed",
+  rejected: "toolsUI.reports.callLog.statusLabel.rejected",
+  failed: "toolsUI.reports.callLog.statusLabel.failed",
+};
+
 const ALL_VISIBLE: Record<ColumnKey, boolean> = COLUMNS.reduce(
   (acc, c) => ({ ...acc, [c.id]: true }),
   {} as Record<ColumnKey, boolean>,
@@ -91,7 +118,7 @@ function timeLabel(ts: number) {
   return `${month} ${day}, ${h}:${m}:${s} ${ampm}`;
 }
 
-const STATUS_LABEL: Record<CallStatus, string> = {
+const STATUS_LABEL_FALLBACK: Record<CallStatus, string> = {
   ringing: "Ringing",
   "in-progress": "Live",
   completed: "Completed",
@@ -220,7 +247,7 @@ function logCellValue(c: Call, key: ColumnKey): number | string {
     case "tag":
       return getTags(c).join(", ");
     case "status":
-      return STATUS_LABEL[c.status];
+      return STATUS_LABEL_FALLBACK[c.status];
     case "failReason":
       return getFailReason(c);
     case "recording":
@@ -235,6 +262,7 @@ interface CallLogTableProps {
 }
 
 export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [columns, setColumns] = React.useState<Record<ColumnKey, boolean>>(ALL_VISIBLE);
   const [pageSize, setPageSize] = React.useState<number>(limit);
@@ -269,47 +297,47 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
 
   const onExport = (format: ExportFormat) => {
     const dateCol: ExportColumn<Call> = {
-      label: "Call date",
+      label: t("toolsUI.reports.callLog.columns.callDate"),
       value: (c) => new Date(c.startedAt).toISOString(),
     };
     const dataCols: ExportColumn<Call>[] = COLUMNS.filter((c) => columns[c.id]).map((c) => ({
-      label: c.label,
+      label: t(COLUMN_LABEL_KEYS[c.id]),
       value: (row) => logCellValue(row, c.id),
     }));
     downloadRows(format, [dateCol, ...dataCols], visible, dateStamped("vortyx-call-log"), "Call log");
-    toast.success(`Exported ${visible.length} rows to ${format.toUpperCase()}`);
+    toast.success(t("toolsUI.reports.callLog.toastExport").replace("{count}", String(visible.length)).replace("{format}", format.toUpperCase()));
   };
 
   return (
     <Card className="overflow-hidden p-0">
       {/* Section title */}
       <div className="flex items-center justify-between gap-2 border-b border-border px-6 py-4">
-        <div className="text-sm font-semibold text-foreground">Call log</div>
+        <div className="text-sm font-semibold text-foreground">{t("toolsUI.reports.callLog.title")}</div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search calls…"
+              placeholder={t("toolsUI.reports.callLog.searchPlaceholder")}
               className="h-8 w-56 pl-7 text-xs"
             />
           </div>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Column settings">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("toolsUI.reports.callLog.columnSettings")}>
                 <Settings className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-56 p-0">
               <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="text-sm font-semibold">Columns</span>
+                <span className="text-sm font-semibold">{t("toolsUI.callLogs.toolbar.columns")}</span>
                 <button
                   type="button"
                   onClick={() => setColumns(ALL_VISIBLE)}
                   className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  Show all
+                  {t("toolsUI.reports.callLog.showAll")}
                 </button>
               </div>
               <div className="max-h-72 overflow-y-auto px-2 py-2">
@@ -326,7 +354,7 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                         checked={columns[col.id]}
                         onCheckedChange={() => toggleColumn(col.id)}
                       />
-                      <span>{col.label}</span>
+                      <span>{t(COLUMN_LABEL_KEYS[col.id])}</span>
                     </Label>
                   );
                 })}
@@ -334,7 +362,7 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
             </PopoverContent>
           </Popover>
           <ExportMenu onExport={onExport}>
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Export">
+            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("toolsUI.callLogs.toolbar.export")}>
               <Download className="h-4 w-4" />
             </Button>
           </ExportMenu>
@@ -346,29 +374,29 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
           <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6">Call date</TableHead>
-                {columns.campaign && <TableHead>Campaign</TableHead>}
-                {columns.publisher && <TableHead>Publisher</TableHead>}
-                {columns.caller && <TableHead>Caller ID</TableHead>}
-                {columns.dialed && <TableHead>Dialed</TableHead>}
-                {columns.buyer && <TableHead>Buyer</TableHead>}
-                {columns.revenue && <TableHead className="text-right">Revenue</TableHead>}
-                {columns.payout && <TableHead className="text-right">Payout</TableHead>}
-                {columns.ttc && <TableHead>TTC</TableHead>}
-                {columns.duration && <TableHead>Duration</TableHead>}
-                {columns.hangUp && <TableHead className="text-center">Hang up</TableHead>}
-                {columns.tag && <TableHead className="text-center">Tag</TableHead>}
-                {columns.status && <TableHead>Status</TableHead>}
-                {columns.failReason && <TableHead>Fail reason</TableHead>}
-                {columns.recording && <TableHead>Rec.</TableHead>}
-                <TableHead className="pr-6">Action</TableHead>
+                <TableHead className="pl-6">{t("toolsUI.reports.callLog.columns.callDate")}</TableHead>
+                {columns.campaign && <TableHead>{t("toolsUI.reports.callLog.columns.campaign")}</TableHead>}
+                {columns.publisher && <TableHead>{t("toolsUI.reports.callLog.columns.publisher")}</TableHead>}
+                {columns.caller && <TableHead>{t("toolsUI.reports.callLog.columns.callerId")}</TableHead>}
+                {columns.dialed && <TableHead>{t("toolsUI.reports.callLog.columns.dialed")}</TableHead>}
+                {columns.buyer && <TableHead>{t("toolsUI.reports.callLog.columns.buyer")}</TableHead>}
+                {columns.revenue && <TableHead className="text-right">{t("toolsUI.reports.callLog.columns.revenue")}</TableHead>}
+                {columns.payout && <TableHead className="text-right">{t("toolsUI.reports.callLog.columns.payout")}</TableHead>}
+                {columns.ttc && <TableHead>{t("toolsUI.reports.callLog.columns.ttc")}</TableHead>}
+                {columns.duration && <TableHead>{t("toolsUI.reports.callLog.columns.duration")}</TableHead>}
+                {columns.hangUp && <TableHead className="text-center">{t("toolsUI.reports.callLog.columns.hangUp")}</TableHead>}
+                {columns.tag && <TableHead className="text-center">{t("toolsUI.reports.callLog.columns.tag")}</TableHead>}
+                {columns.status && <TableHead>{t("toolsUI.reports.callLog.columns.status")}</TableHead>}
+                {columns.failReason && <TableHead>{t("toolsUI.reports.callLog.columns.failReason")}</TableHead>}
+                {columns.recording && <TableHead>{t("toolsUI.reports.callLog.columns.rec")}</TableHead>}
+                <TableHead className="pr-6">{t("toolsUI.reports.callLog.columns.action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visible.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={colSpan} className="pl-6 py-8 text-center text-sm text-muted-foreground">
-                    No matching calls.
+                    {t("toolsUI.reports.callLog.empty")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -445,7 +473,7 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                       )}
                       {columns.status && (
                         <TableCell>
-                          <Badge variant={statusVariant(c.status)}>{STATUS_LABEL[c.status]}</Badge>
+                          <Badge variant={statusVariant(c.status)}>{t(STATUS_LABEL_KEYS[c.status])}</Badge>
                         </TableCell>
                       )}
                       {columns.failReason && (
@@ -460,7 +488,7 @@ export function CallLogTable({ calls, limit = 50 }: CallLogTableProps) {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              aria-label="Play recording"
+                              aria-label={t("toolsUI.reports.callLog.actions.playRecording")}
                             >
                               <Play className="h-3.5 w-3.5" />
                             </Button>
@@ -528,21 +556,22 @@ function HangUpCell({ call }: { call: Call }) {
  * surface the add-tag affordance. Stays compact in the column.
  */
 function TagCell({ call }: { call: Call }) {
+  const { t } = useTranslation();
   const tags = getTags(call);
   return (
     <div className="inline-flex items-center gap-1">
-      {tags.map((t) => (
+      {tags.map((tagValue) => (
         <span
-          key={t}
+          key={tagValue}
           className="inline-flex items-center rounded-md border border-border bg-secondary/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
         >
-          {t}
+          {tagValue}
         </span>
       ))}
       <button
         type="button"
-        aria-label={`Add tag to call ${call.id}`}
-        onClick={() => toast.info("Tag picker — coming soon")}
+        aria-label={t("toolsUI.reports.callLog.actions.addTagAria").replace("{id}", call.id)}
+        onClick={() => toast.info(t("toolsUI.reports.callLog.actions.tagSoon"))}
         className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-accent/50 hover:text-accent"
       >
         {tags.length === 0 ? <Tag className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
@@ -553,20 +582,21 @@ function TagCell({ call }: { call: Call }) {
 
 /** Three inline icon actions per row: copy caller, block caller, bill/adjust. */
 function CallRowActions({ call }: { call: Call }) {
+  const { t } = useTranslation();
   const caller = toE164(call.callerNumber);
 
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(caller);
-      toast.success(`Copied ${caller}`);
+      toast.success(t("toolsUI.reports.callLog.actions.toastCopied").replace("{number}", caller));
     } catch {
-      toast.error("Couldn't copy to clipboard");
+      toast.error(t("toolsUI.reports.callLog.actions.toastCopyError"));
     }
   };
 
   const onBlock = () => {
-    toast.success(`Blocked ${caller}`, {
-      description: "Future calls from this number will be rejected.",
+    toast.success(t("toolsUI.reports.callLog.actions.toastBlocked").replace("{number}", caller), {
+      description: t("toolsUI.reports.callLog.actions.toastBlockedDesc"),
     });
   };
 
@@ -574,12 +604,16 @@ function CallRowActions({ call }: { call: Call }) {
     const reason = getFailReason(call);
     const ttc = formatHMS(getTTCSeconds(call));
     if (call.status === "completed" || call.status === "in-progress") {
-      toast.success(`Marked ${caller} for payout review`, {
-        description: `Payout ${formatCurrency(call.payout, true)} · TTC ${ttc}`,
+      toast.success(t("toolsUI.reports.callLog.actions.toastPayoutReview").replace("{number}", caller), {
+        description: t("toolsUI.reports.callLog.actions.toastPayoutReviewDesc")
+          .replace("{payout}", formatCurrency(call.payout, true))
+          .replace("{ttc}", ttc),
       });
     } else {
-      toast.success(`Billed missed call from ${caller}`, {
-        description: `${reason || "No-connect"} · TTC ${ttc}`,
+      toast.success(t("toolsUI.reports.callLog.actions.toastBilledMissed").replace("{number}", caller), {
+        description: t("toolsUI.reports.callLog.actions.toastBilledMissedDesc")
+          .replace("{reason}", reason || t("toolsUI.reports.callLog.actions.noConnect"))
+          .replace("{ttc}", ttc),
       });
     }
   };
@@ -590,7 +624,7 @@ function CallRowActions({ call }: { call: Call }) {
         variant="ghost"
         size="icon"
         className="h-7 w-7"
-        aria-label="Copy caller number"
+        aria-label={t("toolsUI.reports.callLog.actions.copyCaller")}
         onClick={onCopy}
       >
         <Copy className="h-3.5 w-3.5" />
@@ -599,7 +633,7 @@ function CallRowActions({ call }: { call: Call }) {
         variant="ghost"
         size="icon"
         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-        aria-label="Block caller"
+        aria-label={t("toolsUI.reports.callLog.actions.blockCaller")}
         onClick={onBlock}
       >
         <Ban className="h-3.5 w-3.5" />
@@ -608,7 +642,7 @@ function CallRowActions({ call }: { call: Call }) {
         variant="ghost"
         size="icon"
         className="h-7 w-7 text-muted-foreground hover:text-[color:var(--success)]"
-        aria-label="Bill / adjust payout"
+        aria-label={t("toolsUI.reports.callLog.actions.billAdjust")}
         onClick={onBill}
       >
         <DollarSign className="h-3.5 w-3.5" />

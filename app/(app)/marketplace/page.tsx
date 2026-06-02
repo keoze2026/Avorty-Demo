@@ -12,10 +12,12 @@ import { VerticalHeat } from "@/components/marketplace/vertical-heat";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { useMarketplaceStream } from "@/hooks/use-marketplace-stream";
+import { useTranslation } from "@/hooks/use-translation";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
 import { formatCompact, formatCurrency } from "@/lib/format";
 
 export default function MarketplacePage() {
+  const { t } = useTranslation();
   // Boot the live simulation
   useMarketplaceStream();
 
@@ -63,13 +65,13 @@ export default function MarketplacePage() {
   return (
     <>
       <PageHeader
-        title="Marketplace"
-        description="The Vortyx trading floor — real-time bidding on inbound calls."
+        title={t("toolsUI.marketplace.pageTitle")}
+        description={t("toolsUI.marketplace.pageDescription")}
         actions={
           <div className="flex items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur sm:inline-flex">
               <Activity className="h-3 w-3 text-accent" />
-              {formatCompact(bidCount)} bids · session
+              {t("toolsUI.marketplace.bidsSession").replace("{count}", formatCompact(bidCount))}
             </span>
             <Button
               size="sm"
@@ -79,11 +81,11 @@ export default function MarketplacePage() {
             >
               {paused ? (
                 <>
-                  <Play className="h-3.5 w-3.5" /> Resume
+                  <Play className="h-3.5 w-3.5" /> {t("toolsUI.marketplace.resume")}
                 </>
               ) : (
                 <>
-                  <Pause className="h-3.5 w-3.5" /> Pause floor
+                  <Pause className="h-3.5 w-3.5" /> {t("toolsUI.marketplace.pauseFloor")}
                 </>
               )}
             </Button>
@@ -93,19 +95,19 @@ export default function MarketplacePage() {
 
       {/* 4-up at @2xl/main (672px container), 2-up below */}
       <div className="grid grid-cols-2 gap-3 @2xl/main:grid-cols-4">
-        <FloorStat label="Open listings" value={formatCompact(listings.length)} accent="text-accent" />
+        <FloorStat label={t("toolsUI.marketplace.stats.openListings")} value={formatCompact(listings.length)} accent="text-accent" />
         <FloorStat
-          label="Closing < 15s"
+          label={t("toolsUI.marketplace.stats.closingSoon")}
           value={formatCompact(stats.closingSoon)}
           accent="text-destructive"
         />
         <FloorStat
-          label="Hot listings"
+          label={t("toolsUI.marketplace.stats.hotListings")}
           value={formatCompact(stats.hot)}
           accent="text-[color:var(--warning)]"
         />
         <FloorStat
-          label="Tape volume (session)"
+          label={t("toolsUI.marketplace.stats.tapeVolume")}
           value={formatCurrency(stats.totalVolume)}
           accent="text-[color:var(--success)]"
         />
@@ -139,7 +141,7 @@ export default function MarketplacePage() {
 
       <p className="-mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/70">
         <Gavel className="h-3 w-3" />
-        Simulated bids stream every ~1.2s
+        {t("toolsUI.marketplace.simulatedNote")}
       </p>
     </>
   );

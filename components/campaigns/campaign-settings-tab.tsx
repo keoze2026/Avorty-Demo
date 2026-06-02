@@ -34,19 +34,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { VERTICALS } from "@/lib/mock/campaigns";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import type { Campaign, PayoutModel, Weekday } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const DAY_LABELS: Array<{ id: Weekday; label: string }> = [
-  { id: 0, label: "Sun" },
-  { id: 1, label: "Mon" },
-  { id: 2, label: "Tue" },
-  { id: 3, label: "Wed" },
-  { id: 4, label: "Thu" },
-  { id: 5, label: "Fri" },
-  { id: 6, label: "Sat" },
+const DAY_KEYS: Array<{ id: Weekday; key: string }> = [
+  { id: 0, key: "trafficUI.common.days.sun" },
+  { id: 1, key: "trafficUI.common.days.mon" },
+  { id: 2, key: "trafficUI.common.days.tue" },
+  { id: 3, key: "trafficUI.common.days.wed" },
+  { id: 4, key: "trafficUI.common.days.thu" },
+  { id: 5, key: "trafficUI.common.days.fri" },
+  { id: 6, key: "trafficUI.common.days.sat" },
 ];
 
 interface FormState {
@@ -82,15 +83,17 @@ function fromCampaign(c: Campaign): FormState {
 }
 
 export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
+  const { t } = useTranslation();
   const update = useCampaignsStore((s) => s.update);
   const [form, setForm] = useState<FormState>(() => fromCampaign(campaign));
   const [submitting, setSubmitting] = useState(false);
+  const DAY_LABELS: Array<{ id: Weekday; label: string }> = DAY_KEYS.map((d) => ({ id: d.id, label: t(d.key) }));
 
   // Recompute baseline if the campaign id changes (rare on this page, but safe)
   const baseline = useMemo(() => fromCampaign(campaign), [campaign]);
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
 
-  const errors = validate(form);
+  const errors = validate(form, t);
   const hasErrors = Object.keys(errors).length > 0;
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -104,7 +107,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
 
   const onSave = async () => {
     if (hasErrors) {
-      toast.error("Please fix the highlighted fields first");
+      toast.error(t("trafficUI.campaigns.toast.fixErrors"));
       return;
     }
     setSubmitting(true);
@@ -126,11 +129,11 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
       },
     });
     setSubmitting(false);
-    toast.success("Campaign settings saved");
+    toast.success(t("trafficUI.campaigns.toast.settingsSaved"));
   };
   const onDiscard = () => {
     setForm(baseline);
-    toast.info("Discarded unsaved changes");
+    toast.info(t("trafficUI.campaigns.toast.discarded"));
   };
 
   return (
@@ -140,12 +143,12 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4 text-accent" />
-            Identity
+            {t("trafficUI.campaigns.settings.identity")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="cs-name">Name</Label>
+            <Label htmlFor="cs-name">{t("trafficUI.campaigns.builder.labels.name")}</Label>
             <Input
               id="cs-name"
               value={form.name}
@@ -155,7 +158,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
             {errors.name && <ErrorLine>{errors.name}</ErrorLine>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="cs-vert">Vertical</Label>
+            <Label htmlFor="cs-vert">{t("trafficUI.campaigns.builder.labels.vertical")}</Label>
             <Select value={form.vertical} onValueChange={(v) => set("vertical", v)}>
               <SelectTrigger id="cs-vert">
                 <SelectValue />
@@ -170,13 +173,13 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
             </Select>
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="cs-desc">Description</Label>
+            <Label htmlFor="cs-desc">{t("trafficUI.campaigns.builder.labels.description")}</Label>
             <Textarea
               id="cs-desc"
               rows={3}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Who is this campaign for and what qualifies a call?"
+              placeholder={t("trafficUI.campaigns.builder.placeholders.description")}
             />
           </div>
         </CardContent>
@@ -187,12 +190,12 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <DollarSign className="h-4 w-4 text-accent" />
-            Payout
+            {t("trafficUI.campaigns.settings.payout")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="cs-payout">Payout per call (USD)</Label>
+            <Label htmlFor="cs-payout">{t("trafficUI.campaigns.settings.payoutPerCall")}</Label>
             <div className="relative">
               <DollarSign className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -209,7 +212,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
             {errors.payout && <ErrorLine>{errors.payout}</ErrorLine>}
           </div>
           <div className="space-y-2">
-            <Label>Payout model</Label>
+            <Label>{t("trafficUI.campaigns.builder.labels.payoutModel")}</Label>
             <Select
               value={form.payoutModel}
               onValueChange={(v) => set("payoutModel", v as PayoutModel)}
@@ -218,9 +221,9 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="per-call">Per call</SelectItem>
-                <SelectItem value="per-qualified">Per qualified call</SelectItem>
-                <SelectItem value="per-minute">Per minute</SelectItem>
+                <SelectItem value="per-call">{t("trafficUI.campaigns.builder.payoutModel.perCall")}</SelectItem>
+                <SelectItem value="per-qualified">{t("trafficUI.campaigns.builder.payoutModel.perQualified")}</SelectItem>
+                <SelectItem value="per-minute">{t("trafficUI.campaigns.builder.payoutModel.perMinute")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -228,7 +231,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="cs-qual" className="inline-flex items-center gap-1.5">
                 <Timer className="h-3 w-3 text-muted-foreground" />
-                Qualify duration (seconds)
+                {t("trafficUI.campaigns.settings.qualifyDuration")}
               </Label>
               <Input
                 id="cs-qual"
@@ -239,7 +242,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
                 className="font-mono"
               />
               <p className="text-[10px] text-muted-foreground">
-                Calls shorter than this won&apos;t trigger a payout.
+                {t("trafficUI.campaigns.settings.qualifyShort")}
               </p>
             </div>
           )}
@@ -251,12 +254,12 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Gauge className="h-4 w-4 text-accent" />
-            Caps
+            {t("trafficUI.campaigns.settings.caps")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="cs-daily">Daily cap</Label>
+            <Label htmlFor="cs-daily">{t("trafficUI.campaigns.builder.labels.dailyCap")}</Label>
             <Input
               id="cs-daily"
               type="number"
@@ -265,10 +268,10 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
               onChange={(e) => set("dailyCap", Math.max(0, parseInt(e.target.value) || 0))}
               className="font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
+            <p className="text-[10px] text-muted-foreground">{t("trafficUI.common.hint.zeroUnlimited")}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="cs-monthly">Monthly cap</Label>
+            <Label htmlFor="cs-monthly">{t("trafficUI.campaigns.builder.labels.monthlyCap")}</Label>
             <Input
               id="cs-monthly"
               type="number"
@@ -277,7 +280,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
               onChange={(e) => set("monthlyCap", Math.max(0, parseInt(e.target.value) || 0))}
               className="font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
+            <p className="text-[10px] text-muted-foreground">{t("trafficUI.common.hint.zeroUnlimited")}</p>
           </div>
         </CardContent>
       </Card>
@@ -287,12 +290,12 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Calendar className="h-4 w-4 text-accent" />
-            Schedule
+            {t("trafficUI.campaigns.settings.schedule")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Active days</Label>
+            <Label>{t("trafficUI.campaigns.builder.labels.activeDays")}</Label>
             <div className="flex flex-wrap gap-2">
               {DAY_LABELS.map((d) => {
                 const active = form.days.includes(d.id);
@@ -320,7 +323,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
             <div className="space-y-2">
               <Label htmlFor="cs-start" className="inline-flex items-center gap-1.5">
                 <Clock className="h-3 w-3 text-muted-foreground" />
-                Start hour
+                {t("trafficUI.campaigns.builder.labels.startHour")}
               </Label>
               <Input
                 id="cs-start"
@@ -335,7 +338,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
             <div className="space-y-2">
               <Label htmlFor="cs-end" className="inline-flex items-center gap-1.5">
                 <Clock className="h-3 w-3 text-muted-foreground" />
-                End hour
+                {t("trafficUI.campaigns.builder.labels.endHour")}
               </Label>
               <Input
                 id="cs-end"
@@ -350,7 +353,7 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
               {errors.endHour && <ErrorLine>{errors.endHour}</ErrorLine>}
             </div>
             <div className="space-y-2">
-              <Label>Timezone</Label>
+              <Label>{t("trafficUI.campaigns.builder.labels.timezone")}</Label>
               <Select
                 value={form.timezone}
                 onValueChange={(v) => set("timezone", v as FormState["timezone"])}
@@ -359,11 +362,11 @@ export function CampaignSettingsTab({ campaign }: { campaign: Campaign }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">Caller-local</SelectItem>
-                  <SelectItem value="America/New_York">Eastern · America/New_York</SelectItem>
-                  <SelectItem value="America/Chicago">Central · America/Chicago</SelectItem>
-                  <SelectItem value="America/Denver">Mountain · America/Denver</SelectItem>
-                  <SelectItem value="America/Los_Angeles">Pacific · America/Los_Angeles</SelectItem>
+                  <SelectItem value="auto">{t("trafficUI.common.timezones.callerLocal")}</SelectItem>
+                  <SelectItem value="America/New_York">{t("trafficUI.common.timezones.eastern")}</SelectItem>
+                  <SelectItem value="America/Chicago">{t("trafficUI.common.timezones.central")}</SelectItem>
+                  <SelectItem value="America/Denver">{t("trafficUI.common.timezones.mountain")}</SelectItem>
+                  <SelectItem value="America/Los_Angeles">{t("trafficUI.common.timezones.pacific")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -389,12 +392,12 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function validate(form: FormState): Record<string, string> {
+function validate(form: FormState, t: (key: string) => string): Record<string, string> {
   const errs: Record<string, string> = {};
-  if (form.name.trim().length < 3) errs.name = "Name must be at least 3 characters.";
-  if (form.payout < 0) errs.payout = "Payout can't be negative.";
-  if (form.days.length === 0) errs.days = "Pick at least one active day.";
-  if (form.endHour <= form.startHour) errs.endHour = "End hour must be after start hour.";
+  if (form.name.trim().length < 3) errs.name = t("trafficUI.campaigns.settings.errors.nameMin");
+  if (form.payout < 0) errs.payout = t("trafficUI.campaigns.settings.errors.payoutNeg");
+  if (form.days.length === 0) errs.days = t("trafficUI.campaigns.settings.errors.daysEmpty");
+  if (form.endHour <= form.startHour) errs.endHour = t("trafficUI.campaigns.settings.errors.endAfterStart");
   return errs;
 }
 
@@ -420,10 +423,11 @@ export function SaveBar({
   onSave: () => void;
   onDiscard: () => void;
 }) {
+  const { t } = useTranslation();
   if (!dirty) {
     return (
       <p className="px-2 text-[11px] font-mono text-muted-foreground">
-        Everything saved. Tweak any field above to start editing.
+        {t("trafficUI.campaigns.settings.savedBaseline")}
       </p>
     );
   }
@@ -440,20 +444,20 @@ export function SaveBar({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
           </span>
-          <span className="font-mono uppercase tracking-wider text-muted-foreground">Unsaved changes</span>
+          <span className="font-mono uppercase tracking-wider text-muted-foreground">{t("trafficUI.campaigns.settings.unsavedChanges")}</span>
         </p>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onDiscard}>
-            <Undo2 className="h-3.5 w-3.5" /> Discard
+            <Undo2 className="h-3.5 w-3.5" /> {t("trafficUI.common.discard")}
           </Button>
           <Button size="sm" onClick={onSave} disabled={submitting || hasErrors}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("trafficUI.common.saving")}
               </>
             ) : (
               <>
-                <Save className="h-3.5 w-3.5" /> Save changes
+                <Save className="h-3.5 w-3.5" /> {t("trafficUI.common.saveChanges")}
               </>
             )}
           </Button>

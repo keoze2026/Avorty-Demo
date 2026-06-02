@@ -13,11 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 import type { Publisher } from "@/lib/types";
 
 export function PublisherDetailHeader({ publisher }: { publisher: Publisher }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const setStatus = usePublishersStore((s) => s.setStatus);
   const remove = usePublishersStore((s) => s.remove);
@@ -27,11 +29,15 @@ export function PublisherDetailHeader({ publisher }: { publisher: Publisher }) {
   const onToggle = () => {
     const next = isActive ? "paused" : "active";
     setStatus(publisher.id, next);
-    toast.success(next === "active" ? `${publisher.name} activated` : `${publisher.name} paused`);
+    toast.success(
+      next === "active"
+        ? t("networkUI.publishers.toast.activated").replace("{name}", publisher.name)
+        : t("networkUI.publishers.toast.paused").replace("{name}", publisher.name),
+    );
   };
   const onRemove = () => {
     remove(publisher.id);
-    toast.success(`${publisher.name} removed`);
+    toast.success(t("networkUI.publishers.toast.removed").replace("{name}", publisher.name));
     router.push(ROUTES.publishers);
   };
 
@@ -50,7 +56,7 @@ export function PublisherDetailHeader({ publisher }: { publisher: Publisher }) {
             className="-ml-2 h-7 text-xs text-muted-foreground hover:text-foreground"
             onClick={() => router.push(ROUTES.publishers)}
           >
-            <ArrowLeft className="h-3 w-3" /> All publishers
+            <ArrowLeft className="h-3 w-3" /> {t("networkUI.publishers.detail.back")}
           </Button>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -86,23 +92,23 @@ export function PublisherDetailHeader({ publisher }: { publisher: Publisher }) {
           <Button size="sm" variant={isActive ? "outline" : "default"} onClick={onToggle}>
             {isActive ? (
               <>
-                <Pause className="h-3.5 w-3.5" /> Pause
+                <Pause className="h-3.5 w-3.5" /> {t("networkUI.common.pause")}
               </>
             ) : (
               <>
-                <Play className="h-3.5 w-3.5" /> Activate
+                <Play className="h-3.5 w-3.5" /> {t("networkUI.common.activate")}
               </>
             )}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Publisher actions">
+              <Button variant="ghost" size="icon" aria-label={t("networkUI.publishers.detail.actionsAria")}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={onRemove} className="text-destructive focus:text-destructive">
-                <Trash2 className="h-4 w-4" /> Remove publisher
+                <Trash2 className="h-4 w-4" /> {t("networkUI.publishers.detail.removePublisher")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

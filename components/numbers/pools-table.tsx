@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact, formatNumber } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
@@ -67,16 +68,16 @@ function formatSeconds(s: number): string {
    =========================================================== */
 
 export const POOL_COLUMNS = [
-  { id: "name", label: "Name" },
-  { id: "country", label: "Country" },
-  { id: "poolSize", label: "Pool size" },
-  { id: "campaign", label: "Campaign" },
-  { id: "closedBrowserDelay", label: "Closed browser delay" },
-  { id: "idleLimit", label: "Idle limit" },
-  { id: "impressions", label: "Impressions" },
-  { id: "misses", label: "Misses" },
-  { id: "status", label: "Status" },
-  { id: "actions", label: "Actions", required: true as const },
+  { id: "name", label: "Name", labelKey: "trafficUI.numbers.pools.headers.name" },
+  { id: "country", label: "Country", labelKey: "trafficUI.numbers.pools.headers.country" },
+  { id: "poolSize", label: "Pool size", labelKey: "trafficUI.numbers.pools.headers.poolSize" },
+  { id: "campaign", label: "Campaign", labelKey: "trafficUI.numbers.pools.headers.campaign" },
+  { id: "closedBrowserDelay", label: "Closed browser delay", labelKey: "trafficUI.numbers.pools.headers.closedBrowserDelay" },
+  { id: "idleLimit", label: "Idle limit", labelKey: "trafficUI.numbers.pools.headers.idleLimit" },
+  { id: "impressions", label: "Impressions", labelKey: "trafficUI.numbers.pools.headers.impressions" },
+  { id: "misses", label: "Misses", labelKey: "trafficUI.numbers.pools.headers.misses" },
+  { id: "status", label: "Status", labelKey: "trafficUI.numbers.pools.headers.status" },
+  { id: "actions", label: "Actions", labelKey: "trafficUI.numbers.pools.headers.actions", required: true as const },
 ];
 
 interface Props {
@@ -94,6 +95,7 @@ export function PoolsTable({
   onToggle,
   onToggleAll,
 }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const setActive = useNumbersStore((s) => s.setPoolActive);
   const remove = useNumbersStore((s) => s.removePool);
@@ -111,32 +113,32 @@ export function PoolsTable({
                 <Checkbox
                   checked={allChecked}
                   onCheckedChange={onToggleAll}
-                  aria-label="Select all"
+                  aria-label={t("trafficUI.common.selectAll")}
                 />
               </TableHead>
               {visibleColumns.has("name") && (
-                <TableHead className="text-left">Name</TableHead>
+                <TableHead className="text-left">{t("trafficUI.numbers.pools.headers.name")}</TableHead>
               )}
-              {visibleColumns.has("country") && <TableHead>Country</TableHead>}
-              {visibleColumns.has("poolSize") && <TableHead>Pool size</TableHead>}
+              {visibleColumns.has("country") && <TableHead>{t("trafficUI.numbers.pools.headers.country")}</TableHead>}
+              {visibleColumns.has("poolSize") && <TableHead>{t("trafficUI.numbers.pools.headers.poolSize")}</TableHead>}
               {visibleColumns.has("campaign") && (
-                <TableHead className="text-left">Campaign</TableHead>
+                <TableHead className="text-left">{t("trafficUI.numbers.pools.headers.campaign")}</TableHead>
               )}
               {visibleColumns.has("closedBrowserDelay") && (
-                <TableHead>Closed browser delay</TableHead>
+                <TableHead>{t("trafficUI.numbers.pools.headers.closedBrowserDelay")}</TableHead>
               )}
-              {visibleColumns.has("idleLimit") && <TableHead>Idle limit</TableHead>}
-              {visibleColumns.has("impressions") && <TableHead>Impressions</TableHead>}
-              {visibleColumns.has("misses") && <TableHead>Misses</TableHead>}
-              {visibleColumns.has("status") && <TableHead>Status</TableHead>}
-              <TableHead className="pr-4">Actions</TableHead>
+              {visibleColumns.has("idleLimit") && <TableHead>{t("trafficUI.numbers.pools.headers.idleLimit")}</TableHead>}
+              {visibleColumns.has("impressions") && <TableHead>{t("trafficUI.numbers.pools.headers.impressions")}</TableHead>}
+              {visibleColumns.has("misses") && <TableHead>{t("trafficUI.numbers.pools.headers.misses")}</TableHead>}
+              {visibleColumns.has("status") && <TableHead>{t("trafficUI.numbers.pools.headers.status")}</TableHead>}
+              <TableHead className="pr-4">{t("trafficUI.numbers.pools.headers.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pools.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={colSpan} className="py-10 text-center text-xs text-muted-foreground">
-                  No data available
+                  {t("trafficUI.common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -146,7 +148,7 @@ export function PoolsTable({
                     <Checkbox
                       checked={selected.has(p.id)}
                       onCheckedChange={() => onToggle(p.id)}
-                      aria-label={`Select ${p.name}`}
+                      aria-label={t("trafficUI.campaigns.table.selectRow").replace("{name}", p.name)}
                     />
                   </TableCell>
                   {visibleColumns.has("name") && (
@@ -193,9 +195,14 @@ export function PoolsTable({
                         checked={p.active}
                         onCheckedChange={(v) => {
                           setActive(p.id, Boolean(v));
-                          toast.success(`${p.name} ${v ? "activated" : "paused"}`);
+                          toast.success(
+                            (v
+                              ? t("trafficUI.numbers.pools.toast.activated")
+                              : t("trafficUI.numbers.pools.toast.paused")
+                            ).replace("{name}", p.name),
+                          );
                         }}
-                        aria-label={`Toggle ${p.name}`}
+                        aria-label={t("trafficUI.numbers.pools.toggle").replace("{name}", p.name)}
                       />
                     </TableCell>
                   )}
@@ -205,7 +212,7 @@ export function PoolsTable({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
-                        aria-label={`Edit ${p.name}`}
+                        aria-label={t("trafficUI.numbers.pools.edit").replace("{name}", p.name)}
                         onClick={() => router.push(`${ROUTES.numbers}/pools/${p.id}`)}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -214,10 +221,10 @@ export function PoolsTable({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        aria-label={`Remove ${p.name}`}
+                        aria-label={t("trafficUI.numbers.pools.remove").replace("{name}", p.name)}
                         onClick={() => {
                           remove(p.id);
-                          toast.success(`Removed "${p.name}"`);
+                          toast.success(t("trafficUI.numbers.pools.removed").replace("{name}", p.name));
                         }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

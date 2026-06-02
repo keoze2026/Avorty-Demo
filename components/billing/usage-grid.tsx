@@ -6,6 +6,7 @@ import { Building2, Gauge, Hash, Plug, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_USAGE } from "@/lib/mock/billing";
 import { formatCompact } from "@/lib/format";
+import { useTranslation } from "@/hooks/use-translation";
 
 const ICONS: Record<string, LucideIcon> = {
   calls: Gauge,
@@ -15,11 +16,12 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 export function UsageGrid() {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Usage this cycle</CardTitle>
-        <p className="text-xs text-muted-foreground">Counts reset on plan renewal</p>
+        <CardTitle className="text-base">{t("toolsUI.billing.usage.title")}</CardTitle>
+        <p className="text-xs text-muted-foreground">{t("toolsUI.billing.usage.description")}</p>
       </CardHeader>
       <CardContent>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

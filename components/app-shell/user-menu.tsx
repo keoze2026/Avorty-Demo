@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/lib/store/auth-store";
 
@@ -28,6 +29,7 @@ function initials(name: string) {
 
 export function UserMenu() {
   const router = useRouter();
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
@@ -35,7 +37,7 @@ export function UserMenu() {
 
   const onLogout = () => {
     logout();
-    toast.success("Signed out");
+    toast.success(t("userMenu.signedOut"));
     router.push(ROUTES.login);
   };
 
@@ -67,17 +69,17 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => router.push(ROUTES.settings)}>
-          <UserIcon className="h-4 w-4" /> Profile
+          <UserIcon className="h-4 w-4" /> {t("userMenu.profile")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => router.push(ROUTES.billing)}>
-          <CreditCard className="h-4 w-4" /> Billing
+          <CreditCard className="h-4 w-4" /> {t("userMenu.billing")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => router.push(ROUTES.settings)}>
-          <Settings className="h-4 w-4" /> Settings
+          <Settings className="h-4 w-4" /> {t("userMenu.settings")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onLogout} className="text-destructive focus:text-destructive">
-          <LogOut className="h-4 w-4" /> Sign out
+          <LogOut className="h-4 w-4" /> {t("userMenu.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

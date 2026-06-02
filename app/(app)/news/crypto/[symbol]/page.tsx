@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowDown, ArrowLeft, ArrowUp, ExternalLink, Globe } from "lucide-react";
 
 import { TradingViewChart } from "@/components/coinmarket/tradingview-chart";
+import { CoinDetailLabels, CoinDetailStat } from "@/components/coinmarket/coin-detail-labels";
 import { Card } from "@/components/ui/card";
 import { fetchCoinDetail } from "@/lib/coingecko";
 import {
@@ -42,7 +43,7 @@ export default async function CoinDetailPage({
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        All tokens
+        <CoinDetailLabels which="allTokens" />
       </Link>
 
       {/* Header — logo, name, price, 24h change */}
@@ -73,7 +74,7 @@ export default async function CoinDetailPage({
                 </span>
                 {coin.rank > 0 && (
                   <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                    Rank #{coin.rank}
+                    <CoinDetailLabels which="rank" params={{ rank: String(coin.rank) }} />
                   </span>
                 )}
               </div>
@@ -93,7 +94,7 @@ export default async function CoinDetailPage({
                     <ArrowDown className="h-3.5 w-3.5" />
                   )}
                   {formatPercent(Math.abs(coin.change24h), 2)}
-                  <span className="text-[11px] text-muted-foreground">/ 24h</span>
+                  <span className="text-[11px] text-muted-foreground"><CoinDetailLabels which="per24h" /></span>
                 </span>
               </div>
             </div>
@@ -109,7 +110,7 @@ export default async function CoinDetailPage({
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/30 px-3 py-1.5 text-xs transition-colors hover:bg-secondary/60 hover:text-foreground"
               >
                 <Globe className="h-3.5 w-3.5" />
-                Website
+                <CoinDetailLabels which="website" />
                 <ExternalLink className="h-3 w-3 opacity-60" />
               </Link>
             )}
@@ -120,7 +121,7 @@ export default async function CoinDetailPage({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/30 px-3 py-1.5 text-xs transition-colors hover:bg-secondary/60 hover:text-foreground"
               >
-                Explorer
+                <CoinDetailLabels which="explorer" />
                 <ExternalLink className="h-3 w-3 opacity-60" />
               </Link>
             )}
@@ -134,27 +135,27 @@ export default async function CoinDetailPage({
 
       {/* Key stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <Stat label="Market Cap" value={formatCompactCurrency(coin.marketCap)} />
-        <Stat label="24h Volume" value={formatCompactCurrency(coin.volume24h)} />
-        <Stat
-          label="Circulating Supply"
+        <CoinDetailStat labelKey="marketCap" value={formatCompactCurrency(coin.marketCap)} />
+        <CoinDetailStat labelKey="volume24h" value={formatCompactCurrency(coin.volume24h)} />
+        <CoinDetailStat
+          labelKey="circulatingSupply"
           value={formatSupply(coin.circulatingSupply, coin.symbol)}
         />
         {coin.fullyDilutedValuation ? (
-          <Stat
-            label="Fully Diluted Valuation"
+          <CoinDetailStat
+            labelKey="fullyDiluted"
             value={formatCompactCurrency(coin.fullyDilutedValuation)}
           />
         ) : coin.maxSupply ? (
-          <Stat
-            label="Max Supply"
+          <CoinDetailStat
+            labelKey="maxSupply"
             value={formatSupply(coin.maxSupply, coin.symbol)}
           />
         ) : (
-          <Stat label="Max Supply" value="—" />
+          <CoinDetailStat labelKey="maxSupply" value="—" />
         )}
-        <Stat
-          label="All-time High"
+        <CoinDetailStat
+          labelKey="athLabel"
           value={formatTokenPrice(coin.ath)}
           foot={
             <span
@@ -164,12 +165,12 @@ export default async function CoinDetailPage({
               )}
             >
               {coin.athChangePct >= 0 ? "+" : ""}
-              {formatPercent(coin.athChangePct, 1)} from ATH
+              {formatPercent(coin.athChangePct, 1)} <CoinDetailLabels which="fromAth" />
             </span>
           }
         />
-        <Stat
-          label="All-time Low"
+        <CoinDetailStat
+          labelKey="atlLabel"
           value={formatTokenPrice(coin.atl)}
           foot={
             <span
@@ -179,13 +180,13 @@ export default async function CoinDetailPage({
               )}
             >
               {coin.atlChangePct >= 0 ? "+" : ""}
-              {formatPercent(coin.atlChangePct, 1)} from ATL
+              {formatPercent(coin.atlChangePct, 1)} <CoinDetailLabels which="fromAtl" />
             </span>
           }
         />
         {coin.totalSupply && (
-          <Stat
-            label="Total Supply"
+          <CoinDetailStat
+            labelKey="totalSupply"
             value={formatSupply(coin.totalSupply, coin.symbol)}
           />
         )}
@@ -196,7 +197,7 @@ export default async function CoinDetailPage({
       {coin.description && (
         <Card className="space-y-2 p-5">
           <h2 className="text-[11px] font-semibold uppercase tracking-wider">
-            About {coin.name}
+            <CoinDetailLabels which="aboutLabel" params={{ name: coin.name }} />
           </h2>
           <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {stripHtml(coin.description)}
@@ -204,26 +205,6 @@ export default async function CoinDetailPage({
         </Card>
       )}
     </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  foot,
-}: {
-  label: string;
-  value: string;
-  foot?: React.ReactNode;
-}) {
-  return (
-    <Card className="p-4">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1.5 text-lg font-semibold tabular-nums">{value}</div>
-      {foot && <div className="mt-1">{foot}</div>}
-    </Card>
   );
 }
 

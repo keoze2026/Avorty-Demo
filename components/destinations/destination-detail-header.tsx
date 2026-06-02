@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { toE164 } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
@@ -38,6 +39,7 @@ export function DestinationDetailHeader({
   destination,
   onEdit,
 }: DestinationDetailHeaderProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
   const remove = useDestinationsStore((s) => s.remove);
@@ -47,14 +49,14 @@ export function DestinationDetailHeader({
     setEnabled(destination.id, !destination.enabled);
     toast.success(
       destination.enabled
-        ? `Paused ${destination.name}`
-        : `Enabled ${destination.name}`,
+        ? t("networkUI.destinations.toast.paused").replace("{name}", destination.name)
+        : t("networkUI.destinations.toast.enabled").replace("{name}", destination.name),
     );
   };
 
   const onRemove = () => {
     remove(destination.id);
-    toast.success(`${destination.name} removed`);
+    toast.success(t("networkUI.destinations.toast.removed").replace("{name}", destination.name));
     router.push(ROUTES.destinations);
   };
 
@@ -73,7 +75,7 @@ export function DestinationDetailHeader({
             className="-ml-2 h-7 text-xs text-muted-foreground hover:text-foreground"
             onClick={() => router.push(ROUTES.destinations)}
           >
-            <ArrowLeft className="h-3 w-3" /> All destinations
+            <ArrowLeft className="h-3 w-3" /> {t("networkUI.destinations.detail.back")}
           </Button>
 
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
@@ -101,9 +103,9 @@ export function DestinationDetailHeader({
 
         <div className="flex items-center gap-2">
           {destination.enabled ? (
-            <Badge variant="success">Active</Badge>
+            <Badge variant="success">{t("networkUI.destinations.detail.active")}</Badge>
           ) : (
-            <Badge variant="outline">Disabled</Badge>
+            <Badge variant="outline">{t("networkUI.destinations.detail.disabled")}</Badge>
           )}
           <Button
             size="sm"
@@ -112,33 +114,33 @@ export function DestinationDetailHeader({
           >
             {destination.enabled ? (
               <>
-                <Pause className="h-3.5 w-3.5" /> Pause
+                <Pause className="h-3.5 w-3.5" /> {t("networkUI.destinations.detail.pause")}
               </>
             ) : (
               <>
-                <Play className="h-3.5 w-3.5" /> Enable
+                <Play className="h-3.5 w-3.5" /> {t("networkUI.destinations.detail.enable")}
               </>
             )}
           </Button>
           <Button size="sm" variant="outline" onClick={onEdit}>
-            <Pencil className="h-3.5 w-3.5" /> Edit
+            <Pencil className="h-3.5 w-3.5" /> {t("networkUI.destinations.detail.edit")}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Destination actions">
+              <Button variant="ghost" size="icon" aria-label={t("networkUI.destinations.detail.actionsAria")}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={onEdit}>
-                <Pencil className="h-4 w-4" /> Edit settings
+                <Pencil className="h-4 w-4" /> {t("networkUI.destinations.detail.editSettings")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={onRemove}
                 className="text-destructive focus:text-destructive"
               >
-                <Trash2 className="h-4 w-4" /> Remove destination
+                <Trash2 className="h-4 w-4" /> {t("networkUI.destinations.detail.removeDestination")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

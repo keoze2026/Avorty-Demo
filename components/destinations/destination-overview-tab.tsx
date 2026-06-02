@@ -6,6 +6,7 @@ import { Gauge } from "lucide-react";
 
 import { CallsChart } from "@/components/dashboard/calls-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { formatCompact } from "@/lib/format";
 import type { Destination } from "@/lib/types";
@@ -15,6 +16,7 @@ interface DestinationOverviewTabProps {
 }
 
 export function DestinationOverviewTab({ destination }: DestinationOverviewTabProps) {
+  const { t } = useTranslation();
   const scopedCalls = useMemo(
     () => MOCK_CALLS.filter((c) => c.destinationNumber === destination.tfn),
     [destination.tfn],
@@ -49,37 +51,37 @@ export function DestinationOverviewTab({ destination }: DestinationOverviewTabPr
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Pacing</CardTitle>
-          <p className="text-xs text-muted-foreground">Current cap consumption</p>
+          <CardTitle className="text-base">{t("networkUI.destinations.overview.pacingTitle")}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t("networkUI.destinations.overview.pacingDesc")}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <PacingBar
-            label="Daily"
+            label={t("networkUI.destinations.overview.daily")}
             consumed={callsToday}
             cap={destination.dailyCap}
             usage={dailyUsage}
           />
           <PacingBar
-            label="Monthly"
+            label={t("networkUI.destinations.overview.monthly")}
             consumed={callsMonth}
             cap={destination.monthlyCap}
             usage={monthlyUsage}
           />
 
           <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/40 pt-4 text-xs">
-            <dt className="text-muted-foreground">Concurrency cap</dt>
+            <dt className="text-muted-foreground">{t("networkUI.destinations.overview.concurrencyCap")}</dt>
             <dd className="text-right font-mono">{destination.concurrencyCap}</dd>
-            <dt className="text-muted-foreground">Daily cap</dt>
+            <dt className="text-muted-foreground">{t("networkUI.destinations.overview.dailyCap")}</dt>
             <dd className="text-right font-mono">
               {destination.dailyCap === 0 ? "∞" : formatCompact(destination.dailyCap)}
             </dd>
-            <dt className="text-muted-foreground">Monthly cap</dt>
+            <dt className="text-muted-foreground">{t("networkUI.destinations.overview.monthlyCap")}</dt>
             <dd className="text-right font-mono">
               {destination.monthlyCap === 0 ? "∞" : formatCompact(destination.monthlyCap)}
             </dd>
-            <dt className="text-muted-foreground">Status</dt>
+            <dt className="text-muted-foreground">{t("networkUI.destinations.overview.status")}</dt>
             <dd className="text-right font-mono">
-              {destination.enabled ? "Routable" : "Disabled"}
+              {destination.enabled ? t("networkUI.destinations.overview.routable") : t("networkUI.destinations.overview.disabled")}
             </dd>
           </dl>
         </CardContent>

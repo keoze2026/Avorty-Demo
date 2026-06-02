@@ -12,11 +12,13 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VERTICAL_PALETTE } from "@/lib/mock/marketplace";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatRelativeTime } from "@/lib/format";
 import type { VerticalKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function BidTape() {
+  const { t } = useTranslation();
   const ticker = useMarketplaceStore((s) => s.ticker);
   const listings = useMarketplaceStore((s) => s.listings);
 
@@ -31,14 +33,14 @@ export function BidTape() {
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Activity className="h-4 w-4 text-accent" />
-          Bid tape
+          {t("toolsUI.marketplace.bidTape.title")}
         </CardTitle>
         <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
           </span>
-          {ticker.length} live
+          {t("toolsUI.marketplace.bidTape.live").replace("{count}", String(ticker.length))}
         </span>
       </CardHeader>
       <CardContent className="space-y-1 pr-2 pt-2">
@@ -63,7 +65,7 @@ export function BidTape() {
                 >
                   <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-secondary/60 text-muted-foreground">
                     {b.mine ? (
-                      <span className="text-[9px] font-bold text-accent">YOU</span>
+                      <span className="text-[9px] font-bold text-accent">{t("toolsUI.marketplace.bidTape.you")}</span>
                     ) : (
                       <User className="h-3 w-3" />
                     )}
@@ -88,7 +90,7 @@ export function BidTape() {
           </AnimatePresence>
           {ticker.length === 0 && (
             <p className="rounded-md border border-dashed border-border/60 bg-secondary/30 p-4 text-center text-[11px] text-muted-foreground">
-              Waiting for the first bid…
+              {t("toolsUI.marketplace.bidTape.waiting")}
             </p>
           )}
         </div>

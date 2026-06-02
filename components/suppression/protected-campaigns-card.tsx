@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -27,8 +28,10 @@ export function ProtectedCampaignsCard({
   selectedIds,
   onAdd,
   onRemove,
-  description = "Add campaigns to protect them from unwanted VoIP carriers.",
+  description,
 }: Props) {
+  const { t } = useTranslation();
+  const desc = description ?? t("toolsUI.suppression.protectedCampaigns.defaultDescription");
   const [open, setOpen] = React.useState(false);
   const [filter, setFilter] = React.useState("");
 
@@ -43,9 +46,9 @@ export function ProtectedCampaignsCard({
     <Card className="p-5">
       <div className="mb-1">
         <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-          Protected campaigns
+          {t("toolsUI.suppression.protectedCampaigns.title")}
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
       </div>
 
       <div className="my-4 h-px w-full bg-border" />
@@ -64,10 +67,10 @@ export function ProtectedCampaignsCard({
                   type="button"
                   onClick={() => {
                     onRemove(id);
-                    toast.success("Removed from protection");
+                    toast.success(t("toolsUI.suppression.protectedCampaigns.toastRemoved"));
                   }}
                   className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm text-muted-foreground hover:text-destructive"
-                  aria-label={`Remove ${c?.name ?? id}`}
+                  aria-label={t("toolsUI.suppression.protectedCampaigns.removeAria").replace("{name}", c?.name ?? id)}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -84,7 +87,7 @@ export function ProtectedCampaignsCard({
             size="sm"
             className="h-8 px-2 text-xs text-accent hover:text-accent"
           >
-            <Plus className="h-3.5 w-3.5" /> Add campaign
+            <Plus className="h-3.5 w-3.5" /> {t("toolsUI.suppression.protectedCampaigns.addCampaign")}
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-72 p-0">
@@ -93,14 +96,14 @@ export function ProtectedCampaignsCard({
               autoFocus
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Search campaigns…"
+              placeholder={t("toolsUI.suppression.protectedCampaigns.searchPlaceholder")}
               className="w-full bg-transparent text-xs focus:outline-none"
             />
           </div>
           <div className="max-h-64 overflow-y-auto py-1">
             {choices.length === 0 ? (
               <div className="px-3 py-4 text-center text-xs text-muted-foreground">
-                No matches.
+                {t("toolsUI.suppression.protectedCampaigns.noMatches")}
               </div>
             ) : (
               choices.map((c) => {
@@ -113,7 +116,7 @@ export function ProtectedCampaignsCard({
                       if (checked) onRemove(c.id);
                       else {
                         onAdd(c.id);
-                        toast.success(`Protected "${c.name}"`);
+                        toast.success(t("toolsUI.suppression.protectedCampaigns.toastProtected").replace("{name}", c.name));
                       }
                     }}
                     className={cn(

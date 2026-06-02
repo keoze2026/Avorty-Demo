@@ -7,18 +7,20 @@ import { CheckCircle2, Filter, Sparkles } from "lucide-react";
 import { RecommendationCard } from "./recommendation-card";
 import { MOCK_RECOMMENDATIONS } from "@/lib/mock/insights";
 import type { AiRecommendation, RecommendationKind, RecommendationStatus } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
-const FILTERS: Array<{ id: "all" | RecommendationKind; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "scale", label: "Scale" },
-  { id: "pause", label: "Pause" },
-  { id: "rebalance", label: "Rebalance" },
-  { id: "alert", label: "Alert" },
-  { id: "optimize", label: "Optimize" },
+const FILTERS: Array<{ id: "all" | RecommendationKind; labelKey: string }> = [
+  { id: "all", labelKey: "toolsUI.insights.recommendations.filters.all" },
+  { id: "scale", labelKey: "toolsUI.insights.recommendations.filters.scale" },
+  { id: "pause", labelKey: "toolsUI.insights.recommendations.filters.pause" },
+  { id: "rebalance", labelKey: "toolsUI.insights.recommendations.filters.rebalance" },
+  { id: "alert", labelKey: "toolsUI.insights.recommendations.filters.alert" },
+  { id: "optimize", labelKey: "toolsUI.insights.recommendations.filters.optimize" },
 ];
 
 export function RecommendationDeck() {
+  const { t } = useTranslation();
   const [recs, setRecs] = useState<AiRecommendation[]>(MOCK_RECOMMENDATIONS);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
 
@@ -36,10 +38,10 @@ export function RecommendationDeck() {
     <section className="space-y-3">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold">Recommendations</h3>
+          <h3 className="text-base font-semibold">{t("toolsUI.insights.recommendations.title")}</h3>
           <span className="inline-flex items-center gap-1 rounded-full bg-accent/12 px-2 py-0.5 text-xs font-medium text-accent">
             <Sparkles className="h-3 w-3" />
-            {open.length} open
+            {t("toolsUI.insights.recommendations.open").replace("{count}", String(open.length))}
           </span>
         </div>
 
@@ -57,7 +59,7 @@ export function RecommendationDeck() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {f.label}
+              {t(f.labelKey)}
             </button>
           ))}
         </div>
@@ -66,9 +68,9 @@ export function RecommendationDeck() {
       {visible.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/60 bg-secondary/30 p-10 text-center">
           <CheckCircle2 className="h-6 w-6 text-[color:var(--success)]" />
-          <p className="text-sm font-medium">All caught up.</p>
+          <p className="text-sm font-medium">{t("toolsUI.insights.recommendations.emptyTitle")}</p>
           <p className="text-xs text-muted-foreground">
-            No open recommendations in this filter. The co-pilot is still watching.
+            {t("toolsUI.insights.recommendations.emptyDescription")}
           </p>
         </div>
       ) : (

@@ -9,6 +9,7 @@ import {
   type TokenEntry,
 } from "@/lib/mock/tokens";
 import { formatNumber, formatPercent } from "@/lib/format";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -95,6 +96,7 @@ function countSparkline(count: number): number[] {
  * Mirrors the CoinMarketCap "Market Cap / Volume / BTC Dominance" strip.
  */
 export function MarketStatsRow({ tokens }: Props) {
+  const { t } = useTranslation();
   const stats = React.useMemo(() => {
     let totalMcap = 0;
     let totalVolume = 0;
@@ -134,26 +136,26 @@ export function MarketStatsRow({ tokens }: Props) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <StatCard
         icon={Wallet}
-        label="Market Cap"
+        label={t("toolsUI.news.stats.marketCap")}
         value={formatCompactCurrency(stats.totalMcap)}
         trend={stats.change24h}
         sparkline={sparks.mcap}
       />
       <StatCard
         icon={BarChart3}
-        label="24h Volume"
+        label={t("toolsUI.news.stats.volume24h")}
         value={formatCompactCurrency(stats.totalVolume)}
         sparkline={sparks.volume}
       />
       <StatCard
         icon={Crown}
-        label="BTC Dominance"
+        label={t("toolsUI.news.stats.btcDominance")}
         value={formatPercent(stats.dominance, 1)}
         sparkline={sparks.dominance}
       />
       <StatCard
         icon={Coins}
-        label="Active Tokens"
+        label={t("toolsUI.news.stats.activeTokens")}
         value={formatNumber(stats.assetCount)}
         sparkline={sparks.count}
       />

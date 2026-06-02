@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Publisher } from "@/lib/types";
@@ -26,6 +27,7 @@ export function PublisherCard({
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const isActive = publisher.status === "active";
 
   return (
@@ -64,7 +66,7 @@ export function PublisherCard({
                   variant="ghost"
                   size="icon"
                   className="-mr-2 h-7 w-7 opacity-60 hover:opacity-100"
-                  aria-label="Publisher actions"
+                  aria-label={t("networkUI.publishers.card.actionsAria")}
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
@@ -73,11 +75,11 @@ export function PublisherCard({
                 <DropdownMenuItem onSelect={() => onToggle(publisher.id)}>
                   {isActive ? (
                     <>
-                      <Pause className="h-4 w-4" /> Pause
+                      <Pause className="h-4 w-4" /> {t("networkUI.common.pause")}
                     </>
                   ) : (
                     <>
-                      <Play className="h-4 w-4" /> Activate
+                      <Play className="h-4 w-4" /> {t("networkUI.common.activate")}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -86,7 +88,7 @@ export function PublisherCard({
                   onSelect={() => onArchive(publisher.id)}
                   className="text-destructive focus:text-destructive"
                 >
-                  Remove
+                  {t("networkUI.common.remove")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -103,32 +105,32 @@ export function PublisherCard({
               <PhoneCall className="h-3.5 w-3.5 text-accent" />
               {formatCompact(publisher.callsToday)}
             </div>
-            <div className="text-[10px] text-muted-foreground">calls today</div>
+            <div className="text-[10px] text-muted-foreground">{t("networkUI.publishers.card.callsToday")}</div>
           </div>
           <div>
             <div className="flex items-center justify-center gap-1 font-mono text-base font-semibold">
               <DollarSign className="h-3.5 w-3.5 text-accent" />
               {formatCompact(publisher.revenueToday)}
             </div>
-            <div className="text-[10px] text-muted-foreground">revenue</div>
+            <div className="text-[10px] text-muted-foreground">{t("networkUI.publishers.card.revenue")}</div>
           </div>
           <div>
             <div className="flex items-center justify-center gap-1 font-mono text-base font-semibold">
               <TrendingUp className="h-3.5 w-3.5 text-accent" />
               {formatPercent(publisher.conversionRate * 100, 0)}
             </div>
-            <div className="text-[10px] text-muted-foreground">conv.</div>
+            <div className="text-[10px] text-muted-foreground">{t("networkUI.publishers.card.conv")}</div>
           </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <Hash className="h-3 w-3" /> {publisher.numbersAssigned} numbers
+            <Hash className="h-3 w-3" /> {t("networkUI.publishers.card.numbers").replace("{count}", String(publisher.numbersAssigned))}
           </span>
           <span className="font-mono">
-            {formatPercent(publisher.payoutRate * 100, 0)} payout
+            {t("networkUI.publishers.card.payout").replace("{pct}", formatPercent(publisher.payoutRate * 100, 0))}
           </span>
-          <span className="font-mono">{formatCurrency(publisher.pendingPayout)} pending</span>
+          <span className="font-mono">{t("networkUI.publishers.card.pending").replace("{amount}", formatCurrency(publisher.pendingPayout))}</span>
         </div>
       </div>
     </motion.div>

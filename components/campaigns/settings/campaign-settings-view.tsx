@@ -20,20 +20,23 @@ import { ForwardCallsSection } from "./forward-calls-section";
 import { RtbTab } from "./rtb-tab";
 import { TrackingNumbersSection } from "./tracking-numbers-section";
 import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
+import { useTranslation } from "@/hooks/use-translation";
 import type { Campaign } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type TabId = "general" | "rtb" | "enrichment" | "access";
 
-const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: "general", label: "General", icon: SettingsIcon },
-  { id: "rtb", label: "Real-Time Bidding", icon: Zap },
-  { id: "enrichment", label: "Enrichment URLs", icon: Globe },
-  { id: "access", label: "Access", icon: LockKeyhole },
+const TAB_KEYS: Array<{ id: TabId; labelKey: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "general", labelKey: "trafficUI.campaigns.settings.tabs.general", icon: SettingsIcon },
+  { id: "rtb", labelKey: "trafficUI.campaigns.settings.tabs.rtb", icon: Zap },
+  { id: "enrichment", labelKey: "trafficUI.campaigns.settings.tabs.enrichment", icon: Globe },
+  { id: "access", labelKey: "trafficUI.campaigns.settings.tabs.access", icon: LockKeyhole },
 ];
 
 export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
+  const { t } = useTranslation();
   const [tab, setTab] = React.useState<TabId>("general");
+  const TABS = TAB_KEYS.map((tk) => ({ ...tk, label: t(tk.labelKey) }));
 
   return (
     <div className="space-y-4">
@@ -85,9 +88,9 @@ export function CampaignSettingsView({ campaign }: { campaign: Campaign }) {
           {/* 3 — Advanced Settings (12 collapsible cards) */}
           <section className="space-y-3">
             <div>
-              <h2 className="text-[13px] font-semibold uppercase tracking-wider">Advanced Settings</h2>
+              <h2 className="text-[13px] font-semibold uppercase tracking-wider">{t("trafficUI.campaigns.settings.advanced.title")}</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Customize how incoming calls are routed to optimize the call experience.
+                {t("trafficUI.campaigns.settings.advanced.description")}
               </p>
             </div>
             <AdvancedSettingsList campaignId={campaign.id} />

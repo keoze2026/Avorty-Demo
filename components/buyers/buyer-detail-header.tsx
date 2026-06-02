@@ -14,11 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import type { Buyer } from "@/lib/types";
 
 export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const setStatus = useBuyersStore((s) => s.setStatus);
   const remove = useBuyersStore((s) => s.remove);
@@ -28,11 +30,15 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
   const onToggle = () => {
     const next = isActive ? "paused" : "active";
     setStatus(buyer.id, next);
-    toast.success(next === "active" ? `${buyer.name} activated` : `${buyer.name} paused`);
+    toast.success(
+      next === "active"
+        ? t("networkUI.buyers.toast.activated").replace("{name}", buyer.name)
+        : t("networkUI.buyers.toast.paused").replace("{name}", buyer.name),
+    );
   };
   const onRemove = () => {
     remove(buyer.id);
-    toast.success(`${buyer.name} removed`);
+    toast.success(t("networkUI.buyers.toast.removed").replace("{name}", buyer.name));
     router.push(ROUTES.buyers);
   };
 
@@ -51,7 +57,7 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
             className="-ml-2 h-7 text-xs text-muted-foreground hover:text-foreground"
             onClick={() => router.push(ROUTES.buyers)}
           >
-            <ArrowLeft className="h-3 w-3" /> All buyers
+            <ArrowLeft className="h-3 w-3" /> {t("networkUI.buyers.detail.back")}
           </Button>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
             <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -87,23 +93,23 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
           <Button size="sm" variant={isActive ? "outline" : "default"} onClick={onToggle}>
             {isActive ? (
               <>
-                <Pause className="h-3.5 w-3.5" /> Pause
+                <Pause className="h-3.5 w-3.5" /> {t("networkUI.common.pause")}
               </>
             ) : (
               <>
-                <Play className="h-3.5 w-3.5" /> Activate
+                <Play className="h-3.5 w-3.5" /> {t("networkUI.common.activate")}
               </>
             )}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Buyer actions">
+              <Button variant="ghost" size="icon" aria-label={t("networkUI.buyers.detail.actionsAria")}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={onRemove} className="text-destructive focus:text-destructive">
-                <Trash2 className="h-4 w-4" /> Remove buyer
+                <Trash2 className="h-4 w-4" /> {t("networkUI.buyers.detail.removeBuyer")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

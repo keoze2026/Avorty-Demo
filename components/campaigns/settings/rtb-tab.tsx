@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignSettingsStore } from "@/lib/store/campaign-settings-store";
 
 export function RtbTab({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const get = useCampaignSettingsStore((s) => s.get);
   const update = useCampaignSettingsStore((s) => s.update);
   const initial = get(campaignId).rtb;
@@ -22,25 +24,24 @@ export function RtbTab({ campaignId }: { campaignId: string }) {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 300));
     update(campaignId, "rtb", form);
-    toast.success("Real-time bidding settings saved");
+    toast.success(t("trafficUI.campaigns.settings.rtb.saved"));
     setSaving(false);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Real-Time Bidding</CardTitle>
+        <CardTitle className="text-base">{t("trafficUI.campaigns.settings.rtb.title")}</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Configure an external auction endpoint that gets pinged for each incoming call
-          before routing. The highest bidder receives the call.
+          {t("trafficUI.campaigns.settings.rtb.description")}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 p-3">
           <div>
-            <div className="text-sm font-medium">Enable RTB auctions</div>
+            <div className="text-sm font-medium">{t("trafficUI.campaigns.settings.rtb.enableTitle")}</div>
             <div className="text-xs text-muted-foreground">
-              When off, calls route via the static destination list.
+              {t("trafficUI.campaigns.settings.rtb.enableHint")}
             </div>
           </div>
           <Switch
@@ -51,24 +52,24 @@ export function RtbTab({ campaignId }: { campaignId: string }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-1.5 sm:col-span-2">
-            <Label className="text-xs">Endpoint URL</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.rtb.endpointUrl")}</Label>
             <Input
-              placeholder="https://rtb.example.com/auction"
+              placeholder={t("trafficUI.campaigns.settings.rtb.endpointPlaceholder")}
               value={form.endpoint}
               onChange={(e) => setForm((f) => ({ ...f, endpoint: e.target.value }))}
             />
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-xs">Auth token</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.rtb.authToken")}</Label>
             <Input
               type="password"
-              placeholder="Bearer token"
+              placeholder={t("trafficUI.campaigns.settings.rtb.bearerToken")}
               value={form.authToken}
               onChange={(e) => setForm((f) => ({ ...f, authToken: e.target.value }))}
             />
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-xs">Timeout (ms)</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.rtb.timeoutMs")}</Label>
             <Input
               type="number"
               min={100}
@@ -78,7 +79,7 @@ export function RtbTab({ campaignId }: { campaignId: string }) {
             />
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-xs">Minimum bid ($)</Label>
+            <Label className="text-xs">{t("trafficUI.campaigns.settings.rtb.minBid")}</Label>
             <Input
               type="number"
               min={0}
@@ -92,7 +93,7 @@ export function RtbTab({ campaignId }: { campaignId: string }) {
         <div className="flex justify-end">
           <Button onClick={onSave} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? t("trafficUI.common.saving") : t("trafficUI.common.saveChanges")}
           </Button>
         </div>
       </CardContent>

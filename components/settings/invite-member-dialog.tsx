@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES_IN_ORDER, ROLE_DESCRIPTIONS } from "@/lib/mock/settings";
+import { ROLES_IN_ORDER } from "@/lib/mock/settings";
 import type { MemberRole } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Props {
   open: boolean;
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export function InviteMemberDialog({ open, onOpenChange, onInvite }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>("manager");
@@ -51,7 +53,9 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: Props) {
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 300));
     onInvite({ name: name.trim(), email: email.trim(), role });
-    toast.success(`Invite sent to ${email}`, { description: `Role: ${role}` });
+    toast.success(t("workspaceUI.invite.toastTitle").replace("{email}", email), {
+      description: t("workspaceUI.invite.toastDescription").replace("{role}", t(`workspaceUI.members.role.${role}`)),
+    });
     onClose(false);
   };
 
@@ -64,8 +68,8 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: Props) {
               <UserPlus className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Invite a teammate</DialogTitle>
-              <DialogDescription>They&apos;ll receive a setup link by email.</DialogDescription>
+              <DialogTitle>{t("workspaceUI.invite.title")}</DialogTitle>
+              <DialogDescription>{t("workspaceUI.invite.description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -73,16 +77,16 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: Props) {
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="im-name">Name</Label>
+              <Label htmlFor="im-name">{t("workspaceUI.invite.nameLabel")}</Label>
               <Input id="im-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="im-email">Email</Label>
+              <Label htmlFor="im-email">{t("workspaceUI.invite.emailLabel")}</Label>
               <Input id="im-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Role</Label>
+            <Label>{t("workspaceUI.invite.roleLabel")}</Label>
             <Select value={role} onValueChange={(v) => setRole(v as MemberRole)}>
               <SelectTrigger>
                 <SelectValue />
@@ -90,26 +94,26 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: Props) {
               <SelectContent>
                 {ROLES_IN_ORDER.map((r) => (
                   <SelectItem key={r} value={r}>
-                    <span className="font-mono capitalize">{r}</span>
+                    {t(`workspaceUI.members.role.${r}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[10px] text-muted-foreground">{ROLE_DESCRIPTIONS[role]}</p>
+            <p className="text-[10px] text-muted-foreground">{t(`workspaceUI.roles.descriptions.${role}`)}</p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(false)}>
-            Cancel
+            {t("workspaceUI.invite.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting || !name.trim() || !email.trim()}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("workspaceUI.invite.sending")}
               </>
             ) : (
-              "Send invite"
+              t("workspaceUI.invite.send")
             )}
           </Button>
         </DialogFooter>

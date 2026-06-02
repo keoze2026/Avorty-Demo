@@ -14,6 +14,7 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { formatNumber } from "@/lib/format";
 import { MOCK_CALLS } from "@/lib/mock/calls";
@@ -25,23 +26,9 @@ import { cn } from "@/lib/utils";
 
 type FunnelKey = "incoming" | "connected" | "notConnected" | "converted" | "paid";
 
-const CATEGORIES: Array<{ key: FunnelKey; label: string }> = [
-  { key: "incoming", label: "Incoming Calls" },
-  { key: "connected", label: "Connected" },
-  { key: "notConnected", label: "Not connected" },
-  { key: "converted", label: "Converted" },
-  { key: "paid", label: "Paid" },
-];
-
 /* ─── Range selector ───────────────────────────────────────────────── */
 
 type RangeId = "today" | "14d" | "30d";
-
-const RANGES: Array<{ id: RangeId; label: string; days: number }> = [
-  { id: "today", label: "Today", days: 1 },
-  { id: "14d", label: "14d", days: 14 },
-  { id: "30d", label: "Monthly", days: 30 },
-];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -59,7 +46,22 @@ interface BuyerFunnelChartProps {
 }
 
 export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
+  const { t } = useTranslation();
   const [range, setRange] = useState<RangeId>("30d");
+
+  const CATEGORIES: Array<{ key: FunnelKey; label: string }> = [
+    { key: "incoming", label: t("networkUI.buyers.funnel.incoming") },
+    { key: "connected", label: t("networkUI.buyers.funnel.connected") },
+    { key: "notConnected", label: t("networkUI.buyers.funnel.notConnected") },
+    { key: "converted", label: t("networkUI.buyers.funnel.converted") },
+    { key: "paid", label: t("networkUI.buyers.funnel.paid") },
+  ];
+
+  const RANGES: Array<{ id: RangeId; label: string; days: number }> = [
+    { id: "today", label: t("networkUI.buyers.funnel.today"), days: 1 },
+    { id: "14d", label: t("networkUI.buyers.funnel.last14"), days: 14 },
+    { id: "30d", label: t("networkUI.buyers.funnel.monthly"), days: 30 },
+  ];
 
   // Pre-compute the TFN set owned by this buyer (cheap, runs once per buyer).
   const buyerTfns = useMemo(() => {
@@ -112,25 +114,26 @@ export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
       label: c.label,
       value: counts[c.key],
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, buyerTfns]);
 
   const subLabel =
     range === "today"
-      ? "Funnel today"
+      ? t("networkUI.buyers.funnel.subToday")
       : range === "14d"
-        ? "Funnel — last 14 days"
-        : "Funnel — last 30 days";
+        ? t("networkUI.buyers.funnel.sub14")
+        : t("networkUI.buyers.funnel.sub30");
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-sm font-semibold">Call funnel</CardTitle>
+          <CardTitle className="text-sm font-semibold">{t("networkUI.buyers.funnel.title")}</CardTitle>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{subLabel}</p>
         </div>
         <div
           role="tablist"
-          aria-label="Time range"
+          aria-label={t("networkUI.buyers.funnel.range")}
           className="inline-flex rounded-md border border-border bg-muted/30 p-0.5"
         >
           {RANGES.map((r) => {
@@ -198,7 +201,7 @@ export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
                 cursor={false}
-                formatter={(v: number) => [formatNumber(v), "Calls"]}
+                formatter={(v: number) => [formatNumber(v), t("networkUI.buyers.funnel.callsTooltip")]}
               />
               <Bar
                 dataKey="value"

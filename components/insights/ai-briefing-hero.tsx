@@ -11,34 +11,35 @@ import { Activity, AlertTriangle, Sparkles, TrendingUp } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { useAuthStore } from "@/lib/store/auth-store";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface HighlightStat {
-  label: string;
+  labelKey: string;
   value: string;
-  delta?: string;
+  deltaKey?: string;
   tone: "positive" | "warning" | "neutral";
   icon: typeof TrendingUp;
 }
 
 const HIGHLIGHTS: HighlightStat[] = [
   {
-    label: "Recommendations",
+    labelKey: "toolsUI.insights.hero.recommendations",
     value: "6 open",
-    delta: "3 high-confidence",
+    deltaKey: "toolsUI.insights.hero.recommendationsDelta",
     tone: "positive",
     icon: Sparkles,
   },
   {
-    label: "Anomalies in last 24h",
+    labelKey: "toolsUI.insights.hero.anomalies",
     value: "8",
-    delta: "1 critical",
+    deltaKey: "toolsUI.insights.hero.anomaliesDelta",
     tone: "warning",
     icon: AlertTriangle,
   },
   {
-    label: "Projected net impact",
+    labelKey: "toolsUI.insights.hero.netImpact",
     value: "+$1,840",
-    delta: "if all applied",
+    deltaKey: "toolsUI.insights.hero.netImpactDelta",
     tone: "positive",
     icon: TrendingUp,
   },
@@ -59,16 +60,17 @@ const TONE_CLASSES: Record<HighlightStat["tone"], { icon: string; chip: string }
   },
 };
 
-function greeting() {
+function greetingKey() {
   const h = new Date().getHours();
-  if (h < 5) return "Up late";
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  if (h < 21) return "Good evening";
-  return "Good night";
+  if (h < 5) return "toolsUI.insights.hero.greetingLate";
+  if (h < 12) return "toolsUI.insights.hero.greetingMorning";
+  if (h < 17) return "toolsUI.insights.hero.greetingAfternoon";
+  if (h < 21) return "toolsUI.insights.hero.greetingEvening";
+  return "toolsUI.insights.hero.greetingNight";
 }
 
 export function AiBriefingHero() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const firstName = (user?.name ?? "there").split(" ")[0];
 
@@ -116,14 +118,13 @@ export function AiBriefingHero() {
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/15 px-2.5 py-0.5 text-[11px] font-medium text-accent">
             <Activity className="h-3 w-3" />
-            Vortyx co-pilot
+            {t("toolsUI.insights.hero.copilotBadge")}
           </span>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            {greeting()}, {firstName}.
+            {t(greetingKey())}, {firstName}.
           </h2>
           <p className="mt-1.5 max-w-2xl text-[13px] text-muted-foreground">
-            I&apos;ve been watching the network. Here are the moves I&apos;d make today —
-            ranked by impact and confidence.
+            {t("toolsUI.insights.hero.introBody")}
           </p>
         </div>
 
@@ -131,23 +132,27 @@ export function AiBriefingHero() {
         <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
           {HIGHLIGHTS.map((h, i) => {
             const Icon = h.icon;
-            const t = TONE_CLASSES[h.tone];
+            const tone = TONE_CLASSES[h.tone];
+            const value =
+              h.labelKey === "toolsUI.insights.hero.recommendations"
+                ? t("toolsUI.insights.hero.recommendationsValue")
+                : h.value;
             return (
               <motion.div
-                key={h.label}
+                key={h.labelKey}
                 initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 + i * 0.06, duration: 0.3 }}
                 className="flex items-center gap-3 rounded-lg border border-border bg-card/60 px-3 py-2 backdrop-blur-md sm:min-w-[180px]"
               >
-                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-md ${t.icon}`}>
+                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-md ${tone.icon}`}>
                   <Icon className="h-3.5 w-3.5" />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold tabular-nums">{h.value}</div>
+                  <div className="text-sm font-semibold tabular-nums">{value}</div>
                   <div className="flex items-center gap-1 text-[11px]">
-                    <span className="text-muted-foreground">{h.label}</span>
-                    {h.delta && <span className={t.chip}>· {h.delta}</span>}
+                    <span className="text-muted-foreground">{t(h.labelKey)}</span>
+                    {h.deltaKey && <span className={tone.chip}>· {t(h.deltaKey)}</span>}
                   </div>
                 </div>
               </motion.div>

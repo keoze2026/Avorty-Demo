@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/lib/constants";
 import { useSecurityStore } from "@/lib/store/security-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -36,6 +37,7 @@ interface Props {
  * the Security settings card.
  */
 export function ReportsPinGate({ children, needsPin, onCancel }: Props) {
+  const { t } = useTranslation();
   const reportsPin = useSecurityStore((s) => s.reportsPin);
   const unlocked = useSecurityStore((s) => s.reportsPinUnlocked);
   const unlockReports = useSecurityStore((s) => s.unlockReports);
@@ -54,17 +56,17 @@ export function ReportsPinGate({ children, needsPin, onCancel }: Props) {
           <div className="flex items-center justify-between rounded-lg border border-[oklch(0.78_0.18_155)]/30 bg-[oklch(0.78_0.18_155)]/8 px-3 py-2 text-[11px]">
             <span className="inline-flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-[oklch(0.78_0.18_155)]" />
-              Historical reports unlocked for this session.
+              {t("toolsUI.reports.pinGate.unlockedNotice")}
             </span>
             <button
               type="button"
               onClick={() => {
                 lockReports();
-                toast.success("Historical reports locked");
+                toast.success(t("toolsUI.reports.pinGate.toastLocked"));
               }}
               className="text-[oklch(0.78_0.18_155)] underline-offset-2 hover:underline"
             >
-              Lock now
+              {t("toolsUI.reports.pinGate.lockNow")}
             </button>
           </div>
         )}
@@ -78,12 +80,12 @@ export function ReportsPinGate({ children, needsPin, onCancel }: Props) {
     if (entered.length !== 4) return;
     if (entered === reportsPin) {
       unlockReports();
-      toast.success("Unlocked for this session");
+      toast.success(t("toolsUI.reports.pinGate.toastUnlocked"));
       setEntered("");
     } else {
       setAttempts((a) => a + 1);
       setEntered("");
-      toast.error("Incorrect PIN");
+      toast.error(t("toolsUI.reports.pinGate.toastIncorrect"));
     }
   };
 
@@ -94,15 +96,14 @@ export function ReportsPinGate({ children, needsPin, onCancel }: Props) {
           <Lock className="h-5 w-5" />
         </span>
         <div className="min-w-0">
-          <h2 className="text-base font-semibold">Historical reports are locked</h2>
+          <h2 className="text-base font-semibold">{t("toolsUI.reports.pinGate.title")}</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Today&apos;s data is always available, but yesterday and earlier
-            require the 4-digit reports PIN you set in{" "}
+            {t("toolsUI.reports.pinGate.bodyBefore")}
             <Link
               href={ROUTES.settings}
               className="text-accent underline-offset-2 hover:underline"
             >
-              Security settings
+              {t("toolsUI.reports.pinGate.securityLink")}
             </Link>
             .
           </p>
@@ -112,7 +113,7 @@ export function ReportsPinGate({ children, needsPin, onCancel }: Props) {
       <form onSubmit={submit} className="mt-5 space-y-3">
         <div className="grid gap-1.5">
           <Label htmlFor="reports-pin" className="text-xs">
-            Enter reports PIN
+            {t("toolsUI.reports.pinGate.enterPin")}
           </Label>
           <Input
             id="reports-pin"
@@ -133,17 +134,20 @@ export function ReportsPinGate({ children, needsPin, onCancel }: Props) {
           />
           {attempts > 0 && (
             <p className="text-[11px] text-destructive">
-              {attempts} incorrect attempt{attempts === 1 ? "" : "s"} this session.
+              {(attempts === 1
+                ? t("toolsUI.reports.pinGate.incorrectAttemptOne")
+                : t("toolsUI.reports.pinGate.incorrectAttemptMany")
+              ).replace("{count}", String(attempts))}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
           <Button type="submit" disabled={entered.length !== 4}>
-            Unlock
+            {t("toolsUI.reports.pinGate.unlock")}
           </Button>
           {onCancel && (
             <Button type="button" variant="ghost" onClick={onCancel}>
-              View today only
+              {t("toolsUI.reports.pinGate.viewTodayOnly")}
             </Button>
           )}
         </div>

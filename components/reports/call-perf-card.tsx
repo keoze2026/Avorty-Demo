@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface CallPerfCardProps {
@@ -10,6 +11,7 @@ interface CallPerfCardProps {
 }
 
 export function CallPerfCard({ revenue, payout }: CallPerfCardProps) {
+  const { t } = useTranslation();
   const profit = revenue - payout;
   const profitNegative = profit < 0;
 
@@ -17,10 +19,10 @@ export function CallPerfCard({ revenue, payout }: CallPerfCardProps) {
     <Card>
       <CardContent>
         <div className="grid grid-cols-3">
-          <Cell label="Revenue" value={formatCurrency(revenue, true)} />
-          <Cell label="Payout" value={formatCurrency(payout, true)} />
+          <Cell label={t("toolsUI.reports.perfCard.revenue")} value={formatCurrency(revenue, true)} />
+          <Cell label={t("toolsUI.reports.perfCard.payout")} value={formatCurrency(payout, true)} />
           <Cell
-            label="Profit"
+            label={t("toolsUI.reports.perfCard.profit")}
             value={formatCurrency(profit, true)}
             valueClass={profitNegative ? "text-destructive" : "text-[color:var(--success)]"}
           />

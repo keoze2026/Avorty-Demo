@@ -4,6 +4,7 @@ import * as React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { BlockNumberDialog } from "@/components/suppression/block-number-dialog";
@@ -45,25 +46,7 @@ const ALL_CAMPAIGNS_ID = "__all__";
 
 type SortKey = "number-asc" | "number-desc" | "campaign-asc";
 
-const SORT_OPTIONS: SortOption[] = [
-  { id: "number-asc", label: "Number (low → high)" },
-  { id: "number-desc", label: "Number (high → low)" },
-  { id: "campaign-asc", label: "Campaign (A → Z)" },
-];
-
-const COLUMN_OPTIONS: ColumnOption[] = [
-  { id: "number", label: "Blocked number" },
-  { id: "campaign", label: "Campaign" },
-  { id: "actions", label: "Actions", required: true },
-];
-const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
-
 const CAMPAIGN_NAME_BY_ID = new Map(MOCK_CAMPAIGNS.map((c) => [c.id, c.name]));
-
-function campaignLabel(entry: BlockedNumberEntry): string {
-  if (!entry.campaignId) return "All Campaigns";
-  return CAMPAIGN_NAME_BY_ID.get(entry.campaignId) ?? entry.campaignId;
-}
 
 /** "18302094480" → "+18302094480"; if scope is prefix we append "*". */
 function displayNumber(entry: BlockedNumberEntry): string {
@@ -72,6 +55,26 @@ function displayNumber(entry: BlockedNumberEntry): string {
 }
 
 export default function BlockedNumbersPage() {
+  const { t } = useTranslation();
+
+  const SORT_OPTIONS: SortOption[] = [
+    { id: "number-asc", label: t("toolsUI.suppression.blockedNumbers.sort.numberAsc") },
+    { id: "number-desc", label: t("toolsUI.suppression.blockedNumbers.sort.numberDesc") },
+    { id: "campaign-asc", label: t("toolsUI.suppression.blockedNumbers.sort.campaignAsc") },
+  ];
+
+  const COLUMN_OPTIONS: ColumnOption[] = [
+    { id: "number", label: t("toolsUI.suppression.columns.blockedNumber") },
+    { id: "campaign", label: t("toolsUI.suppression.columns.campaign") },
+    { id: "actions", label: t("toolsUI.suppression.columns.actions"), required: true },
+  ];
+  const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
+
+  function campaignLabel(entry: BlockedNumberEntry): string {
+    if (!entry.campaignId) return t("toolsUI.suppression.allCampaigns");
+    return CAMPAIGN_NAME_BY_ID.get(entry.campaignId) ?? entry.campaignId;
+  }
+
   const numbers = useBlockedNumbersStore((s) => s.numbers);
   const addNumber = useBlockedNumbersStore((s) => s.add);
   const updateNumber = useBlockedNumbersStore((s) => s.update);
@@ -96,9 +99,10 @@ export default function BlockedNumbersPage() {
   // Campaign filter options — "All Campaigns" pseudo-option + every real campaign.
   const filterOptions = React.useMemo<FilterOption[]>(
     () => [
-      { id: ALL_CAMPAIGNS_ID, label: "All Campaigns" },
+      { id: ALL_CAMPAIGNS_ID, label: t("toolsUI.suppression.allCampaigns") },
       ...MOCK_CAMPAIGNS.map((c) => ({ id: c.id, label: c.name })),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -158,7 +162,7 @@ export default function BlockedNumbersPage() {
     campaignId?: string;
   }) => {
     const created = addNumber(input);
-    toast.success(`Blocked +${created.number}`);
+    toast.success(t("toolsUI.suppression.blockedNumbers.toastBlocked").replace("{number}", created.number));
   };
 
   const onSaveUpdate = ({
@@ -171,7 +175,7 @@ export default function BlockedNumbersPage() {
     campaignId?: string;
   }) => {
     updateNumber(id, { number, campaignId });
-    toast.success(`Updated +${number}`);
+    toast.success(t("toolsUI.suppression.blockedNumbers.toastUpdated").replace("{number}", number));
   };
 
   const confirmRemove = (entry: BlockedNumberEntry) => {
@@ -181,20 +185,20 @@ export default function BlockedNumbersPage() {
       next.delete(entry.id);
       return next;
     });
-    toast.success(`Unblocked ${displayNumber(entry)}`);
+    toast.success(t("toolsUI.suppression.blockedNumbers.toastUnblocked").replace("{number}", displayNumber(entry)));
     setRemoving(null);
   };
 
   return (
     <>
-      <PageHeader title="Blocked Numbers" />
+      <PageHeader title={t("toolsUI.suppression.blockedNumbers.title")} />
 
       <SuppressionToolbar
         query={query}
         onQuery={setQuery}
         pageSize={pageSize}
         onPageSize={setPageSize}
-        ctaLabel="Block Number"
+        ctaLabel={t("toolsUI.suppression.blockedNumbers.createCta")}
         onCta={() => setCreateOpen(true)}
         sort={{
           options: SORT_OPTIONS,
@@ -202,7 +206,7 @@ export default function BlockedNumbersPage() {
           onChange: (id) => setSortKey(id as SortKey),
         }}
         filter={{
-          label: "Filter by campaign",
+          label: t("toolsUI.suppression.blockedNumbers.filterByCampaign"),
           options: filterOptions,
           value: campaignFilter,
           onChange: setCampaignFilter,
@@ -227,16 +231,16 @@ export default function BlockedNumbersPage() {
                   <Checkbox
                     checked={allChecked}
                     onCheckedChange={toggleAll}
-                    aria-label="Select all"
+                    aria-label={t("toolsUI.suppression.aria.selectAll")}
                   />
                 </TableHead>
                 {visibleColumns.has("number") && (
-                  <TableHead className="text-left">Blocked number</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.blockedNumber")}</TableHead>
                 )}
                 {visibleColumns.has("campaign") && (
-                  <TableHead className="text-left">Campaign</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.campaign")}</TableHead>
                 )}
-                <TableHead className="pr-4">Actions</TableHead>
+                <TableHead className="pr-4">{t("toolsUI.suppression.columns.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -246,7 +250,7 @@ export default function BlockedNumbersPage() {
                     colSpan={1 + visibleColumns.size}
                     className="py-10 text-center text-xs text-muted-foreground"
                   >
-                    No data available
+                    {t("toolsUI.suppression.noData")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -256,7 +260,7 @@ export default function BlockedNumbersPage() {
                       <Checkbox
                         checked={selected.has(e.id)}
                         onCheckedChange={() => toggle(e.id)}
-                        aria-label={`Select ${displayNumber(e)}`}
+                        aria-label={t("toolsUI.suppression.aria.selectRow").replace("{label}", displayNumber(e))}
                       />
                     </TableCell>
                     {visibleColumns.has("number") && (
@@ -275,7 +279,7 @@ export default function BlockedNumbersPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          aria-label={`Edit ${displayNumber(e)}`}
+                          aria-label={t("toolsUI.suppression.aria.editRow").replace("{label}", displayNumber(e))}
                           onClick={() => setEditing(e)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -284,7 +288,7 @@ export default function BlockedNumbersPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          aria-label={`Unblock ${displayNumber(e)}`}
+                          aria-label={t("toolsUI.suppression.aria.unblockRow").replace("{label}", displayNumber(e))}
                           onClick={() => setRemoving(e)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -326,20 +330,19 @@ export default function BlockedNumbersPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Unblock {removing ? displayNumber(removing) : ""}?
+              {t("toolsUI.suppression.blockedNumbers.confirmUnblockTitle").replace("{number}", removing ? displayNumber(removing) : "")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the entry from the blocked list. The number will be allowed
-              to call again immediately.
+              {t("toolsUI.suppression.blockedNumbers.confirmUnblockDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("toolsUI.suppression.removeConfirm.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removing && confirmRemove(removing)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Unblock
+              {t("toolsUI.suppression.blockedNumbers.confirmUnblockAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

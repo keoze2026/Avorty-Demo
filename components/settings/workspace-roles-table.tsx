@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ROLES_IN_ORDER, ROLE_DESCRIPTIONS } from "@/lib/mock/settings";
+import { ROLES_IN_ORDER } from "@/lib/mock/settings";
 import { ROUTES } from "@/lib/constants";
 import {
   countEnabledPermissions,
@@ -22,6 +22,7 @@ import {
   TOTAL_PERMISSIONS,
 } from "@/lib/workspace-permissions";
 import type { Member, MemberRole } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface WorkspaceRolesTableProps {
   members: Member[];
@@ -29,6 +30,7 @@ interface WorkspaceRolesTableProps {
 
 export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Count active members per role so the table tells the operator who has what.
   const memberCounts = useMemo<Record<MemberRole, number>>(() => {
@@ -64,9 +66,9 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
     <Card className="overflow-hidden p-0">
       <CardHeader className="flex flex-row items-center justify-between gap-2 border-b border-border bg-secondary/20 px-4 py-3 space-y-0">
         <div>
-          <CardTitle className="text-base">Roles</CardTitle>
+          <CardTitle className="text-base">{t("workspaceUI.roles.title")}</CardTitle>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Built-in role definitions. Edit a role to change what its members can do.
+            {t("workspaceUI.roles.description")}
           </p>
         </div>
       </CardHeader>
@@ -76,24 +78,24 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
           <Table className="min-w-[700px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-4 text-left">Role</TableHead>
-                <TableHead className="text-left">Description</TableHead>
-                <TableHead>Members</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead className="pr-4">Actions</TableHead>
+                <TableHead className="pl-4 text-left">{t("workspaceUI.roles.columnRole")}</TableHead>
+                <TableHead className="text-left">{t("workspaceUI.roles.columnDescription")}</TableHead>
+                <TableHead>{t("workspaceUI.roles.columnMembers")}</TableHead>
+                <TableHead>{t("workspaceUI.roles.columnPermissions")}</TableHead>
+                <TableHead className="pr-4">{t("workspaceUI.roles.columnActions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {ROLES_IN_ORDER.map((role) => (
                 <TableRow key={role}>
                   <TableCell className="pl-4 text-left">
-                    <div className="inline-flex items-center gap-2 font-medium capitalize">
+                    <div className="inline-flex items-center gap-2 font-medium">
                       <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                      {role}
+                      {t(`workspaceUI.members.role.${role}`)}
                     </div>
                   </TableCell>
                   <TableCell className="text-left text-[12px] text-muted-foreground">
-                    {ROLE_DESCRIPTIONS[role]}
+                    {t(`workspaceUI.roles.descriptions.${role}`)}
                   </TableCell>
                   <TableCell className="tabular-nums">{memberCounts[role]}</TableCell>
                   <TableCell className="tabular-nums">
@@ -106,7 +108,7 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
                       className="h-7 text-xs"
                       onClick={() => router.push(`${ROUTES.workspace}/roles/${role}`)}
                     >
-                      Edit
+                      {t("workspaceUI.roles.edit")}
                     </Button>
                   </TableCell>
                 </TableRow>

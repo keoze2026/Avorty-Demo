@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { CreateTcpaShieldDialog } from "@/components/suppression/create-tcpa-shield-dialog";
@@ -48,22 +49,6 @@ import { useTcpaShieldStore } from "@/lib/store/tcpa-shield-store";
 
 type SortKey = "name-asc" | "name-desc" | "type-asc" | "active-first";
 
-const SORT_OPTIONS: SortOption[] = [
-  { id: "name-asc", label: "Name (A → Z)" },
-  { id: "name-desc", label: "Name (Z → A)" },
-  { id: "type-asc", label: "Type (A → Z)" },
-  { id: "active-first", label: "Active first" },
-];
-
-const COLUMN_OPTIONS: ColumnOption[] = [
-  { id: "name", label: "Name" },
-  { id: "campaign", label: "Campaign" },
-  { id: "type", label: "Type" },
-  { id: "status", label: "Status" },
-  { id: "actions", label: "Actions", required: true },
-];
-const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
-
 const CAMPAIGN_NAME_BY_ID = new Map(MOCK_CAMPAIGNS.map((c) => [c.id, c.name]));
 
 function campaignLabel(entry: TcpaShieldEntry): string {
@@ -76,7 +61,25 @@ function campaignLabel(entry: TcpaShieldEntry): string {
 }
 
 export default function TcpaShieldPage() {
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const SORT_OPTIONS: SortOption[] = [
+    { id: "name-asc", label: t("toolsUI.suppression.tcpaShield.sort.nameAsc") },
+    { id: "name-desc", label: t("toolsUI.suppression.tcpaShield.sort.nameDesc") },
+    { id: "type-asc", label: t("toolsUI.suppression.tcpaShield.sort.typeAsc") },
+    { id: "active-first", label: t("toolsUI.suppression.tcpaShield.sort.activeFirst") },
+  ];
+
+  const COLUMN_OPTIONS: ColumnOption[] = [
+    { id: "name", label: t("toolsUI.suppression.columns.name") },
+    { id: "campaign", label: t("toolsUI.suppression.columns.campaign") },
+    { id: "type", label: t("toolsUI.suppression.columns.type") },
+    { id: "status", label: t("toolsUI.suppression.columns.status") },
+    { id: "actions", label: t("toolsUI.suppression.columns.actions"), required: true },
+  ];
+  const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
+
   const providers = useTcpaShieldStore((s) => s.providers);
   const add = useTcpaShieldStore((s) => s.add);
   const remove = useTcpaShieldStore((s) => s.remove);
@@ -150,7 +153,7 @@ export default function TcpaShieldPage() {
 
   const onCreate = ({ name, type }: { name: string; type: TcpaShieldEntry["type"] }) => {
     const created = add(name, type);
-    toast.success(`Created "${name}"`);
+    toast.success(t("toolsUI.suppression.tcpaShield.toastCreated").replace("{name}", name));
     router.push(`${ROUTES.tcpaShield}/${created.id}`);
   };
 
@@ -161,20 +164,20 @@ export default function TcpaShieldPage() {
       next.delete(entry.id);
       return next;
     });
-    toast.success(`Removed "${entry.name}"`);
+    toast.success(t("toolsUI.suppression.tcpaShield.toastRemoved").replace("{name}", entry.name));
     setRemoving(null);
   };
 
   return (
     <>
-      <PageHeader title="TCPA Shield" />
+      <PageHeader title={t("toolsUI.suppression.tcpaShield.title")} />
 
       <SuppressionToolbar
         query={query}
         onQuery={setQuery}
         pageSize={pageSize}
         onPageSize={setPageSize}
-        ctaLabel="Create"
+        ctaLabel={t("toolsUI.suppression.tcpaShield.createCta")}
         onCta={() => setCreateOpen(true)}
         sort={{
           options: SORT_OPTIONS,
@@ -182,7 +185,7 @@ export default function TcpaShieldPage() {
           onChange: (id) => setSortKey(id as SortKey),
         }}
         filter={{
-          label: "Filter by type",
+          label: t("toolsUI.suppression.tcpaShield.filterByType"),
           options: filterOptions,
           value: typeFilter,
           onChange: setTypeFilter,
@@ -207,20 +210,20 @@ export default function TcpaShieldPage() {
                   <Checkbox
                     checked={allChecked}
                     onCheckedChange={toggleAll}
-                    aria-label="Select all"
+                    aria-label={t("toolsUI.suppression.aria.selectAll")}
                   />
                 </TableHead>
                 {visibleColumns.has("name") && (
-                  <TableHead className="text-left">Name</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.name")}</TableHead>
                 )}
                 {visibleColumns.has("campaign") && (
-                  <TableHead className="text-left">Campaign</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.campaign")}</TableHead>
                 )}
                 {visibleColumns.has("type") && (
-                  <TableHead className="text-left">Type</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.type")}</TableHead>
                 )}
-                {visibleColumns.has("status") && <TableHead>Status</TableHead>}
-                <TableHead className="pr-4">Actions</TableHead>
+                {visibleColumns.has("status") && <TableHead>{t("toolsUI.suppression.columns.status")}</TableHead>}
+                <TableHead className="pr-4">{t("toolsUI.suppression.columns.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -230,7 +233,7 @@ export default function TcpaShieldPage() {
                     colSpan={1 + visibleColumns.size}
                     className="py-10 text-center text-xs text-muted-foreground"
                   >
-                    No data available
+                    {t("toolsUI.suppression.noData")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -240,7 +243,7 @@ export default function TcpaShieldPage() {
                       <Checkbox
                         checked={selected.has(e.id)}
                         onCheckedChange={() => toggle(e.id)}
-                        aria-label={`Select ${e.name}`}
+                        aria-label={t("toolsUI.suppression.aria.selectRow").replace("{label}", e.name)}
                       />
                     </TableCell>
                     {visibleColumns.has("name") && (
@@ -262,9 +265,14 @@ export default function TcpaShieldPage() {
                           checked={e.active}
                           onCheckedChange={(v) => {
                             setActive(e.id, Boolean(v));
-                            toast.success(`${e.name} ${v ? "activated" : "paused"}`);
+                            toast.success(
+                              (v
+                                ? t("toolsUI.suppression.tcpaShield.toastActivated")
+                                : t("toolsUI.suppression.tcpaShield.toastPaused")
+                              ).replace("{name}", e.name),
+                            );
                           }}
-                          aria-label={`Toggle ${e.name}`}
+                          aria-label={t("toolsUI.suppression.aria.toggleRow").replace("{label}", e.name)}
                         />
                       </TableCell>
                     )}
@@ -274,7 +282,7 @@ export default function TcpaShieldPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          aria-label={`Edit ${e.name}`}
+                          aria-label={t("toolsUI.suppression.aria.editRow").replace("{label}", e.name)}
                           onClick={() => router.push(`${ROUTES.tcpaShield}/${e.id}`)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -283,7 +291,7 @@ export default function TcpaShieldPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          aria-label={`Remove ${e.name}`}
+                          aria-label={t("toolsUI.suppression.aria.removeRow").replace("{label}", e.name)}
                           onClick={() => setRemoving(e)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -316,18 +324,18 @@ export default function TcpaShieldPage() {
       <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove "{removing?.name}"?</AlertDialogTitle>
+            <AlertDialogTitle>{t("toolsUI.suppression.removeConfirm.shieldTitle").replace("{name}", removing?.name ?? "")}</AlertDialogTitle>
             <AlertDialogDescription>
-              The provider and all of its configuration will be deleted. This cannot be undone.
+              {t("toolsUI.suppression.removeConfirm.providerDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("toolsUI.suppression.removeConfirm.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removing && confirmRemove(removing)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Remove
+              {t("toolsUI.suppression.removeConfirm.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

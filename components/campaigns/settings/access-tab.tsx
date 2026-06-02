@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignSettingsStore } from "@/lib/store/campaign-settings-store";
 import type { AccessGrant } from "@/lib/types";
 
@@ -30,6 +31,7 @@ const ROLE_VARIANT: Record<AccessGrant["role"], React.ComponentProps<typeof Badg
 };
 
 export function AccessTab({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const get = useCampaignSettingsStore((s) => s.get);
   const update = useCampaignSettingsStore((s) => s.update);
   const grants = get(campaignId).access;
@@ -39,7 +41,7 @@ export function AccessTab({ campaignId }: { campaignId: string }) {
 
   const addGrant = () => {
     if (!email.trim()) {
-      toast.error("Email is required");
+      toast.error(t("trafficUI.campaigns.settings.access.emailRequired"));
       return;
     }
     update(campaignId, "access", [
@@ -48,7 +50,11 @@ export function AccessTab({ campaignId }: { campaignId: string }) {
     ]);
     setEmail("");
     setRole("viewer");
-    toast.success(`Granted ${role} access to ${email.trim()}`);
+    toast.success(
+      t("trafficUI.campaigns.settings.access.granted")
+        .replace("{role}", role)
+        .replace("{email}", email.trim()),
+    );
   };
 
   const removeGrant = (id: string) => {
@@ -57,46 +63,45 @@ export function AccessTab({ campaignId }: { campaignId: string }) {
       "access",
       grants.filter((g) => g.id !== id),
     );
-    toast.success("Access removed");
+    toast.success(t("trafficUI.campaigns.settings.access.removed"));
   };
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Campaign Access</CardTitle>
+          <CardTitle className="text-base">{t("trafficUI.campaigns.settings.access.title")}</CardTitle>
           <p className="text-xs text-muted-foreground">
-            Invite teammates to this campaign. Owners can grant access; editors can
-            change settings; viewers can read reports only.
+            {t("trafficUI.campaigns.settings.access.description")}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]">
             <div className="grid gap-1.5">
-              <Label className="text-xs">Email</Label>
+              <Label className="text-xs">{t("trafficUI.campaigns.settings.access.email")}</Label>
               <Input
                 type="email"
-                placeholder="teammate@example.com"
+                placeholder={t("trafficUI.campaigns.settings.access.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-1.5">
-              <Label className="text-xs">Role</Label>
+              <Label className="text-xs">{t("trafficUI.campaigns.settings.access.role")}</Label>
               <Select value={role} onValueChange={(v) => setRole(v as AccessGrant["role"])}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="editor">Editor</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectItem value="owner">{t("trafficUI.campaigns.settings.access.roles.owner")}</SelectItem>
+                  <SelectItem value="editor">{t("trafficUI.campaigns.settings.access.roles.editor")}</SelectItem>
+                  <SelectItem value="viewer">{t("trafficUI.campaigns.settings.access.roles.viewer")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-end">
               <Button onClick={addGrant}>
-                <Plus className="h-4 w-4" /> Grant
+                <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.access.grant")}
               </Button>
             </div>
           </div>
@@ -106,7 +111,7 @@ export function AccessTab({ campaignId }: { campaignId: string }) {
       {grants.length > 0 && (
         <Card className="overflow-hidden p-0">
           <div className="border-b border-border px-6 py-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-            Members ({grants.length})
+            {t("trafficUI.campaigns.settings.access.members").replace("{count}", String(grants.length))}
           </div>
           <ul className="divide-y divide-border">
             {grants.map((g) => (
@@ -114,7 +119,7 @@ export function AccessTab({ campaignId }: { campaignId: string }) {
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">{g.email}</div>
                   <div className="text-[11px] text-muted-foreground">
-                    Granted {new Date(g.grantedAt).toLocaleDateString()}
+                    {t("trafficUI.campaigns.settings.access.grantedOn").replace("{date}", new Date(g.grantedAt).toLocaleDateString())}
                   </div>
                 </div>
                 <Badge variant={ROLE_VARIANT[g.role]} className="capitalize">
@@ -125,7 +130,7 @@ export function AccessTab({ campaignId }: { campaignId: string }) {
                   size="icon"
                   className="h-7 w-7 text-destructive"
                   onClick={() => removeGrant(g.id)}
-                  aria-label={`Remove ${g.email}`}
+                  aria-label={t("trafficUI.campaigns.settings.access.remove").replace("{email}", g.email)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

@@ -53,6 +53,7 @@ import {
   PAGE_SIZE_OPTIONS,
   type PageSize,
 } from "@/components/shared/table-toolbar";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import {
   derivePurchaseStatus,
@@ -75,6 +76,7 @@ const PHONE_FORMATS: { id: PhoneNumberFormat; label: string }[] = [
 ];
 
 export default function NumberPoolDetailPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
@@ -91,18 +93,18 @@ export default function NumberPoolDetailPage() {
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Manage Number Pools
+          {t("trafficUI.numbers.poolDetail.back")}
         </Link>
-        <h1 className="mt-6 text-xl font-semibold">Pool not found</h1>
+        <h1 className="mt-6 text-xl font-semibold">{t("trafficUI.numbers.poolDetail.notFoundTitle")}</h1>
         <p className="text-sm text-muted-foreground">
-          This pool no longer exists. Return to the list to pick another.
+          {t("trafficUI.numbers.poolDetail.notFoundDescription")}
         </p>
         <button
           type="button"
           onClick={() => router.push(ROUTES.numbers)}
           className="text-xs text-accent hover:underline"
         >
-          Back to Phone Numbers
+          {t("trafficUI.numbers.poolDetail.backToList")}
         </button>
       </>
     );
@@ -117,13 +119,13 @@ export default function NumberPoolDetailPage() {
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Manage Number Pools
+        {t("trafficUI.numbers.poolDetail.back")}
       </Link>
 
       <div>
         <h1 className="text-xl font-semibold tracking-tight">{pool.name}</h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          Manage settings for this number pool
+          {t("trafficUI.numbers.poolDetail.manageDescription")}
         </p>
       </div>
 
@@ -147,33 +149,34 @@ export default function NumberPoolDetailPage() {
 /* ─── Integration Code card ──────────────────────────────────────────── */
 
 function IntegrationCodeCard({ pool }: { pool: NumberPool }) {
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const snippet = `<!-- Vortyx number-pool tracker · ${pool.name} -->
 <script src="https://cdn.vortyx.io/track.js" data-pool="${pool.id}" defer></script>`;
   return (
     <Card className="p-5">
       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-        Integration code
+        {t("trafficUI.numbers.poolDetail.integration.title")}
       </h3>
       <div className="my-4 h-px w-full bg-border" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-medium">Integration</div>
+          <div className="text-sm font-medium">{t("trafficUI.numbers.poolDetail.integration.row")}</div>
           <div className="mt-0.5 text-xs text-muted-foreground">
-            To enable Dialics call tracking you need to place code snippets on your website.
+            {t("trafficUI.numbers.poolDetail.integration.rowHint")}
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-          Show integration code
+          {t("trafficUI.numbers.poolDetail.integration.show")}
         </Button>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Integration code</DialogTitle>
+            <DialogTitle>{t("trafficUI.numbers.poolDetail.integration.dialogTitle")}</DialogTitle>
             <DialogDescription>
-              Paste this snippet at the bottom of every page you want to track.
+              {t("trafficUI.numbers.poolDetail.integration.dialogDescription")}
             </DialogDescription>
           </DialogHeader>
           <pre className="overflow-auto rounded-md border border-border bg-secondary/30 p-3 font-mono text-[11px] text-foreground/90">
@@ -185,15 +188,15 @@ function IntegrationCodeCard({ pool }: { pool: NumberPool }) {
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(snippet);
-                  toast.success("Copied to clipboard");
+                  toast.success(t("trafficUI.common.copied"));
                 } catch {
-                  toast.error("Couldn't copy");
+                  toast.error(t("trafficUI.common.copyFailed"));
                 }
               }}
             >
-              Copy
+              {t("trafficUI.common.copy")}
             </Button>
-            <Button onClick={() => setOpen(false)}>Done</Button>
+            <Button onClick={() => setOpen(false)}>{t("trafficUI.common.done")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -210,29 +213,30 @@ function SetupNumberPoolCard({
   pool: NumberPool;
   onChange: (patch: Partial<NumberPool>) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="p-5">
       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-        Setup number pool
+        {t("trafficUI.numbers.poolDetail.setup.title")}
       </h3>
       <div className="my-4 h-px w-full bg-border" />
 
       {/* Replacement Number */}
       <Row
-        label="Replacement Number"
-        hint="Enter the number to replace with one from the pool"
+        label={t("trafficUI.numbers.poolDetail.setup.replacementNumber")}
+        hint={t("trafficUI.numbers.poolDetail.setup.replacementHint")}
       >
         <Input
           value={pool.replacementNumber ?? ""}
           onChange={(e) => onChange({ replacementNumber: e.target.value })}
-          placeholder="Type Phone Number"
+          placeholder={t("trafficUI.numbers.poolDetail.setup.replacementPlaceholder")}
         />
       </Row>
 
       <Divider />
 
       {/* Phone Number Format */}
-      <Row label="Phone Number Format" hint="Select the display format for numbers">
+      <Row label={t("trafficUI.numbers.poolDetail.setup.format")} hint={t("trafficUI.numbers.poolDetail.setup.formatHint")}>
         <Select
           value={pool.phoneNumberFormat ?? "E164"}
           onValueChange={(v) => onChange({ phoneNumberFormat: v as PhoneNumberFormat })}
@@ -253,7 +257,7 @@ function SetupNumberPoolCard({
       <Divider />
 
       {/* Idle time */}
-      <Row label="Idle time" hint="The time for which a phone number will be reserved for a user">
+      <Row label={t("trafficUI.numbers.poolDetail.setup.idleTime")} hint={t("trafficUI.numbers.poolDetail.setup.idleHint")}>
         <SecondsInput
           value={pool.idleTimeSec ?? 300}
           onChange={(n) => onChange({ idleTimeSec: n })}
@@ -264,8 +268,8 @@ function SetupNumberPoolCard({
 
       {/* Closed browser delay */}
       <Row
-        label="Closed browser delay"
-        hint="The phone number reservation time after closing the browser"
+        label={t("trafficUI.numbers.poolDetail.setup.closedBrowser")}
+        hint={t("trafficUI.numbers.poolDetail.setup.closedBrowserHint")}
       >
         <SecondsInput
           value={pool.closedBrowserDelaySec ?? 30}
@@ -287,6 +291,7 @@ function AttachNumbersCard({
   allNumbers: TrackingNumber[];
   onChange: (ids: string[]) => void;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [pageSize, setPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
   const [attachOpen, setAttachOpen] = React.useState(false);
@@ -307,13 +312,13 @@ function AttachNumbersCard({
 
   const detach = (id: string) => {
     onChange(attachedIds.filter((x) => x !== id));
-    toast.success("Removed from pool");
+    toast.success(t("trafficUI.numbers.poolDetail.attach.removed"));
   };
 
   return (
     <Card className="p-5">
       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-        Attach numbers in pool
+        {t("trafficUI.numbers.poolDetail.attach.title")}
       </h3>
       <div className="my-4 h-px w-full bg-border" />
 
@@ -322,7 +327,7 @@ function AttachNumbersCard({
         onQuery={setQuery}
         pageSize={pageSize}
         onPageSize={setPageSize}
-        ctaLabel="Add"
+        ctaLabel={t("trafficUI.numbers.poolDetail.attach.add")}
         onCta={() => setAttachOpen(true)}
       />
 
@@ -331,21 +336,21 @@ function AttachNumbersCard({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="pl-4 w-10 text-left">
-                <Checkbox aria-label="Select all" />
+                <Checkbox aria-label={t("trafficUI.common.selectAll")} />
               </TableHead>
-              <TableHead>Number</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Purchase status</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="pr-4">Actions</TableHead>
+              <TableHead>{t("trafficUI.numbers.poolDetail.attach.headers.number")}</TableHead>
+              <TableHead>{t("trafficUI.numbers.poolDetail.attach.headers.name")}</TableHead>
+              <TableHead>{t("trafficUI.numbers.poolDetail.attach.headers.purchaseStatus")}</TableHead>
+              <TableHead>{t("trafficUI.numbers.poolDetail.attach.headers.type")}</TableHead>
+              <TableHead>{t("trafficUI.numbers.poolDetail.attach.headers.status")}</TableHead>
+              <TableHead className="pr-4">{t("trafficUI.numbers.poolDetail.attach.headers.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {visible.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
-                  No data available
+                  {t("trafficUI.common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -354,16 +359,16 @@ function AttachNumbersCard({
                 return (
                   <TableRow key={n.id}>
                     <TableCell className="pl-4 text-left">
-                      <Checkbox aria-label={`Select ${toE164(n.number)}`} />
+                      <Checkbox aria-label={t("trafficUI.numbers.track.selectRow").replace("{number}", toE164(n.number))} />
                     </TableCell>
                     <TableCell className="font-mono text-xs">{toE164(n.number)}</TableCell>
                     <TableCell className="font-medium">{deriveNumberName(n)}</TableCell>
                     <TableCell>
-                      <Badge variant={purchase.tone}>{purchase.label}</Badge>
+                      <Badge variant={purchase.tone}>{t(purchase.labelKey)}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="capitalize">
-                        {n.type === "tollfree" ? "Toll-free" : n.type}
+                        {n.type === "tollfree" ? t("trafficUI.numbers.typeOptions.tollfree") : n.type === "local" ? t("trafficUI.numbers.typeOptions.local") : t("trafficUI.numbers.typeOptions.international")}
                       </Badge>
                     </TableCell>
                     <TableCell className="capitalize">{n.status}</TableCell>
@@ -372,7 +377,7 @@ function AttachNumbersCard({
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        aria-label={`Detach ${toE164(n.number)}`}
+                        aria-label={t("trafficUI.numbers.poolDetail.attach.detach").replace("{number}", toE164(n.number))}
                         onClick={() => detach(n.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -393,7 +398,12 @@ function AttachNumbersCard({
         attachedIds={attachedIds}
         onAttach={(ids) => {
           onChange(Array.from(new Set([...attachedIds, ...ids])));
-          toast.success(`Attached ${ids.length} number${ids.length === 1 ? "" : "s"}`);
+          toast.success(
+            (ids.length === 1
+              ? t("trafficUI.numbers.poolDetail.attach.dialog.attached")
+              : t("trafficUI.numbers.poolDetail.attach.dialog.attachedPlural")
+            ).replace("{count}", String(ids.length)),
+          );
         }}
       />
     </Card>
@@ -413,6 +423,7 @@ function AttachNumbersDialog({
   attachedIds: string[];
   onAttach: (ids: string[]) => void;
 }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [query, setQuery] = React.useState("");
 
@@ -450,9 +461,9 @@ function AttachNumbersDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Attach numbers</DialogTitle>
+          <DialogTitle>{t("trafficUI.numbers.poolDetail.attach.dialog.title")}</DialogTitle>
           <DialogDescription>
-            Pick the numbers to add to this pool. Already-attached numbers are hidden.
+            {t("trafficUI.numbers.poolDetail.attach.dialog.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -461,7 +472,7 @@ function AttachNumbersDialog({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search numbers…"
+            placeholder={t("trafficUI.numbers.poolDetail.attach.dialog.searchPlaceholder")}
             className="h-9 pl-7 text-xs"
           />
         </div>
@@ -469,7 +480,7 @@ function AttachNumbersDialog({
         <div className="max-h-72 overflow-y-auto rounded-md border border-border">
           {candidates.length === 0 ? (
             <div className="py-6 text-center text-xs text-muted-foreground">
-              No matching numbers.
+              {t("trafficUI.numbers.poolDetail.attach.dialog.noMatching")}
             </div>
           ) : (
             candidates.map((n) => (
@@ -492,10 +503,10 @@ function AttachNumbersDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("trafficUI.common.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={selected.size === 0}>
-            Attach {selected.size > 0 ? `(${selected.size})` : ""}
+            {t("trafficUI.numbers.poolDetail.attach.dialog.attachButton")} {selected.size > 0 ? `(${selected.size})` : ""}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -514,13 +525,14 @@ function VendorCard({
   onToggleEnabled: (enabled: boolean) => void;
   onChangeVendor: (vendorId: string) => void;
 }) {
+  const { t } = useTranslation();
   const enabled = pool.vendorEnabled ?? false;
   return (
     <Collapsible defaultOpen={enabled}>
       <Card className="p-5">
         <CollapsibleHeader
-          title="Vendor"
-          description="Set up and configure your vendor"
+          title={t("trafficUI.numbers.poolDetail.vendor.title")}
+          description={t("trafficUI.numbers.poolDetail.vendor.description")}
           enabled={enabled}
           onToggleEnabled={onToggleEnabled}
         />
@@ -528,10 +540,10 @@ function VendorCard({
         <CollapsibleContent>
           <div className="mt-4 h-px w-full bg-border" />
           <div className="mt-4">
-            <Row label="Choose Vendor" hint="Choose a vendor for phone number tracking">
+            <Row label={t("trafficUI.numbers.poolDetail.vendor.choose")} hint={t("trafficUI.numbers.poolDetail.vendor.chooseHint")}>
               <Select value={pool.vendorId ?? ""} onValueChange={onChangeVendor}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose" />
+                  <SelectValue placeholder={t("trafficUI.numbers.poolDetail.vendor.choosePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {VENDOR_OPTIONS.map((v) => (
@@ -560,6 +572,7 @@ function TrafficSourcesCard({
   onToggleEnabled: (enabled: boolean) => void;
   onChangeSources: (sources: TrafficSourceEntry[]) => void;
 }) {
+  const { t } = useTranslation();
   const enabled = pool.trafficSourcesEnabled ?? false;
   const sources = pool.trafficSources ?? [];
   const [query, setQuery] = React.useState("");
@@ -581,20 +594,20 @@ function TrafficSourcesCard({
       conversions: 0,
     };
     onChangeSources([next, ...sources]);
-    toast.success("Added traffic source");
+    toast.success(t("trafficUI.numbers.poolDetail.trafficSources.added"));
   };
 
   const onRemove = (id: string) => {
     onChangeSources(sources.filter((s) => s.id !== id));
-    toast.success("Removed traffic source");
+    toast.success(t("trafficUI.numbers.poolDetail.trafficSources.removed"));
   };
 
   return (
     <Collapsible defaultOpen={enabled}>
       <Card className="p-5">
         <CollapsibleHeader
-          title="Traffic sources"
-          description="Configure the traffic source for collecting call data"
+          title={t("trafficUI.numbers.poolDetail.trafficSources.title")}
+          description={t("trafficUI.numbers.poolDetail.trafficSources.description")}
           enabled={enabled}
           onToggleEnabled={onToggleEnabled}
         />
@@ -602,13 +615,9 @@ function TrafficSourcesCard({
         <CollapsibleContent>
           <div className="mt-4 h-px w-full bg-border" />
           <p className="mt-3 text-xs text-muted-foreground">
-            Traffic source functionality for call tracking allows you to identify and
-            attribute incoming calls to specific marketing channels or sources. By integrating
-            with various advertising platforms or using tracking parameters in URLs, you can
-            accurately track the effectiveness of different campaigns, channels, or keywords
-            in driving phone calls. You can read more about this function at the{" "}
+            {t("trafficUI.numbers.poolDetail.trafficSources.longDescription")}{" "}
             <a className="text-accent hover:underline" href="#">
-              link
+              {t("trafficUI.numbers.poolDetail.trafficSources.linkText")}
             </a>
             .
           </p>
@@ -619,7 +628,7 @@ function TrafficSourcesCard({
               onQuery={setQuery}
               pageSize={pageSize}
               onPageSize={setPageSize}
-              ctaLabel="Add"
+              ctaLabel={t("trafficUI.numbers.poolDetail.trafficSources.add")}
               onCta={onAdd}
             />
 
@@ -628,13 +637,13 @@ function TrafficSourcesCard({
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="pl-4 w-10 text-left">
-                      <Checkbox aria-label="Select all" />
+                      <Checkbox aria-label={t("trafficUI.common.selectAll")} />
                     </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Integration</TableHead>
-                    <TableHead>Events</TableHead>
-                    <TableHead>Conversions</TableHead>
-                    <TableHead className="pr-4">Actions</TableHead>
+                    <TableHead>{t("trafficUI.numbers.poolDetail.trafficSources.headers.name")}</TableHead>
+                    <TableHead>{t("trafficUI.numbers.poolDetail.trafficSources.headers.integration")}</TableHead>
+                    <TableHead>{t("trafficUI.numbers.poolDetail.trafficSources.headers.events")}</TableHead>
+                    <TableHead>{t("trafficUI.numbers.poolDetail.trafficSources.headers.conversions")}</TableHead>
+                    <TableHead className="pr-4">{t("trafficUI.numbers.poolDetail.trafficSources.headers.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -644,14 +653,14 @@ function TrafficSourcesCard({
                         colSpan={6}
                         className="py-8 text-center text-xs text-muted-foreground"
                       >
-                        No data available
+                        {t("trafficUI.common.noData")}
                       </TableCell>
                     </TableRow>
                   ) : (
                     visible.map((s) => (
                       <TableRow key={s.id}>
                         <TableCell className="pl-4 text-left">
-                          <Checkbox aria-label={`Select ${s.name}`} />
+                          <Checkbox aria-label={t("trafficUI.campaigns.table.selectRow").replace("{name}", s.name)} />
                         </TableCell>
                         <TableCell className="font-medium">{s.name}</TableCell>
                         <TableCell className="text-muted-foreground">{s.integration}</TableCell>
@@ -662,7 +671,7 @@ function TrafficSourcesCard({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            aria-label={`Remove ${s.name}`}
+                            aria-label={t("trafficUI.numbers.poolDetail.trafficSources.remove").replace("{name}", s.name)}
                             onClick={() => onRemove(s.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -745,6 +754,7 @@ function CollapsibleHeader({
   enabled: boolean;
   onToggleEnabled: (next: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-start justify-between gap-3">
       <div>
@@ -761,13 +771,13 @@ function CollapsibleHeader({
           onClick={() => onToggleEnabled(!enabled)}
           className="rounded-md border border-border bg-secondary/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          {enabled ? "Enabled" : "Disabled"}
+          {enabled ? t("trafficUI.common.enabled") : t("trafficUI.common.disabled")}
         </button>
         <CollapsibleTrigger asChild>
           <button
             type="button"
             className="group inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
-            aria-label={`Toggle ${title}`}
+            aria-label={t("trafficUI.campaigns.settings.advancedShell.toggle").replace("{title}", title)}
           >
             <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
           </button>
@@ -794,6 +804,7 @@ function Toolbar({
   ctaLabel: string;
   onCta: () => void;
 }) {
+  const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = React.useState(false);
 
   return (
@@ -805,7 +816,7 @@ function Toolbar({
             autoFocus
             value={query}
             onChange={(e) => onQuery(e.target.value)}
-            placeholder="Search…"
+            placeholder={t("trafficUI.numbers.poolDetail.toolbar.searchPlaceholder")}
             className="h-9 w-56 pl-7 pr-7 text-xs"
           />
           <button
@@ -814,7 +825,7 @@ function Toolbar({
               onQuery("");
               setSearchOpen(false);
             }}
-            aria-label="Close search"
+            aria-label={t("trafficUI.numbers.poolDetail.toolbar.closeSearch")}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
@@ -825,7 +836,7 @@ function Toolbar({
           variant="ghost"
           size="icon"
           className="h-9 w-9 text-muted-foreground"
-          aria-label="Search"
+          aria-label={t("trafficUI.numbers.poolDetail.toolbar.search")}
           onClick={() => setSearchOpen(true)}
         >
           <Search className="h-4 w-4" />
@@ -835,8 +846,8 @@ function Toolbar({
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Filter"
-        onClick={() => toast("Filter options coming soon")}
+        aria-label={t("trafficUI.numbers.poolDetail.toolbar.filter")}
+        onClick={() => toast(t("trafficUI.numbers.poolDetail.toolbar.filterSoon"))}
       >
         <ChevronRight className="h-4 w-4 rotate-90" />
       </Button>
@@ -844,8 +855,8 @@ function Toolbar({
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Column settings"
-        onClick={() => toast("Column settings coming soon")}
+        aria-label={t("trafficUI.numbers.poolDetail.toolbar.columns")}
+        onClick={() => toast(t("trafficUI.numbers.poolDetail.toolbar.columnsSoon"))}
       >
         <Settings className="h-4 w-4" />
       </Button>
@@ -859,7 +870,7 @@ function Toolbar({
         <SelectContent align="end">
           {PAGE_SIZE_OPTIONS.map((n) => (
             <SelectItem key={n} value={String(n)}>
-              On page {n}
+              {t("trafficUI.numbers.poolDetail.toolbar.onPage").replace("{n}", String(n))}
             </SelectItem>
           ))}
         </SelectContent>

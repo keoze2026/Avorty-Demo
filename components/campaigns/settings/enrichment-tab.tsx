@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignSettingsStore } from "@/lib/store/campaign-settings-store";
 import type { EnrichmentUrl } from "@/lib/types";
 
@@ -24,6 +25,7 @@ function makeId() {
 }
 
 export function EnrichmentTab({ campaignId }: { campaignId: string }) {
+  const { t } = useTranslation();
   const get = useCampaignSettingsStore((s) => s.get);
   const update = useCampaignSettingsStore((s) => s.update);
   const urls = get(campaignId).enrichmentUrls;
@@ -38,12 +40,12 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
 
   const addUrl = () => {
     if (!draft.label.trim() || !draft.url.trim()) {
-      toast.error("Label and URL are required");
+      toast.error(t("trafficUI.campaigns.settings.enrichment.required"));
       return;
     }
     update(campaignId, "enrichmentUrls", [...urls, { ...draft, id: makeId() }]);
     setDraft({ label: "", url: "", hook: "pre-route", timeoutMs: 500, enabled: true });
-    toast.success("Enrichment URL added");
+    toast.success(t("trafficUI.campaigns.settings.enrichment.added"));
   };
 
   const removeUrl = (id: string) => {
@@ -52,7 +54,7 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
       "enrichmentUrls",
       urls.filter((u) => u.id !== id),
     );
-    toast.success("Enrichment URL removed");
+    toast.success(t("trafficUI.campaigns.settings.enrichment.removed"));
   };
 
   const toggleUrl = (id: string, enabled: boolean) => {
@@ -67,24 +69,23 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Enrichment URLs</CardTitle>
+          <CardTitle className="text-base">{t("trafficUI.campaigns.settings.enrichment.title")}</CardTitle>
           <p className="text-xs text-muted-foreground">
-            External webhooks that get called for each call. The response can populate
-            caller metadata used by routing filters downstream.
+            {t("trafficUI.campaigns.settings.enrichment.description")}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <Label className="text-xs">Label</Label>
+              <Label className="text-xs">{t("trafficUI.campaigns.settings.enrichment.label")}</Label>
               <Input
-                placeholder="Caller score (Whitepages)"
+                placeholder={t("trafficUI.campaigns.settings.enrichment.labelPlaceholder")}
                 value={draft.label}
                 onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
               />
             </div>
             <div className="grid gap-1.5">
-              <Label className="text-xs">Hook</Label>
+              <Label className="text-xs">{t("trafficUI.campaigns.settings.enrichment.hook")}</Label>
               <Select
                 value={draft.hook}
                 onValueChange={(v) =>
@@ -95,22 +96,22 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pre-route">Pre-route (before routing)</SelectItem>
-                  <SelectItem value="post-connect">Post-connect (after the buyer answers)</SelectItem>
+                  <SelectItem value="pre-route">{t("trafficUI.campaigns.settings.enrichment.hooks.preRoute")}</SelectItem>
+                  <SelectItem value="post-connect">{t("trafficUI.campaigns.settings.enrichment.hooks.postConnect")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-1.5 sm:col-span-2">
-              <Label className="text-xs">URL</Label>
+              <Label className="text-xs">{t("trafficUI.campaigns.settings.enrichment.url")}</Label>
               <Input
-                placeholder="https://api.example.com/enrich"
+                placeholder={t("trafficUI.campaigns.settings.enrichment.urlPlaceholder")}
                 value={draft.url}
                 onChange={(e) => setDraft((d) => ({ ...d, url: e.target.value }))}
                 className="font-mono text-xs"
               />
             </div>
             <div className="grid gap-1.5">
-              <Label className="text-xs">Timeout (ms)</Label>
+              <Label className="text-xs">{t("trafficUI.campaigns.settings.enrichment.timeout")}</Label>
               <Input
                 type="number"
                 min={50}
@@ -123,7 +124,7 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
             </div>
             <div className="flex items-end">
               <Button onClick={addUrl}>
-                <Plus className="h-4 w-4" /> Add URL
+                <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.enrichment.addUrl")}
               </Button>
             </div>
           </div>
@@ -133,7 +134,7 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
       {urls.length > 0 && (
         <Card className="overflow-hidden p-0">
           <div className="border-b border-border px-6 py-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-            Configured ({urls.length})
+            {t("trafficUI.campaigns.settings.enrichment.configured").replace("{count}", String(urls.length))}
           </div>
           <ul className="divide-y divide-border">
             {urls.map((u) => (
@@ -145,7 +146,7 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
                       {u.hook}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      {u.timeoutMs}ms timeout
+                      {t("trafficUI.campaigns.settings.enrichment.timeoutSuffix").replace("{ms}", String(u.timeoutMs))}
                     </span>
                   </div>
                   <div className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
@@ -155,14 +156,14 @@ export function EnrichmentTab({ campaignId }: { campaignId: string }) {
                 <Switch
                   checked={u.enabled}
                   onCheckedChange={(v) => toggleUrl(u.id, v)}
-                  aria-label={`Toggle ${u.label}`}
+                  aria-label={t("trafficUI.campaigns.settings.enrichment.toggle").replace("{label}", u.label)}
                 />
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-destructive"
                   onClick={() => removeUrl(u.id)}
-                  aria-label={`Remove ${u.label}`}
+                  aria-label={t("trafficUI.campaigns.settings.enrichment.remove").replace("{label}", u.label)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

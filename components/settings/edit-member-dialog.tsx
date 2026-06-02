@@ -22,16 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES_IN_ORDER, ROLE_DESCRIPTIONS } from "@/lib/mock/settings";
+import { ROLES_IN_ORDER } from "@/lib/mock/settings";
 import type { Member, MemberRole } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 
 type MemberStatus = Member["status"];
 
-const STATUS_OPTIONS: Array<{ value: MemberStatus; label: string; description: string }> = [
-  { value: "active", label: "Active", description: "Has full access to the workspace." },
-  { value: "invited", label: "Invited", description: "Setup link sent — pending acceptance." },
-  { value: "suspended", label: "Suspended", description: "Access revoked — can't sign in." },
-];
+const STATUS_VALUES: MemberStatus[] = ["active", "invited", "suspended"];
 
 interface Props {
   member: Member | null;
@@ -46,6 +43,7 @@ interface Props {
 }
 
 export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
+  const { t } = useTranslation();
   const open = member !== null;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -69,11 +67,11 @@ export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 250));
     onSave({ id: member.id, name: name.trim(), email: email.trim(), role, status });
-    toast.success(`Updated ${name.trim()}`);
+    toast.success(t("workspaceUI.editMember.updated").replace("{name}", name.trim()));
     onOpenChange(false);
   };
 
-  const statusDescription = STATUS_OPTIONS.find((s) => s.value === status)?.description;
+  const statusDescription = t(`workspaceUI.editMember.statusDescriptions.${status}`);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,8 +82,8 @@ export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
               <UserCog className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Edit member</DialogTitle>
-              <DialogDescription>Update this member&apos;s name, email, or role.</DialogDescription>
+              <DialogTitle>{t("workspaceUI.editMember.title")}</DialogTitle>
+              <DialogDescription>{t("workspaceUI.editMember.description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -93,17 +91,17 @@ export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="em-name">Name</Label>
+              <Label htmlFor="em-name">{t("workspaceUI.editMember.nameLabel")}</Label>
               <Input id="em-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="em-email">Email</Label>
+              <Label htmlFor="em-email">{t("workspaceUI.editMember.emailLabel")}</Label>
               <Input id="em-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>{t("workspaceUI.editMember.roleLabel")}</Label>
               <Select value={role} onValueChange={(v) => setRole(v as MemberRole)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -111,23 +109,23 @@ export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
                 <SelectContent>
                   {ROLES_IN_ORDER.map((r) => (
                     <SelectItem key={r} value={r}>
-                      <span className="font-mono capitalize">{r}</span>
+                      {t(`workspaceUI.members.role.${r}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground">{ROLE_DESCRIPTIONS[role]}</p>
+              <p className="text-[10px] text-muted-foreground">{t(`workspaceUI.roles.descriptions.${role}`)}</p>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t("workspaceUI.editMember.statusLabel")}</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as MemberStatus)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      <span className="font-mono">{s.label}</span>
+                  {STATUS_VALUES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {t(`workspaceUI.members.status.${s}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -139,15 +137,15 @@ export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("workspaceUI.editMember.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting || !name.trim() || !email.trim()}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("workspaceUI.editMember.saving")}
               </>
             ) : (
-              "Save changes"
+              t("workspaceUI.editMember.save")
             )}
           </Button>
         </DialogFooter>

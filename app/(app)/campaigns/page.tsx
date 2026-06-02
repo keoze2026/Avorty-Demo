@@ -17,9 +17,11 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 export default function CampaignsPage() {
+  const { t } = useTranslation();
   const campaigns = useCampaignsStore((s) => s.campaigns);
   const setCampaignStatus = useCampaignsStore((s) => s.setStatus);
   const remove = useCampaignsStore((s) => s.remove);
@@ -69,24 +71,28 @@ export default function CampaignsPage() {
     if (!c) return;
     const next = c.status === "active" ? "paused" : "active";
     setCampaignStatus(id, next);
-    toast.success(next === "active" ? `${c.name} activated` : `${c.name} paused`);
+    toast.success(
+      next === "active"
+        ? t("trafficUI.campaigns.toast.activated").replace("{name}", c.name)
+        : t("trafficUI.campaigns.toast.paused").replace("{name}", c.name),
+    );
   };
 
   const onArchive = (id: string) => {
     const c = campaigns.find((x) => x.id === id);
     if (!c) return;
     remove(id);
-    toast.success(`${c.name} archived`);
+    toast.success(t("trafficUI.campaigns.toast.archived").replace("{name}", c.name));
   };
 
   return (
     <>
       <PageHeader
-        title="Campaigns"
-        description="Manage your pay-per-call campaigns."
+        title={t("trafficUI.campaigns.pageTitle")}
+        description={t("trafficUI.campaigns.pageDescription")}
         actions={
           <Button size="sm" onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4" /> New campaign
+            <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.newCampaign")}
           </Button>
         }
       />
@@ -95,11 +101,11 @@ export default function CampaignsPage() {
         <EmptyState
           icon={Megaphone}
           tone="emerald"
-          title="No campaigns yet"
-          description="Create your first campaign to start routing calls."
+          title={t("trafficUI.campaigns.empty.title")}
+          description={t("trafficUI.campaigns.empty.description")}
           actions={
             <Button onClick={() => setOpen(true)}>
-              <Plus className="h-4 w-4" /> Create campaign
+              <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.createCampaign")}
             </Button>
           }
         />
@@ -116,15 +122,15 @@ export default function CampaignsPage() {
             onPageSize={setPageSize}
             columns={columns}
             onColumns={setColumns}
-            onRefresh={() => toast.success("Campaigns refreshed")}
+            onRefresh={() => toast.success(t("trafficUI.campaigns.refreshed"))}
           />
 
           {filtered.length === 0 ? (
             <EmptyState
               icon={Megaphone}
               tone="emerald"
-              title="No campaigns match"
-              description="Try clearing the search or relaxing the status filter."
+              title={t("trafficUI.campaigns.emptyMatch.title")}
+              description={t("trafficUI.campaigns.emptyMatch.description")}
             />
           ) : (
             <>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { CallDetailSheet } from "@/components/calls/call-detail-sheet";
 import { ALL_COLUMNS, CallsToolbar } from "@/components/calls/calls-toolbar";
 import { CallsTable } from "@/components/calls/calls-table";
@@ -37,6 +38,7 @@ const CALL_EXPORT_COLUMNS: ExportColumn<Call>[] = [
 ];
 
 export default function CallsPage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [range, setRange] = useState<DateRange>("7d");
   const [statuses, setStatuses] = useState<Set<CallStatus>>(new Set());
@@ -94,22 +96,26 @@ export default function CallsPage() {
       dateStamped(`vortyx-calls-${range}`),
       "Calls",
     );
-    toast.success(`Exported ${filtered.length} calls to ${format.toUpperCase()}`);
+    toast.success(
+      t("toolsUI.callLogs.toastExport")
+        .replace("{count}", String(filtered.length))
+        .replace("{format}", format.toUpperCase()),
+    );
   };
 
   return (
     <>
       <PageHeader
-        title="Call logs"
-        description="Every call your network has handled — search, filter, and drill down."
+        title={t("toolsUI.callLogs.pageTitle")}
+        description={t("toolsUI.callLogs.pageDescription")}
       />
 
       {/* Summary tiles */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <SummaryCard label="Total calls" value={formatCompact(summary.count)} />
-        <SummaryCard label="Won" value={formatCompact(summary.completed)} />
-        <SummaryCard label="Conversion" value={formatPercent(summary.conversionRate * 100, 1)} />
-        <SummaryCard label="Revenue" value={formatCurrency(summary.revenue)} />
+        <SummaryCard label={t("toolsUI.callLogs.summary.totalCalls")} value={formatCompact(summary.count)} />
+        <SummaryCard label={t("toolsUI.callLogs.summary.won")} value={formatCompact(summary.completed)} />
+        <SummaryCard label={t("toolsUI.callLogs.summary.conversion")} value={formatPercent(summary.conversionRate * 100, 1)} />
+        <SummaryCard label={t("toolsUI.callLogs.summary.revenue")} value={formatCurrency(summary.revenue)} />
       </div>
 
       <CallsToolbar
@@ -133,8 +139,8 @@ export default function CallsPage() {
         <EmptyState
           icon={PhoneCall}
           tone="cyan"
-          title="No calls match"
-          description="Try widening the date range, clearing the search box, or relaxing status filters."
+          title={t("toolsUI.callLogs.emptyTitle")}
+          description={t("toolsUI.callLogs.emptyDescription")}
         />
       ) : (
         <>
@@ -159,7 +165,7 @@ export default function CallsPage() {
 
       {/* Tiny footer note explaining avg duration */}
       <p className="-mt-3 text-[11px] text-muted-foreground">
-        Avg duration on completed calls: <span className="font-mono text-foreground">{formatDuration(summary.avgDurationSec)}</span>
+        {t("toolsUI.callLogs.avgDurationLabel")} <span className="font-mono text-foreground">{formatDuration(summary.avgDurationSec)}</span>
       </p>
 
       <CallDetailSheet

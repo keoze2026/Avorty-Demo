@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { BlockedNumberScope } from "@/lib/mock/suppression";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 type ChoiceType = "all" | "campaign";
@@ -42,6 +43,7 @@ interface Props {
  * (when applicable) → Scope → Number → submit.
  */
 export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
+  const { t } = useTranslation();
   const [choiceType, setChoiceType] = React.useState<ChoiceType>("all");
   const [campaignId, setCampaignId] = React.useState<string>("");
   const [scope, setScope] = React.useState<BlockedNumberScope>("number");
@@ -75,18 +77,18 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-[13px] font-semibold uppercase tracking-wider">
-            Block a number
+            {t("toolsUI.suppression.blockedNumbers.block.dialogTitle")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {/* Choose Type — All Campaigns / Select Campaign */}
           <div className="space-y-2">
-            <Label>Choose Type</Label>
+            <Label>{t("toolsUI.suppression.blockedNumbers.block.chooseType")}</Label>
             <Segmented
               options={[
-                { id: "all", label: "All Campaigns" },
-                { id: "campaign", label: "Select Campaign" },
+                { id: "all", label: t("toolsUI.suppression.blockedNumbers.block.allCampaigns") },
+                { id: "campaign", label: t("toolsUI.suppression.blockedNumbers.block.selectCampaign") },
               ]}
               value={choiceType}
               onChange={(v) => setChoiceType(v as ChoiceType)}
@@ -96,10 +98,10 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
           {/* Campaign picker — only when "Select Campaign" is chosen */}
           {choiceType === "campaign" && (
             <div className="space-y-2">
-              <Label htmlFor="bn-campaign">Select Campaign</Label>
+              <Label htmlFor="bn-campaign">{t("toolsUI.suppression.blockedNumbers.block.selectCampaign")}</Label>
               <Select value={campaignId} onValueChange={setCampaignId}>
                 <SelectTrigger id="bn-campaign">
-                  <SelectValue placeholder="Choose" />
+                  <SelectValue placeholder={t("toolsUI.suppression.blockedNumbers.block.choose")} />
                 </SelectTrigger>
                 <SelectContent>
                   {MOCK_CAMPAIGNS.map((c) => (
@@ -114,11 +116,11 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
 
           {/* Scope — Number / Prefix */}
           <div className="space-y-2">
-            <Label>Scope</Label>
+            <Label>{t("toolsUI.suppression.blockedNumbers.block.scope")}</Label>
             <Segmented
               options={[
-                { id: "number", label: "Number" },
-                { id: "prefix", label: "Prefix" },
+                { id: "number", label: t("toolsUI.suppression.blockedNumbers.block.scopeNumber") },
+                { id: "prefix", label: t("toolsUI.suppression.blockedNumbers.block.scopePrefix") },
               ]}
               value={scope}
               onChange={(v) => setScope(v as BlockedNumberScope)}
@@ -127,7 +129,7 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
 
           {/* Number */}
           <div className="space-y-2">
-            <Label htmlFor="bn-number">Number</Label>
+            <Label htmlFor="bn-number">{t("toolsUI.suppression.blockedNumbers.block.numberLabel")}</Label>
             <Input
               id="bn-number"
               autoFocus
@@ -136,7 +138,7 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") onSubmit();
               }}
-              placeholder="Type Number"
+              placeholder={t("toolsUI.suppression.blockedNumbers.block.numberPlaceholder")}
               inputMode="tel"
             />
           </div>
@@ -146,10 +148,10 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("toolsUI.suppression.blockedNumbers.block.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={!valid}>
-            Block Number
+            {t("toolsUI.suppression.blockedNumbers.block.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

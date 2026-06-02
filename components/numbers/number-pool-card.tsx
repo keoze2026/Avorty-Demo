@@ -12,17 +12,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact } from "@/lib/format";
 import type { NumberPool } from "@/lib/types";
 
 const STRATEGY_META = {
-  "round-robin": { icon: Shuffle, label: "Round-robin" },
-  weighted: { icon: Target, label: "Weighted" },
-  priority: { icon: Target, label: "Priority" },
+  "round-robin": { icon: Shuffle, labelKey: "trafficUI.numbers.poolCard.roundRobin" },
+  weighted: { icon: Target, labelKey: "trafficUI.numbers.poolCard.weighted" },
+  priority: { icon: Target, labelKey: "trafficUI.numbers.poolCard.priority" },
 } as const;
 
 export function NumberPoolCard({ pool }: { pool: NumberPool }) {
+  const { t } = useTranslation();
   const meta = STRATEGY_META[pool.rotationStrategy];
   const Icon = meta.icon;
 
@@ -49,16 +51,16 @@ export function NumberPoolCard({ pool }: { pool: NumberPool }) {
           </Link>
         </div>
         <div className="flex items-center gap-1">
-          <Badge variant={pool.active ? "success" : "outline"}>{pool.active ? "Active" : "Paused"}</Badge>
+          <Badge variant={pool.active ? "success" : "outline"}>{pool.active ? t("trafficUI.common.active") : t("trafficUI.common.paused")}</Badge>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Number pool actions">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("trafficUI.numbers.poolCard.actions")}>
                 <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Edit rotation</DropdownMenuItem>
-              <DropdownMenuItem>Attach numbers</DropdownMenuItem>
+              <DropdownMenuItem>{t("trafficUI.numbers.poolCard.editRotation")}</DropdownMenuItem>
+              <DropdownMenuItem>{t("trafficUI.numbers.poolCard.attach")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -66,18 +68,18 @@ export function NumberPoolCard({ pool }: { pool: NumberPool }) {
 
       <div className="relative mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Icon className="h-3 w-3 text-accent" />
-        <span className="font-mono">{meta.label} rotation</span>
+        <span className="font-mono">{t("trafficUI.numbers.poolCard.rotation").replace("{label}", t(meta.labelKey))}</span>
       </div>
 
       <div className="relative mt-4 grid grid-cols-2 gap-2 border-t border-border/40 pt-3">
         <div>
           <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-            <Hash className="h-2.5 w-2.5" /> Numbers
+            <Hash className="h-2.5 w-2.5" /> {t("trafficUI.numbers.poolCard.numbers")}
           </div>
           <div className="font-mono text-lg font-semibold">{pool.numberCount}</div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Calls today</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("trafficUI.numbers.poolCard.callsToday")}</div>
           <div className="font-mono text-lg font-semibold">{formatCompact(pool.callsToday)}</div>
         </div>
       </div>

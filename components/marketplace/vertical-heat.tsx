@@ -12,6 +12,7 @@ import { Flame } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VERTICAL_PALETTE } from "@/lib/mock/marketplace";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatPercent } from "@/lib/format";
 import type { VerticalKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 const ORDER: VerticalKey[] = ["Health", "Solar", "Legal", "Auto", "Finance", "Home"];
 
 export function VerticalHeat() {
+  const { t } = useTranslation();
   const ticker = useMarketplaceStore((s) => s.ticker);
   const listings = useMarketplaceStore((s) => s.listings);
 
@@ -44,14 +46,14 @@ export function VerticalHeat() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Flame className="h-4 w-4 text-accent" />
-          Vertical heat
+          {t("toolsUI.marketplace.verticalHeat.title")}
           {hottest && hottest.count > 0 && (
             <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              hottest · <span className="text-foreground">{hottest.v}</span>
+              {t("toolsUI.marketplace.verticalHeat.hottest")} <span className="text-foreground">{hottest.v}</span>
             </span>
           )}
         </CardTitle>
-        <p className="text-[11px] text-muted-foreground">Share of the last 50 bids by vertical</p>
+        <p className="text-[11px] text-muted-foreground">{t("toolsUI.marketplace.verticalHeat.description")}</p>
       </CardHeader>
 
       <CardContent className="space-y-3">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { ProtectedCampaignsCard } from "@/components/suppression/protected-campaigns-card";
 import { ProviderConfigurationCard } from "@/components/suppression/provider-configuration-card";
 import { PageHeader } from "@/components/shared/page-header";
@@ -11,6 +12,7 @@ import { ROUTES } from "@/lib/constants";
 import { useTcpaShieldStore } from "@/lib/store/tcpa-shield-store";
 
 export default function TcpaShieldDetailPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
@@ -28,18 +30,18 @@ export default function TcpaShieldDetailPage() {
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          TCPA Shield
+          {t("toolsUI.suppression.tcpaShield.breadcrumb")}
         </Link>
         <PageHeader
-          title="Provider not found"
-          description="This provider no longer exists. Return to the list to pick another."
+          title={t("toolsUI.suppression.tcpaShield.notFoundTitle")}
+          description={t("toolsUI.suppression.tcpaShield.notFoundDescription")}
         />
         <button
           type="button"
           onClick={() => router.push(ROUTES.tcpaShield)}
           className="text-xs text-accent hover:underline"
         >
-          Back to TCPA Shield
+          {t("toolsUI.suppression.tcpaShield.backToList")}
         </button>
       </>
     );
@@ -54,19 +56,19 @@ export default function TcpaShieldDetailPage() {
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        TCPA Shield
+        {t("toolsUI.suppression.tcpaShield.breadcrumb")}
       </Link>
 
       <PageHeader
         title={provider.name}
-        description="Check callers against DNC providers to block unwanted or risky calls before routing"
+        description={t("toolsUI.suppression.tcpaShield.detailDescription")}
       />
 
       <ProtectedCampaignsCard
         selectedIds={provider.campaignIds}
         onAdd={(campaignId) => addCampaign(provider.id, campaignId)}
         onRemove={(campaignId) => removeCampaign(provider.id, campaignId)}
-        description="Add campaigns to check callers against DNC providers before routing."
+        description={t("toolsUI.suppression.tcpaShield.protectedCampaignsDescription")}
       />
 
       <ProviderConfigurationCard

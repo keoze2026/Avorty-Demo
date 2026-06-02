@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import {
   REPORTING_COLUMNS,
@@ -53,6 +54,7 @@ function fromBuyer(b: Buyer): FormState {
 }
 
 export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
+  const { t } = useTranslation();
   const update = useBuyersStore((s) => s.update);
   const reporting = useBuyerReportingStore((s) => s.byBuyer[buyer.id]) ?? {
     incoming: true,
@@ -82,7 +84,7 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
 
   const onSave = async () => {
     if (hasErrors) {
-      toast.error("Please fix the highlighted fields first");
+      toast.error(t("networkUI.buyers.settings.fixFieldsFirst"));
       return;
     }
     setSubmitting(true);
@@ -100,11 +102,11 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
       monthlyCap: form.monthlyCap,
     });
     setSubmitting(false);
-    toast.success("Buyer settings saved");
+    toast.success(t("networkUI.buyers.settings.saved"));
   };
   const onDiscard = () => {
     setForm(baseline);
-    toast.info("Discarded unsaved changes");
+    toast.info(t("networkUI.buyers.settings.discarded"));
   };
 
   return (
@@ -114,38 +116,38 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Building2 className="h-4 w-4 text-accent" />
-            Identity
+            {t("networkUI.buyers.settings.identityTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="bs-name">Buyer name</Label>
+            <Label htmlFor="bs-name">{t("networkUI.buyers.settings.buyerName")}</Label>
             <Input
               id="bs-name"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               aria-invalid={!!errors.name}
             />
-            {errors.name && <ErrorLine>{errors.name}</ErrorLine>}
+            {errors.name && <ErrorLine>{t(errors.name)}</ErrorLine>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bs-org">Organization</Label>
+            <Label htmlFor="bs-org">{t("networkUI.buyers.settings.organization")}</Label>
             <Input
               id="bs-org"
               value={form.organization}
               onChange={(e) => set("organization", e.target.value)}
               aria-invalid={!!errors.organization}
             />
-            {errors.organization && <ErrorLine>{errors.organization}</ErrorLine>}
+            {errors.organization && <ErrorLine>{t(errors.organization)}</ErrorLine>}
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="bs-desc">Notes</Label>
+            <Label htmlFor="bs-desc">{t("networkUI.buyers.settings.notes")}</Label>
             <Textarea
               id="bs-desc"
               rows={2}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Vertical, geo, anything routing-affecting."
+              placeholder={t("networkUI.buyers.settings.notesPlaceholder")}
             />
           </div>
         </CardContent>
@@ -156,12 +158,12 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <UserSquare className="h-4 w-4 text-accent" />
-            Contact
+            {t("networkUI.buyers.settings.contactTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="bs-contact">Contact name</Label>
+            <Label htmlFor="bs-contact">{t("networkUI.buyers.settings.contactName")}</Label>
             <Input
               id="bs-contact"
               value={form.contactName}
@@ -171,7 +173,7 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
           <div className="space-y-2">
             <Label htmlFor="bs-email" className="inline-flex items-center gap-1.5">
               <Mail className="h-3 w-3 text-muted-foreground" />
-              Email
+              {t("networkUI.buyers.settings.email")}
             </Label>
             <Input
               id="bs-email"
@@ -180,7 +182,7 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
               onChange={(e) => set("email", e.target.value)}
               aria-invalid={!!errors.email}
             />
-            {errors.email && <ErrorLine>{errors.email}</ErrorLine>}
+            {errors.email && <ErrorLine>{t(errors.email)}</ErrorLine>}
           </div>
         </CardContent>
       </Card>
@@ -190,12 +192,12 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <DollarSign className="h-4 w-4 text-accent" />
-            Bidding
+            {t("networkUI.buyers.settings.biddingTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="bs-bid">Bid per call (USD)</Label>
+            <Label htmlFor="bs-bid">{t("networkUI.buyers.settings.bidPerCall")}</Label>
             <div className="relative">
               <DollarSign className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -209,10 +211,10 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
                 aria-invalid={!!errors.bidAmount}
               />
             </div>
-            {errors.bidAmount && <ErrorLine>{errors.bidAmount}</ErrorLine>}
+            {errors.bidAmount && <ErrorLine>{t(errors.bidAmount)}</ErrorLine>}
           </div>
           <div className="space-y-2">
-            <Label>Payout model</Label>
+            <Label>{t("networkUI.buyers.settings.payoutModel")}</Label>
             <Select
               value={form.payoutModel}
               onValueChange={(v) => set("payoutModel", v as BuyerPayoutModel)}
@@ -221,8 +223,8 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="flat">Flat</SelectItem>
-                <SelectItem value="tiered">Tiered</SelectItem>
+                <SelectItem value="flat">{t("networkUI.buyers.settings.payoutFlat")}</SelectItem>
+                <SelectItem value="tiered">{t("networkUI.buyers.settings.payoutTiered")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -234,12 +236,12 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Gauge className="h-4 w-4 text-accent" />
-            Caps &amp; pacing
+            {t("networkUI.buyers.settings.capsTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="bs-conc">Concurrency</Label>
+            <Label htmlFor="bs-conc">{t("networkUI.buyers.settings.concurrency")}</Label>
             <Input
               id="bs-conc"
               type="number"
@@ -248,10 +250,10 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
               onChange={(e) => set("concurrencyCap", Math.max(1, parseInt(e.target.value) || 1))}
               className="font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">Parallel calls allowed.</p>
+            <p className="text-[10px] text-muted-foreground">{t("networkUI.buyers.settings.concurrencyHint")}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bs-daily">Daily cap</Label>
+            <Label htmlFor="bs-daily">{t("networkUI.buyers.settings.dailyCap")}</Label>
             <Input
               id="bs-daily"
               type="number"
@@ -260,10 +262,10 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
               onChange={(e) => set("dailyCap", Math.max(0, parseInt(e.target.value) || 0))}
               className="font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
+            <p className="text-[10px] text-muted-foreground">{t("networkUI.buyers.settings.unlimitedHint")}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bs-monthly">Monthly cap</Label>
+            <Label htmlFor="bs-monthly">{t("networkUI.buyers.settings.monthlyCap")}</Label>
             <Input
               id="bs-monthly"
               type="number"
@@ -272,7 +274,7 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
               onChange={(e) => set("monthlyCap", Math.max(0, parseInt(e.target.value) || 0))}
               className="font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">0 = unlimited.</p>
+            <p className="text-[10px] text-muted-foreground">{t("networkUI.buyers.settings.unlimitedHint")}</p>
           </div>
         </CardContent>
       </Card>
@@ -283,10 +285,12 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Eye className="h-4 w-4 text-accent" />
-            Reporting visibility
+            {t("networkUI.buyers.settings.reportingTitle")}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Pick which reporting columns this buyer can see — uncheck to hide. {visibleCount} of {REPORTING_COLUMNS.length} visible.
+            {t("networkUI.buyers.settings.reportingDesc")
+              .replace("{visible}", String(visibleCount))
+              .replace("{total}", String(REPORTING_COLUMNS.length))}
           </p>
         </CardHeader>
         <CardContent>
@@ -335,9 +339,9 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
 
 function validate(form: FormState) {
   const errs: Record<string, string> = {};
-  if (form.name.trim().length < 2) errs.name = "Name is required.";
-  if (form.organization.trim().length < 2) errs.organization = "Organization is required.";
-  if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = "Doesn't look like a valid email.";
-  if (form.bidAmount < 0) errs.bidAmount = "Bid can't be negative.";
+  if (form.name.trim().length < 2) errs.name = "networkUI.buyers.settings.errNameRequired";
+  if (form.organization.trim().length < 2) errs.organization = "networkUI.buyers.settings.errOrgRequired";
+  if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = "networkUI.buyers.settings.errInvalidEmail";
+  if (form.bidAmount < 0) errs.bidAmount = "networkUI.buyers.settings.errBidNegative";
   return errs;
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { BlockedCarriersCard } from "@/components/suppression/blocked-carriers-card";
 import { ProtectedCampaignsCard } from "@/components/suppression/protected-campaigns-card";
 import { PageHeader } from "@/components/shared/page-header";
@@ -11,6 +12,7 @@ import { ROUTES } from "@/lib/constants";
 import { useVoipShieldStore } from "@/lib/store/voip-shield-store";
 
 export default function VoipShieldDetailPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
@@ -29,18 +31,18 @@ export default function VoipShieldDetailPage() {
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          VoIP Shield
+          {t("toolsUI.suppression.voipShield.breadcrumb")}
         </Link>
         <PageHeader
-          title="Shield not found"
-          description="This shield no longer exists. Return to the list to pick another."
+          title={t("toolsUI.suppression.voipShield.notFoundTitle")}
+          description={t("toolsUI.suppression.voipShield.notFoundDescription")}
         />
         <button
           type="button"
           onClick={() => router.push(ROUTES.voipShield)}
           className="text-xs text-accent hover:underline"
         >
-          Back to VoIP Shield
+          {t("toolsUI.suppression.voipShield.backToList")}
         </button>
       </>
     );
@@ -55,12 +57,12 @@ export default function VoipShieldDetailPage() {
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        VoIP Shield
+        {t("toolsUI.suppression.voipShield.breadcrumb")}
       </Link>
 
       <PageHeader
         title={shield.name}
-        description="Block VoIP callers to prevent fraud traffic, $0.01 per call"
+        description={t("toolsUI.suppression.voipShield.detailDescription")}
       />
 
       <ProtectedCampaignsCard

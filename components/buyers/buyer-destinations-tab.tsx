@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
@@ -21,6 +22,7 @@ interface BuyerDestinationsTabProps {
 }
 
 export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
+  const { t } = useTranslation();
   // Select the stable array, filter outside the selector to avoid Zustand v5's
   // useSyncExternalStore infinite-render trap (React error #185).
   const allDestinations = useDestinationsStore((s) => s.destinations);
@@ -59,11 +61,11 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
         <EmptyState
           icon={Target}
           tone="cyan"
-          title="No destinations yet"
-          description="Add a destination TFN to start routing calls to this buyer."
+          title={t("networkUI.buyers.destinations.emptyTitle")}
+          description={t("networkUI.buyers.destinations.emptyDesc")}
           actions={
             <Button onClick={() => setBuilderOpen(true)}>
-              <Plus className="h-4 w-4" /> Add destination
+              <Plus className="h-4 w-4" /> {t("networkUI.buyers.destinations.add")}
             </Button>
           }
         />
@@ -76,11 +78,15 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
     <>
       <div className="mb-3 flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          {destinations.length} {destinations.length === 1 ? "destination" : "destinations"}
-          {" · "}each with its own concurrency and cap settings.
+          {destinations.length}{" "}
+          {destinations.length === 1
+            ? t("networkUI.buyers.destinations.countOne")
+            : t("networkUI.buyers.destinations.countOther")}
+          {" · "}
+          {t("networkUI.buyers.destinations.eachConcurrency")}
         </p>
         <Button size="sm" onClick={() => setBuilderOpen(true)}>
-          <Plus className="h-4 w-4" /> Add destination
+          <Plus className="h-4 w-4" /> {t("networkUI.buyers.destinations.add")}
         </Button>
       </div>
 
@@ -113,16 +119,16 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
                     </p>
                   </div>
                   {d.enabled ? (
-                    <Badge variant="success">Active</Badge>
+                    <Badge variant="success">{t("networkUI.buyers.destinations.active")}</Badge>
                   ) : (
-                    <Badge variant="outline">Disabled</Badge>
+                    <Badge variant="outline">{t("networkUI.buyers.destinations.disabled")}</Badge>
                   )}
                 </div>
 
                 <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-border/40 pt-3 text-center">
                   <div>
                     <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      CC
+                      {t("networkUI.buyers.destinations.cc")}
                     </dt>
                     <dd className="font-mono">
                       <span className={cn(cc > 0 ? "text-accent" : "text-muted-foreground")}>
@@ -133,13 +139,13 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
                   </div>
                   <div>
                     <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Calls
+                      {t("networkUI.buyers.destinations.calls")}
                     </dt>
                     <dd className="font-mono">{formatNumber(callsToday)}</dd>
                   </div>
                   <div>
                     <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Revenue
+                      {t("networkUI.buyers.destinations.revenue")}
                     </dt>
                     <dd className="font-mono">{formatCurrency(revenueToday)}</dd>
                   </div>
@@ -148,7 +154,7 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
                 {d.dailyCap > 0 && (
                   <div className="mt-3">
                     <div className="mb-1 flex items-baseline justify-between text-[10px] text-muted-foreground">
-                      <span className="uppercase tracking-wider">Daily cap</span>
+                      <span className="uppercase tracking-wider">{t("networkUI.buyers.destinations.dailyCap")}</span>
                       <span className="font-mono tabular-nums">
                         {formatNumber(callsToday)} / {formatNumber(d.dailyCap)} · {Math.round(capPct)}%
                       </span>

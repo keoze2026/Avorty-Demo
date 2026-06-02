@@ -21,6 +21,7 @@ import {
   REFERRAL_COMMISSION_RATE,
   type ReferredClient,
 } from "@/lib/mock/referrals";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 type RangeId = "14d" | "30d" | "90d";
@@ -88,6 +89,7 @@ function buildDailySpend(
 }
 
 export function ReferralSpendChart() {
+  const { t } = useTranslation();
   const [range, setRange] = React.useState<RangeId>("30d");
 
   const data = React.useMemo<Bucket[]>(() => {
@@ -130,23 +132,26 @@ export function ReferralSpendChart() {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-sm font-semibold">Spending tracker</CardTitle>
+          <CardTitle className="text-sm font-semibold">{t("toolsUI.referrals.chart.title")}</CardTitle>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Referred-client spend and your {REFERRAL_COMMISSION_RATE * 100}% commission share
+            {t("toolsUI.referrals.chart.description").replace(
+              "{pct}",
+              String(REFERRAL_COMMISSION_RATE * 100),
+            )}
           </p>
           <div className="mt-2 flex items-baseline gap-3">
             <span className="text-xl font-semibold tabular-nums">
               {formatCurrency(totals.spend)}
             </span>
-            <span className="text-[11px] text-muted-foreground">spend</span>
+            <span className="text-[11px] text-muted-foreground">{t("toolsUI.referrals.chart.spendLabel")}</span>
             <span className="text-[11px] tabular-nums text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
-              · {formatCurrency(totals.commission)} earned
+              · {formatCurrency(totals.commission)}{t("toolsUI.referrals.chart.earnedSuffix")}
             </span>
           </div>
         </div>
         <div
           role="tablist"
-          aria-label="Time range"
+          aria-label={t("toolsUI.referrals.chart.rangeAria")}
           className="inline-flex rounded-md border border-border bg-muted/30 p-0.5"
         >
           {RANGES.map((r) => {
@@ -216,13 +221,13 @@ export function ReferralSpendChart() {
                 cursor={false}
                 formatter={(v: number, name) => [
                   formatCurrency(v, true),
-                  name === "spend" ? "Spend" : "Your commission",
+                  name === "spend" ? t("toolsUI.referrals.chart.spend") : t("toolsUI.referrals.chart.yourCommission"),
                 ]}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
                 iconSize={8}
-                formatter={(v) => (v === "spend" ? "Spend" : "Your commission")}
+                formatter={(v) => (v === "spend" ? t("toolsUI.referrals.chart.spend") : t("toolsUI.referrals.chart.yourCommission"))}
               />
               <Bar
                 yAxisId="spend"

@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
@@ -107,11 +108,12 @@ export function TableToolbar({
   filter,
   columns,
 }: Props) {
+  const { t } = useTranslation();
   const [searchOpen, setSearchOpen] = React.useState(false);
 
   const handleRefresh = () => {
     if (onRefresh) onRefresh();
-    else toast.success("Refreshed");
+    else toast.success(t("tableToolbar.refreshed"));
   };
 
   return (
@@ -123,7 +125,7 @@ export function TableToolbar({
             autoFocus
             value={query}
             onChange={(e) => onQuery(e.target.value)}
-            placeholder="Search…"
+            placeholder={t("tableToolbar.searchPlaceholder")}
             className="h-9 w-56 pl-7 pr-7 text-xs"
           />
           <button
@@ -132,7 +134,7 @@ export function TableToolbar({
               onQuery("");
               setSearchOpen(false);
             }}
-            aria-label="Close search"
+            aria-label={t("tableToolbar.closeSearch")}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
@@ -143,7 +145,7 @@ export function TableToolbar({
           variant="ghost"
           size="icon"
           className="h-9 w-9 text-muted-foreground"
-          aria-label="Search"
+          aria-label={t("tableToolbar.search")}
           onClick={() => setSearchOpen(true)}
         >
           <Search className="h-4 w-4" />
@@ -157,7 +159,7 @@ export function TableToolbar({
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Refresh"
+        aria-label={t("tableToolbar.refresh")}
         onClick={handleRefresh}
       >
         <RotateCw className="h-4 w-4" />
@@ -174,7 +176,7 @@ export function TableToolbar({
         <SelectContent align="end">
           {PAGE_SIZE_OPTIONS.map((n) => (
             <SelectItem key={n} value={String(n)}>
-              On page {n}
+              {t("tableToolbar.onPage").replace("{n}", String(n))}
             </SelectItem>
           ))}
         </SelectContent>
@@ -190,14 +192,15 @@ export function TableToolbar({
 /* ─── Sort popover ────────────────────────────────────────────────────── */
 
 function SortPopover({ sort }: { sort?: Props["sort"] }) {
+  const { t } = useTranslation();
   if (!sort) {
     return (
       <Button
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Sort"
-        onClick={() => toast("Sort options coming soon")}
+        aria-label={t("tableToolbar.sort")}
+        onClick={() => toast(t("tableToolbar.sortComingSoon"))}
       >
         <ArrowUpDown className="h-4 w-4" />
       </Button>
@@ -210,14 +213,14 @@ function SortPopover({ sort }: { sort?: Props["sort"] }) {
           variant="ghost"
           size="icon"
           className="h-9 w-9 text-muted-foreground"
-          aria-label="Sort"
+          aria-label={t("tableToolbar.sort")}
         >
           <ArrowUpDown className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-52 p-1">
         <div className="border-b border-border px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Sort by
+          {t("tableToolbar.sortBy")}
         </div>
         <div className="py-1">
           {sort.options.map((opt) => {
@@ -253,14 +256,15 @@ function SortPopover({ sort }: { sort?: Props["sort"] }) {
 /* ─── Filter popover ──────────────────────────────────────────────────── */
 
 function FilterPopover({ filter }: { filter?: Props["filter"] }) {
+  const { t } = useTranslation();
   if (!filter) {
     return (
       <Button
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Filter"
-        onClick={() => toast("Filter options coming soon")}
+        aria-label={t("tableToolbar.filter")}
+        onClick={() => toast(t("tableToolbar.filterComingSoon"))}
       >
         <Filter className="h-4 w-4" />
       </Button>
@@ -282,7 +286,7 @@ function FilterPopover({ filter }: { filter?: Props["filter"] }) {
             "relative h-9 w-9 text-muted-foreground",
             count > 0 && "text-accent",
           )}
-          aria-label="Filter"
+          aria-label={t("tableToolbar.filter")}
         >
           <Filter className="h-4 w-4" />
           {count > 0 && (
@@ -295,7 +299,7 @@ function FilterPopover({ filter }: { filter?: Props["filter"] }) {
       <PopoverContent align="end" className="w-60 p-1">
         <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {filter.label ?? "Filter"}
+            {filter.label ?? t("tableToolbar.filter")}
           </span>
           {count > 0 && (
             <button
@@ -303,7 +307,7 @@ function FilterPopover({ filter }: { filter?: Props["filter"] }) {
               onClick={() => filter.onChange(new Set())}
               className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
             >
-              Clear
+              {t("tableToolbar.clear")}
             </button>
           )}
         </div>
@@ -335,14 +339,15 @@ function FilterPopover({ filter }: { filter?: Props["filter"] }) {
 /* ─── Column-settings popover ─────────────────────────────────────────── */
 
 function ColumnsPopover({ columns }: { columns?: Props["columns"] }) {
+  const { t } = useTranslation();
   if (!columns) {
     return (
       <Button
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-muted-foreground"
-        aria-label="Column settings"
-        onClick={() => toast("Column settings coming soon")}
+        aria-label={t("tableToolbar.columnSettings")}
+        onClick={() => toast(t("tableToolbar.columnSettingsComingSoon"))}
       >
         <Settings className="h-4 w-4" />
       </Button>
@@ -364,7 +369,7 @@ function ColumnsPopover({ columns }: { columns?: Props["columns"] }) {
           variant="ghost"
           size="icon"
           className="h-9 w-9 text-muted-foreground"
-          aria-label="Column settings"
+          aria-label={t("tableToolbar.columnSettings")}
         >
           <Settings className="h-4 w-4" />
         </Button>
@@ -372,14 +377,14 @@ function ColumnsPopover({ columns }: { columns?: Props["columns"] }) {
       <PopoverContent align="end" className="w-56 p-0">
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Columns
+            {t("tableToolbar.columns")}
           </span>
           <button
             type="button"
             onClick={showAll}
             className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
           >
-            Show all
+            {t("tableToolbar.showAll")}
           </button>
         </div>
         <div className="max-h-64 overflow-y-auto p-1">
@@ -405,7 +410,7 @@ function ColumnsPopover({ columns }: { columns?: Props["columns"] }) {
                   {opt.label}
                   {opt.required && (
                     <span className="ml-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
-                      · always
+                      · {t("tableToolbar.always")}
                     </span>
                   )}
                 </span>

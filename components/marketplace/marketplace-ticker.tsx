@@ -10,10 +10,12 @@ import { Activity } from "lucide-react";
 
 import { VERTICAL_PALETTE } from "@/lib/mock/marketplace";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import type { VerticalKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function MarketplaceTicker() {
+  const { t } = useTranslation();
   const ticker = useMarketplaceStore((s) => s.ticker);
   const listings = useMarketplaceStore((s) => s.listings);
 
@@ -31,7 +33,7 @@ export function MarketplaceTicker() {
       <div className="relative overflow-hidden rounded-xl border border-border bg-card/60 px-3 py-2 backdrop-blur-md">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Activity className="h-3.5 w-3.5 text-accent animate-pulse" />
-          Warming up the floor…
+          {t("toolsUI.marketplace.ticker.warmingUp")}
         </div>
       </div>
     );
@@ -51,7 +53,7 @@ export function MarketplaceTicker() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
         </span>
-        <span className="text-foreground/80">Live tape</span>
+        <span className="text-foreground/80">{t("toolsUI.marketplace.ticker.liveTape")}</span>
       </div>
 
       <div

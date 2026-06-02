@@ -13,6 +13,7 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { bucketDaily, bucketHourly } from "@/lib/dashboard-buckets";
 import { LAST_14_DAYS, TODAY_HOURLY } from "@/lib/mock/timeseries";
@@ -22,9 +23,9 @@ import { cn } from "@/lib/utils";
 
 type Range = "24h" | "14d";
 
-const RANGES: Array<{ id: Range; label: string }> = [
-  { id: "24h", label: "Today" },
-  { id: "14d", label: "14 days" },
+const RANGES: Array<{ id: Range; labelKey: string }> = [
+  { id: "24h", labelKey: "dashboard.range.today" },
+  { id: "14d", labelKey: "dashboard.range.fourteenDays" },
 ];
 
 interface RevenueChartProps {
@@ -33,6 +34,7 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ calls }: RevenueChartProps = {}) {
+  const { t } = useTranslation();
   const [range, setRange] = React.useState<Range>("24h");
   const hourly = React.useMemo(
     () => (calls ? bucketHourly(calls) : TODAY_HOURLY),
@@ -55,13 +57,13 @@ export function RevenueChart({ calls }: RevenueChartProps = {}) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-2">
         <div>
-          <CardTitle className="text-sm font-semibold">Revenue</CardTitle>
+          <CardTitle className="text-sm font-semibold">{t("dashboard.revenue")}</CardTitle>
           <div className="mt-1.5 flex items-baseline gap-2">
             <span className="text-2xl font-semibold tracking-tight tabular-nums">
               {formatCurrency(total)}
             </span>
             <span className="text-[11px] text-muted-foreground">
-              peak {formatCurrency(peak)} · avg {formatCurrency(avg)}
+              {t("dashboard.chart.peak")} {formatCurrency(peak)} · {t("dashboard.chart.avg")} {formatCurrency(avg)}
             </span>
           </div>
         </div>
@@ -77,7 +79,7 @@ export function RevenueChart({ calls }: RevenueChartProps = {}) {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {r.label}
+              {t(r.labelKey)}
             </button>
           ))}
         </div>

@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { Building2, Cable, CircleSlash2, GitFork, Layers } from "lucide-react";
 
 import { useCountUp } from "@/hooks/use-count-up";
+import { useTranslation } from "@/hooks/use-translation";
 import type { RoutingPlan } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ interface TopologyOverviewProps {
 }
 
 export function TopologyOverview({ plans }: TopologyOverviewProps) {
+  const { t } = useTranslation();
   const published = plans.filter((p) => p.status === "published").length;
   const draft = plans.filter((p) => p.status === "draft").length;
   const archived = plans.filter((p) => p.status === "archived").length;
@@ -75,11 +77,11 @@ export function TopologyOverview({ plans }: TopologyOverviewProps) {
         <div className="relative p-7 lg:col-span-4 lg:border-r lg:border-border/60">
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] font-semibold tracking-[0.22em] text-accent">
-              00 / TOPOLOGY
+              00 / {t("trafficUI.routing.topology.topology")}
             </span>
             <span aria-hidden className="h-3 w-px bg-border" />
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              routing plans
+              {t("trafficUI.routing.topology.routingPlans")}
             </span>
           </div>
 
@@ -92,13 +94,13 @@ export function TopologyOverview({ plans }: TopologyOverviewProps) {
                 <span className="text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
                   {published}
                 </span>{" "}
-                live
+                {t("trafficUI.routing.topology.live")}
               </span>
               <span>
-                <span className="text-foreground/85">{draft}</span> draft
+                <span className="text-foreground/85">{draft}</span> {t("trafficUI.routing.topology.draft")}
               </span>
               <span>
-                <span className="text-muted-foreground/70">{archived}</span> archived
+                <span className="text-muted-foreground/70">{archived}</span> {t("trafficUI.routing.topology.archived")}
               </span>
             </div>
           </div>
@@ -121,9 +123,9 @@ export function TopologyOverview({ plans }: TopologyOverviewProps) {
             </div>
           </div>
           <div className="mt-2 flex justify-between font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">
-            <span>portfolio mix</span>
+            <span>{t("trafficUI.routing.topology.portfolioMix")}</span>
             <span>
-              {((published / Math.max(plans.length, 1)) * 100).toFixed(0)}% live
+              {t("trafficUI.routing.topology.percentLive").replace("{pct}", ((published / Math.max(plans.length, 1)) * 100).toFixed(0))}
             </span>
           </div>
         </div>
@@ -138,16 +140,16 @@ export function TopologyOverview({ plans }: TopologyOverviewProps) {
           <Aggregate
             icon={Layers}
             index="01"
-            label="Nodes"
+            label={t("trafficUI.routing.topology.nodes")}
             display={Math.round(animatedNodes).toString()}
             highlight
           />
-          <Aggregate icon={Cable} index="02" label="Edges" display={totalEdges.toString()} />
-          <Aggregate icon={Building2} index="03" label="Buyer terminals" display={totalBuyers.toString()} />
+          <Aggregate icon={Cable} index="02" label={t("trafficUI.routing.topology.edgesLabel")} display={totalEdges.toString()} />
+          <Aggregate icon={Building2} index="03" label={t("trafficUI.routing.topology.buyerTerminals")} display={totalBuyers.toString()} />
           <Aggregate
             icon={CircleSlash2}
             index="04"
-            label="Dead-ends"
+            label={t("trafficUI.routing.topology.deadEnds")}
             display={totalDeadEnds.toString()}
           />
         </div>
@@ -157,7 +159,7 @@ export function TopologyOverview({ plans }: TopologyOverviewProps) {
       <div className="relative flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/50 px-6 py-3">
         <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           <GitFork className="h-3 w-3 text-accent" />
-          campaigns wired
+          {t("trafficUI.routing.topology.campaignsWired")}
         </div>
         {plans.map((p) => (
           <span
@@ -238,19 +240,26 @@ function ConnectivityDial({ value, totalEdges }: { value: number; totalEdges: nu
       })}
 
       {/* Center text */}
+      <DialInner pct={pct} totalEdges={totalEdges} />
+    </div>
+  );
+}
+
+function DialInner({ pct, totalEdges }: { pct: number; totalEdges: number }) {
+  const { t } = useTranslation();
+  return (
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent">
-          density
+          {t("trafficUI.routing.topology.density")}
         </span>
         <span className="mt-0.5 font-mono text-3xl font-bold tabular-nums leading-none">
           {pct.toFixed(0)}
           <span className="text-base text-muted-foreground">%</span>
         </span>
         <span className="mt-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-          {totalEdges} edges
+          {totalEdges} {t("trafficUI.routing.topology.edges")}
         </span>
       </div>
-    </div>
   );
 }
 

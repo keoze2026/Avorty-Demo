@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import type { Campaign } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,7 @@ export function CampaignsTable({
   onToggle,
   onArchive,
 }: CampaignsTableProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
@@ -116,19 +118,19 @@ export function CampaignsTable({
                 <Checkbox
                   checked={allChecked || (indeterminate && "indeterminate")}
                   onCheckedChange={toggleAll}
-                  aria-label="Select all campaigns"
+                  aria-label={t("trafficUI.campaigns.table.selectAll")}
                 />
               </TableHead>
-              {columns.progress && <TableHead>Progress</TableHead>}
-              <TableHead className="text-left">Campaign</TableHead>
-              {columns.access && <TableHead>Access</TableHead>}
-              {columns.live && <TableHead>Live</TableHead>}
-              {columns.hourly && <TableHead>Hourly</TableHead>}
-              {columns.daily && <TableHead>Daily</TableHead>}
-              {columns.monthly && <TableHead>Monthly</TableHead>}
-              {columns.global && <TableHead>Global</TableHead>}
-              {columns.status && <TableHead>Status</TableHead>}
-              <TableHead className="pr-4">Actions</TableHead>
+              {columns.progress && <TableHead>{t("trafficUI.campaigns.columns.progress")}</TableHead>}
+              <TableHead className="text-left">{t("trafficUI.campaigns.columns.campaign")}</TableHead>
+              {columns.access && <TableHead>{t("trafficUI.campaigns.columns.access")}</TableHead>}
+              {columns.live && <TableHead>{t("trafficUI.campaigns.columns.live")}</TableHead>}
+              {columns.hourly && <TableHead>{t("trafficUI.campaigns.columns.hourly")}</TableHead>}
+              {columns.daily && <TableHead>{t("trafficUI.campaigns.columns.daily")}</TableHead>}
+              {columns.monthly && <TableHead>{t("trafficUI.campaigns.columns.monthly")}</TableHead>}
+              {columns.global && <TableHead>{t("trafficUI.campaigns.columns.global")}</TableHead>}
+              {columns.status && <TableHead>{t("trafficUI.campaigns.columns.status")}</TableHead>}
+              <TableHead className="pr-4">{t("trafficUI.campaigns.columns.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -146,7 +148,7 @@ export function CampaignsTable({
                     <Checkbox
                       checked={selected.has(c.id)}
                       onCheckedChange={() => toggleOne(c.id)}
-                      aria-label={`Select ${c.name}`}
+                      aria-label={t("trafficUI.campaigns.table.selectRow").replace("{name}", c.name)}
                     />
                   </TableCell>
                   {columns.progress && (
@@ -167,7 +169,7 @@ export function CampaignsTable({
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <User className="h-3.5 w-3.5" />
-                        Public
+                        {t("trafficUI.common.public")}
                       </span>
                     </TableCell>
                   )}
@@ -193,7 +195,7 @@ export function CampaignsTable({
                       <Switch
                         checked={isActive}
                         onCheckedChange={() => onToggle(c.id)}
-                        aria-label={isActive ? "Pause campaign" : "Activate campaign"}
+                        aria-label={isActive ? t("trafficUI.campaigns.table.pauseCampaign") : t("trafficUI.campaigns.table.activateCampaign")}
                       />
                     </TableCell>
                   )}
@@ -201,14 +203,14 @@ export function CampaignsTable({
                     <div className="inline-flex items-center gap-0.5">
                       <ActionIcon
                         icon={Pencil}
-                        label="Edit"
+                        label={t("trafficUI.campaigns.table.edit")}
                         onClick={() => router.push(`${ROUTES.campaigns}/${c.id}`)}
                       />
-                      <ActionIcon icon={CirclePlus} label="Duplicate" />
-                      <ActionIcon icon={Undo2} label="Revert" />
+                      <ActionIcon icon={CirclePlus} label={t("trafficUI.campaigns.table.duplicate")} />
+                      <ActionIcon icon={Undo2} label={t("trafficUI.campaigns.table.revert")} />
                       <ActionIcon
                         icon={Trash2}
-                        label="Archive"
+                        label={t("trafficUI.campaigns.table.archive")}
                         tone="destructive"
                         onClick={() => onArchive(c.id)}
                       />
@@ -229,15 +231,17 @@ export function CampaignsTable({
 /* ─────────────────────────────────────────────────────────────────── */
 
 function ActiveBadge() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-[oklch(0.78_0.18_155)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
       <span aria-hidden className="h-1 w-1 rounded-full bg-current" />
-      Active
+      {t("trafficUI.common.active")}
     </span>
   );
 }
 
 function ProgressPill({ paused }: { paused: boolean }) {
+  const { t } = useTranslation();
   return (
     <span
       className={cn(
@@ -247,7 +251,7 @@ function ProgressPill({ paused }: { paused: boolean }) {
           : "bg-[color:var(--success)]/15 text-[color:var(--success)]",
       )}
     >
-      {paused ? "Paused" : "Ready"}
+      {paused ? t("trafficUI.campaigns.table.paused") : t("trafficUI.campaigns.table.ready")}
     </span>
   );
 }

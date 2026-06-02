@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Activity, DollarSign, Gauge, PhoneCall, TrendingUp } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
 
@@ -13,6 +14,7 @@ import type { Buyer } from "@/lib/types";
  * in components/dashboard/kpi-tile.tsx and is still used on the main dashboard.
  */
 export function BuyerStatsRow({ buyer }: { buyer: Buyer }) {
+  const { t } = useTranslation();
   const cells: Array<{
     icon: LucideIcon;
     label: string;
@@ -21,29 +23,29 @@ export function BuyerStatsRow({ buyer }: { buyer: Buyer }) {
   }> = [
     {
       icon: PhoneCall,
-      label: "Calls today",
+      label: t("networkUI.buyers.stats5.callsToday"),
       value: formatCompact(buyer.callsToday),
     },
     {
       icon: DollarSign,
-      label: "Spend today",
+      label: t("networkUI.buyers.stats5.spendToday"),
       value: formatCurrency(buyer.spendToday),
     },
     {
       icon: Activity,
-      label: "Accept rate",
+      label: t("networkUI.buyers.stats5.acceptRate"),
       value: formatPercent(buyer.acceptRate * 100, 0),
     },
     {
       icon: TrendingUp,
-      label: "Conversion",
+      label: t("networkUI.buyers.stats5.conversion"),
       value: formatPercent(buyer.conversionRate * 100, 0),
     },
     {
       icon: Gauge,
-      label: "Bid / call",
+      label: t("networkUI.buyers.stats5.bidCall"),
       value: formatCurrency(buyer.bidAmount, true),
-      foot: buyer.payoutModel === "tiered" ? "Tiered" : "Flat",
+      foot: buyer.payoutModel === "tiered" ? t("networkUI.buyers.stats5.tiered") : t("networkUI.buyers.stats5.flat"),
     },
   ];
 

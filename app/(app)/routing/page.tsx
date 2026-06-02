@@ -10,24 +10,27 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/use-translation";
 import { useRoutingStore } from "@/lib/store/routing-store";
 import type { RoutingPlanStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type StatusFilter = "all" | RoutingPlanStatus;
 
-const STATUS_OPTIONS: Array<{ id: StatusFilter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "published", label: "Live" },
-  { id: "draft", label: "Draft" },
-  { id: "archived", label: "Archived" },
+const STATUS_KEYS: Array<{ id: StatusFilter; labelKey: string }> = [
+  { id: "all", labelKey: "trafficUI.routing.statusFilter.all" },
+  { id: "published", labelKey: "trafficUI.routing.statusFilter.live" },
+  { id: "draft", labelKey: "trafficUI.routing.statusFilter.draft" },
+  { id: "archived", labelKey: "trafficUI.routing.statusFilter.archived" },
 ];
 
 export default function RoutingPage() {
+  const { t } = useTranslation();
   const plans = useRoutingStore((s) => s.plans);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const STATUS_OPTIONS = STATUS_KEYS.map((o) => ({ id: o.id, label: t(o.labelKey) }));
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -44,11 +47,11 @@ export default function RoutingPage() {
   return (
     <>
       <PageHeader
-        title="Routing"
-        description="Visual ring trees — conditional, weighted, and capped paths from caller to buyer."
+        title={t("trafficUI.routing.pageTitle")}
+        description={t("trafficUI.routing.pageDescription")}
         actions={
           <Button size="sm" onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4" /> New plan
+            <Plus className="h-4 w-4" /> {t("trafficUI.routing.newPlan")}
           </Button>
         }
       />
@@ -63,14 +66,14 @@ export default function RoutingPage() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search plans…"
+              placeholder={t("trafficUI.routing.searchPlaceholder")}
               className="h-9 w-64 pl-8 font-mono text-xs"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                aria-label="Clear search"
+                aria-label={t("trafficUI.routing.clearSearch")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" />
@@ -110,12 +113,12 @@ export default function RoutingPage() {
                 setStatus("all");
               }}
             >
-              clear
+              {t("trafficUI.routing.clear")}
             </Button>
           )}
 
           <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:ml-2">
-            {filtered.length} of {plans.length}
+            {t("trafficUI.routing.countOfTotal").replace("{count}", String(filtered.length)).replace("{total}", String(plans.length))}
           </span>
         </div>
       </div>
@@ -125,16 +128,16 @@ export default function RoutingPage() {
         <EmptyState
           icon={GitFork}
           tone="amber"
-          title={plans.length === 0 ? "No routing plans yet" : "No plans match"}
+          title={plans.length === 0 ? t("trafficUI.routing.empty.title") : t("trafficUI.routing.emptyMatch.title")}
           description={
             plans.length === 0
-              ? "Spin up your first plan to define how calls flow from publisher to buyer."
-              : "Try relaxing your filters."
+              ? t("trafficUI.routing.empty.description")
+              : t("trafficUI.routing.emptyMatch.description")
           }
           actions={
             plans.length === 0 ? (
               <Button size="sm" onClick={() => setOpen(true)}>
-                <Plus className="h-4 w-4" /> New plan
+                <Plus className="h-4 w-4" /> {t("trafficUI.routing.newPlan")}
               </Button>
             ) : undefined
           }

@@ -3,6 +3,7 @@
 import { Columns, Download, Search, X } from "lucide-react";
 
 import { ExportMenu } from "@/components/shared/export-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,19 +26,19 @@ import type { ExportFormat } from "@/lib/export";
 import type { CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const RANGE_OPTS: Array<{ id: DateRange; label: string }> = [
-  { id: "today", label: "Today" },
-  { id: "7d", label: "7 days" },
-  { id: "14d", label: "14 days" },
-  { id: "30d", label: "30 days" },
+const RANGE_KEYS: Array<{ id: DateRange; key: string }> = [
+  { id: "today", key: "toolsUI.callLogs.toolbar.today" },
+  { id: "7d", key: "toolsUI.callLogs.toolbar.sevenDays" },
+  { id: "14d", key: "toolsUI.callLogs.toolbar.fourteenDays" },
+  { id: "30d", key: "toolsUI.callLogs.toolbar.thirtyDays" },
 ];
 
-const STATUS_OPTS: Array<{ id: CallStatus; label: string; tone: string }> = [
-  { id: "completed", label: "Won", tone: "text-[color:var(--success)]" },
-  { id: "in-progress", label: "Live", tone: "text-accent" },
-  { id: "missed", label: "Missed", tone: "text-[color:var(--warning)]" },
-  { id: "rejected", label: "Rejected", tone: "text-destructive" },
-  { id: "failed", label: "Failed", tone: "text-destructive" },
+const STATUS_OPTS: Array<{ id: CallStatus; labelKey: string; tone: string }> = [
+  { id: "completed", labelKey: "toolsUI.callLogs.toolbar.statusWon", tone: "text-[color:var(--success)]" },
+  { id: "in-progress", labelKey: "toolsUI.callLogs.toolbar.statusLive", tone: "text-accent" },
+  { id: "missed", labelKey: "toolsUI.callLogs.toolbar.statusMissed", tone: "text-[color:var(--warning)]" },
+  { id: "rejected", labelKey: "toolsUI.callLogs.toolbar.statusRejected", tone: "text-destructive" },
+  { id: "failed", labelKey: "toolsUI.callLogs.toolbar.statusFailed", tone: "text-destructive" },
 ];
 
 export interface ColumnKey {
@@ -45,6 +46,7 @@ export interface ColumnKey {
   label: string;
 }
 
+/** Static column ids — labels are looked up at render time via useTranslation. */
 export const ALL_COLUMNS: ColumnKey[] = [
   { id: "started", label: "Started" },
   { id: "caller", label: "Caller" },
@@ -56,6 +58,18 @@ export const ALL_COLUMNS: ColumnKey[] = [
   { id: "duration", label: "Duration" },
   { id: "payout", label: "Payout" },
 ];
+
+const COLUMN_LABEL_KEYS: Record<string, string> = {
+  started: "toolsUI.callLogs.columns.started",
+  caller: "toolsUI.callLogs.columns.caller",
+  campaign: "toolsUI.callLogs.columns.campaign",
+  publisher: "toolsUI.callLogs.columns.publisher",
+  buyer: "toolsUI.callLogs.columns.buyer",
+  geo: "toolsUI.callLogs.columns.geo",
+  status: "toolsUI.callLogs.columns.status",
+  duration: "toolsUI.callLogs.columns.duration",
+  payout: "toolsUI.callLogs.columns.payout",
+};
 
 interface Props {
   query: string;
@@ -90,6 +104,7 @@ export function CallsToolbar({
   count,
   total,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -98,14 +113,14 @@ export function CallsToolbar({
           <Input
             value={query}
             onChange={(e) => onQuery(e.target.value)}
-            placeholder="Search caller, campaign, buyer…"
+            placeholder={t("toolsUI.callLogs.toolbar.searchPlaceholder")}
             className="h-9 w-72 pl-8"
           />
           {query && (
             <button
               type="button"
               onClick={() => onQuery("")}
-              aria-label="Clear"
+              aria-label={t("toolsUI.callLogs.toolbar.clearAria")}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
@@ -115,7 +130,7 @@ export function CallsToolbar({
 
         {/* Date range pills */}
         <div className="flex gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
-          {RANGE_OPTS.map((r) => {
+          {RANGE_KEYS.map((r) => {
             const active = r.id === range;
             return (
               <button
@@ -129,7 +144,7 @@ export function CallsToolbar({
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {r.label}
+                {t(r.key)}
               </button>
             );
           })}
@@ -138,10 +153,10 @@ export function CallsToolbar({
         {/* Campaign select */}
         <Select value={campaignFilter} onValueChange={onCampaign}>
           <SelectTrigger size="sm" className="h-9 w-52">
-            <SelectValue placeholder="All campaigns" />
+            <SelectValue placeholder={t("toolsUI.callLogs.toolbar.allCampaigns")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All campaigns</SelectItem>
+            <SelectItem value="all">{t("toolsUI.callLogs.toolbar.allCampaigns")}</SelectItem>
             {campaigns.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -154,14 +169,14 @@ export function CallsToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-9">
-              Status
+              {t("toolsUI.callLogs.toolbar.status")}
               <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent/15 px-1.5 text-[10px] font-mono text-accent">
                 {statuses.size}
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("toolsUI.callLogs.toolbar.filterByStatus")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {STATUS_OPTS.map((s) => (
               <DropdownMenuCheckboxItem
@@ -173,7 +188,7 @@ export function CallsToolbar({
                 }}
               >
                 <span className={cn("font-mono text-xs", s.tone)}>●</span>
-                {s.label}
+                {t(s.labelKey)}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
@@ -184,11 +199,11 @@ export function CallsToolbar({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-9 gap-1.5">
               <Columns className="h-3.5 w-3.5" />
-              Columns
+              {t("toolsUI.callLogs.toolbar.columns")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("toolsUI.callLogs.toolbar.visibleColumns")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {ALL_COLUMNS.map((c) => (
               <DropdownMenuCheckboxItem
@@ -199,20 +214,20 @@ export function CallsToolbar({
                   onToggleColumn(c.id);
                 }}
               >
-                {c.label}
+                {t(COLUMN_LABEL_KEYS[c.id] ?? "")}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
 
         <span className="ml-auto text-[11px] font-mono text-muted-foreground">
-          {count} of {total}
+          {t("toolsUI.callLogs.toolbar.countOfTotal").replace("{count}", String(count)).replace("{total}", String(total))}
         </span>
 
         <ExportMenu onExport={onExport}>
           <Button variant="outline" size="sm" className="h-9 gap-1.5">
             <Download className="h-3.5 w-3.5" />
-            Export
+            {t("toolsUI.callLogs.toolbar.export")}
           </Button>
         </ExportMenu>
       </div>

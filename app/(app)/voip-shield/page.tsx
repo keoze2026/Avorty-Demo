@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Info, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { useTranslation } from "@/hooks/use-translation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { CreateVoipShieldDialog } from "@/components/suppression/create-voip-shield-dialog";
@@ -45,34 +46,36 @@ import { useVoipShieldStore } from "@/lib/store/voip-shield-store";
 
 type SortKey = "name-asc" | "name-desc" | "size-desc" | "size-asc";
 
-const SORT_OPTIONS: SortOption[] = [
-  { id: "name-asc", label: "Name (A → Z)" },
-  { id: "name-desc", label: "Name (Z → A)" },
-  { id: "size-desc", label: "Size (high → low)" },
-  { id: "size-asc", label: "Size (low → high)" },
-];
-
-const COLUMN_OPTIONS: ColumnOption[] = [
-  { id: "name", label: "Name" },
-  { id: "campaign", label: "Campaign" },
-  { id: "size", label: "Size" },
-  { id: "actions", label: "Actions", required: true },
-];
-const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
-
 const CAMPAIGN_NAME_BY_ID = new Map(MOCK_CAMPAIGNS.map((c) => [c.id, c.name]));
 
-function campaignLabel(entry: VoipShieldEntry): string {
-  if (entry.campaignIds.length === 0) return "All Campaigns";
-  if (entry.campaignIds.length === 1) {
-    return CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
-  }
-  const first = CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
-  return `${first} +${entry.campaignIds.length - 1}`;
-}
-
 export default function VoipShieldPage() {
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const SORT_OPTIONS: SortOption[] = [
+    { id: "name-asc", label: t("toolsUI.suppression.voipShield.sort.nameAsc") },
+    { id: "name-desc", label: t("toolsUI.suppression.voipShield.sort.nameDesc") },
+    { id: "size-desc", label: t("toolsUI.suppression.voipShield.sort.sizeDesc") },
+    { id: "size-asc", label: t("toolsUI.suppression.voipShield.sort.sizeAsc") },
+  ];
+
+  const COLUMN_OPTIONS: ColumnOption[] = [
+    { id: "name", label: t("toolsUI.suppression.columns.name") },
+    { id: "campaign", label: t("toolsUI.suppression.columns.campaign") },
+    { id: "size", label: t("toolsUI.suppression.columns.size") },
+    { id: "actions", label: t("toolsUI.suppression.columns.actions"), required: true },
+  ];
+  const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
+
+  function campaignLabel(entry: VoipShieldEntry): string {
+    if (entry.campaignIds.length === 0) return t("toolsUI.suppression.allCampaigns");
+    if (entry.campaignIds.length === 1) {
+      return CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
+    }
+    const first = CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
+    return `${first} +${entry.campaignIds.length - 1}`;
+  }
+
   const shields = useVoipShieldStore((s) => s.shields);
   const add = useVoipShieldStore((s) => s.add);
   const remove = useVoipShieldStore((s) => s.remove);
@@ -94,9 +97,10 @@ export default function VoipShieldPage() {
   // Build the campaign filter option list — "All Campaigns" + every known campaign.
   const filterOptions = React.useMemo<FilterOption[]>(
     () => [
-      { id: "__all__", label: "All Campaigns" },
+      { id: "__all__", label: t("toolsUI.suppression.allCampaigns") },
       ...MOCK_CAMPAIGNS.map((c) => ({ id: c.id, label: c.name })),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -152,7 +156,7 @@ export default function VoipShieldPage() {
 
   const onCreate = (name: string) => {
     const created = add(name);
-    toast.success(`Created "${name}"`);
+    toast.success(t("toolsUI.suppression.voipShield.toastCreated").replace("{name}", name));
     router.push(`${ROUTES.voipShield}/${created.id}`);
   };
 
@@ -163,18 +167,18 @@ export default function VoipShieldPage() {
       next.delete(entry.id);
       return next;
     });
-    toast.success(`Removed "${entry.name}"`);
+    toast.success(t("toolsUI.suppression.voipShield.toastRemoved").replace("{name}", entry.name));
     setRemoving(null);
   };
 
   return (
     <>
       <PageHeader
-        title="VoIP Shield"
+        title={t("toolsUI.suppression.voipShield.title")}
         description={
           <span className="inline-flex items-center gap-1.5">
             <Info className="h-3.5 w-3.5" />
-            The feature is paid, $0.01 per call
+            {t("toolsUI.suppression.voipShield.paidNotice")}
           </span>
         }
       />
@@ -184,7 +188,7 @@ export default function VoipShieldPage() {
         onQuery={setQuery}
         pageSize={pageSize}
         onPageSize={setPageSize}
-        ctaLabel="Create"
+        ctaLabel={t("toolsUI.suppression.voipShield.createCta")}
         onCta={() => setCreateOpen(true)}
         sort={{
           options: SORT_OPTIONS,
@@ -192,7 +196,7 @@ export default function VoipShieldPage() {
           onChange: (id) => setSortKey(id as SortKey),
         }}
         filter={{
-          label: "Filter by campaign",
+          label: t("toolsUI.suppression.voipShield.filterByCampaign"),
           options: filterOptions,
           value: campaignFilter,
           onChange: setCampaignFilter,
@@ -218,19 +222,19 @@ export default function VoipShieldPage() {
                   <Checkbox
                     checked={allChecked}
                     onCheckedChange={toggleAll}
-                    aria-label="Select all"
+                    aria-label={t("toolsUI.suppression.aria.selectAll")}
                   />
                 </TableHead>
                 {visibleColumns.has("name") && (
-                  <TableHead className="text-left">Name</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.name")}</TableHead>
                 )}
                 {visibleColumns.has("campaign") && (
-                  <TableHead className="text-left">Campaign</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.campaign")}</TableHead>
                 )}
                 {visibleColumns.has("size") && (
-                  <TableHead className="text-left">Size</TableHead>
+                  <TableHead className="text-left">{t("toolsUI.suppression.columns.size")}</TableHead>
                 )}
-                <TableHead className="pr-4">Actions</TableHead>
+                <TableHead className="pr-4">{t("toolsUI.suppression.columns.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,7 +244,7 @@ export default function VoipShieldPage() {
                     colSpan={1 + visibleColumns.size}
                     className="py-10 text-center text-xs text-muted-foreground"
                   >
-                    No data available
+                    {t("toolsUI.suppression.noData")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -250,7 +254,7 @@ export default function VoipShieldPage() {
                       <Checkbox
                         checked={selected.has(e.id)}
                         onCheckedChange={() => toggle(e.id)}
-                        aria-label={`Select ${e.name}`}
+                        aria-label={t("toolsUI.suppression.aria.selectRow").replace("{label}", e.name)}
                       />
                     </TableCell>
                     {visibleColumns.has("name") && (
@@ -272,7 +276,7 @@ export default function VoipShieldPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          aria-label={`Edit ${e.name}`}
+                          aria-label={t("toolsUI.suppression.aria.editRow").replace("{label}", e.name)}
                           onClick={() => router.push(`${ROUTES.voipShield}/${e.id}`)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -281,7 +285,7 @@ export default function VoipShieldPage() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          aria-label={`Remove ${e.name}`}
+                          aria-label={t("toolsUI.suppression.aria.removeRow").replace("{label}", e.name)}
                           onClick={() => setRemoving(e)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -314,18 +318,18 @@ export default function VoipShieldPage() {
       <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove "{removing?.name}"?</AlertDialogTitle>
+            <AlertDialogTitle>{t("toolsUI.suppression.removeConfirm.shieldTitle").replace("{name}", removing?.name ?? "")}</AlertDialogTitle>
             <AlertDialogDescription>
-              The shield and all of its blocked carriers will be deleted. This cannot be undone.
+              {t("toolsUI.suppression.removeConfirm.shieldDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("toolsUI.suppression.removeConfirm.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removing && confirmRemove(removing)}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Remove
+              {t("toolsUI.suppression.removeConfirm.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

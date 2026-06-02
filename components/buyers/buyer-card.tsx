@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
@@ -24,6 +25,7 @@ interface BuyerCardProps {
 }
 
 export function BuyerCard({ buyer, onToggle, onArchive }: BuyerCardProps) {
+  const { t } = useTranslation();
   const isActive = buyer.status === "active";
   const dailyUsage = buyer.dailyCap > 0 ? Math.min(1, buyer.callsToday / buyer.dailyCap) : 0;
 
@@ -63,7 +65,7 @@ export function BuyerCard({ buyer, onToggle, onArchive }: BuyerCardProps) {
                   variant="ghost"
                   size="icon"
                   className="-mr-2 h-7 w-7 opacity-60 hover:opacity-100"
-                  aria-label="Buyer actions"
+                  aria-label={t("networkUI.buyers.card.actionsAria")}
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
@@ -72,11 +74,11 @@ export function BuyerCard({ buyer, onToggle, onArchive }: BuyerCardProps) {
                 <DropdownMenuItem onSelect={() => onToggle(buyer.id)}>
                   {isActive ? (
                     <>
-                      <Pause className="h-4 w-4" /> Pause
+                      <Pause className="h-4 w-4" /> {t("networkUI.common.pause")}
                     </>
                   ) : (
                     <>
-                      <Play className="h-4 w-4" /> Activate
+                      <Play className="h-4 w-4" /> {t("networkUI.common.activate")}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -85,7 +87,7 @@ export function BuyerCard({ buyer, onToggle, onArchive }: BuyerCardProps) {
                   onSelect={() => onArchive(buyer.id)}
                   className="text-destructive focus:text-destructive"
                 >
-                  Remove
+                  {t("networkUI.common.remove")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -102,25 +104,25 @@ export function BuyerCard({ buyer, onToggle, onArchive }: BuyerCardProps) {
               <DollarSign className="h-3.5 w-3.5 text-accent" />
               {buyer.bidAmount.toFixed(2)}
             </div>
-            <div className="text-[10px] text-muted-foreground">bid / call</div>
+            <div className="text-[10px] text-muted-foreground">{t("networkUI.buyers.card.bidCall")}</div>
           </div>
           <div>
             <div className="font-mono text-base font-semibold">{formatCompact(buyer.callsToday)}</div>
-            <div className="text-[10px] text-muted-foreground">calls today</div>
+            <div className="text-[10px] text-muted-foreground">{t("networkUI.buyers.card.callsToday")}</div>
           </div>
           <div>
             <div className="flex items-center justify-center gap-1 font-mono text-base font-semibold">
               <TrendingUp className="h-3.5 w-3.5 text-accent" />
               {formatPercent(buyer.conversionRate * 100, 0)}
             </div>
-            <div className="text-[10px] text-muted-foreground">conv.</div>
+            <div className="text-[10px] text-muted-foreground">{t("networkUI.buyers.card.conv")}</div>
           </div>
         </div>
 
         {/* Daily cap usage */}
         <div className="mt-4 space-y-1">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="text-muted-foreground">Daily cap</span>
+            <span className="text-muted-foreground">{t("networkUI.buyers.card.dailyCap")}</span>
             <span className="font-mono">
               {formatCompact(buyer.callsToday)} / {buyer.dailyCap === 0 ? "∞" : formatCompact(buyer.dailyCap)}
             </span>
@@ -141,7 +143,7 @@ export function BuyerCard({ buyer, onToggle, onArchive }: BuyerCardProps) {
 
         <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <PhoneCall className="h-3 w-3" /> {formatCompact(buyer.callsMonth)} this mo
+            <PhoneCall className="h-3 w-3" /> {formatCompact(buyer.callsMonth)} {t("networkUI.buyers.card.thisMonth")}
           </span>
           <span className="font-mono">{formatCurrency(buyer.spendToday)}</span>
         </div>

@@ -10,6 +10,15 @@ import {
   selectTrustScore,
   useKycStore,
 } from "@/lib/store/kyc-store";
+import { useTranslation } from "@/hooks/use-translation";
+
+const TIER_LABEL_KEYS: Record<string, string> = {
+  sandbox: "toolsUI.trustEngine.tiers.sandbox",
+  bronze: "toolsUI.trustEngine.tiers.bronze",
+  silver: "toolsUI.trustEngine.tiers.silver",
+  gold: "toolsUI.trustEngine.tiers.gold",
+  platinum: "toolsUI.trustEngine.tiers.platinum",
+};
 
 /**
  * Sandbox banner — appears across every authenticated page while the user
@@ -18,6 +27,7 @@ import {
  * once the user dismisses it for the session.
  */
 export function SandboxBanner() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const score = useKycStore((s) => selectTrustScore(s));
   const tier = selectTier(score);
@@ -37,24 +47,23 @@ export function SandboxBanner() {
         <ShieldAlert className="h-4 w-4 shrink-0 text-[color:var(--warning)]" />
         <div className="min-w-0 flex-1 text-[12px]">
           <span className="font-semibold text-foreground">
-            {tier.label} tier
+            {t("toolsUI.trustEngine.banner.tierLabel").replace("{tier}", t(TIER_LABEL_KEYS[tier.id] ?? ""))}
           </span>
           <span className="text-muted-foreground">
-            {" "}
-            — capped at {cap} calls / day, payouts disabled. Verify to unlock.
+            {t("toolsUI.trustEngine.banner.bannerBody").replace("{cap}", String(cap))}
           </span>
         </div>
         <Link
           href={ROUTES.kyc}
           className="inline-flex items-center gap-1 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/15 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--warning)] transition-colors hover:bg-[color:var(--warning)]/25"
         >
-          Open Trust Engine
+          {t("toolsUI.trustEngine.banner.openTrustEngine")}
           <ArrowRight className="h-3 w-3" />
         </Link>
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Dismiss"
+          aria-label={t("toolsUI.trustEngine.banner.dismissAria")}
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
         >
           <X className="h-3.5 w-3.5" />

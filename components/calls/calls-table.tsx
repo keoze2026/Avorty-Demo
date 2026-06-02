@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 
 import { CallStatusBadge } from "./call-status-badge";
+import { useTranslation } from "@/hooks/use-translation";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -25,21 +26,22 @@ interface Props {
 }
 
 export function CallsTable({ calls, visibleColumns, onSelect, selectedId }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/40">
-              {visibleColumns.has("started") && <TableHead className="w-[10%]">Started</TableHead>}
-              {visibleColumns.has("caller") && <TableHead className="w-[14%]">Caller</TableHead>}
-              {visibleColumns.has("campaign") && <TableHead>Campaign</TableHead>}
-              {visibleColumns.has("publisher") && <TableHead>Publisher</TableHead>}
-              {visibleColumns.has("buyer") && <TableHead>Buyer</TableHead>}
-              {visibleColumns.has("geo") && <TableHead className="w-[6%]">Geo</TableHead>}
-              {visibleColumns.has("status") && <TableHead>Status</TableHead>}
-              {visibleColumns.has("duration") && <TableHead>Duration</TableHead>}
-              {visibleColumns.has("payout") && <TableHead className="text-right">Payout</TableHead>}
+              {visibleColumns.has("started") && <TableHead className="w-[10%]">{t("toolsUI.callLogs.columns.started")}</TableHead>}
+              {visibleColumns.has("caller") && <TableHead className="w-[14%]">{t("toolsUI.callLogs.columns.caller")}</TableHead>}
+              {visibleColumns.has("campaign") && <TableHead>{t("toolsUI.callLogs.columns.campaign")}</TableHead>}
+              {visibleColumns.has("publisher") && <TableHead>{t("toolsUI.callLogs.columns.publisher")}</TableHead>}
+              {visibleColumns.has("buyer") && <TableHead>{t("toolsUI.callLogs.columns.buyer")}</TableHead>}
+              {visibleColumns.has("geo") && <TableHead className="w-[6%]">{t("toolsUI.callLogs.columns.geo")}</TableHead>}
+              {visibleColumns.has("status") && <TableHead>{t("toolsUI.callLogs.columns.status")}</TableHead>}
+              {visibleColumns.has("duration") && <TableHead>{t("toolsUI.callLogs.columns.duration")}</TableHead>}
+              {visibleColumns.has("payout") && <TableHead className="text-right">{t("toolsUI.callLogs.columns.payout")}</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>

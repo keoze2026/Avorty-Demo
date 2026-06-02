@@ -4,10 +4,12 @@ import { motion } from "framer-motion";
 import { Calendar, Clock, Gauge } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
 
 export function BuyerCapsTab({ buyer }: { buyer: Buyer }) {
+  const { t } = useTranslation();
   const daily = buyer.dailyCap;
   const monthly = buyer.monthlyCap;
   const dailyUsage = daily > 0 ? Math.min(1, buyer.callsToday / daily) : 0;
@@ -17,7 +19,7 @@ export function BuyerCapsTab({ buyer }: { buyer: Buyer }) {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <CapCard
         icon={Calendar}
-        label="Daily cap"
+        label={t("networkUI.buyers.caps.dailyCap")}
         consumed={buyer.callsToday}
         cap={daily}
         usage={dailyUsage}
@@ -25,7 +27,7 @@ export function BuyerCapsTab({ buyer }: { buyer: Buyer }) {
       />
       <CapCard
         icon={Clock}
-        label="Monthly cap"
+        label={t("networkUI.buyers.caps.monthlyCap")}
         consumed={buyer.callsMonth}
         cap={monthly}
         usage={monthlyUsage}
@@ -36,23 +38,28 @@ export function BuyerCapsTab({ buyer }: { buyer: Buyer }) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Gauge className="h-4 w-4 text-accent" />
-            Concurrency &amp; pacing rules
+            {t("networkUI.buyers.caps.rulesTitle")}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Hard limits applied by the routing engine before any call hits this buyer.
+            {t("networkUI.buyers.caps.rulesDesc")}
           </p>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Field label="Concurrency cap" value={`${buyer.concurrencyCap} parallel calls`} />
-            <Field label="Bid amount" value={formatCurrency(buyer.bidAmount, true)} />
-            <Field label="Payout model" value={buyer.payoutModel === "tiered" ? "Tiered" : "Flat"} />
+            <Field
+              label={t("networkUI.buyers.caps.concurrencyCap")}
+              value={t("networkUI.buyers.caps.parallelCalls").replace("{count}", String(buyer.concurrencyCap))}
+            />
+            <Field label={t("networkUI.buyers.caps.bidAmount")} value={formatCurrency(buyer.bidAmount, true)} />
+            <Field
+              label={t("networkUI.buyers.caps.payoutModel")}
+              value={buyer.payoutModel === "tiered" ? t("networkUI.buyers.caps.tiered") : t("networkUI.buyers.caps.flat")}
+            />
           </dl>
 
           <p className="mt-6 rounded-md border border-dashed border-border/60 bg-secondary/30 p-3 text-[11px] text-muted-foreground">
-            Cap values are sourced from the buyer&apos;s onboarding configuration. To
-            change them, edit the buyer profile in{" "}
-            <span className="font-mono text-foreground">Settings → Buyers</span>.
+            {t("networkUI.buyers.caps.capNote")}{" "}
+            <span className="font-mono text-foreground">{t("networkUI.buyers.caps.capNotePath")}</span>.
           </p>
         </CardContent>
       </Card>
@@ -75,6 +82,7 @@ function CapCard({
   usage: number;
   currency: number;
 }) {
+  const { t } = useTranslation();
   const pct = Math.round(usage * 100);
   const danger = usage > 0.85;
   return (
@@ -93,7 +101,7 @@ function CapCard({
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-2xl font-bold">{formatCompact(consumed)}</span>
           <span className="text-sm text-muted-foreground">
-            / {cap === 0 ? "Unlimited" : formatCompact(cap)}
+            / {cap === 0 ? t("networkUI.buyers.caps.unlimited") : formatCompact(cap)}
           </span>
         </div>
 
@@ -111,7 +119,11 @@ function CapCard({
         </div>
 
         <p className={`text-[11px] ${danger ? "text-[color:var(--warning)]" : "text-muted-foreground"}`}>
-          {cap === 0 ? "No cap — accept all" : danger ? `${pct}% consumed — approaching cap` : `${pct}% consumed`}
+          {cap === 0
+            ? t("networkUI.buyers.caps.noCap")
+            : danger
+              ? t("networkUI.buyers.caps.consumedApproaching").replace("{pct}", String(pct))
+              : t("networkUI.buyers.caps.consumed").replace("{pct}", String(pct))}
         </p>
       </CardContent>
     </Card>

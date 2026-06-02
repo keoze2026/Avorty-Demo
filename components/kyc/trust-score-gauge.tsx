@@ -4,7 +4,16 @@ import * as React from "react";
 import { motion } from "framer-motion";
 
 import { TIERS, type KycTierDefinition } from "@/lib/store/kyc-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
+
+const TIER_LABEL_KEYS: Record<string, string> = {
+  sandbox: "toolsUI.trustEngine.tiers.sandbox",
+  bronze: "toolsUI.trustEngine.tiers.bronze",
+  silver: "toolsUI.trustEngine.tiers.silver",
+  gold: "toolsUI.trustEngine.tiers.gold",
+  platinum: "toolsUI.trustEngine.tiers.platinum",
+};
 
 interface Props {
   /** 0–100 trust score. */
@@ -20,6 +29,7 @@ interface Props {
  * value animates from 0 on mount so the gauge feels alive.
  */
 export function TrustScoreGauge({ score, tier, next }: Props) {
+  const { t } = useTranslation();
   // Animate from 0 to score on mount.
   const [shown, setShown] = React.useState(0);
   React.useEffect(() => {
@@ -72,7 +82,7 @@ export function TrustScoreGauge({ score, tier, next }: Props) {
         width={SIZE}
         height={SIZE}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        aria-label={`Trust score ${score} out of 100`}
+        aria-label={t("toolsUI.trustEngine.gauge.outOf").replace("{score}", String(score))}
       >
         <defs>
           <linearGradient id="trust-grad" x1="0" y1="0" x2="1" y2="1">
@@ -106,15 +116,15 @@ export function TrustScoreGauge({ score, tier, next }: Props) {
         />
 
         {/* Tier tick marks */}
-        {TIERS.map((t) => {
-          const pct = t.minScore / 100;
+        {TIERS.map((tierDef) => {
+          const pct = tierDef.minScore / 100;
           const tickDeg = START_DEG + pct * SWEEP_DEG;
           const inner = polarOnRadius(tickDeg, R - STROKE / 2 - 2, CX, CY);
           const outer = polarOnRadius(tickDeg, R + STROKE / 2 + 2, CX, CY);
-          const reached = score >= t.minScore;
+          const reached = score >= tierDef.minScore;
           return (
             <line
-              key={t.id}
+              key={tierDef.id}
               x1={inner.x}
               y1={inner.y}
               x2={outer.x}
@@ -130,7 +140,7 @@ export function TrustScoreGauge({ score, tier, next }: Props) {
       {/* Centered readout */}
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Trust Score
+          {t("toolsUI.trustEngine.gauge.title")}
         </span>
         <span className="mt-1 font-mono text-5xl font-semibold tabular-nums text-foreground">
           {shown}
@@ -141,11 +151,13 @@ export function TrustScoreGauge({ score, tier, next }: Props) {
             tier.badgeClass,
           )}
         >
-          {tier.label}
+          {t(TIER_LABEL_KEYS[tier.id] ?? "")}
         </span>
         {next && (
           <span className="mt-1 text-[10px] text-muted-foreground">
-            {next.minScore - score} pts to {next.label}
+            {t("toolsUI.trustEngine.gauge.ptsToNext")
+              .replace("{points}", String(next.minScore - score))
+              .replace("{tier}", t(TIER_LABEL_KEYS[next.id] ?? ""))}
           </span>
         )}
       </div>

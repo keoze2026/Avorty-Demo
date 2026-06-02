@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 
 interface EditPublisherDialogProps {
@@ -25,6 +26,7 @@ interface EditPublisherDialogProps {
 }
 
 export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisherDialogProps) {
+  const { t } = useTranslation();
   const publishers = usePublishersStore((s) => s.publishers);
   const update = usePublishersStore((s) => s.update);
 
@@ -62,7 +64,7 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
       payoutRate: payoutRate / 100,
     });
     setSubmitting(false);
-    toast.success(`${name.trim()} updated`);
+    toast.success(t("networkUI.publishers.edit.updated").replace("{name}", name.trim()));
     onOpenChange(false);
   };
 
@@ -75,8 +77,8 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
               <Pencil className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Edit publisher</DialogTitle>
-              <DialogDescription>Update the publisher&apos;s details.</DialogDescription>
+              <DialogTitle>{t("networkUI.publishers.edit.title")}</DialogTitle>
+              <DialogDescription>{t("networkUI.publishers.edit.description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -84,11 +86,11 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ep-name">Publisher name</Label>
+              <Label htmlFor="ep-name">{t("networkUI.publishers.edit.publisherName")}</Label>
               <Input id="ep-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ep-org">Organization</Label>
+              <Label htmlFor="ep-org">{t("networkUI.publishers.edit.organization")}</Label>
               <Input
                 id="ep-org"
                 value={organization}
@@ -98,7 +100,7 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ep-contact">Contact name</Label>
+              <Label htmlFor="ep-contact">{t("networkUI.publishers.edit.contactName")}</Label>
               <Input
                 id="ep-contact"
                 value={contactName}
@@ -106,7 +108,7 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ep-email">Email</Label>
+              <Label htmlFor="ep-email">{t("networkUI.publishers.edit.email")}</Label>
               <Input
                 id="ep-email"
                 type="email"
@@ -116,7 +118,7 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ep-rate">Payout rate (%)</Label>
+            <Label htmlFor="ep-rate">{t("networkUI.publishers.edit.payoutRate")}</Label>
             <Input
               id="ep-rate"
               type="number"
@@ -129,24 +131,24 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
               className="font-mono"
             />
             <p className="text-xs text-muted-foreground">
-              Share of buyer payout passed through to this publisher.
+              {t("networkUI.publishers.edit.payoutHint")}
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ep-desc">Notes</Label>
+            <Label htmlFor="ep-desc">{t("networkUI.publishers.edit.notes")}</Label>
             <Textarea
               id="ep-desc"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Traffic channels, verticals, anything routing-affecting."
+              placeholder={t("networkUI.publishers.edit.notesPh")}
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("networkUI.publishers.edit.cancel")}
           </Button>
           <Button
             onClick={onSubmit}
@@ -154,10 +156,10 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
           >
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.publishers.edit.saving")}
               </>
             ) : (
-              "Save changes"
+              t("networkUI.publishers.edit.save")
             )}
           </Button>
         </DialogFooter>

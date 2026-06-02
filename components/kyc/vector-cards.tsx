@@ -24,13 +24,14 @@ import {
   useKycStore,
   VECTOR_WEIGHTS,
 } from "@/lib/store/kyc-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface VectorMeta {
   id: KycVectorId;
   icon: LucideIcon;
-  title: string;
-  blurb: string;
+  titleKey: string;
+  blurbKey: string;
   /** Inline verification body — receives the vector + a "done" callback. */
   Flow: React.ComponentType<{ vector: KycVector; onSubmit: () => void }>;
 }
@@ -38,6 +39,7 @@ interface VectorMeta {
 /* ─── Per-vector verification flows ─────────────────────────────── */
 
 function IdentityFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => void }) {
+  const { t } = useTranslation();
   const setProgress = useKycStore((s) => s.setProgress);
   const [step, setStep] = React.useState<"face" | "id" | "confirm">("face");
   const [scanning, setScanning] = React.useState(false);
@@ -63,7 +65,7 @@ function IdentityFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
     return (
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          We use a 3-D biometric scan to bind your face to your ID. No video is stored.
+          {t("toolsUI.trustEngine.identityFlow.intro")}
         </p>
         <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-dashed border-border bg-muted/20">
           <div className="absolute inset-0 flex items-center justify-center">
@@ -98,12 +100,12 @@ function IdentityFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
           {scanning ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Scanning…
+              {t("toolsUI.trustEngine.identityFlow.scanning")}
             </>
           ) : (
             <>
               <ScanFace className="h-4 w-4" />
-              Start biometric scan
+              {t("toolsUI.trustEngine.identityFlow.startScan")}
             </>
           )}
         </Button>
@@ -115,8 +117,7 @@ function IdentityFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
     return (
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          Upload a government-issued ID. Auto-cropped, encrypted, and matched against
-          the face capture.
+          {t("toolsUI.trustEngine.identityFlow.uploadIntro")}
         </p>
         <button
           type="button"
@@ -127,9 +128,9 @@ function IdentityFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
           className="flex w-full flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/20 p-8 transition-colors hover:border-accent/50 hover:bg-accent/5"
         >
           <CreditCard className="h-8 w-8 text-muted-foreground" />
-          <span className="text-sm font-medium">Drop ID here or click to upload</span>
+          <span className="text-sm font-medium">{t("toolsUI.trustEngine.identityFlow.dropZone")}</span>
           <span className="text-[11px] text-muted-foreground">
-            JPG, PNG, or PDF · max 10 MB
+            {t("toolsUI.trustEngine.identityFlow.dropZoneHint")}
           </span>
         </button>
       </div>
@@ -141,20 +142,21 @@ function IdentityFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
       <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-accent">
           <CheckCircle2 className="h-4 w-4" />
-          Face + ID match: 98.4%
+          {t("toolsUI.trustEngine.identityFlow.matchSuccess")}
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Biometric match passed. Ready to submit for liveness verification.
+          {t("toolsUI.trustEngine.identityFlow.matchSuccessBody")}
         </p>
       </div>
       <Button onClick={onSubmit} className="w-full">
-        Submit for verification
+        {t("toolsUI.trustEngine.identityFlow.submit")}
       </Button>
     </div>
   );
 }
 
 function BusinessFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => void }) {
+  const { t } = useTranslation();
   const setProgress = useKycStore((s) => s.setProgress);
   const [ein, setEin] = React.useState("");
   const [looking, setLooking] = React.useState(false);
@@ -166,7 +168,7 @@ function BusinessFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
 
   const lookup = () => {
     if (ein.replace(/\D/g, "").length < 9) {
-      toast.error("EIN must be 9 digits");
+      toast.error(t("toolsUI.trustEngine.toast.einLength"));
       return;
     }
     setLooking(true);
@@ -182,22 +184,22 @@ function BusinessFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">
-        We auto-pull entity records from IRS + state registries. No paperwork.
+        {t("toolsUI.trustEngine.businessFlow.intro")}
       </p>
       <div className="grid gap-1.5">
         <Label htmlFor="ein" className="text-xs">
-          EIN (Employer Identification Number)
+          {t("toolsUI.trustEngine.businessFlow.einLabel")}
         </Label>
         <div className="flex gap-2">
           <Input
             id="ein"
             value={ein}
             onChange={(e) => setEin(e.target.value)}
-            placeholder="12-3456789"
+            placeholder={t("toolsUI.trustEngine.businessFlow.einPlaceholder")}
             className="font-mono"
           />
           <Button onClick={lookup} disabled={looking}>
-            {looking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Look up"}
+            {looking ? <Loader2 className="h-4 w-4 animate-spin" /> : t("toolsUI.trustEngine.businessFlow.lookup")}
           </Button>
         </div>
       </div>
@@ -206,29 +208,30 @@ function BusinessFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
         <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-1">
           <div className="flex items-center gap-2 text-sm font-semibold text-accent">
             <CheckCircle2 className="h-4 w-4" />
-            Entity matched
+            {t("toolsUI.trustEngine.businessFlow.matched")}
           </div>
           <dl className="grid grid-cols-2 gap-1 text-xs">
-            <dt className="text-muted-foreground">Legal name</dt>
+            <dt className="text-muted-foreground">{t("toolsUI.trustEngine.businessFlow.legalName")}</dt>
             <dd className="font-medium">{found.name}</dd>
-            <dt className="text-muted-foreground">Entity type</dt>
+            <dt className="text-muted-foreground">{t("toolsUI.trustEngine.businessFlow.entityType")}</dt>
             <dd className="font-medium">{found.type}</dd>
-            <dt className="text-muted-foreground">Jurisdiction</dt>
+            <dt className="text-muted-foreground">{t("toolsUI.trustEngine.businessFlow.jurisdiction")}</dt>
             <dd className="font-medium">{found.state}</dd>
-            <dt className="text-muted-foreground">Status</dt>
-            <dd className="font-medium text-[oklch(0.78_0.18_155)]">Active · Good standing</dd>
+            <dt className="text-muted-foreground">{t("toolsUI.trustEngine.businessFlow.statusLabel")}</dt>
+            <dd className="font-medium text-[oklch(0.78_0.18_155)]">{t("toolsUI.trustEngine.businessFlow.active")}</dd>
           </dl>
         </div>
       )}
 
       <Button onClick={onSubmit} disabled={!found} className="w-full">
-        Submit for verification
+        {t("toolsUI.trustEngine.businessFlow.submit")}
       </Button>
     </div>
   );
 }
 
 function BankingFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => void }) {
+  const { t } = useTranslation();
   const setProgress = useKycStore((s) => s.setProgress);
   const [phase, setPhase] = React.useState<"select" | "deposits" | "verify">("select");
   const [picked, setPicked] = React.useState<string | null>(null);
@@ -239,11 +242,10 @@ function BankingFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => 
     return (
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground">
-          Connect via Plaid — we never see your password. Or we can drop two
-          micro-deposits ($0.01–$0.99) tomorrow.
+          {t("toolsUI.trustEngine.bankingFlow.intro")}
         </p>
         <div className="grid grid-cols-3 gap-2">
-          {["Chase", "Bank of America", "Wells Fargo", "Citi", "Capital One", "Other"].map(
+          {["Chase", "Bank of America", "Wells Fargo", "Citi", "Capital One", t("toolsUI.trustEngine.bankingFlow.other")].map(
             (b) => (
               <button
                 key={b}
@@ -268,14 +270,14 @@ function BankingFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => 
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-border bg-secondary/20 p-3 text-xs">
-          <div className="font-semibold">Two micro-deposits sent to {picked}</div>
+          <div className="font-semibold">{t("toolsUI.trustEngine.bankingFlow.microSent").replace("{bank}", picked ?? "")}</div>
           <p className="mt-1 text-muted-foreground">
-            Check your account in 1–2 business days. Enter the cent amounts below.
+            {t("toolsUI.trustEngine.bankingFlow.microBody")}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
-            <Label className="text-xs">Deposit 1 (¢)</Label>
+            <Label className="text-xs">{t("toolsUI.trustEngine.bankingFlow.deposit1")}</Label>
             <Input
               value={amt1}
               onChange={(e) => setAmt1(e.target.value)}
@@ -284,7 +286,7 @@ function BankingFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => 
             />
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-xs">Deposit 2 (¢)</Label>
+            <Label className="text-xs">{t("toolsUI.trustEngine.bankingFlow.deposit2")}</Label>
             <Input
               value={amt2}
               onChange={(e) => setAmt2(e.target.value)}
@@ -301,7 +303,7 @@ function BankingFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => 
           disabled={!amt1 || !amt2}
           className="w-full"
         >
-          Verify deposits
+          {t("toolsUI.trustEngine.bankingFlow.verifyDeposits")}
         </Button>
       </div>
     );
@@ -312,20 +314,21 @@ function BankingFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => 
       <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-accent">
           <CheckCircle2 className="h-4 w-4" />
-          {picked} · checking ****4218
+          {t("toolsUI.trustEngine.bankingFlow.verifiedAccount").replace("{bank}", picked ?? "")}
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Account verified. Payouts will land in 1 business day once your tier is unlocked.
+          {t("toolsUI.trustEngine.bankingFlow.verifiedBody")}
         </p>
       </div>
       <Button onClick={onSubmit} className="w-full">
-        Submit for verification
+        {t("toolsUI.trustEngine.bankingFlow.submit")}
       </Button>
     </div>
   );
 }
 
 function ComplianceFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () => void }) {
+  const { t } = useTranslation();
   const setProgress = useKycStore((s) => s.setProgress);
   const [checks, setChecks] = React.useState({ tcpa: false, dnc: false, audit: false });
   const all = checks.tcpa && checks.dnc && checks.audit;
@@ -343,23 +346,23 @@ function ComplianceFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () 
       <CheckRow
         checked={checks.tcpa}
         onToggle={() => toggle("tcpa")}
-        title="TCPA acknowledgment"
-        body="I have express written consent for every number I route, with audit trail."
+        title={t("toolsUI.trustEngine.complianceFlow.tcpaTitle")}
+        body={t("toolsUI.trustEngine.complianceFlow.tcpaBody")}
       />
       <CheckRow
         checked={checks.dnc}
         onToggle={() => toggle("dnc")}
-        title="Federal DNC scrub"
-        body="My lists are scrubbed against the National Do Not Call Registry at most 31 days before dial."
+        title={t("toolsUI.trustEngine.complianceFlow.dncTitle")}
+        body={t("toolsUI.trustEngine.complianceFlow.dncBody")}
       />
       <CheckRow
         checked={checks.audit}
         onToggle={() => toggle("audit")}
-        title="Sample call audit"
-        body="I authorize Vortyx to audit 5 random calls in the next 7 days for compliance signals."
+        title={t("toolsUI.trustEngine.complianceFlow.auditTitle")}
+        body={t("toolsUI.trustEngine.complianceFlow.auditBody")}
       />
       <Button onClick={onSubmit} disabled={!all} className="w-full">
-        Submit for verification
+        {t("toolsUI.trustEngine.complianceFlow.submit")}
       </Button>
     </div>
   );
@@ -404,20 +407,20 @@ function CheckRow({
 }
 
 function ReputationFlow({ vector }: { vector: KycVector; onSubmit: () => void }) {
+  const { t } = useTranslation();
   // Reputation can't be manually verified — it accrues from real traffic.
   // We just surface the live components so the operator understands what
   // moves the needle.
   const factors = [
-    { label: "Call answer rate", value: 0.84, weight: "high" as const },
-    { label: "Buyer complaint rate", value: 0.92, weight: "high" as const, invert: true },
-    { label: "Account age", value: vector.progress, weight: "medium" as const },
-    { label: "Compliance events", value: 1.0, weight: "low" as const, invert: true },
+    { label: t("toolsUI.trustEngine.reputationFlow.factorAnswer"), value: 0.84, weight: "high" as const },
+    { label: t("toolsUI.trustEngine.reputationFlow.factorComplaint"), value: 0.92, weight: "high" as const, invert: true },
+    { label: t("toolsUI.trustEngine.reputationFlow.factorAge"), value: vector.progress, weight: "medium" as const },
+    { label: t("toolsUI.trustEngine.reputationFlow.factorCompliance"), value: 1.0, weight: "low" as const, invert: true },
   ];
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Reputation isn&apos;t a one-time check — it accrues from your traffic. Keep
-        answer rates up and complaints down to climb tiers.
+        {t("toolsUI.trustEngine.reputationFlow.intro")}
       </p>
       <div className="space-y-2">
         {factors.map((f) => (
@@ -438,7 +441,7 @@ function ReputationFlow({ vector }: { vector: KycVector; onSubmit: () => void })
         ))}
       </div>
       <div className="rounded-lg border border-dashed border-border bg-secondary/10 p-3 text-[11px] text-muted-foreground">
-        Auto-recalculates every 24 hours. Next refresh in 17 h.
+        {t("toolsUI.trustEngine.reputationFlow.autoRefresh")}
       </div>
     </div>
   );
@@ -450,36 +453,36 @@ const VECTORS: VectorMeta[] = [
   {
     id: "identity",
     icon: ScanFace,
-    title: "Identity",
-    blurb: "Biometric face + government ID match.",
+    titleKey: "toolsUI.trustEngine.vectors.identity.title",
+    blurbKey: "toolsUI.trustEngine.vectors.identity.blurb",
     Flow: IdentityFlow,
   },
   {
     id: "business",
     icon: Building2,
-    title: "Business",
-    blurb: "EIN lookup + entity registration check.",
+    titleKey: "toolsUI.trustEngine.vectors.business.title",
+    blurbKey: "toolsUI.trustEngine.vectors.business.blurb",
     Flow: BusinessFlow,
   },
   {
     id: "banking",
     icon: CreditCard,
-    title: "Banking",
-    blurb: "Micro-deposit account verification for payouts.",
+    titleKey: "toolsUI.trustEngine.vectors.banking.title",
+    blurbKey: "toolsUI.trustEngine.vectors.banking.blurb",
     Flow: BankingFlow,
   },
   {
     id: "compliance",
     icon: ShieldCheck,
-    title: "Compliance",
-    blurb: "TCPA + DNC acknowledgment and sample-call audit.",
+    titleKey: "toolsUI.trustEngine.vectors.compliance.title",
+    blurbKey: "toolsUI.trustEngine.vectors.compliance.blurb",
     Flow: ComplianceFlow,
   },
   {
     id: "reputation",
     icon: Star,
-    title: "Reputation",
-    blurb: "Continuously scored from real traffic quality.",
+    titleKey: "toolsUI.trustEngine.vectors.reputation.title",
+    blurbKey: "toolsUI.trustEngine.vectors.reputation.blurb",
     Flow: ReputationFlow,
   },
 ];
@@ -487,28 +490,29 @@ const VECTORS: VectorMeta[] = [
 /* ─── Card ────────────────────────────────────────────────────────── */
 
 function StatusPill({ vector }: { vector: KycVector }) {
-  const map: Record<KycVector["status"], { label: string; className: string }> = {
+  const { t } = useTranslation();
+  const map: Record<KycVector["status"], { labelKey: string; className: string }> = {
     locked: {
-      label: "Locked",
+      labelKey: "toolsUI.trustEngine.status.locked",
       className: "bg-secondary text-muted-foreground border-border",
     },
     "in-progress": {
-      label: "In progress",
+      labelKey: "toolsUI.trustEngine.status.inProgress",
       className:
         "bg-[oklch(0.78_0.14_220)]/15 text-[oklch(0.82_0.14_220)] border-[oklch(0.82_0.14_220)]/30",
     },
     review: {
-      label: "Under review",
+      labelKey: "toolsUI.trustEngine.status.review",
       className:
         "bg-[oklch(0.82_0.16_75)]/15 text-[oklch(0.82_0.16_75)] border-[oklch(0.82_0.16_75)]/30",
     },
     verified: {
-      label: "Verified",
+      labelKey: "toolsUI.trustEngine.status.verified",
       className:
         "bg-[oklch(0.78_0.18_155)]/15 text-[oklch(0.78_0.18_155)] border-[oklch(0.78_0.18_155)]/30",
     },
     expired: {
-      label: "Expired",
+      labelKey: "toolsUI.trustEngine.status.expired",
       className: "bg-destructive/15 text-destructive border-destructive/30",
     },
   };
@@ -520,12 +524,13 @@ function StatusPill({ vector }: { vector: KycVector }) {
         p.className,
       )}
     >
-      {p.label}
+      {t(p.labelKey)}
     </span>
   );
 }
 
 export function VectorCard({ meta }: { meta: VectorMeta }) {
+  const { t } = useTranslation();
   const vector = useKycStore((s) => s.vectors[meta.id]);
   const submit = useKycStore((s) => s.submit);
   const verify = useKycStore((s) => s.verify);
@@ -543,11 +548,15 @@ export function VectorCard({ meta }: { meta: VectorMeta }) {
 
   const handleSubmit = () => {
     submit(meta.id);
-    toast.success(`${meta.title} submitted for review`);
+    toast.success(t("toolsUI.trustEngine.toast.submitted").replace("{title}", t(meta.titleKey)));
     // Simulate a 3-second auto-approve so the demo feels responsive.
     setTimeout(() => {
       verify(meta.id);
-      toast.success(`${meta.title} verified · +${weight} trust points`);
+      toast.success(
+        t("toolsUI.trustEngine.toast.verified")
+          .replace("{title}", t(meta.titleKey))
+          .replace("{points}", String(weight)),
+      );
     }, 3000);
   };
 
@@ -572,13 +581,13 @@ export function VectorCard({ meta }: { meta: VectorMeta }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold">{meta.title}</h3>
+            <h3 className="text-sm font-semibold">{t(meta.titleKey)}</h3>
             <StatusPill vector={vector} />
             <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              +{weight} pts
+              {t("toolsUI.trustEngine.pointsBadge").replace("{points}", String(weight))}
             </span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">{meta.blurb}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t(meta.blurbKey)}</p>
           {vector.progress > 0 && vector.status !== "verified" && (
             <div className="mt-3">
               <div className="h-1 overflow-hidden rounded-full bg-muted">
@@ -597,7 +606,7 @@ export function VectorCard({ meta }: { meta: VectorMeta }) {
           {vector.status === "verified" ? (
             <>
               <span className="text-[11px] text-muted-foreground">
-                Verified · re-checks every 90 days
+                {t("toolsUI.trustEngine.actions.verified90")}
               </span>
               <Button
                 variant="ghost"
@@ -605,20 +614,23 @@ export function VectorCard({ meta }: { meta: VectorMeta }) {
                 onClick={() => reset(meta.id)}
                 className="h-7 text-xs"
               >
-                Re-verify
+                {t("toolsUI.trustEngine.actions.reverify")}
               </Button>
             </>
           ) : vector.status === "review" ? (
             <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Auto-approving… (typical 3 s)
+              {t("toolsUI.trustEngine.actions.autoApproving")}
             </span>
           ) : (
             <>
               <span className="text-[11px] text-muted-foreground">
                 {vector.status === "locked"
-                  ? "Not started"
-                  : `${Math.round(vector.progress * 100)}% complete`}
+                  ? t("toolsUI.trustEngine.actions.notStarted")
+                  : t("toolsUI.trustEngine.actions.percentComplete").replace(
+                      "{percent}",
+                      String(Math.round(vector.progress * 100)),
+                    )}
               </span>
               <Button
                 size="sm"
@@ -626,7 +638,11 @@ export function VectorCard({ meta }: { meta: VectorMeta }) {
                 onClick={() => setExpanded((v) => !v)}
                 className="h-7 text-xs"
               >
-                {expanded ? "Close" : vector.status === "locked" ? "Start" : "Continue"}
+                {expanded
+                  ? t("toolsUI.trustEngine.actions.close")
+                  : vector.status === "locked"
+                    ? t("toolsUI.trustEngine.actions.start")
+                    : t("toolsUI.trustEngine.actions.continue")}
               </Button>
             </>
           )}

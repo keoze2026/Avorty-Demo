@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/hooks/use-translation";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 /** Largest avatar we'll keep in localStorage as a data URL. */
 const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
 
 export function ProfileSection() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const setAvatar = useAuthStore((s) => s.setAvatar);
 
@@ -26,7 +28,7 @@ export function ProfileSection() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onSave = () => {
-    toast.success("Profile saved");
+    toast.success(t("settings.profileSection.profileSaved"));
   };
 
   const onPickAvatar = () => fileInputRef.current?.click();
@@ -38,7 +40,7 @@ export function ProfileSection() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Avatar must be an image file");
+      toast.error(t("settings.profileSection.avatarMustBeImage"));
       return;
     }
     if (file.size > MAX_AVATAR_BYTES) {
@@ -50,19 +52,20 @@ export function ProfileSection() {
     reader.onload = () => {
       const dataUrl = reader.result;
       if (typeof dataUrl !== "string") {
-        toast.error("Could not read image");
+        toast.error(t("settings.profileSection.couldNotReadImage"));
         return;
       }
       setAvatar(dataUrl);
-      toast.success("Avatar updated");
+      toast.success(t("settings.profileSection.avatarUpdated"));
     };
-    reader.onerror = () => toast.error("Could not read image");
+    reader.onerror = () =>
+      toast.error(t("settings.profileSection.couldNotReadImage"));
     reader.readAsDataURL(file);
   };
 
   const onRemoveAvatar = () => {
     setAvatar(null);
-    toast.success("Avatar removed");
+    toast.success(t("settings.profileSection.avatarRemoved"));
   };
 
   const initials = name
@@ -75,9 +78,9 @@ export function ProfileSection() {
 
   return (
     <SectionShell
-      eyebrow="Profile"
-      title="Your account"
-      description="Your personal details — visible to your teammates and on activity feeds."
+      eyebrow={t("settings.profileSection.eyebrow")}
+      title={t("settings.profileSection.title")}
+      description={t("settings.profileSection.description")}
     >
       {/* Avatar block */}
       <Card>
@@ -101,7 +104,7 @@ export function ProfileSection() {
             <button
               type="button"
               className="absolute -bottom-1.5 -right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md transition-colors hover:text-accent"
-              aria-label="Change avatar"
+              aria-label={t("settings.profileSection.avatar")}
               onClick={onPickAvatar}
             >
               <Camera className="h-3 w-3" />
@@ -116,14 +119,16 @@ export function ProfileSection() {
             />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold">Avatar</h3>
+            <h3 className="text-base font-semibold">{t("settings.profileSection.avatar")}</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              PNG, JPG, WEBP, or GIF — up to 1.5 MB. Stored locally on this device.
+              {t("settings.profileSection.avatarHint")}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={onPickAvatar}>
                 <Camera className="h-3.5 w-3.5" />
-                {user?.avatarUrl ? "Replace" : "Upload"}
+                {user?.avatarUrl
+                  ? t("settings.profileSection.replace")
+                  : t("settings.profileSection.upload")}
               </Button>
               {user?.avatarUrl && (
                 <Button
@@ -133,7 +138,7 @@ export function ProfileSection() {
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Remove
+                  {t("settings.profileSection.remove")}
                 </Button>
               )}
             </div>
@@ -144,29 +149,32 @@ export function ProfileSection() {
       {/* Identity */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Identity</CardTitle>
+          <CardTitle className="text-base">{t("settings.profileSection.identity")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field id="prof-name" label="Full name" icon={User}>
+            <Field id="prof-name" label={t("settings.profileSection.fullName")} icon={User}>
               <Input id="prof-name" value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
-            <Field id="prof-email" label="Email" icon={Mail}>
+            <Field id="prof-email" label={t("settings.profileSection.email")} icon={Mail}>
               <Input id="prof-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </Field>
-            <Field id="prof-phone" label="Phone (for SMS alerts)" icon={Mail}>
+            <Field id="prof-phone" label={t("settings.profileSection.phone")} icon={Mail}>
               <Input id="prof-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </Field>
-            <Field id="prof-role" label="Role" icon={Shield}>
-              <Input id="prof-role" value="Admin · Workspace owner" readOnly className="bg-secondary/40" />
+            <Field id="prof-role" label={t("settings.profileSection.role")} icon={Shield}>
+              <Input id="prof-role" value={t("settings.profileSection.adminOwner")} readOnly className="bg-secondary/40" />
             </Field>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => toast.info("Reverted unsaved changes")}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={() => toast.info(t("settings.profileSection.revertedChanges"))}
+            >
+              {t("settings.profileSection.cancel")}
             </Button>
-            <Button onClick={onSave}>Save changes</Button>
+            <Button onClick={onSave}>{t("settings.profileSection.saveChanges")}</Button>
           </div>
         </CardContent>
       </Card>
@@ -174,26 +182,40 @@ export function ProfileSection() {
       {/* Security */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Security</CardTitle>
+          <CardTitle className="text-base">{t("settings.profileSection.security")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Row
             icon={KeyRound}
-            label="Password"
-            description="Last changed 3 months ago"
+            label={t("settings.profileSection.password")}
+            description={t("settings.profileSection.passwordChanged")}
             action={
-              <Button variant="outline" size="sm" onClick={() => toast.success("Reset email sent")}>
-                Send reset link
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast.success(t("settings.profileSection.resetEmailSent"))}
+              >
+                {t("settings.profileSection.sendResetLink")}
               </Button>
             }
           />
           <Row
             icon={Shield}
-            label="Two-factor authentication"
-            description="Authenticator app · TOTP"
+            label={t("settings.profileSection.twoFactor")}
+            description={t("settings.profileSection.twoFactorAuth")}
             action={
               <div className="flex items-center gap-2">
-                <Switch checked={mfa} onCheckedChange={(v) => { setMfa(v); toast.success(v ? "2FA enabled" : "2FA disabled"); }} />
+                <Switch
+                  checked={mfa}
+                  onCheckedChange={(v) => {
+                    setMfa(v);
+                    toast.success(
+                      v
+                        ? t("settings.securitySection.twoFactorEnabled")
+                        : t("settings.securitySection.twoFactorDisabled"),
+                    );
+                  }}
+                />
               </div>
             }
           />

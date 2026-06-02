@@ -23,22 +23,35 @@ import {
 } from "@/components/ui/table";
 import { formatRelativeTime } from "@/lib/format";
 import {
-  ACTIVITY_VERBS,
   MOCK_WORKSPACE_ACTIVITY,
   type ActivityCategory,
   type ActivityKind,
   type WorkspaceActivityEvent,
 } from "@/lib/mock/workspace-activity";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/use-translation";
 
 type Filter = "all" | ActivityCategory;
 
-const FILTERS: Array<{ id: Filter; label: string }> = [
-  { id: "all", label: "All" },
-  { id: "member", label: "Members" },
-  { id: "role", label: "Roles" },
-  { id: "settings", label: "Settings" },
+const FILTERS: Array<{ id: Filter; labelKey: string }> = [
+  { id: "all", labelKey: "workspaceUI.activity.filter.all" },
+  { id: "member", labelKey: "workspaceUI.activity.filter.member" },
+  { id: "role", labelKey: "workspaceUI.activity.filter.role" },
+  { id: "settings", labelKey: "workspaceUI.activity.filter.settings" },
 ];
+
+/** Maps activity kinds to translation keys for the verb phrase. */
+const VERB_KEYS: Record<ActivityKind, string> = {
+  "member.invited": "workspaceUI.activity.verbs.invited",
+  "member.joined": "workspaceUI.activity.verbs.joined",
+  "member.removed": "workspaceUI.activity.verbs.removed",
+  "member.suspended": "workspaceUI.activity.verbs.suspended",
+  "member.reactivated": "workspaceUI.activity.verbs.reactivated",
+  "member.role-changed": "workspaceUI.activity.verbs.roleChanged",
+  "role.permissions-updated": "workspaceUI.activity.verbs.permissionsUpdated",
+  "workspace.renamed": "workspaceUI.activity.verbs.renamed",
+  "workspace.timezone-changed": "workspaceUI.activity.verbs.timezoneChanged",
+};
 
 /** Per-kind icon shown next to the action verb. */
 const KIND_ICONS: Record<ActivityKind, React.ComponentType<{ className?: string }>> = {
@@ -68,6 +81,7 @@ function absoluteTime(ts: number) {
 }
 
 export function WorkspaceActivityLog() {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [filter, setFilter] = React.useState<Filter>("all");
   const [pageSize, setPageSize] = React.useState(25);
@@ -87,18 +101,18 @@ export function WorkspaceActivityLog() {
       return (
         e.actor.name.toLowerCase().includes(q) ||
         (e.target?.toLowerCase().includes(q) ?? false) ||
-        ACTIVITY_VERBS[e.kind].toLowerCase().includes(q)
+        t(VERB_KEYS[e.kind]).toLowerCase().includes(q)
       );
     });
-  }, [events, filter, query]);
+  }, [events, filter, query, t]);
 
   return (
     <Card className="overflow-hidden p-0">
       <CardHeader className="flex flex-col gap-3 border-b border-border bg-secondary/20 px-4 py-3 space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <CardTitle className="text-base">Activity log</CardTitle>
+          <CardTitle className="text-base">{t("workspaceUI.activity.title")}</CardTitle>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Recent workspace events — invites, role changes, permission edits, and settings updates.
+            {t("workspaceUI.activity.description")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -107,7 +121,7 @@ export function WorkspaceActivityLog() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search activity…"
+              placeholder={t("workspaceUI.activity.searchPlaceholder")}
               className="h-8 w-56 pl-7 text-xs"
             />
           </div>
@@ -124,7 +138,7 @@ export function WorkspaceActivityLog() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {f.label}
+                {t(f.labelKey)}
               </button>
             ))}
           </div>
@@ -136,17 +150,17 @@ export function WorkspaceActivityLog() {
           <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-4 text-left">Actor</TableHead>
-                <TableHead className="text-left">Action</TableHead>
-                <TableHead className="text-left">Detail</TableHead>
-                <TableHead className="pr-4">When</TableHead>
+                <TableHead className="pl-4 text-left">{t("workspaceUI.activity.columnActor")}</TableHead>
+                <TableHead className="text-left">{t("workspaceUI.activity.columnAction")}</TableHead>
+                <TableHead className="text-left">{t("workspaceUI.activity.columnDetail")}</TableHead>
+                <TableHead className="pr-4">{t("workspaceUI.activity.columnWhen")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="py-10 text-center text-xs text-muted-foreground">
-                    No activity matches the current filter.
+                    {t("workspaceUI.activity.empty")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -173,8 +187,9 @@ export function WorkspaceActivityLog() {
 }
 
 function ActivityRow({ event }: { event: WorkspaceActivityEvent }) {
+  const { t } = useTranslation();
   const Icon = KIND_ICONS[event.kind];
-  const verb = ACTIVITY_VERBS[event.kind];
+  const verb = t(VERB_KEYS[event.kind]);
 
   return (
     <TableRow>
@@ -201,12 +216,12 @@ function ActivityRow({ event }: { event: WorkspaceActivityEvent }) {
       <TableCell className="text-left text-[12px] text-muted-foreground">
         {event.rolePair ? (
           <span className="inline-flex items-center gap-1.5">
-            <span className="rounded border border-border bg-card px-1.5 py-0.5 text-[10px] capitalize">
-              {event.rolePair.from}
+            <span className="rounded border border-border bg-card px-1.5 py-0.5 text-[10px]">
+              {t(`workspaceUI.members.role.${event.rolePair.from}`)}
             </span>
             <span aria-hidden>→</span>
-            <span className="rounded border border-accent/45 bg-accent/12 px-1.5 py-0.5 text-[10px] capitalize text-foreground">
-              {event.rolePair.to}
+            <span className="rounded border border-accent/45 bg-accent/12 px-1.5 py-0.5 text-[10px] text-foreground">
+              {t(`workspaceUI.members.role.${event.rolePair.to}`)}
             </span>
           </span>
         ) : (

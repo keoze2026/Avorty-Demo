@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
@@ -39,6 +40,7 @@ export function BuyersTable({
   onArchive,
   onEdit,
 }: BuyersTableProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
@@ -68,16 +70,16 @@ export function BuyersTable({
                 <Checkbox
                   checked={allChecked || (indeterminate && "indeterminate")}
                   onCheckedChange={toggleAll}
-                  aria-label="Select all buyers"
+                  aria-label={t("networkUI.buyers.table.selectAllAria")}
                 />
               </TableHead>
-              <TableHead className="text-left">Name</TableHead>
-              {columns.hourly && <TableHead className="!text-left">Hourly</TableHead>}
-              {columns.daily && <TableHead className="!text-left">Daily</TableHead>}
-              {columns.monthly && <TableHead className="!text-left">Monthly</TableHead>}
-              {columns.global && <TableHead className="!text-left">Global</TableHead>}
-              {columns.status && <TableHead>Status</TableHead>}
-              <TableHead className="pr-4">Actions</TableHead>
+              <TableHead className="text-left">{t("networkUI.common.name")}</TableHead>
+              {columns.hourly && <TableHead className="!text-left">{t("networkUI.common.hourly")}</TableHead>}
+              {columns.daily && <TableHead className="!text-left">{t("networkUI.common.daily")}</TableHead>}
+              {columns.monthly && <TableHead className="!text-left">{t("networkUI.common.monthly")}</TableHead>}
+              {columns.global && <TableHead className="!text-left">{t("networkUI.common.global")}</TableHead>}
+              {columns.status && <TableHead>{t("networkUI.common.status")}</TableHead>}
+              <TableHead className="pr-4">{t("networkUI.common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,7 +97,7 @@ export function BuyersTable({
                     <Checkbox
                       checked={selected.has(b.id)}
                       onCheckedChange={() => toggleOne(b.id)}
-                      aria-label={`Select ${b.name}`}
+                      aria-label={t("networkUI.buyers.table.selectOneAria").replace("{name}", b.name)}
                     />
                   </TableCell>
                   <TableCell className="text-left font-medium text-foreground">
@@ -126,7 +128,7 @@ export function BuyersTable({
                       <Switch
                         checked={isActive}
                         onCheckedChange={() => onToggle(b.id)}
-                        aria-label={isActive ? "Pause buyer" : "Activate buyer"}
+                        aria-label={isActive ? t("networkUI.buyers.table.pauseAria") : t("networkUI.buyers.table.activateAria")}
                       />
                     </TableCell>
                   )}
@@ -134,13 +136,13 @@ export function BuyersTable({
                     <div className="inline-flex items-center gap-0.5">
                       <ActionIcon
                         icon={Pencil}
-                        label="Edit"
+                        label={t("networkUI.common.edit")}
                         onClick={() => onEdit(b.id)}
                       />
-                      <ActionIcon icon={Undo2} label="Revert" />
+                      <ActionIcon icon={Undo2} label={t("networkUI.common.revert")} />
                       <ActionIcon
                         icon={Trash2}
-                        label="Remove"
+                        label={t("networkUI.common.remove")}
                         tone="destructive"
                         onClick={() => onArchive(b.id)}
                       />

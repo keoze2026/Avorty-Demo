@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import type { NumberStatus, NumberType } from "@/lib/types";
 
 interface Props {
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function NumbersToolbar({ query, onQuery, type, onType, status, onStatus, countLabel }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative">
@@ -31,14 +33,14 @@ export function NumbersToolbar({ query, onQuery, type, onType, status, onStatus,
         <Input
           value={query}
           onChange={(e) => onQuery(e.target.value)}
-          placeholder="Search numbers, campaigns, cities…"
+          placeholder={t("trafficUI.numbers.toolbar.searchPlaceholder")}
           className="h-9 w-72 pl-8"
         />
         {query && (
           <button
             type="button"
             onClick={() => onQuery("")}
-            aria-label="Clear search"
+            aria-label={t("trafficUI.common.clearSearch")}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
@@ -51,10 +53,10 @@ export function NumbersToolbar({ query, onQuery, type, onType, status, onStatus,
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All types</SelectItem>
-          <SelectItem value="local">Local</SelectItem>
-          <SelectItem value="tollfree">Toll-free</SelectItem>
-          <SelectItem value="international">International</SelectItem>
+          <SelectItem value="all">{t("trafficUI.numbers.statusOptions.allTypes")}</SelectItem>
+          <SelectItem value="local">{t("trafficUI.numbers.typeOptions.local")}</SelectItem>
+          <SelectItem value="tollfree">{t("trafficUI.numbers.typeOptions.tollfree")}</SelectItem>
+          <SelectItem value="international">{t("trafficUI.numbers.typeOptions.international")}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -63,11 +65,11 @@ export function NumbersToolbar({ query, onQuery, type, onType, status, onStatus,
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="paused">Paused</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="expired">Expired</SelectItem>
+          <SelectItem value="all">{t("trafficUI.numbers.statusOptions.allStatuses")}</SelectItem>
+          <SelectItem value="active">{t("trafficUI.numbers.statusOptions.active")}</SelectItem>
+          <SelectItem value="paused">{t("trafficUI.numbers.statusOptions.paused")}</SelectItem>
+          <SelectItem value="pending">{t("trafficUI.numbers.statusOptions.pending")}</SelectItem>
+          <SelectItem value="expired">{t("trafficUI.numbers.statusOptions.expired")}</SelectItem>
         </SelectContent>
       </Select>
 

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "@/hooks/use-translation";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useSecurityStore } from "@/lib/store/security-store";
 import {
@@ -41,6 +42,7 @@ export function SecuritySection() {
 /* ─────────────────────────────────────────────────────────────────── */
 
 function TwoFactorCard() {
+  const { t } = useTranslation();
   const enabled = useSecurityStore((s) => s.twoFactorEnabled);
   const secret = useSecurityStore((s) => s.twoFactorSecret);
   const enable2FA = useSecurityStore((s) => s.enable2FA);
@@ -54,7 +56,7 @@ function TwoFactorCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <ShieldCheck className="h-4 w-4 text-accent" />
-          Two-factor authentication
+          {t("settings.securitySection.twoFactor")}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Require a Google Authenticator code on every portal sign-in.
@@ -79,12 +81,12 @@ function TwoFactorCard() {
               size="sm"
               onClick={() => {
                 disable2FA();
-                toast.success("Two-factor disabled");
+                toast.success(t("settings.securitySection.twoFactorDisabled"));
               }}
               className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Disable
+              {t("settings.securitySection.disable")}
             </Button>
           </div>
         ) : !setupOpen ? (
@@ -102,7 +104,7 @@ function TwoFactorCard() {
             </div>
             <Button size="sm" onClick={() => setSetupOpen(true)}>
               <ScanLine className="h-3.5 w-3.5" />
-              Set up
+              {t("settings.securitySection.setup")}
             </Button>
           </div>
         ) : (
@@ -241,6 +243,7 @@ function TwoFactorSetup({
 /* ─────────────────────────────────────────────────────────────────── */
 
 function ReportsPinCard() {
+  const { t } = useTranslation();
   const reportsPin = useSecurityStore((s) => s.reportsPin);
   const setReportsPin = useSecurityStore((s) => s.setReportsPin);
   const clearReportsPin = useSecurityStore((s) => s.clearReportsPin);
@@ -262,7 +265,7 @@ function ReportsPinCard() {
     setEditing(false);
     setPin("");
     setConfirm("");
-    toast.success("Reports PIN saved");
+    toast.success(t("settings.securitySection.pinSaved"));
   };
 
   return (
@@ -270,7 +273,7 @@ function ReportsPinCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Lock className="h-4 w-4 text-accent" />
-          Reports PIN
+          {t("settings.securitySection.reportsPin")}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           A 4-digit code that gates historical reports. Today&apos;s data is
@@ -306,7 +309,7 @@ function ReportsPinCard() {
                 size="sm"
                 onClick={() => {
                   clearReportsPin();
-                  toast.success("Reports PIN removed");
+                  toast.success(t("settings.securitySection.pinRemoved"));
                 }}
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
@@ -336,13 +339,17 @@ function ReportsPinCard() {
             <div className="grid gap-3 sm:grid-cols-2">
               <PinInput
                 id="pin-new"
-                label={reportsPin ? "New PIN" : "Choose a 4-digit PIN"}
+                label={
+                  reportsPin
+                    ? t("settings.securitySection.newPinLabel")
+                    : t("settings.securitySection.choosePinLabel")
+                }
                 value={pin}
                 onChange={setPin}
               />
               <PinInput
                 id="pin-confirm"
-                label="Confirm PIN"
+                label={t("settings.securitySection.confirmPin")}
                 value={confirm}
                 onChange={setConfirm}
               />
@@ -353,7 +360,7 @@ function ReportsPinCard() {
             </p>
             <div className="flex items-center gap-2">
               <Button onClick={onSave} disabled={pin.length !== 4 || confirm.length !== 4}>
-                Save PIN
+                {t("settings.securitySection.savePin")}
               </Button>
               <Button
                 variant="ghost"

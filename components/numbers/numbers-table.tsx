@@ -22,12 +22,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact, formatPercent, formatRelativeTime, toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import type { TrackingNumber } from "@/lib/types";
 
 export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
+  const { t } = useTranslation();
   const setStatus = useNumbersStore((s) => s.setNumberStatus);
   const remove = useNumbersStore((s) => s.removeNumber);
 
@@ -36,12 +38,12 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
       <Table>
         <TableHeader>
           <TableRow className="bg-secondary/40">
-            <TableHead>Number</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Campaign</TableHead>
+            <TableHead>{t("trafficUI.numbers.track.headers.number")}</TableHead>
+            <TableHead>{t("trafficUI.numbers.track.headers.type")}</TableHead>
+            <TableHead>{t("trafficUI.numbers.track.headers.campaign")}</TableHead>
             <TableHead>Geo</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Calls today</TableHead>
+            <TableHead>{t("trafficUI.numbers.track.headers.status")}</TableHead>
+            <TableHead>{t("trafficUI.numbers.poolCard.callsToday")}</TableHead>
             <TableHead>Conv.</TableHead>
             <TableHead>Last call</TableHead>
             <TableHead className="w-10" />
@@ -55,7 +57,7 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                 <TableCell className="font-mono text-xs">{toE164(n.number)}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className="capitalize">
-                    {n.type === "tollfree" ? "Toll-free" : n.type}
+                    {n.type === "tollfree" ? t("trafficUI.numbers.typeOptions.tollfree") : n.type === "local" ? t("trafficUI.numbers.typeOptions.local") : t("trafficUI.numbers.typeOptions.international")}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs">
@@ -67,7 +69,7 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                       {n.campaignName}
                     </Link>
                   ) : (
-                    <span className="text-muted-foreground italic">Unassigned</span>
+                    <span className="text-muted-foreground italic">{t("trafficUI.numbers.track.unassigned")}</span>
                   )}
                 </TableCell>
                 <TableCell className="text-xs font-mono">
@@ -86,7 +88,7 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Actions">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("trafficUI.common.actions")}>
                         <MoreVertical className="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -94,16 +96,20 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                       <DropdownMenuItem
                         onSelect={() => {
                           setStatus(n.id, isActive ? "paused" : "active");
-                          toast.success(isActive ? `${toE164(n.number)} paused` : `${toE164(n.number)} activated`);
+                          toast.success(
+                            isActive
+                              ? t("trafficUI.campaigns.settings.trackingNumbers.toast.paused").replace("{number}", toE164(n.number))
+                              : t("trafficUI.campaigns.settings.trackingNumbers.toast.activated").replace("{number}", toE164(n.number)),
+                          );
                         }}
                       >
                         {isActive ? (
                           <>
-                            <Pause className="h-4 w-4" /> Pause
+                            <Pause className="h-4 w-4" /> {t("trafficUI.campaigns.detail.pause")}
                           </>
                         ) : (
                           <>
-                            <Play className="h-4 w-4" /> Activate
+                            <Play className="h-4 w-4" /> {t("trafficUI.campaigns.detail.activate")}
                           </>
                         )}
                       </DropdownMenuItem>
@@ -111,11 +117,11 @@ export function NumbersTable({ numbers }: { numbers: TrackingNumber[] }) {
                       <DropdownMenuItem
                         onSelect={() => {
                           remove(n.id);
-                          toast.success(`${toE164(n.number)} released`);
+                          toast.success(t("trafficUI.numbers.track.releaseSuccess").replace("{number}", toE164(n.number)));
                         }}
                         className="text-destructive focus:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" /> Release number
+                        <Trash2 className="h-4 w-4" /> {t("trafficUI.numbers.track.release").replace("{number}", toE164(n.number))}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

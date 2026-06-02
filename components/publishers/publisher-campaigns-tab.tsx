@@ -8,11 +8,13 @@ import { CampaignStatusBadge } from "@/components/campaigns/campaign-status-badg
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 export function PublisherCampaignsTab({ campaignIds }: { campaignIds: string[] }) {
+  const { t } = useTranslation();
   // Stable selector + useMemo filter — see campaign-buyers-tab for rationale.
   const allCampaigns = useCampaignsStore((s) => s.campaigns);
   const campaigns = useMemo(
@@ -25,11 +27,11 @@ export function PublisherCampaignsTab({ campaignIds }: { campaignIds: string[] }
       <EmptyState
         icon={Megaphone}
         tone="violet"
-        title="Not sending traffic to any campaign yet"
-        description="Attach this publisher to one or more campaigns so they can start earning."
+        title={t("networkUI.publishers.campaigns.emptyTitle")}
+        description={t("networkUI.publishers.campaigns.emptyDesc")}
         actions={
           <Button size="sm">
-            <Plus className="h-4 w-4" /> Attach campaign
+            <Plus className="h-4 w-4" /> {t("networkUI.publishers.campaigns.attach")}
           </Button>
         }
       />
@@ -59,15 +61,15 @@ export function PublisherCampaignsTab({ campaignIds }: { campaignIds: string[] }
 
             <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-border/40 pt-3 text-center">
               <div>
-                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Calls</dt>
+                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("networkUI.publishers.campaigns.calls")}</dt>
                 <dd className="font-mono">{formatCompact(c.callsToday)}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Revenue</dt>
+                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("networkUI.publishers.campaigns.revenue")}</dt>
                 <dd className="font-mono">{formatCurrency(c.revenueToday)}</dd>
               </div>
               <div>
-                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Payout</dt>
+                <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("networkUI.publishers.campaigns.payout")}</dt>
                 <dd className="font-mono">{formatCurrency(c.payout, true)}</dd>
               </div>
             </dl>

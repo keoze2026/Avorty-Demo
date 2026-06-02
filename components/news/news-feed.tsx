@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatRelativeTime } from "@/lib/format";
 import type { NewsCategory, NewsItem } from "@/lib/mock/news";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function NewsFeed({ items, categories }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [category, setCategory] = React.useState<NewsCategory | "all">("all");
@@ -46,7 +48,7 @@ export function NewsFeed({ items, categories }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <Chip
-            label="All"
+            label={t("toolsUI.news.feed.all")}
             active={category === "all"}
             onClick={() => setCategory("all")}
           />
@@ -68,7 +70,7 @@ export function NewsFeed({ items, categories }: Props) {
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search news…"
+                placeholder={t("toolsUI.news.feed.searchPlaceholder")}
                 className="h-9 w-64 pl-7 pr-7 text-xs"
               />
               <button
@@ -77,7 +79,7 @@ export function NewsFeed({ items, categories }: Props) {
                   setQuery("");
                   setSearchOpen(false);
                 }}
-                aria-label="Close search"
+                aria-label={t("toolsUI.news.feed.closeSearch")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" />
@@ -88,7 +90,7 @@ export function NewsFeed({ items, categories }: Props) {
               variant="ghost"
               size="icon"
               className="h-9 w-9 text-muted-foreground"
-              aria-label="Search"
+              aria-label={t("toolsUI.news.feed.searchAria")}
               onClick={() => setSearchOpen(true)}
             >
               <Search className="h-4 w-4" />
@@ -99,7 +101,7 @@ export function NewsFeed({ items, categories }: Props) {
 
       {sorted.length === 0 ? (
         <Card className="p-10 text-center text-sm text-muted-foreground">
-          No stories match the current filter.
+          {t("toolsUI.news.feed.noMatches")}
         </Card>
       ) : (
         <>
@@ -148,6 +150,7 @@ function Chip({
 }
 
 function FeaturedCard({ item }: { item: NewsItem }) {
+  const { t } = useTranslation();
   return (
     <a href={item.url} className="group/featured block">
       <Card className="overflow-hidden p-0">
@@ -173,7 +176,7 @@ function FeaturedCard({ item }: { item: NewsItem }) {
               />
             )}
             <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur">
-              Featured
+              {t("toolsUI.news.feed.featured")}
             </span>
           </div>
           {/* Body */}
@@ -191,7 +194,7 @@ function FeaturedCard({ item }: { item: NewsItem }) {
             </h2>
             <p className="mt-2 text-sm text-muted-foreground line-clamp-3">{item.summary}</p>
             <div className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-accent">
-              Read full story
+              {t("toolsUI.news.feed.readFullStory")}
               <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/featured:translate-x-0.5 group-hover/featured:-translate-y-0.5" />
             </div>
           </div>

@@ -3,8 +3,10 @@
 import { NodeFrame } from "./node-frame";
 import { NODE_META } from "../node-meta";
 import type { RFNodeProps } from "./types";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function WeightSplitNode({ data, selected }: RFNodeProps<"weightSplit">) {
+  const { t } = useTranslation();
   const meta = NODE_META.weightSplit;
   const cfg = data.weightSplit;
   if (!cfg) return null;
@@ -15,7 +17,7 @@ export function WeightSplitNode({ data, selected }: RFNodeProps<"weightSplit">) 
   return (
     <NodeFrame
       icon={meta.icon}
-      title={meta.label}
+      title={t("trafficUI.routing.nodes.weightSplit.label")}
       tone={meta.tone}
       selected={selected}
       outputs={[

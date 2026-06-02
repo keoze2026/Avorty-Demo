@@ -12,6 +12,7 @@ import { Pencil, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_PAYMENT_METHOD } from "@/lib/mock/billing";
+import { useTranslation } from "@/hooks/use-translation";
 
 const BRAND_LABEL: Record<string, string> = {
   visa: "VISA",
@@ -21,15 +22,16 @@ const BRAND_LABEL: Record<string, string> = {
 };
 
 export function PaymentMethodCard() {
+  const { t } = useTranslation();
   const pm = MOCK_PAYMENT_METHOD;
   const brand = BRAND_LABEL[pm.brand] ?? "Card";
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base">Payment method</CardTitle>
+        <CardTitle className="text-base">{t("toolsUI.billing.payment.title")}</CardTitle>
         <Button variant="outline" size="sm">
-          <Pencil className="h-3 w-3" /> Update
+          <Pencil className="h-3 w-3" /> {t("toolsUI.billing.payment.update")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -95,11 +97,11 @@ export function PaymentMethodCard() {
           {/* Bottom row */}
           <div className="relative mt-4 flex items-end justify-between">
             <div>
-              <div className="text-[9px] uppercase tracking-widest opacity-70">Cardholder</div>
+              <div className="text-[9px] uppercase tracking-widest opacity-70">{t("toolsUI.billing.payment.cardholder")}</div>
               <div className="font-mono text-sm font-semibold tracking-wide">{pm.cardholderName}</div>
             </div>
             <div className="text-right">
-              <div className="text-[9px] uppercase tracking-widest opacity-70">Expires</div>
+              <div className="text-[9px] uppercase tracking-widest opacity-70">{t("toolsUI.billing.payment.expires")}</div>
               <div className="font-mono text-sm font-semibold">
                 {pm.expMonth.toString().padStart(2, "0")}/{(pm.expYear % 100).toString().padStart(2, "0")}
               </div>
@@ -110,7 +112,7 @@ export function PaymentMethodCard() {
         {/* Security note */}
         <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <ShieldCheck className="h-3 w-3 text-accent" />
-          Stored with Stripe · PCI-DSS Level 1
+          {t("toolsUI.billing.payment.securityNote")}
         </p>
       </CardContent>
     </Card>

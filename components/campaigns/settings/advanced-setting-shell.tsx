@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface AdvancedSettingShellProps {
@@ -28,6 +29,7 @@ export function AdvancedSettingShell({
   children,
   defaultOpen = false,
 }: AdvancedSettingShellProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
 
   return (
@@ -59,12 +61,12 @@ export function AdvancedSettingShell({
               enabled ? "text-[color:var(--success)]" : "text-muted-foreground",
             )}
           >
-            {enabled ? "Enabled" : "Disabled"}
+            {enabled ? t("trafficUI.campaigns.settings.advancedShell.enabled") : t("trafficUI.campaigns.settings.advancedShell.disabled")}
           </span>
           <Switch
             checked={enabled}
             onCheckedChange={onEnabledChange}
-            aria-label={`Toggle ${title}`}
+            aria-label={t("trafficUI.campaigns.settings.advancedShell.toggle").replace("{title}", title)}
           />
           <ChevronDown
             className={cn(

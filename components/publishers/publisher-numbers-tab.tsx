@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatPercent, formatRelativeTime, toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 
@@ -24,6 +25,7 @@ import { useNumbersStore } from "@/lib/store/numbers-store";
  * to give the page substance until publisher-level number routing ships.
  */
 export function PublisherNumbersTab({ publisherId }: { publisherId: string }) {
+  const { t } = useTranslation();
   const allNumbers = useNumbersStore((s) => s.numbers);
 
   // Stable, deterministic per-publisher slice
@@ -38,11 +40,11 @@ export function PublisherNumbersTab({ publisherId }: { publisherId: string }) {
       <EmptyState
         icon={Hash}
         tone="cyan"
-        title="No numbers assigned"
-        description="Provision tracking numbers and route them through this publisher to start collecting traffic."
+        title={t("networkUI.publishers.numbers.emptyTitle")}
+        description={t("networkUI.publishers.numbers.emptyDesc")}
         actions={
           <Button size="sm">
-            <Plus className="h-4 w-4" /> Provision number
+            <Plus className="h-4 w-4" /> {t("networkUI.publishers.numbers.provision")}
           </Button>
         }
       />
@@ -54,13 +56,13 @@ export function PublisherNumbersTab({ publisherId }: { publisherId: string }) {
       <Table>
         <TableHeader>
           <TableRow className="bg-secondary/40">
-            <TableHead>Number</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Campaign</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Calls today</TableHead>
-            <TableHead>Conv.</TableHead>
-            <TableHead>Last call</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.number")}</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.type")}</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.campaign")}</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.status")}</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.callsToday")}</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.conv")}</TableHead>
+            <TableHead>{t("networkUI.publishers.numbers.lastCall")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,7 +71,7 @@ export function PublisherNumbersTab({ publisherId }: { publisherId: string }) {
               <TableCell className="font-mono text-xs">{toE164(n.number)}</TableCell>
               <TableCell>
                 <Badge variant="outline" className="capitalize">
-                  {n.type === "tollfree" ? "Toll-free" : n.type}
+                  {n.type === "tollfree" ? t("networkUI.publishers.numbers.tollFree") : n.type}
                 </Badge>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground">

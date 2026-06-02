@@ -6,6 +6,7 @@ import { ArrowUpRight } from "lucide-react";
 
 import { CallWaveform } from "@/components/live/call-waveform";
 import { Card } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   Table,
   TableBody,
@@ -106,6 +107,7 @@ export function DestinationSummaryTable({
   destinationFilter,
   limit = 12,
 }: DestinationSummaryTableProps) {
+  const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
   const rows = useMemo(
     () => buildRows(destinations, destinationFilter, limit),
@@ -116,16 +118,16 @@ export function DestinationSummaryTable({
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between gap-2 border-b border-border px-6 py-4">
         <div>
-          <h3 className="text-[13px] font-semibold uppercase tracking-wider">DESTINATIONS</h3>
+          <h3 className="text-[13px] font-semibold uppercase tracking-wider">{t("dashboard.destinations")}</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Active TFNs attached to active buyers — paused destinations drop off automatically.
+            {t("dashboard.destinationsHint")}
           </p>
         </div>
         <Link
           href={ROUTES.buyers}
           className="inline-flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          Manage buyers <ArrowUpRight className="h-3 w-3" />
+          {t("nav.buyers")} <ArrowUpRight className="h-3 w-3" />
         </Link>
       </div>
 
@@ -133,13 +135,13 @@ export function DestinationSummaryTable({
         <Table className="min-w-[980px] [&_tr]:border-b-0 [&_td]:py-2 [&_th]:h-8 [&_th]:py-1.5 [&_th]:text-[10px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wider">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[220px] pl-6 text-left">Destination</TableHead>
-              <TableHead className="w-[160px] !text-left">Status</TableHead>
-              <TableHead className="text-left">Buyer</TableHead>
-              <TableHead className="text-center">Live</TableHead>
-              <TableHead className="text-right">Cap (today)</TableHead>
-              <TableHead className="text-center">Calls today</TableHead>
-              <TableHead className="pr-6 text-center">Revenue today</TableHead>
+              <TableHead className="w-[220px] pl-6 text-left">{t("dashboard.columns.destination")}</TableHead>
+              <TableHead className="w-[160px] !text-left">{t("dashboard.columns.status")}</TableHead>
+              <TableHead className="text-left">{t("dashboard.columns.buyer")}</TableHead>
+              <TableHead className="text-center">{t("dashboard.columns.live")}</TableHead>
+              <TableHead className="text-right">{t("dashboard.columns.capToday")}</TableHead>
+              <TableHead className="text-center">{t("dashboard.columns.callsToday")}</TableHead>
+              <TableHead className="pr-6 text-center">{t("dashboard.columns.revenueToday")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

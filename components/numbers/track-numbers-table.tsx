@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatCompact, formatNumber, toE164 } from "@/lib/format";
 import { useNumbersStore } from "@/lib/store/numbers-store";
@@ -58,11 +59,12 @@ export function deriveCountry(n: TrackingNumber): string {
 
 export function derivePurchaseStatus(n: TrackingNumber): {
   label: string;
+  labelKey: string;
   tone: "success" | "warning" | "outline" | "destructive";
 } {
-  if (n.status === "pending") return { label: "Pending", tone: "warning" };
-  if (n.status === "expired") return { label: "Expired", tone: "destructive" };
-  return { label: "Purchased", tone: "success" };
+  if (n.status === "pending") return { label: "Pending", labelKey: "trafficUI.numbers.track.purchase.pending", tone: "warning" };
+  if (n.status === "expired") return { label: "Expired", labelKey: "trafficUI.numbers.track.purchase.expired", tone: "destructive" };
+  return { label: "Purchased", labelKey: "trafficUI.numbers.track.purchase.purchased", tone: "success" };
 }
 
 export function deriveAllocated(n: TrackingNumber): number {
@@ -107,24 +109,24 @@ export function deriveGlobal(n: TrackingNumber): number {
    =========================================================== */
 
 export const TRACK_NUMBERS_COLUMNS = [
-  { id: "number", label: "Number" },
-  { id: "name", label: "Name" },
-  { id: "country", label: "Country" },
-  { id: "purchaseStatus", label: "Purchase status" },
-  { id: "type", label: "Type" },
-  { id: "region", label: "Region" },
-  { id: "campaign", label: "Campaign" },
-  { id: "allocated", label: "Allocated" },
-  { id: "renew", label: "Renew" },
-  { id: "lifetime", label: "Lifetime" },
-  { id: "vendor", label: "Vendor" },
-  { id: "live", label: "Live" },
-  { id: "hourly", label: "Hourly" },
-  { id: "daily", label: "Daily" },
-  { id: "monthly", label: "Monthly" },
-  { id: "global", label: "Global" },
-  { id: "status", label: "Status" },
-  { id: "actions", label: "Actions", required: true as const },
+  { id: "number", label: "Number", labelKey: "trafficUI.numbers.track.headers.number" },
+  { id: "name", label: "Name", labelKey: "trafficUI.numbers.track.headers.name" },
+  { id: "country", label: "Country", labelKey: "trafficUI.numbers.track.headers.country" },
+  { id: "purchaseStatus", label: "Purchase status", labelKey: "trafficUI.numbers.track.headers.purchaseStatus" },
+  { id: "type", label: "Type", labelKey: "trafficUI.numbers.track.headers.type" },
+  { id: "region", label: "Region", labelKey: "trafficUI.numbers.track.headers.region" },
+  { id: "campaign", label: "Campaign", labelKey: "trafficUI.numbers.track.headers.campaign" },
+  { id: "allocated", label: "Allocated", labelKey: "trafficUI.numbers.track.headers.allocated" },
+  { id: "renew", label: "Renew", labelKey: "trafficUI.numbers.track.headers.renew" },
+  { id: "lifetime", label: "Lifetime", labelKey: "trafficUI.numbers.track.headers.lifetime" },
+  { id: "vendor", label: "Vendor", labelKey: "trafficUI.numbers.track.headers.vendor" },
+  { id: "live", label: "Live", labelKey: "trafficUI.numbers.track.headers.live" },
+  { id: "hourly", label: "Hourly", labelKey: "trafficUI.numbers.track.headers.hourly" },
+  { id: "daily", label: "Daily", labelKey: "trafficUI.numbers.track.headers.daily" },
+  { id: "monthly", label: "Monthly", labelKey: "trafficUI.numbers.track.headers.monthly" },
+  { id: "global", label: "Global", labelKey: "trafficUI.numbers.track.headers.global" },
+  { id: "status", label: "Status", labelKey: "trafficUI.numbers.track.headers.status" },
+  { id: "actions", label: "Actions", labelKey: "trafficUI.numbers.track.headers.actions", required: true as const },
 ];
 
 interface Props {
@@ -142,6 +144,7 @@ export function TrackNumbersTable({
   onToggle,
   onToggleAll,
 }: Props) {
+  const { t } = useTranslation();
   const remove = useNumbersStore((s) => s.removeNumber);
 
   const allChecked = numbers.length > 0 && numbers.every((n) => selected.has(n.id));
@@ -158,42 +161,42 @@ export function TrackNumbersTable({
                 <Checkbox
                   checked={allChecked}
                   onCheckedChange={onToggleAll}
-                  aria-label="Select all"
+                  aria-label={t("trafficUI.common.selectAll")}
                 />
               </TableHead>
               {visibleColumns.has("number") && (
-                <TableHead className="text-left">Number</TableHead>
+                <TableHead className="text-left">{t("trafficUI.numbers.track.headers.number")}</TableHead>
               )}
               {visibleColumns.has("name") && (
-                <TableHead className="text-left">Name</TableHead>
+                <TableHead className="text-left">{t("trafficUI.numbers.track.headers.name")}</TableHead>
               )}
               {visibleColumns.has("country") && (
-                <TableHead className="text-left">Country</TableHead>
+                <TableHead className="text-left">{t("trafficUI.numbers.track.headers.country")}</TableHead>
               )}
-              {visibleColumns.has("purchaseStatus") && <TableHead>Purchase status</TableHead>}
-              {visibleColumns.has("type") && <TableHead>Type</TableHead>}
-              {visibleColumns.has("region") && <TableHead>Region</TableHead>}
+              {visibleColumns.has("purchaseStatus") && <TableHead>{t("trafficUI.numbers.track.headers.purchaseStatus")}</TableHead>}
+              {visibleColumns.has("type") && <TableHead>{t("trafficUI.numbers.track.headers.type")}</TableHead>}
+              {visibleColumns.has("region") && <TableHead>{t("trafficUI.numbers.track.headers.region")}</TableHead>}
               {visibleColumns.has("campaign") && (
-                <TableHead className="text-left">Campaign</TableHead>
+                <TableHead className="text-left">{t("trafficUI.numbers.track.headers.campaign")}</TableHead>
               )}
-              {visibleColumns.has("allocated") && <TableHead>Allocated</TableHead>}
-              {visibleColumns.has("renew") && <TableHead>Renew</TableHead>}
-              {visibleColumns.has("lifetime") && <TableHead>Lifetime</TableHead>}
-              {visibleColumns.has("vendor") && <TableHead>Vendor</TableHead>}
-              {visibleColumns.has("live") && <TableHead>Live</TableHead>}
-              {visibleColumns.has("hourly") && <TableHead>Hourly</TableHead>}
-              {visibleColumns.has("daily") && <TableHead>Daily</TableHead>}
-              {visibleColumns.has("monthly") && <TableHead>Monthly</TableHead>}
-              {visibleColumns.has("global") && <TableHead>Global</TableHead>}
-              {visibleColumns.has("status") && <TableHead>Status</TableHead>}
-              <TableHead className="pr-4">Actions</TableHead>
+              {visibleColumns.has("allocated") && <TableHead>{t("trafficUI.numbers.track.headers.allocated")}</TableHead>}
+              {visibleColumns.has("renew") && <TableHead>{t("trafficUI.numbers.track.headers.renew")}</TableHead>}
+              {visibleColumns.has("lifetime") && <TableHead>{t("trafficUI.numbers.track.headers.lifetime")}</TableHead>}
+              {visibleColumns.has("vendor") && <TableHead>{t("trafficUI.numbers.track.headers.vendor")}</TableHead>}
+              {visibleColumns.has("live") && <TableHead>{t("trafficUI.numbers.track.headers.live")}</TableHead>}
+              {visibleColumns.has("hourly") && <TableHead>{t("trafficUI.numbers.track.headers.hourly")}</TableHead>}
+              {visibleColumns.has("daily") && <TableHead>{t("trafficUI.numbers.track.headers.daily")}</TableHead>}
+              {visibleColumns.has("monthly") && <TableHead>{t("trafficUI.numbers.track.headers.monthly")}</TableHead>}
+              {visibleColumns.has("global") && <TableHead>{t("trafficUI.numbers.track.headers.global")}</TableHead>}
+              {visibleColumns.has("status") && <TableHead>{t("trafficUI.numbers.track.headers.status")}</TableHead>}
+              <TableHead className="pr-4">{t("trafficUI.numbers.track.headers.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {numbers.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={colSpan} className="py-10 text-center text-xs text-muted-foreground">
-                  No data available
+                  {t("trafficUI.common.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -206,7 +209,7 @@ export function TrackNumbersTable({
                       <Checkbox
                         checked={selected.has(n.id)}
                         onCheckedChange={() => onToggle(n.id)}
-                        aria-label={`Select ${toE164(n.number)}`}
+                        aria-label={t("trafficUI.numbers.track.selectRow").replace("{number}", toE164(n.number))}
                       />
                     </TableCell>
                     {visibleColumns.has("number") && (
@@ -226,13 +229,13 @@ export function TrackNumbersTable({
                     )}
                     {visibleColumns.has("purchaseStatus") && (
                       <TableCell>
-                        <Badge variant={purchase.tone}>{purchase.label}</Badge>
+                        <Badge variant={purchase.tone}>{t(purchase.labelKey)}</Badge>
                       </TableCell>
                     )}
                     {visibleColumns.has("type") && (
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {n.type === "tollfree" ? "Toll-free" : n.type}
+                          {n.type === "tollfree" ? t("trafficUI.numbers.typeOptions.tollfree") : n.type === "local" ? t("trafficUI.numbers.typeOptions.local") : t("trafficUI.numbers.typeOptions.international")}
                         </Badge>
                       </TableCell>
                     )}
@@ -251,7 +254,7 @@ export function TrackNumbersTable({
                             {n.campaignName}
                           </Link>
                         ) : (
-                          <span className="italic text-muted-foreground">Unassigned</span>
+                          <span className="italic text-muted-foreground">{t("trafficUI.numbers.track.unassigned")}</span>
                         )}
                       </TableCell>
                     )}
@@ -316,8 +319,8 @@ export function TrackNumbersTable({
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          aria-label={`Edit ${toE164(n.number)}`}
-                          onClick={() => toast(`Edit ${toE164(n.number)} — coming soon`)}
+                          aria-label={t("trafficUI.numbers.track.edit").replace("{number}", toE164(n.number))}
+                          onClick={() => toast(t("trafficUI.numbers.track.editSoon").replace("{number}", toE164(n.number)))}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -325,10 +328,10 @@ export function TrackNumbersTable({
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          aria-label={`Release ${toE164(n.number)}`}
+                          aria-label={t("trafficUI.numbers.track.release").replace("{number}", toE164(n.number))}
                           onClick={() => {
                             remove(n.id);
-                            toast.success(`${toE164(n.number)} released`);
+                            toast.success(t("trafficUI.numbers.track.releaseSuccess").replace("{number}", toE164(n.number)));
                           }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

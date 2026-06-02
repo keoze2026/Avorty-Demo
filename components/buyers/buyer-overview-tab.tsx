@@ -7,10 +7,12 @@ import { BuyerFunnelChart } from "@/components/buyers/buyer-funnel-chart";
 import { RecentCallsFeed } from "@/components/dashboard/recent-calls-feed";
 import { AutoScheduleCard } from "@/components/shared/auto-schedule-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
 
 export function BuyerOverviewTab({ buyer }: { buyer: Buyer }) {
+  const { t } = useTranslation();
   const dailyUsage = buyer.dailyCap > 0 ? Math.min(1, buyer.callsToday / buyer.dailyCap) : 0;
   const monthlyUsage = buyer.monthlyCap > 0 ? Math.min(1, buyer.callsMonth / buyer.monthlyCap) : 0;
 
@@ -28,29 +30,29 @@ export function BuyerOverviewTab({ buyer }: { buyer: Buyer }) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Pacing</CardTitle>
-            <p className="text-xs text-muted-foreground">Current cap consumption</p>
+            <CardTitle className="text-base">{t("networkUI.buyers.overview.pacingTitle")}</CardTitle>
+            <p className="text-xs text-muted-foreground">{t("networkUI.buyers.overview.pacingDesc")}</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <PacingBar
-              label="Daily"
+              label={t("networkUI.buyers.overview.daily")}
               consumed={buyer.callsToday}
               cap={buyer.dailyCap}
               usage={dailyUsage}
             />
             <PacingBar
-              label="Monthly"
+              label={t("networkUI.buyers.overview.monthly")}
               consumed={buyer.callsMonth}
               cap={buyer.monthlyCap}
               usage={monthlyUsage}
             />
 
             <dl className="grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/40 pt-4 text-xs">
-              <dt className="text-muted-foreground">Concurrency cap</dt>
+              <dt className="text-muted-foreground">{t("networkUI.buyers.overview.concurrencyCap")}</dt>
               <dd className="text-right font-mono">{buyer.concurrencyCap}</dd>
-              <dt className="text-muted-foreground">Bid model</dt>
+              <dt className="text-muted-foreground">{t("networkUI.buyers.overview.bidModel")}</dt>
               <dd className="text-right font-mono capitalize">{buyer.payoutModel}</dd>
-              <dt className="text-muted-foreground">Lifetime spend</dt>
+              <dt className="text-muted-foreground">{t("networkUI.buyers.overview.lifetimeSpend")}</dt>
               <dd className="text-right font-mono">{formatCurrency(buyer.lifetimeSpend)}</dd>
             </dl>
           </CardContent>
@@ -60,23 +62,23 @@ export function BuyerOverviewTab({ buyer }: { buyer: Buyer }) {
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { icon: PhoneCall, label: "Month calls", value: formatCompact(buyer.callsMonth) },
-          { icon: DollarSign, label: "Month spend", value: formatCurrency(buyer.spendMonth) },
-          { icon: CheckCircle2, label: "Accept rate", value: formatPercent(buyer.acceptRate * 100, 0) },
-          { icon: Users, label: "Campaigns", value: buyer.campaignIds.length.toString() },
-        ].map((t) => {
-          const Icon = t.icon;
+          { icon: PhoneCall, label: t("networkUI.buyers.overview.monthCalls"), value: formatCompact(buyer.callsMonth) },
+          { icon: DollarSign, label: t("networkUI.buyers.overview.monthSpend"), value: formatCurrency(buyer.spendMonth) },
+          { icon: CheckCircle2, label: t("networkUI.buyers.overview.acceptRate"), value: formatPercent(buyer.acceptRate * 100, 0) },
+          { icon: Users, label: t("networkUI.buyers.overview.campaigns"), value: buyer.campaignIds.length.toString() },
+        ].map((tile) => {
+          const Icon = tile.icon;
           return (
             <div
-              key={t.label}
+              key={tile.label}
               className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 p-3"
             >
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <Icon className="h-4 w-4" />
               </span>
               <div>
-                <div className="font-mono text-lg font-semibold">{t.value}</div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.label}</div>
+                <div className="font-mono text-lg font-semibold">{tile.value}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{tile.label}</div>
               </div>
             </div>
           );

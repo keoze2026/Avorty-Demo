@@ -37,6 +37,7 @@ import {
   PAGE_SIZE_OPTIONS,
   type PageSize,
 } from "@/components/suppression/suppression-toolbar";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface Props {
   carriers: string[];
@@ -46,6 +47,7 @@ interface Props {
 
 /** Card showing the carriers currently blocked by this shield. */
 export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [pageSize, setPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
@@ -83,16 +85,16 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
       next.delete(carrier);
       return next;
     });
-    toast.success(`Unblocked ${carrier}`);
+    toast.success(t("toolsUI.suppression.blockedCarriers.toastUnblocked").replace("{carrier}", carrier));
   };
 
   return (
     <Card className="p-5">
       <div className="mb-1">
         <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-          Blocked carriers
+          {t("toolsUI.suppression.blockedCarriers.title")}
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">Block unwanted VoIP carriers.</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("toolsUI.suppression.blockedCarriers.description")}</p>
       </div>
 
       <div className="my-4 h-px w-full bg-border" />
@@ -105,7 +107,7 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search…"
+              placeholder={t("toolsUI.suppression.blockedCarriers.searchPlaceholder")}
               className="h-9 w-56 pl-7 pr-7 text-xs"
             />
             <button
@@ -114,7 +116,7 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
                 setQuery("");
                 setSearchOpen(false);
               }}
-              aria-label="Close search"
+              aria-label={t("toolsUI.suppression.aria.closeSearch")}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
@@ -125,7 +127,7 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
             variant="ghost"
             size="icon"
             className="h-9 w-9 text-muted-foreground"
-            aria-label="Search"
+            aria-label={t("toolsUI.suppression.aria.search")}
             onClick={() => setSearchOpen(true)}
           >
             <Search className="h-4 w-4" />
@@ -142,14 +144,14 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
           <SelectContent align="end">
             {PAGE_SIZE_OPTIONS.map((n) => (
               <SelectItem key={n} value={String(n)}>
-                On page {n}
+                {t("toolsUI.suppression.onPage").replace("{n}", String(n))}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         <Button size="sm" className="h-9" onClick={() => setBlockOpen(true)}>
-          Block Carrier
+          {t("toolsUI.suppression.blockedCarriers.blockCta")}
         </Button>
       </div>
 
@@ -161,18 +163,18 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
                 <Checkbox
                   checked={allChecked}
                   onCheckedChange={toggleAll}
-                  aria-label="Select all"
+                  aria-label={t("toolsUI.suppression.aria.selectAll")}
                 />
               </TableHead>
-              <TableHead className="text-left">Blocked carrier</TableHead>
-              <TableHead className="pr-4">Actions</TableHead>
+              <TableHead className="text-left">{t("toolsUI.suppression.columns.blockedCarrier")}</TableHead>
+              <TableHead className="pr-4">{t("toolsUI.suppression.columns.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {visible.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={3} className="py-8 text-center text-xs text-muted-foreground">
-                  No data available
+                  {t("toolsUI.suppression.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -182,7 +184,7 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
                     <Checkbox
                       checked={selected.has(c)}
                       onCheckedChange={() => toggle(c)}
-                      aria-label={`Select ${c}`}
+                      aria-label={t("toolsUI.suppression.aria.selectRow").replace("{label}", c)}
                     />
                   </TableCell>
                   <TableCell className="text-left font-medium">{c}</TableCell>
@@ -191,7 +193,7 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      aria-label={`Unblock ${c}`}
+                      aria-label={t("toolsUI.suppression.aria.unblockRow").replace("{label}", c)}
                       onClick={() => handleUnblock(c)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -210,7 +212,7 @@ export function BlockedCarriersCard({ carriers, onBlock, onUnblock }: Props) {
         existing={carriers}
         onBlock={(carrier) => {
           onBlock(carrier);
-          toast.success(`Blocked ${carrier}`);
+          toast.success(t("toolsUI.suppression.blockedCarriers.toastBlocked").replace("{carrier}", carrier));
         }}
       />
     </Card>
@@ -228,6 +230,7 @@ interface BlockDialogProps {
 }
 
 function BlockCarrierDialog({ open, onOpenChange, existing, onBlock }: BlockDialogProps) {
+  const { t } = useTranslation();
   const [custom, setCustom] = React.useState("");
   const [selected, setSelected] = React.useState<string | null>(null);
 
@@ -252,16 +255,16 @@ function BlockCarrierDialog({ open, onOpenChange, existing, onBlock }: BlockDial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Block a carrier</DialogTitle>
+          <DialogTitle>{t("toolsUI.suppression.blockedCarriers.dialogTitle")}</DialogTitle>
           <DialogDescription>
-            Pick a common carrier or type the exact carrier name to block.
+            {t("toolsUI.suppression.blockedCarriers.dialogDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 py-2">
           <div className="space-y-2">
             <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Common carriers
+              {t("toolsUI.suppression.blockedCarriers.commonCarriers")}
             </Label>
             <div className="flex flex-wrap gap-1.5">
               {COMMON_CARRIERS.map((c) => {
@@ -293,7 +296,7 @@ function BlockCarrierDialog({ open, onOpenChange, existing, onBlock }: BlockDial
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="custom-carrier">Custom carrier</Label>
+            <Label htmlFor="custom-carrier">{t("toolsUI.suppression.blockedCarriers.customCarrier")}</Label>
             <Input
               id="custom-carrier"
               value={custom}
@@ -301,7 +304,7 @@ function BlockCarrierDialog({ open, onOpenChange, existing, onBlock }: BlockDial
                 setCustom(e.target.value);
                 setSelected(null);
               }}
-              placeholder="e.g. Some Carrier LLC"
+              placeholder={t("toolsUI.suppression.blockedCarriers.customPlaceholder")}
               onKeyDown={(e) => {
                 if (e.key === "Enter") onSubmit();
               }}
@@ -311,10 +314,10 @@ function BlockCarrierDialog({ open, onOpenChange, existing, onBlock }: BlockDial
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("toolsUI.suppression.blockedCarriers.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={disabled}>
-            Block
+            {t("toolsUI.suppression.blockedCarriers.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

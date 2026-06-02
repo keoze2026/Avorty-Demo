@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "@/hooks/use-translation";
 import { toE164 } from "@/lib/format";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
@@ -69,6 +70,7 @@ export function DestinationBuilder({
   onOpenChange,
   editId,
 }: DestinationBuilderProps) {
+  const { t } = useTranslation();
   const add = useDestinationsStore((s) => s.add);
   const update = useDestinationsStore((s) => s.update);
   const existing = useDestinationsStore((s) =>
@@ -120,10 +122,10 @@ export function DestinationBuilder({
 
     if (existing) {
       update(existing.id, payload);
-      toast.success(`Updated ${payload.name}`);
+      toast.success(t("networkUI.destinations.toast.updated").replace("{name}", payload.name));
     } else {
       const created = add(payload);
-      toast.success(`Created ${created.name}`);
+      toast.success(t("networkUI.destinations.toast.created").replace("{name}", created.name));
     }
     setSubmitting(false);
     onOpenChange(false);
@@ -137,49 +139,48 @@ export function DestinationBuilder({
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/10 text-accent">
               <Target className="h-4 w-4" />
             </span>
-            {isEdit ? "Edit destination" : "New destination"}
+            {isEdit ? t("networkUI.destinations.builder.titleEdit") : t("networkUI.destinations.builder.titleNew")}
           </DialogTitle>
           <DialogDescription>
-            One TFN with its own concurrency and cap limits. The router uses these to
-            decide whether to dial this destination next.
+            {t("networkUI.destinations.builder.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
           <div className="grid gap-1.5">
-            <Label htmlFor="dest-name">Name</Label>
+            <Label htmlFor="dest-name">{t("networkUI.destinations.builder.name")}</Label>
             <Input
               id="dest-name"
-              placeholder="Tier-1 ACA Inbound"
+              placeholder={t("networkUI.destinations.builder.namePh")}
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="dest-tfn">Toll-free number (TFN)</Label>
+            <Label htmlFor="dest-tfn">{t("networkUI.destinations.builder.tfnLabel")}</Label>
             <Input
               id="dest-tfn"
-              placeholder="+15551234567"
+              placeholder={t("networkUI.destinations.builder.tfnPh")}
               value={form.tfn}
               onChange={(e) => setForm((f) => ({ ...f, tfn: e.target.value }))}
               className="font-mono"
             />
             {form.tfn.length > 0 && !isValidTfn(form.tfn) && (
               <p className="text-xs text-destructive">
-                Needs at least 7 digits.
+                {t("networkUI.destinations.builder.tfnError")}
               </p>
             )}
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="dest-buyer">Buyer</Label>
+            <Label htmlFor="dest-buyer">{t("networkUI.destinations.builder.buyer")}</Label>
             <Select
               value={form.buyerId}
               onValueChange={(v) => setForm((f) => ({ ...f, buyerId: v }))}
             >
               <SelectTrigger id="dest-buyer">
-                <SelectValue placeholder="Pick a buyer" />
+                <SelectValue placeholder={t("networkUI.destinations.builder.pickBuyer")} />
               </SelectTrigger>
               <SelectContent>
                 {MOCK_BUYERS.map((b) => (
@@ -193,7 +194,7 @@ export function DestinationBuilder({
 
           <div className="grid grid-cols-3 gap-3">
             <div className="grid gap-1.5">
-              <Label htmlFor="dest-cc">Concurrency cap</Label>
+              <Label htmlFor="dest-cc">{t("networkUI.destinations.builder.concurrencyCap")}</Label>
               <Input
                 id="dest-cc"
                 type="number"
@@ -208,7 +209,7 @@ export function DestinationBuilder({
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="dest-daily">Daily cap</Label>
+              <Label htmlFor="dest-daily">{t("networkUI.destinations.builder.dailyCap")}</Label>
               <Input
                 id="dest-daily"
                 type="number"
@@ -223,7 +224,7 @@ export function DestinationBuilder({
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="dest-monthly">Monthly cap</Label>
+              <Label htmlFor="dest-monthly">{t("networkUI.destinations.builder.monthlyCap")}</Label>
               <Input
                 id="dest-monthly"
                 type="number"
@@ -239,14 +240,14 @@ export function DestinationBuilder({
             </div>
           </div>
           <p className="-mt-2 text-xs text-muted-foreground">
-            Use <span className="font-mono">0</span> on daily / monthly cap to mean unlimited.
+            {t("networkUI.destinations.builder.zeroHint")} <span className="font-mono">0</span> {t("networkUI.destinations.builder.zeroHintRest")}
           </p>
 
           <div className="flex items-center justify-between rounded-md border border-border bg-muted/40 p-3">
             <div>
-              <div className="text-sm font-medium">Enabled</div>
+              <div className="text-sm font-medium">{t("networkUI.destinations.builder.enabled")}</div>
               <div className="text-xs text-muted-foreground">
-                When off, the router skips this destination.
+                {t("networkUI.destinations.builder.enabledDesc")}
               </div>
             </div>
             <Switch
@@ -258,18 +259,18 @@ export function DestinationBuilder({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Cancel
+            {t("networkUI.destinations.builder.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={!canSubmit || submitting}>
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {isEdit ? "Saving…" : "Creating…"}
+                {isEdit ? t("networkUI.destinations.builder.saving") : t("networkUI.destinations.builder.creating")}
               </>
             ) : isEdit ? (
-              "Save changes"
+              t("networkUI.destinations.builder.save")
             ) : (
-              "Create destination"
+              t("networkUI.destinations.builder.create")
             )}
           </Button>
         </DialogFooter>

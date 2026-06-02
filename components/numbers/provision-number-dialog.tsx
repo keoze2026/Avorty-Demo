@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import type { NumberType } from "@/lib/types";
@@ -54,6 +55,7 @@ function randomTollfree() {
 }
 
 export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation();
   const campaigns = useCampaignsStore((s) => s.campaigns);
   const addNumber = useNumbersStore((s) => s.addNumber);
 
@@ -99,8 +101,14 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
     }
 
     toast.success(
-      count === 1 ? "Number provisioned" : `${count} numbers provisioned`,
-      { description: campaign ? `Attached to ${campaign.name}` : "Sitting unassigned in your inventory." },
+      count === 1
+        ? t("trafficUI.numbers.provision.toast.one")
+        : t("trafficUI.numbers.provision.toast.many").replace("{count}", String(count)),
+      {
+        description: campaign
+          ? t("trafficUI.numbers.provision.toast.attachedTo").replace("{name}", campaign.name)
+          : t("trafficUI.numbers.provision.toast.unattached"),
+      },
     );
     onClose(false);
   };
@@ -114,9 +122,9 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
               <Hash className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Provision tracking number</DialogTitle>
+              <DialogTitle>{t("trafficUI.numbers.provision.title")}</DialogTitle>
               <DialogDescription>
-                Pick a type and (optionally) attach it to a campaign.
+                {t("trafficUI.numbers.provision.description")}
               </DialogDescription>
             </div>
           </div>
@@ -124,24 +132,24 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Type</Label>
+            <Label>{t("trafficUI.numbers.provision.type")}</Label>
             <div className="grid grid-cols-2 gap-2">
-              {(["local", "tollfree"] as NumberType[]).map((t) => (
+              {(["local", "tollfree"] as NumberType[]).map((nt) => (
                 <button
-                  key={t}
+                  key={nt}
                   type="button"
-                  onClick={() => setType(t)}
+                  onClick={() => setType(nt)}
                   className={`rounded-lg border p-3 text-left transition-colors ${
-                    type === t
+                    type === nt
                       ? "border-accent bg-accent/10"
                       : "border-border bg-secondary/30 hover:border-border/80"
                   }`}
                 >
                   <div className="text-sm font-medium capitalize">
-                    {t === "tollfree" ? "Toll-free" : "Local"}
+                    {nt === "tollfree" ? t("trafficUI.numbers.provision.tollfree") : t("trafficUI.numbers.provision.local")}
                   </div>
                   <div className="mt-0.5 text-[10px] text-muted-foreground">
-                    {t === "tollfree" ? "800 / 888 / 877 — $5 / mo" : "Regional area code — $2 / mo"}
+                    {nt === "tollfree" ? t("trafficUI.numbers.provision.tollfreeHint") : t("trafficUI.numbers.provision.localHint")}
                   </div>
                 </button>
               ))}
@@ -150,7 +158,7 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
 
           {type === "local" && (
             <div className="space-y-2">
-              <Label>Region</Label>
+              <Label>{t("trafficUI.numbers.provision.region")}</Label>
               <Select value={region} onValueChange={setRegion}>
                 <SelectTrigger>
                   <SelectValue />
@@ -167,13 +175,13 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
           )}
 
           <div className="space-y-2">
-            <Label>Attach to campaign (optional)</Label>
+            <Label>{t("trafficUI.numbers.provision.attachCampaign")}</Label>
             <Select value={campaignId} onValueChange={setCampaignId}>
               <SelectTrigger>
-                <SelectValue placeholder="Leave unassigned" />
+                <SelectValue placeholder={t("trafficUI.numbers.provision.leaveUnassigned")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— Leave unassigned —</SelectItem>
+                <SelectItem value="none">{t("trafficUI.numbers.provision.leaveUnassignedItem")}</SelectItem>
                 {campaigns.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
@@ -184,7 +192,7 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="prov-count">How many?</Label>
+            <Label htmlFor="prov-count">{t("trafficUI.numbers.provision.howMany")}</Label>
             <Input
               id="prov-count"
               type="number"
@@ -194,22 +202,22 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
               onChange={(e) => setCount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
               className="font-mono"
             />
-            <p className="text-[10px] text-muted-foreground">Up to 20 at a time.</p>
+            <p className="text-[10px] text-muted-foreground">{t("trafficUI.numbers.provision.upTo")}</p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(false)}>
-            Cancel
+            {t("trafficUI.common.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Provisioning…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("trafficUI.numbers.provision.provisioning")}
               </>
             ) : (
               <>
-                <Plus className="h-3.5 w-3.5" /> Provision {count > 1 ? `${count} numbers` : "number"}
+                <Plus className="h-3.5 w-3.5" /> {count > 1 ? t("trafficUI.numbers.provision.provisionMany").replace("{count}", String(count)) : t("trafficUI.numbers.provision.provisionOne")}
               </>
             )}
           </Button>

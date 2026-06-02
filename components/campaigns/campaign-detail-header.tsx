@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { VERTICAL_ACCENT, type Campaign } from "@/lib/types";
@@ -34,6 +35,7 @@ const GLOW: Record<string, string> = {
 };
 
 export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const setStatus = useCampaignsStore((s) => s.setStatus);
   const remove = useCampaignsStore((s) => s.remove);
@@ -44,11 +46,15 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
   const onToggle = () => {
     const next = isActive ? "paused" : "active";
     setStatus(campaign.id, next);
-    toast.success(next === "active" ? `${campaign.name} activated` : `${campaign.name} paused`);
+    toast.success(
+      next === "active"
+        ? t("trafficUI.campaigns.toast.activated").replace("{name}", campaign.name)
+        : t("trafficUI.campaigns.toast.paused").replace("{name}", campaign.name),
+    );
   };
   const onArchive = () => {
     remove(campaign.id);
-    toast.success(`${campaign.name} archived`);
+    toast.success(t("trafficUI.campaigns.toast.archived").replace("{name}", campaign.name));
     router.push(ROUTES.campaigns);
   };
 
@@ -67,7 +73,7 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
             className="-ml-2 h-7 text-xs text-muted-foreground hover:text-foreground"
             onClick={() => router.push(ROUTES.campaigns)}
           >
-            <ArrowLeft className="h-3 w-3" /> All campaigns
+            <ArrowLeft className="h-3 w-3" /> {t("trafficUI.campaigns.detail.backToList")}
           </Button>
           <div className="mt-2 flex items-center gap-2 text-[11px]">
             <span className={cn("inline-block h-1.5 w-1.5 rounded-full", DOT[tone])} />
@@ -88,17 +94,17 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
           <Button size="sm" variant={isActive ? "outline" : "default"} onClick={onToggle}>
             {isActive ? (
               <>
-                <Pause className="h-3.5 w-3.5" /> Pause
+                <Pause className="h-3.5 w-3.5" /> {t("trafficUI.campaigns.detail.pause")}
               </>
             ) : (
               <>
-                <Play className="h-3.5 w-3.5" /> Activate
+                <Play className="h-3.5 w-3.5" /> {t("trafficUI.campaigns.detail.activate")}
               </>
             )}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Campaign actions">
+              <Button variant="ghost" size="icon" aria-label={t("trafficUI.campaigns.detail.actionsMenu")}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -107,7 +113,7 @@ export function CampaignDetailHeader({ campaign }: { campaign: Campaign }) {
                 onSelect={onArchive}
                 className="text-destructive focus:text-destructive"
               >
-                <Trash2 className="h-4 w-4" /> Archive campaign
+                <Trash2 className="h-4 w-4" /> {t("trafficUI.campaigns.detail.archiveCampaign")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -24,6 +24,7 @@ import {
 import { formatPercent, formatRelativeTime } from "@/lib/format";
 import { MOCK_DELIVERIES, MOCK_WEBHOOKS } from "@/lib/mock/integrations";
 import type { Webhook, WebhookStatus } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const STATUS_VARIANT: Record<WebhookStatus, React.ComponentProps<typeof Badge>["variant"]> = {
@@ -32,20 +33,21 @@ const STATUS_VARIANT: Record<WebhookStatus, React.ComponentProps<typeof Badge>["
   failing: "destructive",
 };
 
-const STATUS_LABEL: Record<WebhookStatus, string> = {
-  active: "Active",
-  paused: "Paused",
-  failing: "Failing",
+const STATUS_LABEL_KEYS: Record<WebhookStatus, string> = {
+  active: "toolsUI.integrations.webhooks.statusActive",
+  paused: "toolsUI.integrations.webhooks.statusPaused",
+  failing: "toolsUI.integrations.webhooks.statusFailing",
 };
 
 export function WebhooksSection() {
+  const { t } = useTranslation();
   const [hooks, setHooks] = useState<Webhook[]>(MOCK_WEBHOOKS);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Webhook | null>(null);
 
   const remove = (id: string) => {
     setHooks((h) => h.filter((x) => x.id !== id));
-    toast.success("Webhook removed");
+    toast.success(t("toolsUI.integrations.webhooks.toastRemoved"));
   };
 
   const openCreate = () => {
@@ -88,14 +90,15 @@ export function WebhooksSection() {
     <section className="space-y-3">
       <header className="flex items-center justify-between gap-2">
         <div>
-          <h3 className="font-sans text-base font-semibold">Webhooks</h3>
+          <h3 className="font-sans text-base font-semibold">{t("toolsUI.integrations.webhooks.title")}</h3>
           <p className="text-[11px] text-muted-foreground">
-            {hooks.filter((h) => h.status === "active").length} active ·{" "}
-            {hooks.filter((h) => h.status === "failing").length} failing
+            {t("toolsUI.integrations.webhooks.summary")
+              .replace("{active}", String(hooks.filter((h) => h.status === "active").length))
+              .replace("{failing}", String(hooks.filter((h) => h.status === "failing").length))}
           </p>
         </div>
         <Button size="sm" onClick={openCreate}>
-          <Plus className="h-3.5 w-3.5" /> Add webhook
+          <Plus className="h-3.5 w-3.5" /> {t("toolsUI.integrations.webhooks.addWebhook")}
         </Button>
       </header>
 
@@ -129,7 +132,7 @@ export function WebhooksSection() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h4 className="truncate text-sm font-semibold">{h.name}</h4>
-                        <Badge variant={STATUS_VARIANT[h.status]}>{STATUS_LABEL[h.status]}</Badge>
+                        <Badge variant={STATUS_VARIANT[h.status]}>{t(STATUS_LABEL_KEYS[h.status])}</Badge>
                       </div>
                       <code className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">
                         {h.url}
@@ -139,22 +142,22 @@ export function WebhooksSection() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Webhook actions">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("toolsUI.integrations.webhooks.actionsAria")}>
                         <MoreVertical className="h-3.5 w-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => toast.success("Test event sent")}>
-                        Send test event
+                      <DropdownMenuItem onSelect={() => toast.success(t("toolsUI.integrations.webhooks.toastTestSent"))}>
+                        {t("toolsUI.integrations.webhooks.sendTest")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => openEdit(h)}>
-                        Configure
+                        {t("toolsUI.integrations.webhooks.configure")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onSelect={() => remove(h.id)}
                       >
-                        <Trash2 className="h-4 w-4" /> Remove
+                        <Trash2 className="h-4 w-4" /> {t("toolsUI.integrations.webhooks.remove")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -174,9 +177,9 @@ export function WebhooksSection() {
 
                 {/* Stats row */}
                 <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border/40 pt-3 text-center">
-                  <Stat label="Success" value={formatPercent(h.successRate24h * 100, 1)} />
-                  <Stat label="Events" value={h.events.length.toString()} />
-                  <Stat label="Last delivery" value={h.lastDeliveryAt ? formatRelativeTime(h.lastDeliveryAt) : "—"} />
+                  <Stat label={t("toolsUI.integrations.webhooks.stats.success")} value={formatPercent(h.successRate24h * 100, 1)} />
+                  <Stat label={t("toolsUI.integrations.webhooks.stats.events")} value={h.events.length.toString()} />
+                  <Stat label={t("toolsUI.integrations.webhooks.stats.lastDelivery")} value={h.lastDeliveryAt ? formatRelativeTime(h.lastDeliveryAt) : "—"} />
                 </div>
               </CardContent>
             </Card>
@@ -213,6 +216,7 @@ const DELIVERY_ICON = {
 } as const;
 
 function DeliveryLog() {
+  const { t } = useTranslation();
   const deliveries = MOCK_DELIVERIES.slice(0, 14);
   const hooksById = new Map(MOCK_WEBHOOKS.map((h) => [h.id, h]));
 
@@ -220,8 +224,8 @@ function DeliveryLog() {
     <Card className="mt-3">
       <CardContent className="p-0">
         <div className="border-b border-border/60 bg-secondary/30 px-4 py-2.5">
-          <h4 className="text-sm font-semibold">Recent deliveries</h4>
-          <p className="text-[10px] text-muted-foreground">Last 14 events across all webhooks</p>
+          <h4 className="text-sm font-semibold">{t("toolsUI.integrations.webhooks.deliveryLog.title")}</h4>
+          <p className="text-[10px] text-muted-foreground">{t("toolsUI.integrations.webhooks.deliveryLog.subtitle")}</p>
         </div>
         <ul className="divide-y divide-border/60">
           {deliveries.map((d, i) => {
@@ -267,7 +271,11 @@ function DeliveryLog() {
                     d.status === "failed" && "border-destructive/40 bg-destructive/10 text-destructive",
                   )}
                 >
-                  {d.status}
+                  {d.status === "delivered"
+                    ? t("toolsUI.integrations.webhooks.deliveryLog.delivered")
+                    : d.status === "retrying"
+                      ? t("toolsUI.integrations.webhooks.deliveryLog.retrying")
+                      : t("toolsUI.integrations.webhooks.deliveryLog.failed")}
                 </span>
               </motion.li>
             );

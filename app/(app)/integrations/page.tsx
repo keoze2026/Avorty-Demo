@@ -5,10 +5,12 @@ import { useState } from "react";
 import { IntegrationsBoard } from "@/components/integrations/integrations-board";
 import { WebhooksSection } from "@/components/integrations/webhooks-section";
 import { PageHeader } from "@/components/shared/page-header";
+import { useTranslation } from "@/hooks/use-translation";
 import { MOCK_INTEGRATIONS } from "@/lib/mock/integrations";
 import type { IntegrationApp } from "@/lib/types";
 
 export default function IntegrationsPage() {
+  const { t } = useTranslation();
   const [apps, setApps] = useState<IntegrationApp[]>(MOCK_INTEGRATIONS);
 
   const onConnect = (ids: string[]) => {
@@ -35,8 +37,8 @@ export default function IntegrationsPage() {
   return (
     <>
       <PageHeader
-        title="Integrations"
-        description="Connect the tools you already use — and reach every Vortyx event from anywhere."
+        title={t("toolsUI.integrations.pageTitle")}
+        description={t("toolsUI.integrations.pageDescription")}
       />
 
       <IntegrationsBoard apps={apps} onConnect={onConnect} onDisconnect={onDisconnect} />

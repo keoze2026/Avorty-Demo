@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import type { CallStatus } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const TOOLBAR_BTN_HOVER =
@@ -33,13 +34,13 @@ export const EMPTY_FILTERS: ReportFilters = {
   statuses: [],
 };
 
-const STATUS_OPTIONS: Array<{ id: CallStatus; label: string }> = [
-  { id: "completed", label: "Completed" },
-  { id: "in-progress", label: "In progress" },
-  { id: "ringing", label: "Ringing" },
-  { id: "missed", label: "Missed" },
-  { id: "rejected", label: "Rejected" },
-  { id: "failed", label: "Failed" },
+const STATUS_KEYS: Array<{ id: CallStatus; labelKey: string }> = [
+  { id: "completed", labelKey: "toolsUI.reports.filter.statusOptions.completed" },
+  { id: "in-progress", labelKey: "toolsUI.reports.filter.statusOptions.inProgress" },
+  { id: "ringing", labelKey: "toolsUI.reports.filter.statusOptions.ringing" },
+  { id: "missed", labelKey: "toolsUI.reports.filter.statusOptions.missed" },
+  { id: "rejected", labelKey: "toolsUI.reports.filter.statusOptions.rejected" },
+  { id: "failed", labelKey: "toolsUI.reports.filter.statusOptions.failed" },
 ];
 
 interface ReportsFilterPopoverProps {
@@ -48,7 +49,13 @@ interface ReportsFilterPopoverProps {
 }
 
 export function ReportsFilterPopover({ filters, onChange }: ReportsFilterPopoverProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  const STATUS_OPTIONS = useMemo(
+    () => STATUS_KEYS.map((s) => ({ id: s.id, label: t(s.labelKey) })),
+    [t],
+  );
 
   // Derive option lists from the full mock dataset so the popover always shows
   // every value the user could pick — not just what's visible in the current
@@ -86,7 +93,7 @@ export function ReportsFilterPopover({ filters, onChange }: ReportsFilterPopover
           variant="outline"
           size="icon"
           className={cn("relative h-9 w-9", TOOLBAR_BTN_HOVER)}
-          aria-label="Filters"
+          aria-label={t("toolsUI.reports.filter.triggerAria")}
         >
           <Filter className="h-4 w-4" />
           {total > 0 && (
@@ -98,39 +105,39 @@ export function ReportsFilterPopover({ filters, onChange }: ReportsFilterPopover
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[22rem] p-0">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="text-sm font-semibold">Filters</span>
+          <span className="text-sm font-semibold">{t("toolsUI.reports.filter.title")}</span>
           {total > 0 && (
             <button
               type="button"
               onClick={clearAll}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              <X className="h-3 w-3" /> Clear all
+              <X className="h-3 w-3" /> {t("toolsUI.reports.filter.clearAll")}
             </button>
           )}
         </div>
 
         <div className="max-h-[26rem] space-y-5 overflow-y-auto px-4 py-4">
           <FacetGroup
-            title="Campaigns"
+            title={t("toolsUI.reports.filter.campaigns")}
             options={facets.campaigns}
             selected={filters.campaignIds}
             onToggle={(id) => onChange(toggle(filters, "campaignIds", id))}
           />
           <FacetGroup
-            title="Buyers"
+            title={t("toolsUI.reports.filter.buyers")}
             options={facets.buyers}
             selected={filters.buyerIds}
             onToggle={(id) => onChange(toggle(filters, "buyerIds", id))}
           />
           <FacetGroup
-            title="Publishers"
+            title={t("toolsUI.reports.filter.publishers")}
             options={facets.publishers}
             selected={filters.publisherIds}
             onToggle={(id) => onChange(toggle(filters, "publisherIds", id))}
           />
           <FacetGroup
-            title="Status"
+            title={t("toolsUI.reports.filter.status")}
             options={STATUS_OPTIONS}
             selected={filters.statuses}
             onToggle={(id) =>
@@ -146,10 +153,10 @@ export function ReportsFilterPopover({ filters, onChange }: ReportsFilterPopover
 
         <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
           <Button variant="ghost" size="sm" onClick={clearAll} disabled={total === 0}>
-            Reset
+            {t("toolsUI.reports.filter.reset")}
           </Button>
           <Button size="sm" onClick={() => setOpen(false)}>
-            Apply
+            {t("toolsUI.reports.filter.apply")}
           </Button>
         </div>
       </PopoverContent>
@@ -180,6 +187,7 @@ function FacetGroup<T extends string>({
   selected: T[];
   onToggle: (id: T) => void;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -194,20 +202,20 @@ function FacetGroup<T extends string>({
           {title}
         </span>
         {selected.length > 0 && (
-          <span className="text-[11px] text-accent">{selected.length} selected</span>
+          <span className="text-[11px] text-accent">{t("toolsUI.reports.filter.selected").replace("{count}", String(selected.length))}</span>
         )}
       </div>
       {options.length > 6 && (
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Search ${title.toLowerCase()}…`}
+          placeholder={t("toolsUI.reports.filter.searchPlaceholder").replace("{section}", title.toLowerCase())}
           className="mb-2 h-8 text-xs"
         />
       )}
       <div className="space-y-1.5">
         {filtered.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No matches</p>
+          <p className="text-xs text-muted-foreground">{t("toolsUI.reports.filter.noMatches")}</p>
         ) : (
           filtered.map((o) => {
             const id = `f-${title}-${o.id}`;

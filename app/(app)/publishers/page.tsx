@@ -18,10 +18,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 
 export default function PublishersPage() {
+  const { t } = useTranslation();
   const publishers = usePublishersStore((s) => s.publishers);
   const setPublisherStatus = usePublishersStore((s) => s.setStatus);
   const remove = usePublishersStore((s) => s.remove);
@@ -80,29 +82,33 @@ export default function PublishersPage() {
     if (!p) return;
     const next = p.status === "active" ? "paused" : "active";
     setPublisherStatus(id, next);
-    toast.success(next === "active" ? `${p.name} activated` : `${p.name} paused`);
+    toast.success(
+      next === "active"
+        ? t("networkUI.publishers.toast.activated").replace("{name}", p.name)
+        : t("networkUI.publishers.toast.paused").replace("{name}", p.name),
+    );
   };
 
   const onArchive = (id: string) => {
     const p = publishers.find((x) => x.id === id);
     if (!p) return;
     remove(id);
-    toast.success(`${p.name} removed`);
+    toast.success(t("networkUI.publishers.toast.removed").replace("{name}", p.name));
   };
 
   return (
     <>
       <PageHeader
-        title="Publishers"
-        description="Traffic sources sending calls into your network — their payouts, conversion, and assigned numbers."
+        title={t("networkUI.publishers.page.title")}
+        description={t("networkUI.publishers.page.description")}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Total publishers", value: formatCompact(stats.total) },
-          { label: "Active", value: formatCompact(stats.active) },
-          { label: "Revenue today", value: formatCurrency(stats.revenue) },
-          { label: "Pending payouts", value: formatCurrency(stats.pending) },
+          { label: t("networkUI.publishers.page.totalPublishers"), value: formatCompact(stats.total) },
+          { label: t("networkUI.publishers.page.active"), value: formatCompact(stats.active) },
+          { label: t("networkUI.publishers.page.revenueToday"), value: formatCurrency(stats.revenue) },
+          { label: t("networkUI.publishers.page.pendingPayouts"), value: formatCurrency(stats.pending) },
         ].map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4">
@@ -124,7 +130,7 @@ export default function PublishersPage() {
         onPageSize={setPageSize}
         columns={columns}
         onColumns={setColumns}
-        onRefresh={() => toast.success("Publishers refreshed")}
+        onRefresh={() => toast.success(t("networkUI.publishers.toast.refreshed"))}
         onCreate={() => setInviteOpen(true)}
       />
 
@@ -132,8 +138,8 @@ export default function PublishersPage() {
         <EmptyState
           icon={Users}
           tone="violet"
-          title="No publishers match"
-          description="Try clearing the search box or relaxing your status filter."
+          title={t("networkUI.publishers.empty.title")}
+          description={t("networkUI.publishers.empty.description")}
         />
       ) : (
         <>

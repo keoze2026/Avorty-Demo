@@ -6,6 +6,8 @@ import { Coins, Newspaper, RefreshCw } from "lucide-react";
 import { MarketStatsRow } from "@/components/coinmarket/market-stats-row";
 import { TokensTable } from "@/components/coinmarket/tokens-table";
 import { NewsFeed } from "@/components/news/news-feed";
+import { PageHeader } from "@/components/shared/page-header";
+import { useTranslation } from "@/hooks/use-translation";
 import type { NewsCategory, NewsItem } from "@/lib/mock/news";
 import type { TokenEntry } from "@/lib/mock/tokens";
 import { cn } from "@/lib/utils";
@@ -14,12 +16,22 @@ type TabId = "tokens" | "news";
 
 const TABS: Array<{
   id: TabId;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: "tokens", label: "Tokens", icon: Coins },
-  { id: "news", label: "Crypto News", icon: Newspaper },
+  { id: "tokens", labelKey: "toolsUI.news.coinMarket.tabs.tokens", icon: Coins },
+  { id: "news", labelKey: "toolsUI.news.coinMarket.tabs.cryptoNews", icon: Newspaper },
 ];
+
+export function CoinMarketHeader() {
+  const { t } = useTranslation();
+  return (
+    <PageHeader
+      title={t("toolsUI.news.coinMarket.title")}
+      description={t("toolsUI.news.coinMarket.description")}
+    />
+  );
+}
 
 const CRYPTO_CATEGORIES: NewsCategory[] = [
   "Bitcoin",
@@ -53,6 +65,7 @@ interface Props {
 
 /** Client-side tab switcher — the server page hands us the initial data. */
 export function CoinMarketTabs({ tokens: initialTokens, news: initialNews }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = React.useState<TabId>("tokens");
   const [tokens, setTokens] = React.useState<TokenEntry[]>(initialTokens);
   const [news, setNews] = React.useState<NewsItem[]>(initialNews);
@@ -218,14 +231,14 @@ export function CoinMarketTabs({ tokens: initialTokens, news: initialNews }: Pro
   return (
     <>
       <div className="no-scrollbar flex overflow-x-auto border-b border-border">
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.id;
+        {TABS.map((tab2) => {
+          const Icon = tab2.icon;
+          const active = tab === tab2.id;
           return (
             <button
-              key={t.id}
+              key={tab2.id}
               type="button"
-              onClick={() => setTab(t.id)}
+              onClick={() => setTab(tab2.id)}
               className={cn(
                 "relative inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none",
                 active
@@ -234,7 +247,7 @@ export function CoinMarketTabs({ tokens: initialTokens, news: initialNews }: Pro
               )}
             >
               <Icon className="h-3.5 w-3.5" />
-              {t.label}
+              {t(tab2.labelKey)}
               {active && (
                 <span
                   aria-hidden
@@ -259,18 +272,20 @@ export function CoinMarketTabs({ tokens: initialTokens, news: initialNews }: Pro
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.18_155)]" />
               </span>
               <span className="font-semibold uppercase tracking-wider text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
-                Live
+                {t("toolsUI.news.coinMarket.live")}
               </span>
             </span>
             <span aria-hidden className="text-muted-foreground/40">·</span>
             <span className="tabular-nums">
-              Updated {secondsAgo < 1 ? "just now" : `${secondsAgo}s ago`}
+              {secondsAgo < 1
+                ? t("toolsUI.news.coinMarket.updatedJustNow")
+                : t("toolsUI.news.coinMarket.updatedSecondsAgo").replace("{seconds}", String(secondsAgo))}
             </span>
             <button
               type="button"
               onClick={manualRefresh}
               disabled={refreshing}
-              aria-label="Refresh tokens"
+              aria-label={t("toolsUI.news.coinMarket.refreshAria")}
               className={cn(
                 "ml-1 inline-flex h-6 w-6 items-center justify-center rounded-md border border-border transition-colors",
                 "hover:bg-muted hover:text-foreground",

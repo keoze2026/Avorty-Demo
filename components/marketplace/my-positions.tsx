@@ -11,37 +11,39 @@ import { CheckCircle2, Trophy, XCircle, ZapOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VERTICAL_PALETTE } from "@/lib/mock/marketplace";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency } from "@/lib/format";
 import type { MyPosition } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<
   MyPosition["status"],
-  { label: string; icon: typeof Trophy; tone: string }
+  { labelKey: string; icon: typeof Trophy; tone: string }
 > = {
   leading: {
-    label: "Leading",
+    labelKey: "toolsUI.marketplace.myPositions.leading",
     icon: CheckCircle2,
     tone: "border-[color:var(--success)]/40 bg-[color:var(--success)]/10 text-[color:var(--success)]",
   },
   outbid: {
-    label: "Outbid",
+    labelKey: "toolsUI.marketplace.myPositions.outbid",
     icon: ZapOff,
     tone: "border-destructive/40 bg-destructive/10 text-destructive",
   },
   won: {
-    label: "Won",
+    labelKey: "toolsUI.marketplace.myPositions.won",
     icon: Trophy,
     tone: "border-[color:var(--success)]/40 bg-[color:var(--success)]/10 text-[color:var(--success)]",
   },
   lost: {
-    label: "Lost",
+    labelKey: "toolsUI.marketplace.myPositions.lost",
     icon: XCircle,
     tone: "border-border bg-secondary/40 text-muted-foreground",
   },
 };
 
 export function MyPositions() {
+  const { t } = useTranslation();
   const positions = useMarketplaceStore((s) => s.positions);
   const stats = positionStats(positions);
 
@@ -59,7 +61,7 @@ export function MyPositions() {
 
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between text-base">
-          <span>My positions</span>
+          <span>{t("toolsUI.marketplace.myPositions.title")}</span>
           <span className="font-mono text-xs text-muted-foreground">
             <span className="text-[color:var(--success)]">{stats.wins}</span>
             <span className="text-muted-foreground/60"> / </span>
@@ -67,13 +69,13 @@ export function MyPositions() {
           </span>
         </CardTitle>
         <p className="text-[11px] text-muted-foreground">
-          Live status updates as the floor moves. Wins settle when the timer expires.
+          {t("toolsUI.marketplace.myPositions.description")}
         </p>
       </CardHeader>
       <CardContent className="space-y-1.5">
         {positions.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border/60 bg-secondary/30 p-6 text-center text-xs text-muted-foreground">
-            Place a bid on any listing to start tracking it here.
+            {t("toolsUI.marketplace.myPositions.empty")}
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -106,7 +108,7 @@ export function MyPositions() {
                     )}
                   >
                     <Icon className="h-2.5 w-2.5" />
-                    {meta.label}
+                    {t(meta.labelKey)}
                   </span>
                 </motion.div>
               );

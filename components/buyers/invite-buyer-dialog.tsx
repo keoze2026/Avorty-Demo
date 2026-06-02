@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 
@@ -27,6 +28,7 @@ export function InviteBuyerDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const add = useBuyersStore((s) => s.add);
 
@@ -73,8 +75,8 @@ export function InviteBuyerDialog({
       conversionRate: 0,
       campaignIds: [],
     });
-    toast.success(`Invited ${created.name}`, {
-      description: "They'll appear once the integration is approved.",
+    toast.success(t("networkUI.buyers.invite.invited").replace("{name}", created.name), {
+      description: t("networkUI.buyers.invite.willAppear"),
     });
     onClose(false);
     router.push(`${ROUTES.buyers}/${created.id}`);
@@ -89,8 +91,8 @@ export function InviteBuyerDialog({
               <Building2 className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>Create a buyer</DialogTitle>
-              <DialogDescription>They&apos;ll receive a setup link by email.</DialogDescription>
+              <DialogTitle>{t("networkUI.buyers.invite.title")}</DialogTitle>
+              <DialogDescription>{t("networkUI.buyers.invite.description")}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -98,27 +100,27 @@ export function InviteBuyerDialog({
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ib-name">Buyer name</Label>
-              <Input id="ib-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Apex Insurance" />
+              <Label htmlFor="ib-name">{t("networkUI.buyers.invite.buyerName")}</Label>
+              <Input id="ib-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("networkUI.buyers.invite.namePh")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ib-org">Organization</Label>
-              <Input id="ib-org" value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Apex Group" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="ib-contact">Contact name</Label>
-              <Input id="ib-contact" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Sarah Mitchell" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ib-email">Email</Label>
-              <Input id="ib-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="intake@apex.example" />
+              <Label htmlFor="ib-org">{t("networkUI.buyers.invite.organization")}</Label>
+              <Input id="ib-org" value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder={t("networkUI.buyers.invite.orgPh")} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ib-bid">Bid per call ($)</Label>
+              <Label htmlFor="ib-contact">{t("networkUI.buyers.invite.contactName")}</Label>
+              <Input id="ib-contact" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder={t("networkUI.buyers.invite.contactPh")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ib-email">{t("networkUI.buyers.invite.email")}</Label>
+              <Input id="ib-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("networkUI.buyers.invite.emailPh")} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="ib-bid">{t("networkUI.buyers.invite.bidPerCall")}</Label>
               <Input
                 id="ib-bid"
                 type="number"
@@ -130,7 +132,7 @@ export function InviteBuyerDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ib-cap">Daily cap</Label>
+              <Label htmlFor="ib-cap">{t("networkUI.buyers.invite.dailyCap")}</Label>
               <Input
                 id="ib-cap"
                 type="number"
@@ -142,28 +144,28 @@ export function InviteBuyerDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ib-desc">Notes</Label>
+            <Label htmlFor="ib-desc">{t("networkUI.buyers.invite.notes")}</Label>
             <Textarea
               id="ib-desc"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Vertical, geo, anything routing-affecting."
+              placeholder={t("networkUI.buyers.invite.notesPh")}
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(false)}>
-            Cancel
+            {t("networkUI.buyers.invite.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting || !name.trim() || !organization.trim()}>
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Inviting…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.buyers.invite.sending")}
               </>
             ) : (
-              "Send invite"
+              t("networkUI.buyers.invite.send")
             )}
           </Button>
         </DialogFooter>

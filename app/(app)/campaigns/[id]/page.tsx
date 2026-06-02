@@ -8,9 +8,11 @@ import { CampaignDetailHeader } from "@/components/campaigns/campaign-detail-hea
 import { CampaignSettingsView } from "@/components/campaigns/settings/campaign-settings-view";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
+import { useTranslation } from "@/hooks/use-translation";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 export default function CampaignDetailPage() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const campaign = useCampaignsStore((s) => s.getById(params.id));
@@ -29,8 +31,8 @@ export default function CampaignDetailPage() {
       <EmptyState
         icon={Hash}
         tone="amber"
-        title="Campaign not found"
-        description="It may have been archived. Sending you back to the campaigns list…"
+        title={t("trafficUI.campaigns.notFound.title")}
+        description={t("trafficUI.campaigns.notFound.description")}
       />
     );
   }

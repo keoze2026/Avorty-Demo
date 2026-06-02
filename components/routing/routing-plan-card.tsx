@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/format";
 import { useRoutingStore } from "@/lib/store/routing-store";
@@ -30,30 +31,31 @@ import { cn } from "@/lib/utils";
 
 const STATUS_TONE: Record<
   RoutingPlanStatus,
-  { chip: string; rail: string; dot: string; label: string }
+  { chip: string; rail: string; dot: string; labelKey: string }
 > = {
   published: {
     chip:
       "border-[oklch(0.6_0.18_155)]/45 bg-[oklch(0.6_0.18_155)]/10 text-[oklch(0.6_0.18_155)] dark:text-[oklch(0.78_0.18_155)]",
     rail: "bg-[oklch(0.6_0.18_155)]",
     dot: "bg-[oklch(0.6_0.18_155)]",
-    label: "LIVE",
+    labelKey: "trafficUI.routing.planCard.labels.live",
   },
   draft: {
     chip: "border-accent/45 bg-accent/10 text-accent",
     rail: "bg-accent",
     dot: "bg-accent",
-    label: "DRAFT",
+    labelKey: "trafficUI.routing.planCard.labels.draft",
   },
   archived: {
     chip: "border-border bg-secondary/50 text-muted-foreground",
     rail: "bg-muted-foreground/40",
     dot: "bg-muted-foreground/50",
-    label: "ARCH",
+    labelKey: "trafficUI.routing.planCard.labels.archived",
   },
 };
 
 export function RoutingPlanCard({ plan }: { plan: RoutingPlan }) {
+  const { t } = useTranslation();
   const setStatus = useRoutingStore((s) => s.setStatus);
   const remove = useRoutingStore((s) => s.remove);
   const published = plan.status === "published";
@@ -98,7 +100,7 @@ export function RoutingPlanCard({ plan }: { plan: RoutingPlan }) {
             {/* Plan ID + status chip */}
             <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               <span className={cn("inline-block h-1.5 w-1.5 rounded-full", meta.dot)} />
-              plan · {plan.id.slice(-6)}
+              {t("trafficUI.routing.planCard.labels.plan")} · {plan.id.slice(-6)}
               {plan.campaignName && (
                 <>
                   <span aria-hidden>·</span>
@@ -131,7 +133,7 @@ export function RoutingPlanCard({ plan }: { plan: RoutingPlan }) {
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-current" />
                 </span>
               )}
-              {meta.label}
+              {t(meta.labelKey)}
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -139,7 +141,7 @@ export function RoutingPlanCard({ plan }: { plan: RoutingPlan }) {
                   variant="ghost"
                   size="icon"
                   className="-mr-2 h-7 w-7 opacity-60 hover:opacity-100"
-                  aria-label="Plan actions"
+                  aria-label={t("trafficUI.routing.planCard.actions")}
                 >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
@@ -150,21 +152,23 @@ export function RoutingPlanCard({ plan }: { plan: RoutingPlan }) {
                     const next = published ? "draft" : "published";
                     setStatus(plan.id, next);
                     toast.success(
-                      next === "published" ? `${plan.name} published` : `${plan.name} unpublished`,
+                      next === "published"
+                        ? t("trafficUI.routing.planCard.published").replace("{name}", plan.name)
+                        : t("trafficUI.routing.planCard.unpublished").replace("{name}", plan.name),
                     );
                   }}
                 >
-                  {published ? "Unpublish" : "Publish"}
+                  {published ? t("trafficUI.routing.toolbar.unpublish") : t("trafficUI.routing.toolbar.publish")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onSelect={() => {
                     remove(plan.id);
-                    toast.success(`${plan.name} deleted`);
+                    toast.success(t("trafficUI.routing.planCard.deleted").replace("{name}", plan.name));
                   }}
                 >
-                  <Trash2 className="h-4 w-4" /> Delete plan
+                  <Trash2 className="h-4 w-4" /> {t("trafficUI.routing.planCard.deletePlan")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -182,20 +186,20 @@ export function RoutingPlanCard({ plan }: { plan: RoutingPlan }) {
 
         {/* ─── Instrument readouts ─── */}
         <div className="mt-3 grid grid-cols-4 gap-2">
-          <Readout icon={Layers} label="nodes" value={nodeCount} />
-          <Readout icon={Cable} label="edges" value={edgeCount} />
-          <Readout icon={Building2} label="buyers" value={buyerCount} highlight />
-          <Readout icon={CircleSlash2} label="dead" value={deadCount} muted />
+          <Readout icon={Layers} label={t("trafficUI.routing.planCard.labels.nodes")} value={nodeCount} />
+          <Readout icon={Cable} label={t("trafficUI.routing.planCard.labels.edges")} value={edgeCount} />
+          <Readout icon={Building2} label={t("trafficUI.routing.planCard.labels.buyers")} value={buyerCount} highlight />
+          <Readout icon={CircleSlash2} label={t("trafficUI.routing.planCard.labels.dead")} value={deadCount} muted />
         </div>
 
         {/* ─── Footer ─── */}
         <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          <span>updated {formatRelativeTime(plan.updatedAt)}</span>
+          <span>{t("trafficUI.routing.planCard.updated").replace("{time}", formatRelativeTime(plan.updatedAt))}</span>
           <Link
             href={`${ROUTES.routing}/${plan.id}`}
             className="inline-flex h-7 items-center gap-1 rounded-md border border-accent/45 bg-accent/10 px-2.5 text-accent transition-colors hover:bg-accent/20"
           >
-            open editor
+            {t("trafficUI.routing.planCard.openEditor")}
             <ArrowUpRight className="h-3 w-3" />
           </Link>
         </div>

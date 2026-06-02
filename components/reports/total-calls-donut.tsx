@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface TotalCallsDonutProps {
   calls: Call[];
@@ -25,6 +26,7 @@ function classify(c: Call): Slice["key"] {
 }
 
 export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
+  const { t } = useTranslation();
   const counts = { converted: 0, notConverted: 0, noAnswer: 0 };
   for (const c of calls) counts[classify(c)] += 1;
 
@@ -32,9 +34,9 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
   // Both "Not converted" and "No answer" use the same bright destructive red,
   // matching the dashboard donut.
   const slices: Slice[] = [
-    { key: "converted", label: "Converted", count: counts.converted, color: "var(--accent)" },
-    { key: "notConverted", label: "Not converted", count: counts.notConverted, color: "var(--destructive)" },
-    { key: "noAnswer", label: "No answer", count: counts.noAnswer, color: "var(--destructive)" },
+    { key: "converted", label: t("toolsUI.reports.totalDonut.converted"), count: counts.converted, color: "var(--accent)" },
+    { key: "notConverted", label: t("toolsUI.reports.totalDonut.notConverted"), count: counts.notConverted, color: "var(--destructive)" },
+    { key: "noAnswer", label: t("toolsUI.reports.totalDonut.noAnswer"), count: counts.noAnswer, color: "var(--destructive)" },
   ];
   const total = slices.reduce((s, x) => s + x.count, 0);
 
@@ -82,12 +84,12 @@ export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
               </Pie>
               <Tooltip
                 {...CHART_TOOLTIP_PROPS}
-                formatter={(value: number, name) => [`${formatNumber(value)} calls`, name as string]}
+                formatter={(value: number, name) => [`${formatNumber(value)} ${t("toolsUI.reports.totalDonut.callsSuffix")}`, name as string]}
               />
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("toolsUI.reports.totalDonut.total")}</span>
             <span className="text-xl font-semibold tabular-nums">{formatNumber(total)}</span>
           </div>
         </div>

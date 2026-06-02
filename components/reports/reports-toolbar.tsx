@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TIMEZONES as TZ_OPTIONS } from "@/lib/timezones";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 type RefreshOption =
@@ -37,6 +38,15 @@ const REFRESH_OPTIONS: RefreshOption[] = [
   "Every 1 min",
   "Every 5 min",
 ];
+
+const REFRESH_LABEL_KEYS: Record<RefreshOption, string> = {
+  "Off": "toolsUI.reports.toolbar.refreshOptions.off",
+  "Auto refresh": "toolsUI.reports.toolbar.refreshOptions.auto",
+  "Every 10 s": "toolsUI.reports.toolbar.refreshOptions.every10s",
+  "Every 30 s": "toolsUI.reports.toolbar.refreshOptions.every30s",
+  "Every 1 min": "toolsUI.reports.toolbar.refreshOptions.every1m",
+  "Every 5 min": "toolsUI.reports.toolbar.refreshOptions.every5m",
+};
 
 /** How many seconds before the option fires onRefresh again. 0 = no timer. */
 const REFRESH_SECONDS: Record<RefreshOption, number> = {
@@ -75,6 +85,7 @@ export function ReportsToolbar({
   filters,
   onFiltersChange,
 }: ReportsToolbarProps) {
+  const { t } = useTranslation();
   // Default to Eastern Time — first entry in the curated list that matches.
   const [tz, setTz] = useState<string>(
     TZ_OPTIONS.find((t) => t.iana === "America/New_York")?.label ??
@@ -113,7 +124,8 @@ export function ReportsToolbar({
   }, [intervalSec]);
 
   const active = intervalSec > 0;
-  const countdownLabel = active ? `${refresh} · ${remaining}s` : refresh;
+  const refreshLabel = t(REFRESH_LABEL_KEYS[refresh]);
+  const countdownLabel = active ? `${refreshLabel} · ${remaining}s` : refreshLabel;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -121,7 +133,7 @@ export function ReportsToolbar({
         variant="outline"
         size="sm"
         className={cn("gap-1.5 px-2.5", TOOLBAR_BTN_HOVER)}
-        aria-label="View settings"
+        aria-label={t("toolsUI.reports.toolbar.viewSettings")}
       >
         <Eye className="h-4 w-4" />
         <ChevronDown className="h-3 w-3 opacity-60" />
@@ -166,7 +178,7 @@ export function ReportsToolbar({
           variant="outline"
           size="icon"
           className={cn("h-9 w-9", TOOLBAR_BTN_HOVER)}
-          aria-label="Refresh"
+          aria-label={t("toolsUI.reports.toolbar.refresh")}
           onClick={onRefresh}
         >
           <RefreshCw className="h-4 w-4" />
@@ -206,7 +218,7 @@ export function ReportsToolbar({
                 onSelect={() => setRefresh(r)}
                 className={cn(refresh === r && "text-accent")}
               >
-                {r}
+                {t(REFRESH_LABEL_KEYS[r])}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

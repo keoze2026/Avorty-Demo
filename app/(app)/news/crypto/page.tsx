@@ -1,8 +1,7 @@
-import { PageHeader } from "@/components/shared/page-header";
 import { fetchTopTokens } from "@/lib/coingecko";
 import { fetchCryptoNews } from "@/lib/cryptocompare";
 
-import { CoinMarketTabs } from "./coin-market-tabs";
+import { CoinMarketHeader, CoinMarketTabs } from "./coin-market-tabs";
 
 /**
  * Coin Market — server component.
@@ -20,10 +19,7 @@ export default async function CoinMarketPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Coin Market"
-        description="Live token tape with sparklines plus the latest crypto headlines."
-      />
+      <CoinMarketHeader />
       <CoinMarketTabs tokens={tokensResult.tokens} news={news} />
     </div>
   );

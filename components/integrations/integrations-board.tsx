@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { INTEGRATION_CATEGORIES } from "@/lib/mock/integrations";
 import type { IntegrationApp, IntegrationCategory } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<IntegrationCategory, string> = Object.fromEntries(
@@ -42,6 +43,7 @@ export function IntegrationsBoard({
   onConnect,
   onDisconnect,
 }: IntegrationsBoardProps) {
+  const { t } = useTranslation();
   const available = useMemo(() => apps.filter((a) => !a.connected), [apps]);
   const connected = useMemo(() => apps.filter((a) => a.connected), [apps]);
 
@@ -63,7 +65,9 @@ export function IntegrationsBoard({
     if (availSelected.size === 0) return;
     onConnect(Array.from(availSelected));
     toast.success(
-      `Connected ${availSelected.size} ${availSelected.size === 1 ? "app" : "apps"}`,
+      availSelected.size === 1
+        ? t("toolsUI.integrations.board.toastConnectedOne")
+        : t("toolsUI.integrations.board.toastConnectedMany").replace("{count}", String(availSelected.size)),
     );
     setAvailSelected(new Set());
   };
@@ -72,7 +76,9 @@ export function IntegrationsBoard({
     if (connSelected.size === 0) return;
     onDisconnect(Array.from(connSelected));
     toast.success(
-      `Disconnected ${connSelected.size} ${connSelected.size === 1 ? "app" : "apps"}`,
+      connSelected.size === 1
+        ? t("toolsUI.integrations.board.toastDisconnectedOne")
+        : t("toolsUI.integrations.board.toastDisconnectedMany").replace("{count}", String(connSelected.size)),
     );
     setConnSelected(new Set());
   };
@@ -81,7 +87,7 @@ export function IntegrationsBoard({
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-4">
       {/* ── Available (left) ─────────────────────────────────────────── */}
       <Column
-        title="Available"
+        title={t("toolsUI.integrations.board.available")}
         accentClass="text-muted-foreground"
         count={available.length}
         selected={availSelected.size}
@@ -91,7 +97,7 @@ export function IntegrationsBoard({
         selectedSet={availSelected}
         onSelectedChange={setAvailSelected}
         rowAccent="border-border"
-        emptyLabel="Nothing left to connect."
+        emptyLabel={t("toolsUI.integrations.board.emptyAvailable")}
       />
 
       {/* ── Transfer controls ────────────────────────────────────────── */}
@@ -100,7 +106,7 @@ export function IntegrationsBoard({
           variant={availSelected.size > 0 ? "default" : "outline"}
           size="icon"
           className="h-10 w-10 lg:h-12 lg:w-12"
-          aria-label="Connect selected"
+          aria-label={t("toolsUI.integrations.board.connectAria")}
           onClick={moveRight}
           disabled={availSelected.size === 0}
         >
@@ -110,7 +116,7 @@ export function IntegrationsBoard({
           variant={connSelected.size > 0 ? "default" : "outline"}
           size="icon"
           className="h-10 w-10 lg:h-12 lg:w-12"
-          aria-label="Disconnect selected"
+          aria-label={t("toolsUI.integrations.board.disconnectAria")}
           onClick={moveLeft}
           disabled={connSelected.size === 0}
         >
@@ -120,7 +126,7 @@ export function IntegrationsBoard({
 
       {/* ── Connected (right) ────────────────────────────────────────── */}
       <Column
-        title="Connected"
+        title={t("toolsUI.integrations.board.connected")}
         accentClass="text-[color:var(--success)]"
         count={connected.length}
         selected={connSelected.size}
@@ -130,7 +136,7 @@ export function IntegrationsBoard({
         selectedSet={connSelected}
         onSelectedChange={setConnSelected}
         rowAccent="border-[color:var(--success)]/30"
-        emptyLabel="No apps connected yet. Pick from the left to get started."
+        emptyLabel={t("toolsUI.integrations.board.emptyConnected")}
         liveDot
       />
     </div>
@@ -169,6 +175,7 @@ function Column({
   emptyLabel,
   liveDot,
 }: ColumnProps) {
+  const { t } = useTranslation();
   const toggle = (id: string) => {
     const next = new Set(selectedSet);
     if (next.has(id)) next.delete(id);
@@ -204,7 +211,7 @@ function Column({
         </div>
         {selected > 0 && (
           <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent">
-            {selected} selected
+            {t("toolsUI.integrations.board.selected").replace("{count}", String(selected))}
           </span>
         )}
       </div>
@@ -214,14 +221,14 @@ function Column({
         <Checkbox
           checked={allChecked ? true : partial ? "indeterminate" : false}
           onCheckedChange={toggleAll}
-          aria-label={`Select all ${title.toLowerCase()}`}
+          aria-label={t("toolsUI.integrations.board.selectAllAria").replace("{column}", title.toLowerCase())}
         />
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder={`Search ${title.toLowerCase()}…`}
+            placeholder={t("toolsUI.integrations.board.searchPlaceholder").replace("{column}", title.toLowerCase())}
             className="h-8 pl-7 text-xs"
           />
         </div>
@@ -252,7 +259,7 @@ function Column({
                     checked={checked}
                     onCheckedChange={() => toggle(app.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Select ${app.name}`}
+                    aria-label={t("toolsUI.integrations.board.selectAppAria").replace("{name}", app.name)}
                   />
                   <AppIcon app={app} size={32} />
                   <div className="min-w-0 flex-1">

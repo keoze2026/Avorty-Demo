@@ -9,6 +9,7 @@ import { DepthSpark } from "./depth-spark";
 import { Button } from "@/components/ui/button";
 import { VERTICAL_PALETTE } from "@/lib/mock/marketplace";
 import { useMarketplaceStore } from "@/lib/store/marketplace-store";
+import { useTranslation } from "@/hooks/use-translation";
 import type { MarketListing } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function ListingCard({
   onFocus: (id: string) => void;
   isFeatured?: boolean;
 }) {
+  const { t } = useTranslation();
   const placeBid = useMarketplaceStore((s) => s.placeBid);
   const myPos = useMarketplaceStore((s) =>
     s.positions.find((p) => p.listingId === listing.id),
@@ -74,7 +76,7 @@ export function ListingCard({
           <AnimatedPrice value={listing.topBid} size="md" className="text-lg" />
           <p className="text-[11px] text-muted-foreground">
             <span className="font-mono">{listing.topBidder || "—"}</span>{" "}
-            <span className="text-muted-foreground/60">leading</span>
+            <span className="text-muted-foreground/60">{t("toolsUI.marketplace.listingCard.leading")}</span>
           </p>
         </div>
         <DepthSpark series={listing.bidHistory} vertical={listing.vertical} width={80} height={24} />
@@ -111,7 +113,13 @@ export function ListingCard({
                 "border-border bg-secondary/40 text-muted-foreground",
             )}
           >
-            {myPos.status}
+            {myPos.status === "leading"
+              ? t("toolsUI.marketplace.myPositions.leading")
+              : myPos.status === "outbid"
+                ? t("toolsUI.marketplace.myPositions.outbid")
+                : myPos.status === "won"
+                  ? t("toolsUI.marketplace.myPositions.won")
+                  : t("toolsUI.marketplace.myPositions.lost")}
           </span>
         )}
 

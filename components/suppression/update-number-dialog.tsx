@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { BlockedNumberEntry } from "@/lib/mock/suppression";
+import { useTranslation } from "@/hooks/use-translation";
 
 type ChoiceType = "all" | "campaign";
 
@@ -34,6 +35,7 @@ interface Props {
 
 /** "Update a number" dialog — opened from the row pencil icon. */
 export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
+  const { t } = useTranslation();
   const open = entry !== null;
   const [choiceType, setChoiceType] = React.useState<ChoiceType>("all");
   const [campaignId, setCampaignId] = React.useState<string>("");
@@ -67,17 +69,17 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-[13px] font-semibold uppercase tracking-wider">
-            Update a number
+            {t("toolsUI.suppression.blockedNumbers.update.dialogTitle")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Choose Type</Label>
+            <Label>{t("toolsUI.suppression.blockedNumbers.update.chooseType")}</Label>
             <Segmented
               options={[
-                { id: "all", label: "All Campaigns" },
-                { id: "campaign", label: "Select Campaign" },
+                { id: "all", label: t("toolsUI.suppression.blockedNumbers.update.allCampaigns") },
+                { id: "campaign", label: t("toolsUI.suppression.blockedNumbers.update.selectCampaign") },
               ]}
               value={choiceType}
               onChange={(v) => setChoiceType(v as ChoiceType)}
@@ -86,10 +88,10 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
 
           {choiceType === "campaign" && (
             <div className="space-y-2">
-              <Label htmlFor="un-campaign">Select Campaign</Label>
+              <Label htmlFor="un-campaign">{t("toolsUI.suppression.blockedNumbers.update.selectCampaign")}</Label>
               <Select value={campaignId} onValueChange={setCampaignId}>
                 <SelectTrigger id="un-campaign">
-                  <SelectValue placeholder="Choose" />
+                  <SelectValue placeholder={t("toolsUI.suppression.blockedNumbers.block.choose")} />
                 </SelectTrigger>
                 <SelectContent>
                   {MOCK_CAMPAIGNS.map((c) => (
@@ -103,7 +105,7 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="un-number">Number</Label>
+            <Label htmlFor="un-number">{t("toolsUI.suppression.blockedNumbers.update.numberLabel")}</Label>
             <Input
               id="un-number"
               autoFocus
@@ -121,10 +123,10 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("toolsUI.suppression.blockedNumbers.update.cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={!valid}>
-            Update Number
+            {t("toolsUI.suppression.blockedNumbers.update.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

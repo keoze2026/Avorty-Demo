@@ -16,6 +16,7 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { ROUTES } from "@/lib/constants";
 import { formatNumber } from "@/lib/format";
@@ -33,10 +34,12 @@ interface Row {
 
 type RangeId = "today" | "14d" | "30d";
 
-const RANGES: Array<{ id: RangeId; label: string; days: number }> = [
-  { id: "today", label: "Today", days: 1 },
-  { id: "14d", label: "14d", days: 14 },
-  { id: "30d", label: "Monthly", days: 30 },
+interface RangeDef { id: RangeId; labelKey: string; days: number; }
+
+const RANGES: RangeDef[] = [
+  { id: "today", labelKey: "dashboard.range.today",        days: 1 },
+  { id: "14d",   labelKey: "dashboard.range.fourteenDays", days: 14 },
+  { id: "30d",   labelKey: "dashboard.range.monthly",      days: 30 },
 ];
 
 interface TopCampaignsBarsProps {
@@ -52,6 +55,7 @@ function isConnected(status: Call["status"]) {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
+  const { t } = useTranslation();
   const [range, setRange] = useState<RangeId>("today");
 
   const data = useMemo<Row[]>(() => {
@@ -96,19 +100,14 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
       .slice(0, 6);
   }, [calls, range]);
 
-  const subLabel =
-    range === "today"
-      ? "Connected calls today, by campaign"
-      : range === "14d"
-        ? "Connected calls in the last 14 days, by campaign"
-        : "Connected calls in the last 30 days, by campaign";
+  const subLabel = t("dashboard.topCampaignsHint");
 
   // Recharts BarChart with layout="vertical" renders horizontal bars (y = category, x = value).
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-3 pb-2">
         <div>
-          <CardTitle className="text-sm font-semibold">Top campaigns</CardTitle>
+          <CardTitle className="text-sm font-semibold">{t("dashboard.topCampaigns")}</CardTitle>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
             {subLabel}
           </p>
@@ -135,7 +134,7 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {r.label}
+                  {t(r.labelKey)}
                 </button>
               );
             })}
@@ -144,7 +143,7 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
             href={ROUTES.campaigns}
             className="inline-flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            View all <ArrowUpRight className="h-3 w-3" />
+            {t("common.viewAll")} <ArrowUpRight className="h-3 w-3" />
           </Link>
         </div>
       </CardHeader>

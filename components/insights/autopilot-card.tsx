@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { MOCK_AUTOPILOT_RULES } from "@/lib/mock/insights";
 import type { AutopilotRule } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 const TONE: Record<AutopilotRule["tone"], { icon: LucideIcon; chip: string; iconBg: string }> = {
@@ -30,6 +31,7 @@ const TONE: Record<AutopilotRule["tone"], { icon: LucideIcon; chip: string; icon
 };
 
 export function AutopilotCard() {
+  const { t } = useTranslation();
   const [rules, setRules] = useState<AutopilotRule[]>(MOCK_AUTOPILOT_RULES);
   const enabledCount = rules.filter((r) => r.enabled).length;
 
@@ -38,9 +40,14 @@ export function AutopilotCard() {
       rs.map((r) => {
         if (r.id !== id) return r;
         const next = { ...r, enabled: !r.enabled };
-        toast.success(next.enabled ? `Autopilot rule enabled` : `Autopilot rule disabled`, {
-          description: next.label,
-        });
+        toast.success(
+          next.enabled
+            ? t("toolsUI.insights.autopilot.toastEnabled")
+            : t("toolsUI.insights.autopilot.toastDisabled"),
+          {
+            description: next.label,
+          },
+        );
         return next;
       }),
     );
@@ -53,14 +60,14 @@ export function AutopilotCard() {
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-accent">
             <Bot className="h-3.5 w-3.5" />
           </span>
-          Autopilot
+          {t("toolsUI.insights.autopilot.title")}
           <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-accent">
             <Check className="h-3 w-3" />
-            {enabledCount} active
+            {t("toolsUI.insights.autopilot.active").replace("{count}", String(enabledCount))}
           </span>
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Let the co-pilot act on its own for things you trust. Off by default.
+          {t("toolsUI.insights.autopilot.description")}
         </p>
       </CardHeader>
 

@@ -49,6 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   PERMISSIONS,
   REPORTING_COLUMNS,
@@ -138,6 +139,7 @@ function HeaderRow({
   timezone: string;
   onTimezoneChange: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
@@ -146,7 +148,7 @@ function HeaderRow({
           <Info className="h-4 w-4 text-muted-foreground" />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage settings for this publisher
+          {t("networkUI.publishers.settings.manageSettings")}
         </p>
       </div>
       <Select value={timezone} onValueChange={onTimezoneChange}>
@@ -178,6 +180,7 @@ function MembersSection({
   onAdd: (email: string) => void;
   onRemove: (memberId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [inviteOpen, setInviteOpen] = React.useState(false);
@@ -192,34 +195,34 @@ function MembersSection({
   const submitInvite = () => {
     const trimmed = inviteEmail.trim();
     if (!/^\S+@\S+\.\S+$/.test(trimmed)) {
-      toast.error("Enter a valid email address");
+      toast.error(t("networkUI.publishers.settings.invalidEmail"));
       return;
     }
     onAdd(trimmed);
-    toast.success(`Invited ${trimmed}`);
+    toast.success(t("networkUI.publishers.settings.invited").replace("{email}", trimmed));
     setInviteEmail("");
     setInviteOpen(false);
   };
 
   return (
     <Section
-      title="Members"
-      description="Users who can view the statistics for this publisher"
+      title={t("networkUI.publishers.settings.membersTitle")}
+      description={t("networkUI.publishers.settings.membersDesc")}
     >
       <div className="flex items-center justify-end gap-2 px-4 pb-3 pt-1">
         <button
           type="button"
           onClick={() => setSearchOpen((v) => !v)}
           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="Search members"
+          aria-label={t("networkUI.publishers.settings.searchMembers")}
         >
           <Search className="h-3.5 w-3.5" />
         </button>
         <button
           type="button"
-          onClick={() => toast.info("Filter members — coming soon")}
+          onClick={() => toast.info(t("networkUI.publishers.settings.filterSoon"))}
           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="Filter members"
+          aria-label={t("networkUI.publishers.settings.filterMembers")}
         >
           <Filter className="h-3.5 w-3.5" />
         </button>
@@ -228,7 +231,7 @@ function MembersSection({
           variant="default"
           onClick={() => setInviteOpen((v) => !v)}
         >
-          Invite
+          {t("networkUI.publishers.settings.invite")}
         </Button>
       </div>
 
@@ -237,7 +240,7 @@ function MembersSection({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by email"
+            placeholder={t("networkUI.publishers.settings.searchByEmail")}
             className="h-8"
           />
         </div>
@@ -255,12 +258,12 @@ function MembersSection({
                 submitInvite();
               }
             }}
-            placeholder="member@example.com"
+            placeholder={t("networkUI.publishers.settings.invitePlaceholder")}
             className="h-8"
             autoFocus
           />
           <Button size="sm" onClick={submitInvite}>
-            Send invite
+            {t("networkUI.publishers.settings.sendInvite")}
           </Button>
           <Button
             size="sm"
@@ -270,7 +273,7 @@ function MembersSection({
               setInviteEmail("");
             }}
           >
-            Cancel
+            {t("networkUI.publishers.settings.cancel")}
           </Button>
         </div>
       )}
@@ -279,9 +282,9 @@ function MembersSection({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-4 text-left">Email</TableHead>
-              <TableHead className="text-left">Status</TableHead>
-              <TableHead className="pr-4 text-right">Actions</TableHead>
+              <TableHead className="pl-4 text-left">{t("networkUI.publishers.settings.email")}</TableHead>
+              <TableHead className="text-left">{t("networkUI.publishers.settings.status")}</TableHead>
+              <TableHead className="pr-4 text-right">{t("networkUI.publishers.settings.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -292,7 +295,7 @@ function MembersSection({
                   className="py-10 text-center text-sm text-muted-foreground"
                 >
                   <Users className="mx-auto mb-2 h-5 w-5 opacity-40" />
-                  No data available
+                  {t("networkUI.publishers.settings.noData")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -314,9 +317,9 @@ function MembersSection({
                       type="button"
                       onClick={() => {
                         onRemove(m.id);
-                        toast.success(`Removed ${m.email}`);
+                        toast.success(t("networkUI.publishers.settings.removed").replace("{email}", m.email));
                       }}
-                      aria-label={`Remove ${m.email}`}
+                      aria-label={t("networkUI.publishers.settings.removeMemberAria").replace("{email}", m.email)}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -343,10 +346,11 @@ function PermissionsSection({
   permissions: Record<PermissionKey, boolean>;
   onToggle: (key: PermissionKey) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Section
-      title="Permissions"
-      description="List of available permissions for users"
+      title={t("networkUI.publishers.settings.permissionsTitle")}
+      description={t("networkUI.publishers.settings.permissionsDesc")}
     >
       <ul className="divide-y divide-border">
         {PERMISSIONS.map((p) => (
@@ -363,7 +367,7 @@ function PermissionsSection({
             <Switch
               checked={!!permissions[p.key]}
               onCheckedChange={() => onToggle(p.key)}
-              aria-label={`Toggle ${p.label}`}
+              aria-label={t("networkUI.publishers.settings.permToggle").replace("{label}", p.label)}
             />
           </li>
         ))}
@@ -381,12 +385,15 @@ function ReportingVisibilitySection({
   visibility: ReportingVisibility;
   onToggle: (key: ReportingColumnKey) => void;
 }) {
+  const { t } = useTranslation();
   const visibleCount = REPORTING_COLUMNS.filter((c) => visibility[c.key]).length;
 
   return (
     <Section
-      title="Reporting Visibility"
-      description={`Pick which reporting columns this publisher can see — uncheck to hide. ${visibleCount} of ${REPORTING_COLUMNS.length} visible.`}
+      title={t("networkUI.publishers.settings.reportingTitle")}
+      description={t("networkUI.publishers.settings.reportingDesc")
+        .replace("{visible}", String(visibleCount))
+        .replace("{total}", String(REPORTING_COLUMNS.length))}
     >
       <ul className="grid grid-cols-1 gap-1 px-2 py-2 sm:grid-cols-2">
         {REPORTING_COLUMNS.map((col) => {
@@ -430,12 +437,13 @@ function AdvancedSection({
   capEnabled: boolean;
   onCapEnabledChange: (v: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = React.useState(false);
 
   return (
     <Section
-      title="Advanced Settings"
-      description="Customize how incoming calls are routed to optimize the call experience"
+      title={t("networkUI.publishers.settings.advancedTitle")}
+      description={t("networkUI.publishers.settings.advancedDesc")}
     >
       <div className="px-2 py-2">
         <button
@@ -448,15 +456,15 @@ function AdvancedSection({
               <Gauge className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-sm font-medium leading-tight">CAP SETTINGS</div>
+              <div className="text-sm font-medium leading-tight">{t("networkUI.publishers.settings.capSettings")}</div>
               <div className="mt-0.5 text-xs text-muted-foreground">
-                Manage limits for the traffic sources of the publisher
+                {t("networkUI.publishers.settings.capSettingsDesc")}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={capEnabled ? "success" : "outline"}>
-              {capEnabled ? "Enabled" : "Disabled"}
+              {capEnabled ? t("networkUI.publishers.settings.enabled") : t("networkUI.publishers.settings.disabled")}
             </Badge>
             {expanded ? (
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -469,15 +477,15 @@ function AdvancedSection({
           <div className="mx-3 mt-2 rounded-md border border-border bg-secondary/30 p-3">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-medium">Enable cap limits</div>
+                <div className="text-sm font-medium">{t("networkUI.publishers.settings.enableCapTitle")}</div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                  When on, routing will respect this publisher's hourly / daily caps.
+                  {t("networkUI.publishers.settings.enableCapDesc")}
                 </div>
               </div>
               <Switch
                 checked={capEnabled}
                 onCheckedChange={onCapEnabledChange}
-                aria-label="Enable cap settings"
+                aria-label={t("networkUI.publishers.settings.enableCapAria")}
               />
             </div>
           </div>

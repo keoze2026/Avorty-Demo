@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { CallWaveform } from "@/components/live/call-waveform";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { ROUTES } from "@/lib/constants";
 import { formatCurrency, formatDuration, formatRelativeTime, toE164 } from "@/lib/format";
@@ -23,17 +24,18 @@ const STATUS_META: Record<CallStatus, { icon: typeof Phone; color: string; label
 };
 
 export function RecentCallsFeed() {
+  const { t } = useTranslation();
   const calls = MOCK_CALLS.slice(0, 8);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base">Recent calls</CardTitle>
+        <CardTitle className="text-base">{t("dashboard.recentCalls")}</CardTitle>
         <Link
           href={ROUTES.calls}
           className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground"
         >
-          View all <ArrowUpRight className="h-3 w-3" />
+          {t("common.viewAll")} <ArrowUpRight className="h-3 w-3" />
         </Link>
       </CardHeader>
       <CardContent className="space-y-1.5">

@@ -12,7 +12,7 @@
  * Footer carries a destructive Disconnect alongside Save.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity as ActivityIcon,
@@ -44,6 +44,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatRelativeTime } from "@/lib/format";
 import type { IntegrationApp } from "@/lib/types";
+import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -59,13 +60,13 @@ interface EventDef {
   defaultOn: boolean;
 }
 
-const EVENTS: EventDef[] = [
-  { key: "call.completed", label: "call.completed", description: "Settled call (pays out)", defaultOn: true },
-  { key: "call.qualified", label: "call.qualified", description: "Call passed qualify duration", defaultOn: true },
-  { key: "call.rejected", label: "call.rejected", description: "Buyer rejected the call", defaultOn: false },
-  { key: "buyer.capped", label: "buyer.capped", description: "Buyer hit a daily / monthly cap", defaultOn: false },
-  { key: "publisher.spike", label: "publisher.spike", description: "Publisher volume spiked", defaultOn: false },
-  { key: "bid.placed", label: "bid.placed", description: "New marketplace bid", defaultOn: false },
+const EVENTS: Array<EventDef & { descriptionKey: string }> = [
+  { key: "call.completed", label: "call.completed", description: "", descriptionKey: "toolsUI.integrations.configure.eventDefs.completed", defaultOn: true },
+  { key: "call.qualified", label: "call.qualified", description: "", descriptionKey: "toolsUI.integrations.configure.eventDefs.qualified", defaultOn: true },
+  { key: "call.rejected", label: "call.rejected", description: "", descriptionKey: "toolsUI.integrations.configure.eventDefs.rejected", defaultOn: false },
+  { key: "buyer.capped", label: "buyer.capped", description: "", descriptionKey: "toolsUI.integrations.configure.eventDefs.capped", defaultOn: false },
+  { key: "publisher.spike", label: "publisher.spike", description: "", descriptionKey: "toolsUI.integrations.configure.eventDefs.spike", defaultOn: false },
+  { key: "bid.placed", label: "bid.placed", description: "", descriptionKey: "toolsUI.integrations.configure.eventDefs.bidPlaced", defaultOn: false },
 ];
 
 interface ScopeDef {
@@ -76,13 +77,13 @@ interface ScopeDef {
   required?: boolean;
 }
 
-const SCOPES: ScopeDef[] = [
-  { key: "calls.read", label: "Read calls", description: "Read call records and detail.", defaultOn: true, required: true },
-  { key: "campaigns.read", label: "Read campaigns", description: "Read campaign config + metrics.", defaultOn: true },
-  { key: "campaigns.write", label: "Write campaigns", description: "Create + edit campaigns.", defaultOn: false },
-  { key: "buyers.read", label: "Read buyers", description: "Buyer rosters, bids, caps.", defaultOn: true },
-  { key: "buyers.write", label: "Write buyers", description: "Edit buyer config.", defaultOn: false },
-  { key: "members.read", label: "Read members", description: "Read your team roster.", defaultOn: false },
+const SCOPES: Array<ScopeDef & { labelKey: string; descriptionKey: string }> = [
+  { key: "calls.read", label: "Read calls", labelKey: "toolsUI.integrations.configure.scopeDefs.callsRead", description: "Read call records and detail.", descriptionKey: "toolsUI.integrations.configure.scopeDefs.callsReadHint", defaultOn: true, required: true },
+  { key: "campaigns.read", label: "Read campaigns", labelKey: "toolsUI.integrations.configure.scopeDefs.campaignsRead", description: "", descriptionKey: "toolsUI.integrations.configure.scopeDefs.campaignsReadHint", defaultOn: true },
+  { key: "campaigns.write", label: "Write campaigns", labelKey: "toolsUI.integrations.configure.scopeDefs.campaignsWrite", description: "", descriptionKey: "toolsUI.integrations.configure.scopeDefs.campaignsWriteHint", defaultOn: false },
+  { key: "buyers.read", label: "Read buyers", labelKey: "toolsUI.integrations.configure.scopeDefs.buyersRead", description: "", descriptionKey: "toolsUI.integrations.configure.scopeDefs.buyersReadHint", defaultOn: true },
+  { key: "buyers.write", label: "Write buyers", labelKey: "toolsUI.integrations.configure.scopeDefs.buyersWrite", description: "", descriptionKey: "toolsUI.integrations.configure.scopeDefs.buyersWriteHint", defaultOn: false },
+  { key: "members.read", label: "Read members", labelKey: "toolsUI.integrations.configure.scopeDefs.membersRead", description: "", descriptionKey: "toolsUI.integrations.configure.scopeDefs.membersReadHint", defaultOn: false },
 ];
 
 interface ActivityEntry {
@@ -94,15 +95,18 @@ interface ActivityEntry {
   at: number;
 }
 
-function activityFor(app: IntegrationApp): ActivityEntry[] {
+function activityFor(
+  app: IntegrationApp,
+  t: (k: string) => string,
+): ActivityEntry[] {
   const now = Date.now();
   const min = 60_000;
   return [
     {
       id: "a_1",
       kind: "sync",
-      label: "Outbound sync",
-      detail: `212 events delivered to ${app.name}`,
+      label: t("toolsUI.integrations.configure.activity.outboundSync"),
+      detail: t("toolsUI.integrations.configure.activity.outboundDetail").replace("{name}", app.name),
       status: "ok",
       at: now - min * 2,
     },
@@ -117,8 +121,8 @@ function activityFor(app: IntegrationApp): ActivityEntry[] {
     {
       id: "a_3",
       kind: "auth",
-      label: "Token refresh",
-      detail: "Auto-renewed OAuth access token",
+      label: t("toolsUI.integrations.configure.activity.tokenRefresh"),
+      detail: t("toolsUI.integrations.configure.activity.tokenRefreshDetail"),
       status: "ok",
       at: now - min * 64,
     },
@@ -133,8 +137,8 @@ function activityFor(app: IntegrationApp): ActivityEntry[] {
     {
       id: "a_5",
       kind: "sync",
-      label: "Inbound sync",
-      detail: "Imported 14 contact records",
+      label: t("toolsUI.integrations.configure.activity.inboundSync"),
+      detail: t("toolsUI.integrations.configure.activity.inboundDetail"),
       status: "ok",
       at: now - min * 220,
     },
@@ -149,6 +153,7 @@ const STATUS_TONE = {
 } as const;
 
 export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
+  const { t } = useTranslation();
   const open = !!app;
 
   // Local form state — reset each time we open with a new app
@@ -171,7 +176,7 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
     setActive(true);
   }, [app]);
 
-  const activity = useMemo(() => (app ? activityFor(app) : []), [app]);
+  const activity = useMemo(() => (app ? activityFor(app, t) : []), [app, t]);
 
   const toggleEvent = (k: string) =>
     setEvents((curr) => {
@@ -192,8 +197,11 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
     setTesting(true);
     await new Promise((r) => setTimeout(r, 700));
     setTesting(false);
-    toast.success("Connection healthy", {
-      description: `Round-trip ${80 + Math.floor(Math.random() * 90)}ms`,
+    toast.success(t("toolsUI.integrations.configure.connection.toastHealthy"), {
+      description: t("toolsUI.integrations.configure.connection.toastHealthyDesc").replace(
+        "{ms}",
+        String(80 + Math.floor(Math.random() * 90)),
+      ),
     });
   };
   const onSave = async () => {
@@ -201,8 +209,16 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 350));
     setSaving(false);
-    toast.success(`${app.name} configuration saved`, {
-      description: `${events.size} events · ${scopes.size} scopes · ${active ? "Active" : "Paused"}`,
+    toast.success(t("toolsUI.integrations.configure.toastSaved").replace("{name}", app.name), {
+      description: t("toolsUI.integrations.configure.toastSavedDesc")
+        .replace("{events}", String(events.size))
+        .replace("{scopes}", String(scopes.size))
+        .replace(
+          "{status}",
+          active
+            ? t("toolsUI.integrations.configure.connection.active")
+            : t("toolsUI.integrations.configure.connection.paused"),
+        ),
     });
     onOpenChange(false);
   };
@@ -224,14 +240,14 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-70" />
                         <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-current" />
                       </span>
-                      Live
+                      {t("toolsUI.integrations.configure.live")}
                     </Badge>
                   </div>
                   <SheetDescription>{app.description}</SheetDescription>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
                     <span>{app.category}</span>
                     <span className="text-muted-foreground/40">·</span>
-                    <span>Connected {app.connectedAt ? formatRelativeTime(app.connectedAt) : "—"}</span>
+                    <span>{t("toolsUI.integrations.configure.connectedAt").replace("{time}", app.connectedAt ? formatRelativeTime(app.connectedAt) : "—")}</span>
                   </div>
                 </div>
               </div>
@@ -242,16 +258,16 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
               <div className="border-b border-border/60 px-6 pt-3">
                 <TabsList className="bg-secondary/40">
                   <TabsTrigger value="connection">
-                    <Plug2 className="h-3 w-3" /> Connection
+                    <Plug2 className="h-3 w-3" /> {t("toolsUI.integrations.configure.tabs.connection")}
                   </TabsTrigger>
                   <TabsTrigger value="events">
-                    <WebhookIcon className="h-3 w-3" /> Events
+                    <WebhookIcon className="h-3 w-3" /> {t("toolsUI.integrations.configure.tabs.events")}
                   </TabsTrigger>
                   <TabsTrigger value="permissions">
-                    <ShieldCheck className="h-3 w-3" /> Permissions
+                    <ShieldCheck className="h-3 w-3" /> {t("toolsUI.integrations.configure.tabs.permissions")}
                   </TabsTrigger>
                   <TabsTrigger value="activity">
-                    <ActivityIcon className="h-3 w-3" /> Activity
+                    <ActivityIcon className="h-3 w-3" /> {t("toolsUI.integrations.configure.tabs.activity")}
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -259,22 +275,22 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
               <div className="flex-1 overflow-y-auto p-6">
                 {/* Connection */}
                 <TabsContent value="connection" className="m-0 space-y-4">
-                  <Row label="Status" hint="Pause to stop syncing without disconnecting.">
+                  <Row label={t("toolsUI.integrations.configure.connection.statusLabel")} hint={t("toolsUI.integrations.configure.connection.statusHint")}>
                     <div className="flex items-center gap-2">
                       <Switch checked={active} onCheckedChange={setActive} />
-                      <span className="text-xs font-mono">{active ? "Active" : "Paused"}</span>
+                      <span className="text-xs font-mono">{active ? t("toolsUI.integrations.configure.connection.active") : t("toolsUI.integrations.configure.connection.paused")}</span>
                     </div>
                   </Row>
 
-                  <Row label="API token" hint="Used by Vortyx to authenticate to the partner API.">
+                  <Row label={t("toolsUI.integrations.configure.connection.tokenLabel")} hint={t("toolsUI.integrations.configure.connection.tokenHint")}>
                     <div className="flex w-full gap-2">
                       <Input value={token} readOnly className="font-mono" />
                       <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Copy token"
+                        aria-label={t("toolsUI.integrations.configure.connection.copyTokenAria")}
                         onClick={() => {
-                          navigator.clipboard?.writeText(token).then(() => toast.success("Token copied"));
+                          navigator.clipboard?.writeText(token).then(() => toast.success(t("toolsUI.integrations.configure.connection.toastTokenCopied")));
                         }}
                       >
                         <Copy className="h-3 w-3" />
@@ -282,34 +298,34 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                       <Button
                         variant="outline"
                         size="icon"
-                        aria-label="Rotate token"
-                        onClick={() => toast.success("Token rotation queued")}
+                        aria-label={t("toolsUI.integrations.configure.connection.rotateTokenAria")}
+                        onClick={() => toast.success(t("toolsUI.integrations.configure.connection.toastRotateQueued"))}
                       >
                         <RefreshCw className="h-3 w-3" />
                       </Button>
                     </div>
                   </Row>
 
-                  <Row label="Base URL" hint="Where Vortyx posts events. Override only if instructed.">
+                  <Row label={t("toolsUI.integrations.configure.connection.baseUrlLabel")} hint={t("toolsUI.integrations.configure.connection.baseUrlHint")}>
                     <Input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} className="font-mono" />
                   </Row>
 
                   <div className="rounded-lg border border-dashed border-border/60 bg-secondary/30 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-xs">
-                        <div className="font-medium">Connection test</div>
+                        <div className="font-medium">{t("toolsUI.integrations.configure.connection.connectionTestTitle")}</div>
                         <div className="mt-0.5 text-[11px] text-muted-foreground">
-                          Send a no-op handshake to verify the credentials.
+                          {t("toolsUI.integrations.configure.connection.connectionTestHint")}
                         </div>
                       </div>
                       <Button size="sm" variant="outline" onClick={onTest} disabled={testing}>
                         {testing ? (
                           <>
-                            <Loader2 className="h-3 w-3 animate-spin" /> Testing…
+                            <Loader2 className="h-3 w-3 animate-spin" /> {t("toolsUI.integrations.configure.connection.testing")}
                           </>
                         ) : (
                           <>
-                            <Zap className="h-3 w-3" /> Test
+                            <Zap className="h-3 w-3" /> {t("toolsUI.integrations.configure.connection.test")}
                           </>
                         )}
                       </Button>
@@ -320,7 +336,9 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                 {/* Events */}
                 <TabsContent value="events" className="m-0 space-y-2">
                   <p className="text-[11px] text-muted-foreground">
-                    Pick the events Vortyx should send to <span className="font-mono text-foreground">{app.name}</span>.
+                    {t("toolsUI.integrations.configure.events.intro").split("{name}").map((seg, i, arr) => (
+                      <React.Fragment key={i}>{seg}{i < arr.length - 1 && <span className="font-mono text-foreground">{app.name}</span>}</React.Fragment>
+                    ))}
                   </p>
                   {EVENTS.map((e, i) => {
                     const on = events.has(e.key);
@@ -334,7 +352,7 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                       >
                         <div className="min-w-0">
                           <div className="font-mono text-xs">{e.label}</div>
-                          <div className="mt-0.5 text-[11px] text-muted-foreground">{e.description}</div>
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">{t(e.descriptionKey)}</div>
                         </div>
                         <Switch checked={on} onCheckedChange={() => toggleEvent(e.key)} />
                       </motion.div>
@@ -345,7 +363,7 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                 {/* Permissions */}
                 <TabsContent value="permissions" className="m-0 space-y-2">
                   <p className="text-[11px] text-muted-foreground">
-                    Scopes are enforced server-side — changes take effect within ~30s.
+                    {t("toolsUI.integrations.configure.permissions.intro")}
                   </p>
                   {SCOPES.map((s, i) => {
                     const on = scopes.has(s.key);
@@ -360,14 +378,14 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 text-xs font-medium">
                             <ShieldCheck className="h-3 w-3 text-accent" />
-                            {s.label}
+                            {t(s.labelKey)}
                             {s.required && (
                               <Badge variant="outline" className="text-[9px]">
-                                Required
+                                {t("toolsUI.integrations.configure.permissions.required")}
                               </Badge>
                             )}
                           </div>
-                          <div className="mt-0.5 text-[11px] text-muted-foreground">{s.description}</div>
+                          <div className="mt-0.5 text-[11px] text-muted-foreground">{t(s.descriptionKey)}</div>
                         </div>
                         <Switch
                           checked={on || !!s.required}
@@ -424,22 +442,22 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                   onClick={() => {
                     onDisconnect(app.id);
                     onOpenChange(false);
-                    toast.success(`Disconnected ${app.name}`);
+                    toast.success(t("toolsUI.integrations.configure.toastDisconnected").replace("{name}", app.name));
                   }}
                 >
-                  Disconnect
+                  {t("toolsUI.integrations.configure.disconnect")}
                 </Button>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-                    Cancel
+                    {t("toolsUI.integrations.configure.cancel")}
                   </Button>
                   <Button size="sm" onClick={onSave} disabled={saving}>
                     {saving ? (
                       <>
-                        <Loader2 className="h-3 w-3 animate-spin" /> Saving…
+                        <Loader2 className="h-3 w-3 animate-spin" /> {t("toolsUI.integrations.configure.saving")}
                       </>
                     ) : (
-                      "Save changes"
+                      t("toolsUI.integrations.configure.saveChanges")
                     )}
                   </Button>
                 </div>
