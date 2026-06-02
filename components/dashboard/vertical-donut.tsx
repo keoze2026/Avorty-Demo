@@ -25,8 +25,15 @@ const DROP_SWATCH = "var(--destructive)";
 export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
   const { total, completed, dropped } = useMemo(() => {
     if (calls) {
-      const all = calls.length;
-      const ok = calls.filter((c) => c.status === "completed").length;
+      // Match the topbar TOTAL — only count calls that started today, so the
+      // donut headline stays in sync with the topbar's "today" counter and
+      // the hourly chart above it.
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const startMs = startOfToday.getTime();
+      const today = calls.filter((c) => c.startedAt >= startMs);
+      const all = today.length;
+      const ok = today.filter((c) => c.status === "completed").length;
       return { total: all, completed: ok, dropped: Math.max(0, all - ok) };
     }
     const all = TODAY_HOURLY.reduce((s, p) => s + p.calls, 0);
