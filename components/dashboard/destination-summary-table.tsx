@@ -134,7 +134,7 @@ export function DestinationSummaryTable({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-[220px] pl-6 text-left">Destination</TableHead>
-              <TableHead className="w-[110px] !text-center">Status</TableHead>
+              <TableHead className="w-[160px] !text-center">Status</TableHead>
               <TableHead className="text-left">Buyer</TableHead>
               <TableHead className="text-center">Live</TableHead>
               <TableHead className="text-right">Cap (today)</TableHead>
@@ -176,7 +176,7 @@ export function DestinationSummaryTable({
                         {toE164(destination.tfn)}
                       </div>
                     </TableCell>
-                    <TableCell className="w-[110px] !text-center">
+                    <TableCell className="w-[160px] !text-center">
                       <div className="flex w-full items-center justify-center">
                         <ActiveBadge />
                       </div>

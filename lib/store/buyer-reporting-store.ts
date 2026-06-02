@@ -21,6 +21,7 @@ const DEFAULT_REPORTING: ReportingVisibility = {
   incoming: true,
   connected: true,
   qualified: true,
+  converted: true,
   notConnected: true,
   acl: true,
   tcl: true,

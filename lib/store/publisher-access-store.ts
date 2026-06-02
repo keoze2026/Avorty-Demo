@@ -32,6 +32,7 @@ export type ReportingColumnKey =
   | "incoming"
   | "connected"
   | "qualified"
+  | "converted"
   | "notConnected"
   | "acl"
   | "tcl"
@@ -66,6 +67,7 @@ const DEFAULT_REPORTING: ReportingVisibility = {
   incoming: true,
   connected: true,
   qualified: true,
+  converted: true,
   notConnected: true,
   acl: true,
   tcl: true,
@@ -225,6 +227,7 @@ export const REPORTING_COLUMNS: ReportingColumnDef[] = [
   { key: "incoming", label: "Incoming", description: "Total inbound call attempts." },
   { key: "connected", label: "Connected", description: "Calls that reached a destination." },
   { key: "qualified", label: "Qualified", description: "Calls that met the buyer's quality criteria." },
+  { key: "converted", label: "Converted", description: "Calls that converted into a paid event." },
   { key: "notConnected", label: "Not Connected", description: "Calls that failed to reach a destination." },
   { key: "acl", label: "ACL", description: "Average call length across delivered calls." },
   { key: "tcl", label: "TCL", description: "Total call length aggregated across delivered calls." },

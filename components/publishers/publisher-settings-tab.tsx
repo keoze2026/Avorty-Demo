@@ -86,6 +86,7 @@ export function PublisherSettingsTab({ publisher }: Props) {
     incoming: true,
     connected: true,
     qualified: true,
+    converted: true,
     notConnected: true,
     acl: true,
     tcl: true,
