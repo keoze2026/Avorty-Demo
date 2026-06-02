@@ -4,6 +4,7 @@ import * as React from "react";
 import { MotionConfig } from "framer-motion";
 
 import { AccentProvider } from "./accent-provider";
+import { LocaleProvider } from "./locale-provider";
 import { ThemeProvider } from "./theme-provider";
 import { QueryProvider } from "./query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         <TooltipProvider delayDuration={150}>
           <MotionConfig reducedMotion="user">
             <AccentProvider />
+            <LocaleProvider />
             {children}
             <Toaster richColors closeButton />
           </MotionConfig>

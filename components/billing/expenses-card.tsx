@@ -26,9 +26,13 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface CategoryDef {
   key: string;
+  /** Dotted translation key resolved at render time. */
+  labelKey: string;
+  /** English fallback used when t() can't resolve. */
   label: string;
   color: string;
   /** Per-day average dollar amount, used to derive the range total. */
@@ -36,12 +40,12 @@ interface CategoryDef {
 }
 
 const CATEGORIES: CategoryDef[] = [
-  { key: "rent",     label: "Rent Numbers",  color: "#10B981", perDay: 0 },
-  { key: "voice",    label: "Voice Minutes", color: "#8B5CF6", perDay: 78.96 },
-  { key: "voip",     label: "VoIP Shield",   color: "#F97316", perDay: 0 },
-  { key: "rejected", label: "Rejected Call", color: "#FACC15", perDay: 3.075 },
-  { key: "identity", label: "Caller Identity", color: "#22D3EE", perDay: 0 },
-  { key: "rec",      label: "Call Recording", color: "#EC4899", perDay: 5.64 },
+  { key: "rent",     labelKey: "billing.categories.rentNumbers",    label: "Rent Numbers",    color: "#10B981", perDay: 0 },
+  { key: "voice",    labelKey: "billing.categories.voiceMinutes",   label: "Voice Minutes",   color: "#8B5CF6", perDay: 78.96 },
+  { key: "voip",     labelKey: "billing.categories.voipShield",     label: "VoIP Shield",     color: "#F97316", perDay: 0 },
+  { key: "rejected", labelKey: "billing.categories.rejectedCall",   label: "Rejected Call",   color: "#FACC15", perDay: 3.075 },
+  { key: "identity", labelKey: "billing.categories.callerIdentity", label: "Caller Identity", color: "#22D3EE", perDay: 0 },
+  { key: "rec",      labelKey: "billing.categories.callRecording",  label: "Call Recording",  color: "#EC4899", perDay: 5.64 },
 ];
 
 function startOfDay(d: Date) {
@@ -67,16 +71,20 @@ function buildRows(range: DateRange | undefined): CategoryRow[] {
 }
 
 export function ExpensesCard() {
+  const { t } = useTranslation();
   const [range, setRange] = React.useState<DateRange | undefined>(() => {
     const today = new Date();
     return { from: today, to: today };
   });
   const [refreshNonce, setRefreshNonce] = React.useState(0);
 
+  // Translate category labels at render time so they swap with the active
+  // locale. `label` on each row becomes the localized string.
   const rows = React.useMemo(
-    () => buildRows(range),
+    () =>
+      buildRows(range).map((r) => ({ ...r, label: t(r.labelKey) })),
     // refreshNonce is read implicitly — bump to trigger a re-derive
-    [range, refreshNonce],
+    [range, refreshNonce, t],
   );
   const total = rows.reduce((s, r) => s + r.amount, 0);
   const pieData = rows.filter((r) => r.amount > 0);
@@ -84,7 +92,7 @@ export function ExpensesCard() {
   return (
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Expenses</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("billing.expenses")}</h2>
         <div className="flex items-center gap-2">
           <DateRangePicker value={range} onChange={setRange} />
           <Button
@@ -102,7 +110,7 @@ export function ExpensesCard() {
         {/* Breakdown list */}
         <div className="rounded-lg border border-border p-5">
           <div className="border-b border-border pb-3">
-            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="text-xs text-muted-foreground">{t("billing.total")}</div>
             <div className="mt-0.5 font-mono text-2xl font-semibold tabular-nums">
               ${total.toFixed(3)}
             </div>
@@ -132,7 +140,7 @@ export function ExpensesCard() {
         {/* Donut */}
         <div className="flex flex-col items-center justify-between rounded-lg border border-border p-5">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
-            Total expenses
+            {t("billing.totalExpenses")}
           </div>
           <div className="relative h-56 w-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -195,7 +203,7 @@ export function ExpensesCard() {
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Total
+                {t("billing.total")}
               </span>
               <span className="mt-0.5 font-mono text-xl font-semibold tabular-nums">
                 ${total.toFixed(4)}
@@ -212,7 +220,7 @@ export function ExpensesCard() {
                   className="h-2 w-2 shrink-0 rounded-full"
                   style={{ background: c.color }}
                 />
-                <span className="text-muted-foreground">{c.label}</span>
+                <span className="text-muted-foreground">{t(c.labelKey)}</span>
               </li>
             ))}
           </ul>

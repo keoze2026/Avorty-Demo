@@ -8,6 +8,7 @@ import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "@/hooks/use-translation";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useSecurityStore } from "@/lib/store/security-store";
 import { verifyTotpCode } from "@/lib/totp";
@@ -26,6 +27,7 @@ import { ROUTES } from "@/lib/constants";
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const { t } = useTranslation();
   const login = useAuthStore((s) => s.login);
   const twoFactorEnabled = useSecurityStore((s) => s.twoFactorEnabled);
   const twoFactorSecret = useSecurityStore((s) => s.twoFactorSecret);
@@ -88,16 +90,18 @@ export function LoginForm() {
             <ShieldCheck className="h-4 w-4" />
           </span>
           <div className="text-xs">
-            <div className="font-semibold text-foreground">Two-factor required</div>
+            <div className="font-semibold text-foreground">
+              {t("login.twoFactor.title")}
+            </div>
             <p className="text-muted-foreground">
-              Open Google Authenticator and enter the current 6-digit code for{" "}
+              {t("login.twoFactor.description")}{" "}
               <span className="font-mono text-foreground">{email}</span>.
             </p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="totp-login">Authenticator code</Label>
+          <Label htmlFor="totp-login">{t("login.twoFactor.label")}</Label>
           <Input
             id="totp-login"
             inputMode="numeric"
@@ -112,12 +116,12 @@ export function LoginForm() {
             autoFocus
           />
           <p className="text-[11px] text-muted-foreground">
-            Codes refresh every 30 seconds. Lost your device? Contact your admin.
+            {t("login.twoFactor.hint")}
           </p>
         </div>
 
         <Button type="submit" className="w-full" disabled={code.length !== 6}>
-          Verify and continue
+          {t("login.twoFactor.verify")}
           <ArrowRight className="h-4 w-4" />
         </Button>
 
@@ -126,7 +130,7 @@ export function LoginForm() {
           onClick={() => setPhase("credentials")}
           className="block w-full text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          ← Back to sign-in
+          {t("login.twoFactor.back")}
         </button>
       </form>
     );
@@ -135,7 +139,7 @@ export function LoginForm() {
   return (
     <form onSubmit={onCredentialsSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t("login.email")}</Label>
         <Input
           id="email"
           type="email"
@@ -148,12 +152,12 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("login.password")}</Label>
           <a
             href={ROUTES.forgotPassword}
             className="text-xs text-muted-foreground hover:text-accent transition-colors"
           >
-            Forgot?
+            {t("login.forgot")}
           </a>
         </div>
         <div className="relative">
@@ -178,25 +182,25 @@ export function LoginForm() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Buyers and publishers sign in via the role-scoped invite link emailed
-        to them, not this form.
+        {t("login.inviteHint")}
       </p>
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
+            <Loader2 className="h-4 w-4 animate-spin" /> {t("login.signingIn")}
           </>
         ) : (
           <>
-            {twoFactorEnabled ? "Continue" : "Sign in"} <ArrowRight className="h-4 w-4" />
+            {twoFactorEnabled ? t("login.continue") : t("login.signIn")}{" "}
+            <ArrowRight className="h-4 w-4" />
           </>
         )}
       </Button>
       {twoFactorEnabled && (
         <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
           <ShieldCheck className="h-3 w-3 text-accent" />
-          Two-factor authentication is on for this account
+          {t("login.twoFactor.enabled")}
         </p>
       )}
     </form>

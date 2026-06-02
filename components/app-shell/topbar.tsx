@@ -5,13 +5,16 @@ import { Command, PhoneCall, PhoneIncoming, Search, Wallet } from "lucide-react"
 
 import { NotificationsMenu } from "./notifications-menu";
 import { UserMenu } from "./user-menu";
+import { LanguageToggle } from "@/components/shared/language-toggle";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { cn } from "@/lib/utils";
 
 export function Topbar() {
+  const { t } = useTranslation();
   // Lightweight live stats derived from the mock call dataset — recomputes
   // on each render but cheap since MOCK_CALLS is small.
   const { rechargeAmount, liveCalls, totalCalls } = useMemo(() => {
@@ -40,7 +43,7 @@ export function Topbar() {
 
         {/* CENTER — command search */}
         <div className="relative mx-auto hidden w-full max-w-lg lg:block">
-          <CommandSearch />
+          <CommandSearch placeholder={t("topbar.searchPlaceholder")} />
         </div>
 
         {/* RIGHT — stats + theme + notifications + identity */}
@@ -57,21 +60,23 @@ export function Topbar() {
             <span aria-hidden className="h-7 w-px bg-border/70" />
             <TopStat
               icon={PhoneIncoming}
-              label="Live"
+              label={t("topbar.live")}
               value={formatNumber(liveCalls)}
               live
             />
             <span aria-hidden className="h-7 w-px bg-border/70" />
             <TopStat
               icon={PhoneCall}
-              label="Total"
+              label={t("topbar.total")}
               value={formatNumber(totalCalls)}
               accent
             />
           </div>
 
-          {/* Theme + notifications grouped in a pill */}
+          {/* Language + theme + notifications grouped in a pill */}
           <div className="inline-flex items-center gap-1 rounded-lg border border-border/70 bg-secondary/30 p-1">
+            <LanguageToggle />
+            <span aria-hidden className="h-5 w-px bg-border/70" />
             <ThemeToggle variant="icon" />
             <span aria-hidden className="h-5 w-px bg-border/70" />
             <NotificationsMenu />
@@ -102,7 +107,7 @@ export function Topbar() {
 
 /* ─────────────────────────────────────────────────────────────────── */
 
-function CommandSearch() {
+function CommandSearch({ placeholder }: { placeholder: string }) {
   return (
     <label className="group/cmd relative flex h-10 w-full items-center gap-2.5 rounded-lg border border-border/70 bg-secondary/30 px-3 text-sm transition-colors hover:border-accent/40 focus-within:border-accent/55 focus-within:bg-secondary/50">
       <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent/10 text-accent">
@@ -110,7 +115,7 @@ function CommandSearch() {
       </span>
       <input
         type="search"
-        placeholder="Search calls, buyers, campaigns…"
+        placeholder={placeholder}
         className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
       />
       <kbd className="pointer-events-none hidden h-6 select-none items-center gap-0.5 rounded border border-border bg-card px-1.5 font-mono text-[10px] font-semibold text-muted-foreground sm:inline-flex">

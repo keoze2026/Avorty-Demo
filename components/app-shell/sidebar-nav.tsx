@@ -27,6 +27,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useTranslation } from "@/hooks/use-translation";
 import { BRAND } from "@/lib/constants";
 import { NAV_GROUPS, type NavItem } from "@/lib/nav";
 import { useAuthStore } from "@/lib/store/auth-store";
@@ -43,6 +44,7 @@ export function AppSidebar() {
   const role = useAuthStore((s) => s.user?.role);
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { t } = useTranslation();
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" className="!bg-sidebar">
@@ -67,7 +69,7 @@ export function AppSidebar() {
                   )}
                 >
                   <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                    {group.label}
+                    {group.labelKey ? t(group.labelKey) : group.label}
                   </span>
                 </div>
               )}
@@ -154,12 +156,14 @@ function SidebarItem({
   collapsed: boolean;
 }) {
   const Icon = item.icon;
+  const { t } = useTranslation();
+  const label = t(item.nameKey);
 
   return (
     <li>
       <Link
         href={item.href}
-        title={collapsed ? item.label : undefined}
+        title={collapsed ? label : undefined}
         className={cn(
           "group/item relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 transition-all",
           "group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
@@ -178,7 +182,7 @@ function SidebarItem({
             "group-data-[collapsible=icon]:hidden",
           )}
         >
-          {item.label}
+          {label}
         </span>
 
         {/* Badge */}

@@ -10,8 +10,10 @@ import { SessionMeter } from "@/components/live/session-meter";
 import { LiveBadge } from "@/components/shared/live-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { useMockSocket } from "@/hooks/use-mock-socket";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function LivePage() {
+  const { t } = useTranslation();
   const [paused, setPaused] = useState(false);
   const { inFlight, history, totals } = useMockSocket({ paused, intervalMs: 2400 });
 
@@ -24,8 +26,8 @@ export default function LivePage() {
   return (
     <>
       <PageHeader
-        title="Live Monitor"
-        description="Every call as it lands, routes, and settles — in real time."
+        title={t("page.live.title")}
+        description={t("page.live.description")}
         actions={
           <>
             <LiveBadge label={paused ? "Paused" : "Streaming"} />

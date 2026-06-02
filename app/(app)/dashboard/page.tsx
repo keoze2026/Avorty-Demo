@@ -12,6 +12,7 @@ import { HourlyDistribution } from "@/components/reports/hourly-distribution";
 import { ExportMenu } from "@/components/shared/export-menu";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/hooks/use-translation";
 import {
   Select,
   SelectContent,
@@ -42,6 +43,7 @@ const CALLS_TODAY_BY_TFN = (() => {
 })();
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
@@ -70,8 +72,8 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        description="Today's performance at a glance."
+        title={t("page.dashboard.title")}
+        description={t("page.dashboard.description")}
         actions={
           <>
             <Select value={destinationTfn} onValueChange={setDestinationTfn}>
@@ -101,7 +103,7 @@ export default function DashboardPage() {
             </Select>
             <ExportMenu onExport={onExport}>
               <Button variant="outline" size="sm">
-                <Download className="h-4 w-4" /> Export
+                <Download className="h-4 w-4" /> {t("common.export")}
               </Button>
             </ExportMenu>
           </>

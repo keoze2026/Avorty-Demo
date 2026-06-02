@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/hooks/use-translation";
 
 const PhoneStop = PhoneOff;
 
@@ -99,13 +100,14 @@ const RATES_BY_COUNTRY: Record<string, RateRow[]> = {
 };
 
 export function RatesCard() {
+  const { t } = useTranslation();
   const [country, setCountry] = React.useState("US");
   const rates = RATES_BY_COUNTRY[country] ?? RATES_BY_COUNTRY.US;
 
   return (
     <Card className="p-6">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold tracking-tight">Rates</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("billing.rates")}</h2>
         <Select value={country} onValueChange={setCountry}>
           <SelectTrigger className="w-[12rem]">
             <SelectValue />

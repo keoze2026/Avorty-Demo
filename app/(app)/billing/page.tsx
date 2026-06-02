@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+"use client";
 
 import { ExpensesCard } from "@/components/billing/expenses-card";
 import { InvoicesTable } from "@/components/billing/invoices-table";
@@ -7,15 +7,15 @@ import { RatesCard } from "@/components/billing/rates-card";
 import { SubscriptionHero } from "@/components/billing/subscription-hero";
 import { UsageGrid } from "@/components/billing/usage-grid";
 import { PageHeader } from "@/components/shared/page-header";
-
-export const metadata: Metadata = { title: "Billing" };
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function BillingPage() {
+  const { t } = useTranslation();
   return (
     <>
       <PageHeader
-        title="Billing"
-        description="Subscription, usage, payment method, and invoice history."
+        title={t("page.billing.title")}
+        description={t("page.billing.description")}
       />
 
       <SubscriptionHero />

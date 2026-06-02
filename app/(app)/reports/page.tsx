@@ -14,6 +14,7 @@ import { ReportsPinGate } from "@/components/reports/reports-pin-gate";
 import { ReportsToolbar } from "@/components/reports/reports-toolbar";
 import { TotalCallsDonut } from "@/components/reports/total-calls-donut";
 import { PageHeader } from "@/components/shared/page-header";
+import { useTranslation } from "@/hooks/use-translation";
 import { MOCK_CALLS } from "@/lib/mock/calls";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ function endOfDay(d: Date) {
 }
 
 export default function ReportsPage() {
+  const { t } = useTranslation();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const today = new Date();
     return { from: today, to: today };
@@ -84,7 +86,10 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reporting" description="Calls, performance, and detail logs." />
+      <PageHeader
+        title={t("page.reports.title")}
+        description={t("page.reports.description")}
+      />
 
       <ReportsToolbar
         dateRange={dateRange}

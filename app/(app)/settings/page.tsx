@@ -10,15 +10,17 @@ import { SecuritySection } from "@/components/settings/security-section";
 import { SessionsSection } from "@/components/settings/sessions-section";
 import { SettingsRail, type SettingsSection } from "@/components/settings/settings-rail";
 import { PageHeader } from "@/components/shared/page-header";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [section, setSection] = useState<SettingsSection>("profile");
 
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Personal account, API keys, notifications, and active sessions."
+        title={t("page.settings.title")}
+        description={t("page.settings.description")}
       />
 
       <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
