@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { BarChart3, PieChart } from "lucide-react";
 import { toast } from "sonner";
 
 import { CallLogTable } from "@/components/reports/call-log-table";
@@ -14,6 +15,7 @@ import { ReportsToolbar } from "@/components/reports/reports-toolbar";
 import { TotalCallsDonut } from "@/components/reports/total-calls-donut";
 import { PageHeader } from "@/components/shared/page-header";
 import { MOCK_CALLS } from "@/lib/mock/calls";
+import { cn } from "@/lib/utils";
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -33,6 +35,10 @@ export default function ReportsPage() {
     return { from: today, to: today };
   });
   const [filters, setFilters] = useState<ReportFilters>(EMPTY_FILTERS);
+  // Mobile-only chart switch — desktop always shows both. The donut is hidden
+  // on mobile because it eats vertical real-estate; the toggle button below
+  // swaps which chart occupies the main slot.
+  const [mobileChart, setMobileChart] = useState<"hourly" | "donut">("hourly");
 
   const filtered = useMemo(() => {
     const start = dateRange?.from ? startOfDay(dateRange.from).getTime() : -Infinity;
@@ -89,14 +95,41 @@ export default function ReportsPage() {
       />
 
       <ReportsPinGate needsPin={needsPin} onCancel={cancelHistorical}>
-        {/* Row 1 — Hourly distribution (2/3) + perf card over donut (1/3). */}
+        {/* Row 1 — Hourly distribution (2/3) + perf card over donut (1/3).
+            On mobile, only one of the two charts is shown at a time and the
+            toggle button below the toolbar swaps between them. */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <HourlyDistribution calls={filtered} />
+          <div className="relative lg:col-span-2">
+            {/* Mobile-only chart switcher */}
+            <button
+              type="button"
+              onClick={() =>
+                setMobileChart((v) => (v === "hourly" ? "donut" : "hourly"))
+              }
+              aria-label={
+                mobileChart === "hourly"
+                  ? "Show total calls donut"
+                  : "Show hourly distribution"
+              }
+              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary hover:text-foreground lg:hidden"
+            >
+              {mobileChart === "hourly" ? (
+                <PieChart className="h-4 w-4" />
+              ) : (
+                <BarChart3 className="h-4 w-4" />
+              )}
+            </button>
+            <div className={cn(mobileChart === "hourly" ? "block" : "hidden", "lg:block")}>
+              <HourlyDistribution calls={filtered} />
+            </div>
+            <div className={cn(mobileChart === "donut" ? "block" : "hidden", "lg:hidden")}>
+              <TotalCallsDonut calls={filtered} />
+            </div>
           </div>
           <div className="flex flex-col gap-4 lg:h-full">
             <CallPerfCard revenue={summary.revenue} payout={summary.payout} />
-            <div className="min-h-0 flex-1">
+            {/* Desktop-only — mobile is handled by the toggle above. */}
+            <div className="hidden min-h-0 flex-1 lg:block">
               <TotalCallsDonut calls={filtered} />
             </div>
           </div>
