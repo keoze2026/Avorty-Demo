@@ -44,12 +44,15 @@ export function Topbar() {
         </div>
 
         {/* RIGHT — stats + theme + notifications + identity */}
-        <div className="ml-auto flex items-center gap-3">
-          {/* Live stats — recharge, in-flight, total today */}
-          <div className="hidden items-center gap-3 rounded-lg border border-border/70 bg-secondary/30 px-3 py-1.5 md:inline-flex">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          {/* Live stats — recharge, in-flight, total today.
+              Always visible; on mobile the inner TopStat labels collapse so
+              the pill stays compact (icon + value only). */}
+          <div className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/30 px-2 py-1.5 sm:gap-3 sm:px-3">
             <TopStat
               icon={Wallet}
-              value={formatCurrency(rechargeAmount)}
+              value={formatCompact(rechargeAmount)}
+              fullValue={formatCurrency(rechargeAmount)}
             />
             <span aria-hidden className="h-7 w-px bg-border/70" />
             <TopStat
@@ -62,13 +65,14 @@ export function Topbar() {
             <TopStat
               icon={PhoneCall}
               label="Total"
-              value={formatNumber(totalCalls)}
+              value={formatCompact(totalCalls)}
+              fullValue={formatNumber(totalCalls)}
               accent
             />
           </div>
 
           {/* Theme + notifications grouped in a pill */}
-          <div className="hidden items-center gap-1 rounded-lg border border-border/70 bg-secondary/30 p-1 sm:inline-flex">
+          <div className="inline-flex items-center gap-1 rounded-lg border border-border/70 bg-secondary/30 p-1">
             <ThemeToggle variant="icon" />
             <span aria-hidden className="h-5 w-px bg-border/70" />
             <NotificationsMenu />
@@ -124,21 +128,31 @@ interface TopStatProps {
   icon: React.ElementType;
   /** Optional eyebrow label. When omitted, the value renders alone next to the icon. */
   label?: string;
+  /** Mobile-friendly value (e.g. compact `$12K`). */
   value: string;
+  /** Optional richer value shown on sm+ breakpoints (e.g. full `$12,480`). */
+  fullValue?: string;
   /** Pulses the icon when true (used for the "Live" stat). */
   live?: boolean;
   /** Renders label + value in the portal accent (matches the auto-refresh chip). */
   accent?: boolean;
 }
 
-function TopStat({ icon: Icon, label, value, live = false, accent = false }: TopStatProps) {
+function TopStat({
+  icon: Icon,
+  label,
+  value,
+  fullValue,
+  live = false,
+  accent = false,
+}: TopStatProps) {
   // Bright Won-green ramp — used everywhere on the Live stat so it draws the eye.
   const greenText = "text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]";
   const greenBg =
     "bg-[oklch(0.6_0.18_155)]/15 dark:bg-[oklch(0.78_0.18_155)]/15";
 
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-1.5 sm:gap-2">
       <span
         className={cn(
           "relative inline-flex h-6 w-6 items-center justify-center rounded-md",
@@ -155,9 +169,10 @@ function TopStat({ icon: Icon, label, value, live = false, accent = false }: Top
       </span>
       {label ? (
         <span className="flex flex-col leading-tight">
+          {/* Label collapses on mobile to keep the pill compact. */}
           <span
             className={cn(
-              "text-[10px] uppercase tracking-wider",
+              "hidden text-[10px] uppercase tracking-wider sm:inline",
               live
                 ? `${greenText} font-semibold`
                 : accent
@@ -171,23 +186,26 @@ function TopStat({ icon: Icon, label, value, live = false, accent = false }: Top
             className={cn(
               "tabular-nums",
               live
-                ? `text-[15px] font-bold ${greenText}`
+                ? `text-[13px] font-bold sm:text-[15px] ${greenText}`
                 : accent
-                  ? "text-[15px] font-bold text-accent-gradient"
-                  : "text-[13px] font-semibold text-foreground",
+                  ? "text-[13px] font-bold text-accent-gradient sm:text-[15px]"
+                  : "text-[12px] font-semibold text-foreground sm:text-[13px]",
             )}
           >
-            {value}
+            {/* Compact value on mobile, full on sm+ (if provided). */}
+            <span className={fullValue ? "sm:hidden" : ""}>{value}</span>
+            {fullValue && <span className="hidden sm:inline">{fullValue}</span>}
           </span>
         </span>
       ) : (
         <span
           className={cn(
-            "text-sm font-semibold tabular-nums",
+            "text-xs font-semibold tabular-nums sm:text-sm",
             accent ? "text-accent-gradient" : "text-foreground",
           )}
         >
-          {value}
+          <span className={fullValue ? "sm:hidden" : ""}>{value}</span>
+          {fullValue && <span className="hidden sm:inline">{fullValue}</span>}
         </span>
       )}
     </span>
