@@ -3,7 +3,8 @@
  *
  * Until we wire the dashboard to a real socket, this hook simulates the
  * operational events that should pop a banner — TFN cap over, low AHT on
- * the last 10 calls, DNC match, conversion spike, etc.
+ * the last 20 calls (minimum sample size before the rule fires), DNC
+ * match, conversion spike, etc.
  *
  * The first event fires ~3s after the hook mounts so the operator sees the
  * banner system right away; subsequent events fire on a jittered interval

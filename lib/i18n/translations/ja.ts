@@ -21,7 +21,7 @@ export const ja: TranslationShape = {
     coinMarket: "コインマーケット",
     dailyNews: "デイリーニュース",
     referrals: "リファラル",
-    trustEngine: "Trust Engine",
+    trustEngine: "信頼エンジン",
     integrations: "連携",
     billing: "請求",
     settings: "設定",
@@ -116,7 +116,7 @@ export const ja: TranslationShape = {
       description: "オペレーターを招待して継続的な収益を獲得。",
     },
     trustEngine: {
-      title: "Trust Engine",
+      title: "信頼エンジン",
       description: "5 つの信頼ベクトルを横断する KYC と本人確認。",
     },
   },
@@ -2990,7 +2990,7 @@ export const ja: TranslationShape = {
       },
     },
     trustEngine: {
-      pageTitle: "Trust Engine",
+      pageTitle: "信頼エンジン",
       pageDescription: "5ベクトル連続検証。ティアを上げると上限拡大、支払い高速化、マーケットプレイス参加が解禁されます。",
       vectorsVerified: "{total} 件中 {verified} 件のベクトルが検証済み",
       tierLadder: "あなたのティアラダー",
@@ -3765,6 +3765,11 @@ export const ja: TranslationShape = {
     push: {
       dismiss: "閉じる",
     },
+    entity: {
+      destination: "宛先",
+      buyer: "バイヤー",
+      campaign: "キャンペーン",
+    },
     timeAgo: {
       justNow: "たった今",
       minutes: "{n} 分前",
@@ -3786,7 +3791,7 @@ export const ja: TranslationShape = {
       lowAht: {
         title: "この TFN で AHT 低下を検知",
         source: "+18883241868 · Mass Tort — Injury Intake",
-        body: "直近 10 コールの平均通話時間が 0:32 (目標 1:30 以上)。バイヤー側で早期スクリーニングの可能性。",
+        body: "直近 20 コールの平均通話時間が 0:32 (目標 1:30 以上)。このルールは TFN に 20 件以上のコールが着信した場合にのみ発火します。バイヤー側で早期スクリーニングの可能性。",
         action: "調査",
       },
       tfnCapOver: {

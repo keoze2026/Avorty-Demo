@@ -3790,6 +3790,11 @@ export const en = {
     push: {
       dismiss: "Dismiss",
     },
+    entity: {
+      destination: "Destination",
+      buyer: "Buyer",
+      campaign: "Campaign",
+    },
     timeAgo: {
       justNow: "just now",
       minutes: "{n} min ago",
@@ -3811,7 +3816,7 @@ export const en = {
       lowAht: {
         title: "Low AHT alert on this TFN",
         source: "+18883241868 · Mass Tort — Injury Intake",
-        body: "Average call length over the last 10 calls is 0:32 (target ≥ 1:30). The buyer may be screening early.",
+        body: "Average call length over the last 20 calls is 0:32 (target ≥ 1:30). Rule only fires once 20+ calls have landed on the TFN. The buyer may be screening early.",
         action: "Investigate",
       },
       tfnCapOver: {

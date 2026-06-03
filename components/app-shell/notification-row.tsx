@@ -1,7 +1,8 @@
 "use client";
 
-import { Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { Building2, MapPin, Megaphone, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 
+import { useTranslation } from "@/hooks/use-translation";
 import {
   ALERT_KIND_DOT,
   ALERT_KIND_TEXT,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
  * dedicated /notifications page. Layout is identical across both surfaces.
  */
 export function NotificationRow({ item }: { item: NotificationItem }) {
+  const { t } = useTranslation();
   const positive = (item.delta ?? 0) >= 0;
   // Prefer the fine-grained alert-kind color (missed=red / cap-over=orange
   // / low-aht=yellow) when present; fall back to the severity dot.
@@ -58,9 +60,40 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
           </h4>
           <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{item.time}</span>
         </div>
-        {item.source && (
+        {item.source && !item.destination && !item.buyer && !item.campaign && (
           <div className="mt-0.5 truncate text-[11px] text-muted-foreground">{item.source}</div>
         )}
+
+        {/* Structured entity context — explicit "Destination: X" / "Buyer: Y"
+            chips so the reader instantly knows WHICH destination missed and
+            WHICH buyer's cap fired, instead of having to guess what `source`
+            refers to. */}
+        {(item.destination || item.buyer || item.campaign) && (
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {item.destination && (
+              <EntityChip
+                icon={MapPin}
+                label={t("notificationsUI.entity.destination")}
+                value={item.destination}
+              />
+            )}
+            {item.buyer && (
+              <EntityChip
+                icon={Building2}
+                label={t("notificationsUI.entity.buyer")}
+                value={item.buyer}
+              />
+            )}
+            {item.campaign && (
+              <EntityChip
+                icon={Megaphone}
+                label={t("notificationsUI.entity.campaign")}
+                value={item.campaign}
+              />
+            )}
+          </div>
+        )}
+
         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground/90">{item.body}</p>
 
         {(typeof item.delta === "number" || item.action) && (
@@ -92,5 +125,31 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
         )}
       </div>
     </li>
+  );
+}
+
+/**
+ * Small labeled chip showing which entity an alert is about — e.g.
+ * `📍 Destination · Solar Nationwide` or `🏢 Buyer · Apex Solutions`.
+ * Lets readers tell at a glance whether the source name refers to a
+ * destination, a buyer, or a campaign.
+ */
+function EntityChip({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px]">
+      <Icon className="h-2.5 w-2.5 text-muted-foreground" />
+      <span className="font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <span className="truncate text-foreground/90">{value}</span>
+    </span>
   );
 }

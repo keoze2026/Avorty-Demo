@@ -21,7 +21,7 @@ export const zh: TranslationShape = {
     coinMarket: "币市行情",
     dailyNews: "每日新闻",
     referrals: "推荐计划",
-    trustEngine: "Trust Engine",
+    trustEngine: "信任引擎",
     integrations: "集成",
     billing: "账单",
     settings: "设置",
@@ -116,7 +116,7 @@ export const zh: TranslationShape = {
       description: "邀请运营商,从他们的通话中持续获得分成。",
     },
     trustEngine: {
-      title: "Trust Engine",
+      title: "信任引擎",
       description: "覆盖全部 5 个信任向量的 KYC 与身份验证。",
     },
   },
@@ -2991,7 +2991,7 @@ export const zh: TranslationShape = {
       },
     },
     trustEngine: {
-      pageTitle: "Trust Engine",
+      pageTitle: "信任引擎",
       pageDescription: "持续五向量验证。逐级解锁更高上限、更快支付与市场访问。",
       vectorsVerified: "{verified} / {total} 个向量已验证",
       tierLadder: "您的层级阶梯",
@@ -3764,6 +3764,11 @@ export const zh: TranslationShape = {
     push: {
       dismiss: "忽略",
     },
+    entity: {
+      destination: "目的地",
+      buyer: "买家",
+      campaign: "营销活动",
+    },
     timeAgo: {
       justNow: "刚刚",
       minutes: "{n} 分钟前",
@@ -3785,7 +3790,7 @@ export const zh: TranslationShape = {
       lowAht: {
         title: "此 TFN 的 AHT 偏低警报",
         source: "+18883241868 · Mass Tort — Injury Intake",
-        body: "最近 10 通通话平均时长为 0:32(目标 ≥ 1:30)。买家可能过早筛除。",
+        body: "最近 20 通通话平均时长为 0:32(目标 ≥ 1:30)。此规则仅在该 TFN 累计 20+ 通来电后触发。买家可能过早筛除。",
         action: "调查",
       },
       tfnCapOver: {

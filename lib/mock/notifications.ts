@@ -26,8 +26,15 @@ export interface NotificationItem {
   action?: string;
   /** Mark as already read. */
   read?: boolean;
-  /** Source label (campaign, buyer, etc.). */
+  /** Free-form source label (only used when no structured entity applies). */
   source?: string;
+  /* ─── Structured entity context ────────────────────────────────────
+   * Surface WHICH destination missed / WHICH buyer hit the cap so the
+   * reader doesn't have to guess what `source` refers to. Rendered as
+   * labeled chips below the title. */
+  destination?: string;
+  buyer?: string;
+  campaign?: string;
 }
 
 export const SEVERITY_DOT: Record<NotificationSeverity, string> = {
@@ -63,7 +70,8 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     title: "Buyer Apex hit daily cap",
     body: "Routing temporarily paused. 14 calls re-routed to fallback Tier-2.",
     time: "11m",
-    source: "Apex Solutions",
+    buyer: "Apex Solutions",
+    campaign: "Health Tier 1",
     delta: -32,
     action: "Raise cap",
   },
@@ -74,7 +82,8 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     title: "Acceptance dipped in OH / MI",
     body: "Auto Warranty acceptance is 14% over the past 48h vs 22% baseline.",
     time: "26m",
-    source: "Auto Warranty",
+    buyer: "Auto Warranty",
+    campaign: "Auto Warranty — OH/MI",
     delta: -8.4,
     action: "Investigate",
   },
@@ -85,7 +94,8 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     title: "12 missed calls in the last hour",
     body: "Solar Nationwide dropped 12 calls between 14:00–15:00. Likely a destination outage.",
     time: "5m",
-    source: "Solar Nationwide",
+    destination: "Solar Nationwide",
+    buyer: "Solar United",
     delta: -18,
     action: "View calls",
   },
@@ -96,7 +106,8 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     title: "Mass Tort missed 4 calls",
     body: "All 4 hit the queue but no destination answered within 30s. Worth checking buyer caps.",
     time: "42m",
-    source: "Mass Tort — Injury",
+    destination: "Mass Tort Intake",
+    buyer: "LawHelp Direct",
     delta: -6,
     action: "Investigate",
   },
@@ -107,7 +118,8 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     title: "TFN +1 (212) 555-0184 hit hourly cap",
     body: "60 calls in the last hour — hourly cap is 50. Excess routed to fallback.",
     time: "18m",
-    source: "Health Tier 1",
+    destination: "Tier-1 Medicare",
+    buyer: "Apex Insurance",
     delta: 20,
     action: "Raise cap",
   },
@@ -116,9 +128,10 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     severity: "warn",
     alertKind: "low-aht",
     title: "Auto Warranty AHT dropped to 38s",
-    body: "Average handle time on the last 10 calls is under the 60s qualified threshold.",
+    body: "Average handle time on the last 20 calls is under the 60s qualified threshold. Rule fires only once 20+ calls land on the TFN.",
     time: "12m",
-    source: "Auto Warranty",
+    buyer: "Auto Warranty",
+    destination: "Auto Day Shift",
     delta: -22,
     action: "Investigate",
   },
@@ -185,7 +198,7 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     title: "Webhook failed for ApexSolutions",
     body: "3 deliveries failed in the last 5 minutes — endpoint returning 502.",
     time: "1d",
-    source: "Apex Solutions",
+    buyer: "Apex Solutions",
     action: "View logs",
     read: true,
   },

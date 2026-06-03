@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useMemo, useState } from "react";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
-import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { TODAY_HOURLY } from "@/lib/mock/timeseries";
 import { formatNumber } from "@/lib/format";
 import type { Call } from "@/lib/types";
@@ -44,12 +43,23 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
   }, [calls]);
 
   const slices = [
-    { key: "completed", label: t("dashboard.donut.completed"), count: completed, fill: SUCCESS_FILL },
-    { key: "dropped", label: t("dashboard.donut.notConnected"), count: dropped, fill: DROP_FILL },
+    { key: "completed", label: t("dashboard.donut.completed"), count: completed, fill: SUCCESS_FILL, swatch: SUCCESS_SWATCH },
+    { key: "dropped", label: t("dashboard.donut.notConnected"), count: dropped, fill: DROP_FILL, swatch: DROP_SWATCH },
   ].filter((s) => s.count > 0);
 
+  // Click a sector → swap the center label/count to that slice. `null` is the
+  // default — the center shows the running TOTAL. Clicking the same sector
+  // again (or anywhere off the chart) toggles back to TOTAL.
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const activeSlice = activeKey
+    ? slices.find((s) => s.key === activeKey) ?? null
+    : null;
+
   return (
-    <Card className="flex h-full flex-col">
+    <Card
+      className="flex h-full flex-col"
+      onClick={() => setActiveKey(null)}
+    >
       <CardContent className="flex flex-1 flex-col items-center justify-center gap-5 p-6">
         <div
           // Suppress the default focus-ring rectangle Recharts paints on the
@@ -83,57 +93,98 @@ export function VerticalDonut({ calls }: VerticalDonutProps = {}) {
                 animationDuration={500}
                 activeShape={undefined}
                 activeIndex={-1}
+                onClick={(payload, idx, e) => {
+                  (e as unknown as { stopPropagation?: () => void })?.stopPropagation?.();
+                  const next = slices[idx];
+                  if (!next) return;
+                  setActiveKey((prev) => (prev === next.key ? null : next.key));
+                }}
               >
                 {slices.map((s) => (
                   <Cell
                     key={s.key}
                     fill={s.fill}
+                    fillOpacity={
+                      activeKey === null || s.key === activeKey ? 1 : 0.35
+                    }
                     tabIndex={-1}
-                    style={{ outline: "none" }}
+                    style={{ outline: "none", cursor: "pointer" }}
                   />
                 ))}
               </Pie>
-              <Tooltip
-                {...CHART_TOOLTIP_PROPS}
-                formatter={(value: number, name) => [
-                  `${formatNumber(value)} calls`,
-                  name as string,
-                ]}
-              />
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {t("dashboard.donut.total")}
-            </span>
-            <span className="text-xl font-semibold tabular-nums">
-              {formatNumber(total)}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {t("dashboard.donut.callsSuffix")}
-            </span>
+            {activeSlice ? (
+              <>
+                <span
+                  className="max-w-[7rem] truncate text-[10px] uppercase tracking-wider"
+                  style={{ color: activeSlice.swatch }}
+                >
+                  {activeSlice.label}
+                </span>
+                <span className="text-xl font-semibold tabular-nums">
+                  {formatNumber(activeSlice.count)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t("dashboard.donut.total")}
+                </span>
+                <span className="text-xl font-semibold tabular-nums">
+                  {formatNumber(total)}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t("dashboard.donut.callsSuffix")}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Legend — gradient swatch for completed, solid for drop */}
-        <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
-          <li className="inline-flex items-center gap-2">
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-sm"
-              style={{ background: SUCCESS_SWATCH }}
-            />
-            <span>{t("dashboard.donut.totalCalls")}</span>
-            <span className="font-medium tabular-nums">{formatNumber(total)}</span>
+        {/* Legend — click a row to focus that slice; click again to revert. */}
+        <ul
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <li>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveKey((prev) => (prev === "completed" ? null : "completed"))
+              }
+              className="inline-flex items-center gap-2 rounded px-1 py-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ opacity: activeKey === null || activeKey === "completed" ? 1 : 0.65 }}
+              aria-pressed={activeKey === "completed"}
+            >
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 rounded-sm"
+                style={{ background: SUCCESS_SWATCH }}
+              />
+              <span>{t("dashboard.donut.totalCalls")}</span>
+              <span className="font-medium tabular-nums">{formatNumber(total)}</span>
+            </button>
           </li>
-          <li className="inline-flex items-center gap-2 text-destructive">
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-sm"
-              style={{ background: DROP_SWATCH }}
-            />
-            <span>{t("dashboard.donut.notConnected")}</span>
-            <span className="font-medium tabular-nums">{formatNumber(dropped)}</span>
+          <li>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveKey((prev) => (prev === "dropped" ? null : "dropped"))
+              }
+              className="inline-flex items-center gap-2 rounded px-1 py-0.5 text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ opacity: activeKey === null || activeKey === "dropped" ? 1 : 0.65 }}
+              aria-pressed={activeKey === "dropped"}
+            >
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 rounded-sm"
+                style={{ background: DROP_SWATCH }}
+              />
+              <span>{t("dashboard.donut.notConnected")}</span>
+              <span className="font-medium tabular-nums">{formatNumber(dropped)}</span>
+            </button>
           </li>
         </ul>
       </CardContent>

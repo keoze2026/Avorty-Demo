@@ -21,7 +21,7 @@ export const ru: TranslationShape = {
     coinMarket: "Криптовалюты",
     dailyNews: "Новости",
     referrals: "Рефералы",
-    trustEngine: "Trust Engine",
+    trustEngine: "Система доверия",
     integrations: "Интеграции",
     billing: "Биллинг",
     settings: "Настройки",
@@ -116,7 +116,7 @@ export const ru: TranslationShape = {
       description: "Приглашайте операторов и получайте постоянный доход от их звонков.",
     },
     trustEngine: {
-      title: "Trust Engine",
+      title: "Система доверия",
       description: "KYC и проверка личности по 5 векторам доверия.",
     },
   },
@@ -2990,7 +2990,7 @@ export const ru: TranslationShape = {
       },
     },
     trustEngine: {
-      pageTitle: "Trust Engine",
+      pageTitle: "Система доверия",
       pageDescription: "Непрерывная пятивекторная верификация. Повышайте уровень, чтобы открыть более высокие лимиты, быстрые выплаты и доступ к маркетплейсу.",
       vectorsVerified: "{verified} из {total} векторов подтверждено",
       tierLadder: "Ваша лестница уровней",
@@ -3765,6 +3765,11 @@ export const ru: TranslationShape = {
     push: {
       dismiss: "Закрыть",
     },
+    entity: {
+      destination: "Назначение",
+      buyer: "Покупатель",
+      campaign: "Кампания",
+    },
     timeAgo: {
       justNow: "только что",
       minutes: "{n} мин назад",
@@ -3786,7 +3791,7 @@ export const ru: TranslationShape = {
       lowAht: {
         title: "Низкий AHT по этому TFN",
         source: "+18883241868 · Mass Tort — приём травм",
-        body: "Средняя длительность последних 10 звонков — 0:32 (целевой ≥ 1:30). Возможно, покупатель отсекает рано.",
+        body: "Средняя длительность последних 20 звонков — 0:32 (целевой ≥ 1:30). Правило срабатывает только после 20+ звонков на TFN. Возможно, покупатель отсекает рано.",
         action: "Разобраться",
       },
       tfnCapOver: {
