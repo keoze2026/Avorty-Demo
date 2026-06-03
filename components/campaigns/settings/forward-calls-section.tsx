@@ -233,23 +233,27 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
             <Plus className="h-4 w-4" /> {t("trafficUI.common.add")}
           </Button>
         </div>
-        <Table>
+        {/* Compact density mode — shrink every cell's font + padding so a
+            100-row page fits without each row chewing up vertical space.
+            `[&_td]:py-1.5` + `[&_th]:py-2` overrides the table primitive's
+            default py-2/py-3 padding for this single table. */}
+        <Table className="[&_td]:py-1.5 [&_th]:py-2">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6 uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.priority")}</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.weight")}</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.name")}</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.number")}</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.type")}</TableHead>
-              <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.revenue")}</TableHead>
-              <TableHead className="text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.status")}</TableHead>
-              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.forward.headers.actions")}</TableHead>
+              <TableHead className="pl-6 uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.priority")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.weight")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.name")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.number")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.type")}</TableHead>
+              <TableHead className="uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.revenue")}</TableHead>
+              <TableHead className="text-center uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.status")}</TableHead>
+              <TableHead className="pr-6 text-center uppercase tracking-wider text-[10px]">{t("trafficUI.campaigns.settings.forward.headers.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {destinations.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={8} className="pl-6 py-6 text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="pl-6 py-6 text-xs text-muted-foreground">
                   {t("trafficUI.campaigns.settings.forward.empty")}
                 </TableCell>
               </TableRow>
@@ -265,7 +269,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                       <Input
                         type="number"
                         min={1}
-                        className="h-7 w-16"
+                        className="h-6 w-14 text-[11px]"
                         value={priorities[d.id] ?? i + 1}
                         onChange={(e) =>
                           setPriorities((p) => ({ ...p, [d.id]: Number(e.target.value) }))
@@ -277,7 +281,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                         type="number"
                         min={0}
                         max={100}
-                        className="h-7 w-20"
+                        className="h-6 w-16 text-[11px]"
                         value={weights[d.id] ?? 100}
                         onChange={(e) =>
                           setWeights((p) => ({ ...p, [d.id]: Number(e.target.value) }))
@@ -287,27 +291,27 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                     <TableCell>
                       <Link
                         href={`${ROUTES.destinations}/${d.id}`}
-                        className="text-sm font-medium transition-colors hover:text-accent"
+                        className="text-xs font-medium transition-colors hover:text-accent"
                       >
                         {d.name}
                       </Link>
-                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      <div className="mt-0.5 text-[10px] text-muted-foreground">
                         {buyer?.name ?? "—"}
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell className="font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                       {toE164(d.tfn)}
                     </TableCell>
                     <TableCell>
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-md border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider",
+                          "inline-flex items-center rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider",
                         )}
                       >
                         {conversions[d.id]?.convertOn ?? "Call Connected"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                    <TableCell className="text-right font-mono text-[11px] tabular-nums">
                       {formatCurrency(
                         conversions[d.id]?.rate ?? buyer?.bidAmount ?? 0,
                         true,
