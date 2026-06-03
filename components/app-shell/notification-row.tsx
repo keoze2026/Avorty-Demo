@@ -2,7 +2,12 @@
 
 import { Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 
-import { ALERT_KIND_DOT, SEVERITY_DOT, type NotificationItem } from "@/lib/mock/notifications";
+import {
+  ALERT_KIND_DOT,
+  ALERT_KIND_TEXT,
+  SEVERITY_DOT,
+  type NotificationItem,
+} from "@/lib/mock/notifications";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,6 +21,16 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
   const dotClass = item.alertKind
     ? ALERT_KIND_DOT[item.alertKind]
     : SEVERITY_DOT[item.severity];
+  // Tint the title with the matching alert-kind color so a glance picks up
+  // the urgency tier (red/orange/yellow) without having to read the dot.
+  // Faded copies once the row is marked read so unread items stay louder.
+  const titleColorClass = item.alertKind
+    ? item.read
+      ? cn(ALERT_KIND_TEXT[item.alertKind], "opacity-65")
+      : ALERT_KIND_TEXT[item.alertKind]
+    : item.read
+      ? "text-muted-foreground"
+      : "text-foreground";
 
   return (
     <li
@@ -36,7 +51,7 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
           <h4
             className={cn(
               "truncate text-sm font-semibold leading-snug",
-              item.read ? "text-muted-foreground" : "text-foreground",
+              titleColorClass,
             )}
           >
             {item.title}
