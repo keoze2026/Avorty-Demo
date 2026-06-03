@@ -168,6 +168,24 @@ export const ja: TranslationShape = {
       hoursAgo: "{n} 時間前",
       daysAgo: "{n} 日前",
     },
+    bulk: {
+      selectAllAria: "このページの全行を選択",
+      selectRowAria: "{name} を選択",
+      clear: "クリア",
+      playAria: "選択した {entity} {count} 件を有効化",
+      pauseAria: "選択した {entity} {count} 件を一時停止",
+      deleteAria: "選択した {entity} {count} 件を削除",
+      entities: {
+        campaigns: "キャンペーン",
+        destinations: "宛先",
+        buyers: "バイヤー",
+      },
+      toast: {
+        activated: "{entity} {count} 件を有効化しました",
+        paused: "{entity} {count} 件を一時停止しました",
+        deleted: "{entity} {count} 件を削除しました",
+      },
+    },
   },
 
   login: {
@@ -367,6 +385,56 @@ export const ja: TranslationShape = {
       sessionRevoked: "セッションを失効しました",
       allOthersRevoked: "他のすべてのセッションを失効しました",
     },
+
+    scheduledReports: {
+      railLabel: "定期レポート",
+      railDescription: "シフト後の Email ダイジェスト",
+      eyebrow: "定期レポート",
+      title: "シフト後の Email レポート",
+      description:
+        "シフト終了後に毎日のダイジェスト — 通話・収益・トップパフォーマー — をメールで受け取れます。",
+      enable: "定期レポートを有効化",
+      enableHint: "デフォルトはオフ。オンにするとダイジェスト配信が始まります。",
+      recipient: "送信先",
+      recipientPlaceholder: "you@company.com",
+      recipientHint: "アカウントのメールアドレスがデフォルト。チーム共有のエイリアスも指定できます。",
+      time: "送信時刻",
+      timeHint: "下のタイムゾーンに基づいた送信時刻。",
+      timezone: "タイムゾーン",
+      days: "曜日",
+      daysHint: "ダイジェストを送信する曜日を選択。",
+      day: {
+        mon: "月",
+        tue: "火",
+        wed: "水",
+        thu: "木",
+        fri: "金",
+        sat: "土",
+        sun: "日",
+      },
+      format: "形式",
+      formatPdf: "PDF",
+      formatCsv: "CSV",
+      formatBoth: "PDF + CSV",
+      sections: "含めるセクション",
+      sectionsHint: "メール本文と添付ファイルに含める内容を選択。",
+      section: {
+        summary: "日次サマリー",
+        topCampaigns: "トップキャンペーン",
+        topPublishers: "トップパブリッシャー",
+        revenue: "収益グラフ",
+        callDetail: "通話詳細",
+      },
+      sendTestNow: "今すぐテスト送信",
+      sendingTest: "テスト送信中…",
+      testSent: "テストレポートを {email} に送信しました",
+      sentToast: "デイリーレポートを {email} に送信しました",
+      lastSent: "最終送信: {time}",
+      neverSent: "未送信",
+      validationEmail: "有効なメールアドレスを入力してください",
+      validationDays: "少なくとも 1 つの曜日を選択してください",
+      validationSections: "少なくとも 1 つのセクションを選択してください",
+    },
   },
 
   billing: {
@@ -466,6 +534,12 @@ export const ja: TranslationShape = {
       deleteTitle: "ワークスペースを削除",
       deleteDescription: "すべてのデータを完全に削除します — 取り消し不可。",
       deleteAction: "削除",
+      lockedBadge: "ロック中",
+      lockedHint:
+        "パネル転売を防ぐためロックされています。本人確認のためサポートまでお問い合わせください。",
+      contactSupport: "サポートに連絡",
+      supportRequested:
+        "リクエストを送信しました — 1 営業日以内に本人確認のうえご返信します。",
     },
     members: {
       title: "メンバー",
@@ -981,6 +1055,12 @@ export const ja: TranslationShape = {
         removed: "{name} を削除しました",
         updated: "{name} を更新しました",
         created: "{name} を作成しました",
+        capUpdated: "{name} — {field} を {value} に更新",
+        fields: {
+          concurrencyCap: "同時接続上限",
+          dailyCap: "日次上限",
+          monthlyCap: "月次上限",
+        },
       },
       empty: {
         notFound: "宛先が見つかりません",
@@ -1000,6 +1080,9 @@ export const ja: TranslationShape = {
         atCapAria: "上限到達",
         disableAria: "{name} を無効化",
         enableAria: "{name} を有効化",
+        editConcurrencyCapAria: "{name} の同時接続上限を編集",
+        editDailyCapAria: "{name} の日次上限を編集",
+        editMonthlyCapAria: "{name} の月次上限を編集",
       },
       builder: {
         titleNew: "新しい宛先",
@@ -1593,6 +1676,16 @@ export const ja: TranslationShape = {
           toast: {
             detached: "{name} をこのキャンペーンから外しました",
             convSaved: "コンバージョン設定を保存しました",
+          },
+          bulk: {
+            selectAllAria: "このページのすべての宛先を選択",
+            rowSelectAria: "{name} を選択",
+            enableAria: "選択した宛先 {count} 件を有効化",
+            pauseAria: "選択した宛先 {count} 件を一時停止",
+            deleteAria: "選択した宛先 {count} 件を削除",
+            enabled: "{count} 件の宛先を有効化しました",
+            paused: "{count} 件の宛先を一時停止しました",
+            deleted: "{count} 件の宛先を削除しました",
           },
           conversion: {
             title: "コンバージョン設定",
@@ -2757,6 +2850,8 @@ export const ja: TranslationShape = {
       daily: {
         title: "デイリーニュース",
         description: "ビジネス・テック・政治・世界の今をライブで切り取ります。",
+        fetchError: "ライブニュースフィードに接続できませんでした — 直近のキャッシュを表示しています。",
+        lastUpdated: "{time} に更新",
       },
       coinMarket: {
         title: "コインマーケット",
@@ -3586,6 +3681,12 @@ export const ja: TranslationShape = {
         insights: "インサイト",
         read: "既読",
       },
+      alertKinds: {
+        all: "すべて",
+        missed: "見逃し",
+        capOver: "上限超過",
+        lowAht: "低 AHT",
+      },
       groups: {
         today: "今日",
         yesterday: "昨日",
@@ -4007,6 +4108,15 @@ export const ja: TranslationShape = {
         "Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "配信停止",
       footerPrivacy: "プライバシー",
+      heroTagline: "ペイパーコール・ルーティングを、再定義。",
+      pleaseClick: "下のボタンをクリックして招待を承認し、アカウントに参加してください。",
+      haveQuestion: "ご質問はありますか?",
+      haveQuestionBody:
+        "セットアップや料金に関する疑問は、当社の専門チームまでお気軽にお問い合わせください。",
+      helpAvailable: "24 時間 365 日対応します。",
+      talkToExpert: "専門家に相談する",
+      requestDemo: "デモを依頼",
+      inviterRole: "パートナーシップ責任者",
     },
   },
 

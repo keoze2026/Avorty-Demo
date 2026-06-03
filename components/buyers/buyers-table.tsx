@@ -31,6 +31,9 @@ interface BuyersTableProps {
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
   onEdit: (id: string) => void;
+  /** Optional controlled selection. When omitted, the table owns it internally. */
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
 }
 
 export function BuyersTable({
@@ -39,25 +42,31 @@ export function BuyersTable({
   onToggle,
   onArchive,
   onEdit,
+  selectedIds,
+  onSelectionChange,
 }: BuyersTableProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const [selected, setSelected] = React.useState<Set<string>>(new Set());
+  // Uncontrolled fallback; controlled when `selectedIds` is supplied.
+  const [internalSelected, setInternalSelected] = React.useState<Set<string>>(new Set());
+  const selected = selectedIds ?? internalSelected;
+  const setSelected = (next: Set<string>) => {
+    if (onSelectionChange) onSelectionChange(next);
+    else setInternalSelected(next);
+  };
 
-  const allChecked = buyers.length > 0 && selected.size === buyers.length;
-  const indeterminate = selected.size > 0 && !allChecked;
+  const allChecked = buyers.length > 0 && buyers.every((b) => selected.has(b.id));
+  const indeterminate = !allChecked && buyers.some((b) => selected.has(b.id));
 
   const toggleAll = () => {
     if (allChecked || indeterminate) setSelected(new Set());
     else setSelected(new Set(buyers.map((b) => b.id)));
   };
   const toggleOne = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
   };
 
   return (

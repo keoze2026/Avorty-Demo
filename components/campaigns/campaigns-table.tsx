@@ -35,6 +35,10 @@ interface CampaignsTableProps {
   columns?: Record<CampaignColumnKey, boolean>;
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
+  /** Optional controlled selection. When provided, the parent owns the set
+   *  and the table reports changes via `onSelectionChange`. */
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
 }
 
 /* ─────────────────────────────────────────────────────────────────── */
@@ -87,25 +91,33 @@ export function CampaignsTable({
   columns = ALL_CAMPAIGN_COLUMNS,
   onToggle,
   onArchive,
+  selectedIds,
+  onSelectionChange,
 }: CampaignsTableProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const [selected, setSelected] = React.useState<Set<string>>(new Set());
+  // Uncontrolled fallback so existing callers that don't pass `selectedIds`
+  // still get their internal checkbox state. When the parent supplies both
+  // `selectedIds` and `onSelectionChange`, the selection lives upstairs.
+  const [internalSelected, setInternalSelected] = React.useState<Set<string>>(new Set());
+  const selected = selectedIds ?? internalSelected;
+  const setSelected = (next: Set<string>) => {
+    if (onSelectionChange) onSelectionChange(next);
+    else setInternalSelected(next);
+  };
 
-  const allChecked = campaigns.length > 0 && selected.size === campaigns.length;
-  const indeterminate = selected.size > 0 && !allChecked;
+  const allChecked = campaigns.length > 0 && campaigns.every((c) => selected.has(c.id));
+  const indeterminate = !allChecked && campaigns.some((c) => selected.has(c.id));
 
   const toggleAll = () => {
     if (allChecked || indeterminate) setSelected(new Set());
     else setSelected(new Set(campaigns.map((c) => c.id)));
   };
   const toggleOne = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
   };
 
   return (

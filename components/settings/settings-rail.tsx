@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { Bell, KeyRound, Monitor, ShieldCheck, UserCog } from "lucide-react";
+import { Bell, CalendarClock, KeyRound, Monitor, ShieldCheck, UserCog } from "lucide-react";
 
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,8 @@ export type SettingsSection =
   | "security"
   | "api-keys"
   | "notifications"
-  | "sessions";
+  | "sessions"
+  | "scheduled-reports";
 
 interface RailItem {
   id: SettingsSection;
@@ -24,11 +25,12 @@ interface RailItem {
 }
 
 const ITEMS: RailItem[] = [
-  { id: "profile",       labelKey: "settings.rail.profile.label",       descriptionKey: "settings.rail.profile.description",       icon: UserCog },
-  { id: "security",      labelKey: "settings.rail.security.label",      descriptionKey: "settings.rail.security.description",      icon: ShieldCheck },
-  { id: "api-keys",      labelKey: "settings.rail.apiKeys.label",       descriptionKey: "settings.rail.apiKeys.description",       icon: KeyRound },
-  { id: "notifications", labelKey: "settings.rail.notifications.label", descriptionKey: "settings.rail.notifications.description", icon: Bell },
-  { id: "sessions",      labelKey: "settings.rail.sessions.label",      descriptionKey: "settings.rail.sessions.description",      icon: Monitor },
+  { id: "profile",            labelKey: "settings.rail.profile.label",       descriptionKey: "settings.rail.profile.description",       icon: UserCog },
+  { id: "security",           labelKey: "settings.rail.security.label",      descriptionKey: "settings.rail.security.description",      icon: ShieldCheck },
+  { id: "api-keys",           labelKey: "settings.rail.apiKeys.label",       descriptionKey: "settings.rail.apiKeys.description",       icon: KeyRound },
+  { id: "notifications",      labelKey: "settings.rail.notifications.label", descriptionKey: "settings.rail.notifications.description", icon: Bell },
+  { id: "sessions",           labelKey: "settings.rail.sessions.label",      descriptionKey: "settings.rail.sessions.description",      icon: Monitor },
+  { id: "scheduled-reports",  labelKey: "settings.scheduledReports.railLabel", descriptionKey: "settings.scheduledReports.railDescription", icon: CalendarClock },
 ];
 
 interface Props {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import {
@@ -23,11 +24,18 @@ import { formatNumber, toE164 } from "@/lib/format";
 import type { Buyer, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+type CapField = "concurrencyCap" | "dailyCap" | "monthlyCap";
+
 interface DestinationsTableProps {
   destinations: Destination[];
   onToggle?: (id: string) => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onUpdateCap?: (id: string, field: CapField, value: number) => void;
+  /** Optional selection lifted to the parent — when provided, renders a
+   *  checkbox column. Without it, no checkboxes are shown. */
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
 }
 
 interface Row {
@@ -99,10 +107,42 @@ function pacingTone(pct: number): string {
 export function DestinationsTable({
   destinations,
   onToggle,
+  onUpdateCap,
+  selectedIds,
+  onSelectionChange,
 }: DestinationsTableProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const rows = useMemo(() => buildRows(destinations), [destinations]);
+
+  const selectable = !!onSelectionChange;
+  const visibleIds = destinations.map((d) => d.id);
+  const allChecked =
+    selectable &&
+    visibleIds.length > 0 &&
+    visibleIds.every((id) => selectedIds?.has(id));
+  const someChecked =
+    selectable &&
+    !allChecked &&
+    visibleIds.some((id) => selectedIds?.has(id));
+
+  const toggleAll = (next: boolean) => {
+    if (!onSelectionChange) return;
+    const out = new Set(selectedIds ?? []);
+    for (const id of visibleIds) {
+      if (next) out.add(id);
+      else out.delete(id);
+    }
+    onSelectionChange(out);
+  };
+
+  const toggleRow = (id: string, next: boolean) => {
+    if (!onSelectionChange) return;
+    const out = new Set(selectedIds ?? []);
+    if (next) out.add(id);
+    else out.delete(id);
+    onSelectionChange(out);
+  };
 
   return (
     <Card className="overflow-hidden p-0">
@@ -110,7 +150,18 @@ export function DestinationsTable({
         <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-6 text-left uppercase tracking-wider text-[11px]">
+              {selectable && (
+                <TableHead className="w-10 pl-6 pr-0">
+                  <Checkbox
+                    checked={
+                      allChecked ? true : someChecked ? "indeterminate" : false
+                    }
+                    onCheckedChange={(v) => toggleAll(v === true)}
+                    aria-label={t("common.bulk.selectAllAria")}
+                  />
+                </TableHead>
+              )}
+              <TableHead className={cn("text-left uppercase tracking-wider text-[11px]", !selectable && "pl-6")}>
                 {t("networkUI.destinations.table.name")}
               </TableHead>
               <TableHead className="text-left uppercase tracking-wider text-[11px]">
@@ -143,7 +194,7 @@ export function DestinationsTable({
             {rows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={9}
+                  colSpan={selectable ? 10 : 9}
                   className="pl-6 py-10 text-center text-sm text-muted-foreground"
                 >
                   {t("networkUI.destinations.table.noResults")}
@@ -161,16 +212,33 @@ export function DestinationsTable({
                   destination.monthlyCap > 0 ? monthly / destination.monthlyCap : 0;
                 const atCap = dailyPct >= 1 || livePct >= 1;
 
+                const checked = !!selectedIds?.has(destination.id);
                 return (
                   <TableRow
                     key={destination.id}
                     className="cursor-pointer"
+                    data-state={checked ? "selected" : undefined}
                     onClick={() =>
                       router.push(`${ROUTES.destinations}/${destination.id}`)
                     }
                   >
+                    {selectable && (
+                      <TableCell
+                        className="w-10 pl-6 pr-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => toggleRow(destination.id, v === true)}
+                          aria-label={t("common.bulk.selectRowAria").replace(
+                            "{name}",
+                            destination.name,
+                          )}
+                        />
+                      </TableCell>
+                    )}
                     {/* NAME */}
-                    <TableCell className="pl-6 text-left">
+                    <TableCell className={cn("text-left", !selectable && "pl-6")}>
                       <Link
                         href={`${ROUTES.destinations}/${destination.id}`}
                         onClick={(e) => e.stopPropagation()}
@@ -206,15 +274,28 @@ export function DestinationsTable({
                       {toE164(destination.tfn)}
                     </TableCell>
 
-                    {/* LIVE — current concurrent / max */}
-                    <TableCell className="text-center">
+                    {/* LIVE — current concurrent / max (cap is click-to-edit) */}
+                    <TableCell
+                      className="text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <span
                         className={cn(
-                          "inline-flex min-w-[3.5rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
+                          "inline-flex min-w-[3.5rem] items-center justify-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
                           pacingTone(livePct),
                         )}
                       >
-                        {live} / {destination.concurrencyCap}
+                        <span>{live}</span>
+                        <span className="opacity-50">/</span>
+                        <EditableCap
+                          value={destination.concurrencyCap}
+                          onCommit={(next) =>
+                            onUpdateCap?.(destination.id, "concurrencyCap", next)
+                          }
+                          ariaLabel={t(
+                            "networkUI.destinations.table.editConcurrencyCapAria",
+                          ).replace("{name}", destination.name)}
+                        />
                       </span>
                     </TableCell>
 
@@ -225,31 +306,53 @@ export function DestinationsTable({
                       </span>
                     </TableCell>
 
-                    {/* DAILY — count or count/cap when capped */}
-                    <TableCell className="text-center">
+                    {/* DAILY — count / cap (cap is click-to-edit, 0 = ∞) */}
+                    <TableCell
+                      className="text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <span
                         className={cn(
-                          "inline-flex min-w-[3rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
+                          "inline-flex min-w-[3rem] items-center justify-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
                           pacingTone(dailyPct),
                         )}
                       >
-                        {destination.dailyCap > 0
-                          ? `${formatNumber(daily)} / ${formatNumber(destination.dailyCap)}`
-                          : formatNumber(daily)}
+                        <span>{formatNumber(daily)}</span>
+                        <span className="opacity-50">/</span>
+                        <EditableCap
+                          value={destination.dailyCap}
+                          onCommit={(next) =>
+                            onUpdateCap?.(destination.id, "dailyCap", next)
+                          }
+                          ariaLabel={t(
+                            "networkUI.destinations.table.editDailyCapAria",
+                          ).replace("{name}", destination.name)}
+                        />
                       </span>
                     </TableCell>
 
-                    {/* MONTHLY — count or count/cap when capped */}
-                    <TableCell className="text-center">
+                    {/* MONTHLY — count / cap (cap is click-to-edit, 0 = ∞) */}
+                    <TableCell
+                      className="text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <span
                         className={cn(
-                          "inline-flex min-w-[3rem] items-center justify-center rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
+                          "inline-flex min-w-[3rem] items-center justify-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-xs tabular-nums",
                           pacingTone(monthlyPct),
                         )}
                       >
-                        {destination.monthlyCap > 0
-                          ? `${formatNumber(monthly)} / ${formatNumber(destination.monthlyCap)}`
-                          : formatNumber(monthly)}
+                        <span>{formatNumber(monthly)}</span>
+                        <span className="opacity-50">/</span>
+                        <EditableCap
+                          value={destination.monthlyCap}
+                          onCommit={(next) =>
+                            onUpdateCap?.(destination.id, "monthlyCap", next)
+                          }
+                          ariaLabel={t(
+                            "networkUI.destinations.table.editMonthlyCapAria",
+                          ).replace("{name}", destination.name)}
+                        />
                       </span>
                     </TableCell>
 
@@ -280,5 +383,95 @@ export function DestinationsTable({
         </Table>
       </div>
     </Card>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  EditableCap                                                         */
+/*  ----------------------------------------------------------------    */
+/*  Click-to-edit cap number rendered inline inside the cell chip. The  */
+/*  display state shows the cap (or ∞ when 0); clicking swaps in a tiny */
+/*  numeric input that commits on Enter/blur and reverts on Escape. The */
+/*  parent cell stops row-click propagation so editing never navigates. */
+/* ─────────────────────────────────────────────────────────────────── */
+
+function EditableCap({
+  value,
+  onCommit,
+  ariaLabel,
+}: {
+  value: number;
+  onCommit: (next: number) => void;
+  ariaLabel: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value.toString());
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  // Reflect prop changes (e.g. store update from another surface) while idle.
+  useEffect(() => {
+    if (!editing) setDraft(value.toString());
+  }, [value, editing]);
+
+  const commit = () => {
+    const parsed = Math.max(0, Math.floor(Number(draft) || 0));
+    if (parsed !== value) onCommit(parsed);
+    setDraft(parsed.toString());
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(value.toString());
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        inputMode="numeric"
+        min={0}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            cancel();
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}
+        aria-label={ariaLabel}
+        className="w-14 rounded border border-accent/50 bg-background px-1 py-0.5 text-center font-mono text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        setDraft(value.toString());
+        setEditing(true);
+      }}
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      className="cursor-text rounded px-1 font-mono text-xs tabular-nums transition-colors hover:bg-accent/10 hover:ring-1 hover:ring-accent/40"
+    >
+      {value > 0 ? formatNumber(value) : "∞"}
+    </button>
   );
 }

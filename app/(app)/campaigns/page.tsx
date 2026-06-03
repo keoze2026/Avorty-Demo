@@ -13,6 +13,7 @@ import {
   type CampaignSortKey,
   type CampaignStatusFilter,
 } from "@/components/campaigns/campaigns-toolbar";
+import { BulkActionsBar } from "@/components/shared/bulk-actions-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
@@ -37,6 +38,7 @@ export default function CampaignsPage() {
   const [page, setPage] = useState(0);
   const [columns, setColumns] =
     useState<Record<CampaignColumnKey, boolean>>(ALL_CAMPAIGN_COLUMNS);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Reset to page 0 whenever the result set or page size changes so the
   // current page never points past the end of the filtered list.
@@ -85,6 +87,46 @@ export default function CampaignsPage() {
     toast.success(t("trafficUI.campaigns.toast.archived").replace("{name}", c.name));
   };
 
+  // Resolve the live selection against the current campaigns list so we never
+  // operate on rows that have already been archived / removed.
+  const selectedCampaigns = useMemo(
+    () => campaigns.filter((c) => selectedIds.has(c.id)),
+    [campaigns, selectedIds],
+  );
+
+  const onBulkPlay = () => {
+    if (selectedCampaigns.length === 0) return;
+    for (const c of selectedCampaigns) setCampaignStatus(c.id, "active");
+    toast.success(
+      t("common.bulk.toast.activated")
+        .replace("{count}", String(selectedCampaigns.length))
+        .replace("{entity}", t("common.bulk.entities.campaigns")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const onBulkPause = () => {
+    if (selectedCampaigns.length === 0) return;
+    for (const c of selectedCampaigns) setCampaignStatus(c.id, "paused");
+    toast.success(
+      t("common.bulk.toast.paused")
+        .replace("{count}", String(selectedCampaigns.length))
+        .replace("{entity}", t("common.bulk.entities.campaigns")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const onBulkDelete = () => {
+    if (selectedCampaigns.length === 0) return;
+    for (const c of selectedCampaigns) remove(c.id);
+    toast.success(
+      t("common.bulk.toast.deleted")
+        .replace("{count}", String(selectedCampaigns.length))
+        .replace("{entity}", t("common.bulk.entities.campaigns")),
+    );
+    setSelectedIds(new Set());
+  };
+
   return (
     <>
       <PageHeader
@@ -125,6 +167,19 @@ export default function CampaignsPage() {
             onRefresh={() => toast.success(t("trafficUI.campaigns.refreshed"))}
           />
 
+          {selectedCampaigns.length > 0 && (
+            <div className="flex items-center justify-between gap-3">
+              <BulkActionsBar
+                count={selectedCampaigns.length}
+                onPlay={onBulkPlay}
+                onPause={onBulkPause}
+                onDelete={onBulkDelete}
+                onClear={() => setSelectedIds(new Set())}
+                entity={t("common.bulk.entities.campaigns")}
+              />
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <EmptyState
               icon={Megaphone}
@@ -139,6 +194,8 @@ export default function CampaignsPage() {
                 columns={columns}
                 onToggle={onToggle}
                 onArchive={onArchive}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
               />
               <Pagination
                 page={page}

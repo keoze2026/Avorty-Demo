@@ -14,6 +14,7 @@ import {
 } from "@/components/buyers/buyers-table-toolbar";
 import { EditBuyerDialog } from "@/components/buyers/edit-buyer-dialog";
 import { InviteBuyerDialog } from "@/components/buyers/invite-buyer-dialog";
+import { BulkActionsBar } from "@/components/shared/bulk-actions-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
@@ -39,6 +40,7 @@ export default function BuyersPage() {
   const [page, setPage] = useState(0);
   const [columns, setColumns] =
     useState<Record<BuyerColumnKey, boolean>>(ALL_BUYER_COLUMNS);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Whenever the result set or page size changes, snap back to page 0 so the
   // current page never points past the end of the filtered list.
@@ -97,6 +99,44 @@ export default function BuyersPage() {
     toast.success(t("networkUI.buyers.toast.removed").replace("{name}", b.name));
   };
 
+  const selectedBuyers = useMemo(
+    () => buyers.filter((b) => selectedIds.has(b.id)),
+    [buyers, selectedIds],
+  );
+
+  const onBulkPlay = () => {
+    if (selectedBuyers.length === 0) return;
+    for (const b of selectedBuyers) setBuyerStatus(b.id, "active");
+    toast.success(
+      t("common.bulk.toast.activated")
+        .replace("{count}", String(selectedBuyers.length))
+        .replace("{entity}", t("common.bulk.entities.buyers")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const onBulkPause = () => {
+    if (selectedBuyers.length === 0) return;
+    for (const b of selectedBuyers) setBuyerStatus(b.id, "paused");
+    toast.success(
+      t("common.bulk.toast.paused")
+        .replace("{count}", String(selectedBuyers.length))
+        .replace("{entity}", t("common.bulk.entities.buyers")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const onBulkDelete = () => {
+    if (selectedBuyers.length === 0) return;
+    for (const b of selectedBuyers) remove(b.id);
+    toast.success(
+      t("common.bulk.toast.deleted")
+        .replace("{count}", String(selectedBuyers.length))
+        .replace("{entity}", t("common.bulk.entities.buyers")),
+    );
+    setSelectedIds(new Set());
+  };
+
   return (
     <>
       <PageHeader
@@ -136,6 +176,17 @@ export default function BuyersPage() {
         onCreate={() => setInviteOpen(true)}
       />
 
+      {selectedBuyers.length > 0 && (
+        <BulkActionsBar
+          count={selectedBuyers.length}
+          onPlay={onBulkPlay}
+          onPause={onBulkPause}
+          onDelete={onBulkDelete}
+          onClear={() => setSelectedIds(new Set())}
+          entity={t("common.bulk.entities.buyers")}
+        />
+      )}
+
       {filtered.length === 0 ? (
         <EmptyState
           icon={Building2}
@@ -151,6 +202,8 @@ export default function BuyersPage() {
             onToggle={onToggle}
             onArchive={onArchive}
             onEdit={setEditId}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
           />
           <Pagination
             page={page}

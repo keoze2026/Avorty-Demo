@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Pagination } from "@/components/shared/pagination";
 import {
   Dialog,
   DialogContent,
@@ -128,8 +129,24 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
   const [priorities, setPriorities] = useState<Record<string, number>>({});
   const [weights, setWeights] = useState<Record<string, number>>({});
   // Per-destination conversion settings entered via the pencil-icon modal.
-  // Survives until the user reloads — sufficient for the demo surface.
+  // Survives until the user reploads — sufficient for the demo surface.
   const [conversions, setConversions] = useState<Record<string, ConversionSettings>>({});
+
+  // Pagination for the routed-destinations table — keeps the page short and
+  // scannable instead of dumping every active destination in a campaign.
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(8);
+  const pageStart = page * pageSize;
+  const pageEnd = pageStart + pageSize;
+  const pagedDestinations = useMemo(
+    () => destinations.slice(pageStart, pageEnd),
+    [destinations, pageStart, pageEnd],
+  );
+  // Reset to page 0 when the underlying list shrinks (e.g. a destination is
+  // detached) so we never strand the user on an empty page.
+  if (page > 0 && pageStart >= destinations.length) {
+    setPage(0);
+  }
 
   // The destination currently being edited in the Conversion Settings modal.
   // `null` means the modal is closed.
@@ -236,7 +253,10 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              destinations.slice(0, 8).map((d, i) => {
+              pagedDestinations.map((d, localIndex) => {
+                // Preserve the absolute row index for the default-priority
+                // suggestion so paging doesn't reset the column to 1 on page 2.
+                const i = pageStart + localIndex;
                 const buyer = MOCK_BUYERS.find((b) => b.id === d.buyerId);
                 return (
                   <TableRow key={d.id}>
@@ -332,6 +352,21 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
             )}
           </TableBody>
         </Table>
+        {destinations.length > 0 && (
+          <div className="border-t border-border px-6 py-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={destinations.length}
+              onPage={setPage}
+              onPageSize={(n) => {
+                setPageSize(n);
+                setPage(0);
+              }}
+              pageSizeOptions={[8, 16, 32, 64]}
+            />
+          </div>
+        )}
       </Card>
 
       {/* Conversion settings — opens when a row's pencil action is clicked. */}

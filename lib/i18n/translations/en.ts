@@ -177,6 +177,24 @@ export const en = {
       hoursAgo: "{n}h ago",
       daysAgo: "{n}d ago",
     },
+    bulk: {
+      selectAllAria: "Select all rows on this page",
+      selectRowAria: "Select {name}",
+      clear: "Clear",
+      playAria: "Activate {count} selected {entity}",
+      pauseAria: "Pause {count} selected {entity}",
+      deleteAria: "Delete {count} selected {entity}",
+      entities: {
+        campaigns: "campaigns",
+        destinations: "destinations",
+        buyers: "buyers",
+      },
+      toast: {
+        activated: "Activated {count} {entity}",
+        paused: "Paused {count} {entity}",
+        deleted: "Deleted {count} {entity}",
+      },
+    },
   },
 
   /* ─── Login ──────────────────────────────────────────────── */
@@ -384,6 +402,56 @@ export const en = {
       sessionRevoked: "Session revoked",
       allOthersRevoked: "All other sessions revoked",
     },
+
+    scheduledReports: {
+      railLabel: "Scheduled Reports",
+      railDescription: "End-of-shift email digests",
+      eyebrow: "Scheduled Reports",
+      title: "End-of-shift email reports",
+      description:
+        "Send yourself a daily digest after your shift — calls, revenue, and top performers, delivered to your inbox.",
+      enable: "Enable scheduled reports",
+      enableHint: "Off by default. Toggle on to start receiving digests.",
+      recipient: "Send to",
+      recipientPlaceholder: "you@company.com",
+      recipientHint: "Defaults to your account email. Add a team alias if you want.",
+      time: "Send at",
+      timeHint: "Time the email goes out, in the timezone below.",
+      timezone: "Timezone",
+      days: "Days",
+      daysHint: "Pick which days the digest should fire on.",
+      day: {
+        mon: "Mon",
+        tue: "Tue",
+        wed: "Wed",
+        thu: "Thu",
+        fri: "Fri",
+        sat: "Sat",
+        sun: "Sun",
+      },
+      format: "Format",
+      formatPdf: "PDF",
+      formatCsv: "CSV",
+      formatBoth: "Both PDF + CSV",
+      sections: "Include sections",
+      sectionsHint: "Pick what goes into the digest body and attachments.",
+      section: {
+        summary: "Daily summary",
+        topCampaigns: "Top campaigns",
+        topPublishers: "Top publishers",
+        revenue: "Revenue chart",
+        callDetail: "Full call detail",
+      },
+      sendTestNow: "Send a test now",
+      sendingTest: "Sending test…",
+      testSent: "Test report sent to {email}",
+      sentToast: "Daily report sent to {email}",
+      lastSent: "Last sent {time}",
+      neverSent: "Never sent",
+      validationEmail: "Enter a valid email address",
+      validationDays: "Pick at least one day",
+      validationSections: "Pick at least one section",
+    },
   },
 
   /* ─── Billing ────────────────────────────────────────────── */
@@ -487,6 +555,12 @@ export const en = {
       deleteTitle: "Delete workspace",
       deleteDescription: "Permanently remove all data — no undo.",
       deleteAction: "Delete",
+      lockedBadge: "Locked",
+      lockedHint:
+        "Locked to prevent panel resale. Contact support to verify identity and proceed.",
+      contactSupport: "Contact support",
+      supportRequested:
+        "Support request sent — we'll verify your identity and reply within 1 business day.",
     },
     members: {
       title: "Members",
@@ -1024,6 +1098,16 @@ export const en = {
           toast: {
             detached: "{name} detached from this campaign",
             convSaved: "Conversion settings saved",
+          },
+          bulk: {
+            selectAllAria: "Select all destinations on this page",
+            rowSelectAria: "Select {name}",
+            enableAria: "Enable {count} selected destination(s)",
+            pauseAria: "Pause {count} selected destination(s)",
+            deleteAria: "Delete {count} selected destination(s)",
+            enabled: "Enabled {count} destination(s)",
+            paused: "Paused {count} destination(s)",
+            deleted: "Deleted {count} destination(s)",
           },
           conversion: {
             title: "Conversion Settings",
@@ -2043,6 +2127,12 @@ export const en = {
         removed: "Removed {name}",
         updated: "Updated {name}",
         created: "Created {name}",
+        capUpdated: "{name} — {field} set to {value}",
+        fields: {
+          concurrencyCap: "concurrency cap",
+          dailyCap: "daily cap",
+          monthlyCap: "monthly cap",
+        },
       },
       empty: {
         notFound: "Destination not found",
@@ -2062,6 +2152,9 @@ export const en = {
         atCapAria: "At cap",
         disableAria: "Disable {name}",
         enableAria: "Enable {name}",
+        editConcurrencyCapAria: "Edit concurrency cap for {name}",
+        editDailyCapAria: "Edit daily cap for {name}",
+        editMonthlyCapAria: "Edit monthly cap for {name}",
       },
       builder: {
         titleNew: "New destination",
@@ -2782,6 +2875,8 @@ export const en = {
       daily: {
         title: "Daily News",
         description: "A live snapshot of what's happening across business, tech, politics, and the world.",
+        fetchError: "Couldn't reach the live news feed — showing the last cached batch.",
+        lastUpdated: "Updated {time}",
       },
       coinMarket: {
         title: "Coin Market",
@@ -3611,6 +3706,12 @@ export const en = {
         insights: "Insights",
         read: "Read",
       },
+      alertKinds: {
+        all: "All",
+        missed: "Missed",
+        capOver: "Cap over",
+        lowAht: "Low AHT",
+      },
       groups: {
         today: "Today",
         yesterday: "Yesterday",
@@ -4026,6 +4127,15 @@ export const en = {
         "Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "Unsubscribe",
       footerPrivacy: "Privacy",
+      heroTagline: "Pay-per-call routing, reimagined.",
+      pleaseClick: "Please click the button below to accept the invitation and join the account.",
+      haveQuestion: "Have a question?",
+      haveQuestionBody:
+        "Get in touch with our team of experts for any questions you have around setup or pricing.",
+      helpAvailable: "We're here to help 24/7.",
+      talkToExpert: "Talk to an expert",
+      requestDemo: "Request demo",
+      inviterRole: "Head of Partnerships",
     },
   },
 

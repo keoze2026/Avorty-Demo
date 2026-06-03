@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { DestinationBuilder } from "@/components/destinations/destination-builder";
 import { DestinationsTable } from "@/components/destinations/destinations-table";
+import { BulkActionsBar } from "@/components/shared/bulk-actions-bar";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
@@ -30,15 +31,17 @@ export default function DestinationsPage() {
   const destinations = useDestinationsStore((s) => s.destinations);
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
   const remove = useDestinationsStore((s) => s.remove);
+  const update = useDestinationsStore((s) => s.update);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [buyerFilter, setBuyerFilter] = useState<string>("all");
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(100);
   const [page, setPage] = useState(0);
 
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editId, setEditId] = useState<string | undefined>(undefined);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Reset to page 0 whenever the result set or page size changes.
   useEffect(() => {
@@ -118,6 +121,63 @@ export default function DestinationsPage() {
     toast.success(t("networkUI.destinations.toast.removed").replace("{name}", d.name));
   };
 
+  // Resolve current selection against the live destinations list so removed /
+  // toggled rows never get re-processed by a stale id.
+  const selectedDestinations = useMemo(
+    () => destinations.filter((d) => selectedIds.has(d.id)),
+    [destinations, selectedIds],
+  );
+
+  const onBulkPlay = () => {
+    if (selectedDestinations.length === 0) return;
+    for (const d of selectedDestinations) setEnabled(d.id, true);
+    toast.success(
+      t("common.bulk.toast.activated")
+        .replace("{count}", String(selectedDestinations.length))
+        .replace("{entity}", t("common.bulk.entities.destinations")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const onBulkPause = () => {
+    if (selectedDestinations.length === 0) return;
+    for (const d of selectedDestinations) setEnabled(d.id, false);
+    toast.success(
+      t("common.bulk.toast.paused")
+        .replace("{count}", String(selectedDestinations.length))
+        .replace("{entity}", t("common.bulk.entities.destinations")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const onBulkDelete = () => {
+    if (selectedDestinations.length === 0) return;
+    for (const d of selectedDestinations) remove(d.id);
+    toast.success(
+      t("common.bulk.toast.deleted")
+        .replace("{count}", String(selectedDestinations.length))
+        .replace("{entity}", t("common.bulk.entities.destinations")),
+    );
+    setSelectedIds(new Set());
+  };
+
+  const handleUpdateCap = (
+    id: string,
+    field: "concurrencyCap" | "dailyCap" | "monthlyCap",
+    value: number,
+  ) => {
+    const d = destinations.find((x) => x.id === id);
+    if (!d) return;
+    update(id, { [field]: value });
+    const fieldLabel = t(`networkUI.destinations.toast.fields.${field}`);
+    toast.success(
+      t("networkUI.destinations.toast.capUpdated")
+        .replace("{name}", d.name)
+        .replace("{field}", fieldLabel)
+        .replace("{value}", value > 0 ? value.toLocaleString() : "∞"),
+    );
+  };
+
   return (
     <>
       <PageHeader
@@ -191,11 +251,25 @@ export default function DestinationsPage() {
         </div>
       </div>
 
+      {selectedDestinations.length > 0 && (
+        <BulkActionsBar
+          count={selectedDestinations.length}
+          onPlay={onBulkPlay}
+          onPause={onBulkPause}
+          onDelete={onBulkDelete}
+          onClear={() => setSelectedIds(new Set())}
+          entity={t("common.bulk.entities.destinations")}
+        />
+      )}
+
       <DestinationsTable
         destinations={filtered.slice(page * pageSize, page * pageSize + pageSize)}
         onToggle={handleToggle}
         onEdit={openEdit}
         onDelete={handleDelete}
+        onUpdateCap={handleUpdateCap}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
       />
       <Pagination
         page={page}

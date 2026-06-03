@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
 import { NotificationsSection } from "@/components/settings/notifications-section";
 import { ProfileSection } from "@/components/settings/profile-section";
+import { ScheduledReportsSection } from "@/components/settings/scheduled-reports-section";
 import { SecuritySection } from "@/components/settings/security-section";
 import { SessionsSection } from "@/components/settings/sessions-section";
 import { SettingsRail, type SettingsSection } from "@/components/settings/settings-rail";
@@ -42,6 +43,7 @@ export default function SettingsPage() {
               {section === "api-keys" && <ApiKeysSection />}
               {section === "notifications" && <NotificationsSection />}
               {section === "sessions" && <SessionsSection />}
+              {section === "scheduled-reports" && <ScheduledReportsSection />}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -5,6 +5,8 @@ import {
   Activity,
   Building2,
   Clock,
+  Lock,
+  Mail,
   Settings as SettingsIcon,
   ShieldCheck,
   Users,
@@ -136,26 +138,31 @@ export function WorkspaceSection() {
               <p className="text-xs text-muted-foreground">{t("workspaceUI.danger.description")}</p>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                <div>
-                  <div className="text-sm font-medium">{t("workspaceUI.danger.transferTitle")}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {t("workspaceUI.danger.transferDescription")}
-                  </div>
-                </div>
-                <Button variant="outline">{t("workspaceUI.danger.transferAction")}</Button>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                <div>
-                  <div className="text-sm font-medium">{t("workspaceUI.danger.deleteTitle")}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {t("workspaceUI.danger.deleteDescription")}
-                  </div>
-                </div>
-                <Button variant="outline" className="text-destructive hover:text-destructive">
-                  {t("workspaceUI.danger.deleteAction")}
-                </Button>
-              </div>
+              {/* Transfer ownership — locked behind a support gate so
+                  attackers / fraudulent buyers can't quietly hand off the
+                  workspace after spinning up a clean KYC. */}
+              <LockedDangerRow
+                title={t("workspaceUI.danger.transferTitle")}
+                description={t("workspaceUI.danger.transferDescription")}
+                lockedLabel={t("workspaceUI.danger.lockedBadge")}
+                lockedHint={t("workspaceUI.danger.lockedHint")}
+                contactLabel={t("workspaceUI.danger.contactSupport")}
+                onContact={() =>
+                  toast.success(t("workspaceUI.danger.supportRequested"))
+                }
+              />
+              {/* Delete workspace — same lock for the same reason. Wiping a
+                  panel out from under the owner needs explicit verification. */}
+              <LockedDangerRow
+                title={t("workspaceUI.danger.deleteTitle")}
+                description={t("workspaceUI.danger.deleteDescription")}
+                lockedLabel={t("workspaceUI.danger.lockedBadge")}
+                lockedHint={t("workspaceUI.danger.lockedHint")}
+                contactLabel={t("workspaceUI.danger.contactSupport")}
+                onContact={() =>
+                  toast.success(t("workspaceUI.danger.supportRequested"))
+                }
+              />
             </CardContent>
           </Card>
         </div>
@@ -168,6 +175,60 @@ export function WorkspaceSection() {
       {tab === "roles" && <WorkspaceRolesTable members={members} />}
 
       {tab === "activity" && <WorkspaceActivityLog />}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  LockedDangerRow                                                     */
+/*  ----------------------------------------------------------------    */
+/*  A danger-zone row whose destructive action is gated behind a        */
+/*  "Contact support" hand-off. The row shows a lock icon, a "Locked"   */
+/*  badge, and a hint explaining why. The button itself doesn't perform */
+/*  the action — clicking it fires `onContact` (we treat that as the    */
+/*  user opening a support ticket / dispatching an email).              */
+/* ─────────────────────────────────────────────────────────────────── */
+
+function LockedDangerRow({
+  title,
+  description,
+  lockedLabel,
+  lockedHint,
+  contactLabel,
+  onContact,
+}: {
+  title: string;
+  description: string;
+  lockedLabel: string;
+  lockedHint: string;
+  contactLabel: string;
+  onContact: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{title}</span>
+          <span className="inline-flex items-center gap-1 rounded-full border border-muted-foreground/30 bg-muted/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <Lock className="h-2.5 w-2.5" />
+            {lockedLabel}
+          </span>
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>
+        <div className="mt-1 flex items-start gap-1.5 text-[11px] text-muted-foreground/85">
+          <Lock className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground/70" />
+          <span>{lockedHint}</span>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onContact}
+        className="shrink-0"
+      >
+        <Mail className="h-3.5 w-3.5" />
+        {contactLabel}
+      </Button>
     </div>
   );
 }

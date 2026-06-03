@@ -168,6 +168,24 @@ export const ru: TranslationShape = {
       hoursAgo: "{n} ч назад",
       daysAgo: "{n} дн назад",
     },
+    bulk: {
+      selectAllAria: "Выбрать все строки на этой странице",
+      selectRowAria: "Выбрать {name}",
+      clear: "Сбросить",
+      playAria: "Включить выбранные ({count}) {entity}",
+      pauseAria: "Поставить на паузу выбранные ({count}) {entity}",
+      deleteAria: "Удалить выбранные ({count}) {entity}",
+      entities: {
+        campaigns: "кампаний",
+        destinations: "назначений",
+        buyers: "покупателей",
+      },
+      toast: {
+        activated: "Включено: {count} {entity}",
+        paused: "Поставлено на паузу: {count} {entity}",
+        deleted: "Удалено: {count} {entity}",
+      },
+    },
   },
 
   login: {
@@ -367,6 +385,56 @@ export const ru: TranslationShape = {
       sessionRevoked: "Сессия отозвана",
       allOthersRevoked: "Все другие сессии отозваны",
     },
+
+    scheduledReports: {
+      railLabel: "Отчёты по расписанию",
+      railDescription: "Дайджест на email после смены",
+      eyebrow: "Отчёты по расписанию",
+      title: "Email-отчёты после смены",
+      description:
+        "Получайте ежедневный дайджест после окончания смены — звонки, выручка и лидеры — прямо на почту.",
+      enable: "Включить отчёты по расписанию",
+      enableHint: "По умолчанию выключено. Включите, чтобы начать получать дайджесты.",
+      recipient: "Кому отправлять",
+      recipientPlaceholder: "you@company.com",
+      recipientHint: "По умолчанию — email вашего аккаунта. Можно указать общий алиас команды.",
+      time: "Время отправки",
+      timeHint: "Время отправки письма по часовому поясу ниже.",
+      timezone: "Часовой пояс",
+      days: "Дни",
+      daysHint: "Выберите, в какие дни высылать дайджест.",
+      day: {
+        mon: "Пн",
+        tue: "Вт",
+        wed: "Ср",
+        thu: "Чт",
+        fri: "Пт",
+        sat: "Сб",
+        sun: "Вс",
+      },
+      format: "Формат",
+      formatPdf: "PDF",
+      formatCsv: "CSV",
+      formatBoth: "PDF + CSV",
+      sections: "Что включить",
+      sectionsHint: "Выберите содержимое тела письма и вложений.",
+      section: {
+        summary: "Сводка за день",
+        topCampaigns: "Топ кампании",
+        topPublishers: "Топ издатели",
+        revenue: "График выручки",
+        callDetail: "Детализация звонков",
+      },
+      sendTestNow: "Отправить тест",
+      sendingTest: "Отправка теста…",
+      testSent: "Тестовый отчёт отправлен на {email}",
+      sentToast: "Ежедневный отчёт отправлен на {email}",
+      lastSent: "Последняя отправка: {time}",
+      neverSent: "Ещё не отправлялся",
+      validationEmail: "Введите корректный email",
+      validationDays: "Выберите хотя бы один день",
+      validationSections: "Выберите хотя бы один раздел",
+    },
   },
 
   billing: {
@@ -466,6 +534,12 @@ export const ru: TranslationShape = {
       deleteTitle: "Удалить рабочее пространство",
       deleteDescription: "Безвозвратное удаление всех данных — отмена невозможна.",
       deleteAction: "Удалить",
+      lockedBadge: "Заблокировано",
+      lockedHint:
+        "Заблокировано, чтобы предотвратить перепродажу панели. Свяжитесь с поддержкой для подтверждения личности.",
+      contactSupport: "Связаться с поддержкой",
+      supportRequested:
+        "Запрос отправлен — мы подтвердим вашу личность и ответим в течение 1 рабочего дня.",
     },
     members: {
       title: "Участники",
@@ -981,6 +1055,12 @@ export const ru: TranslationShape = {
         removed: "{name} удалено",
         updated: "{name} обновлено",
         created: "{name} создано",
+        capUpdated: "{name} — {field}: {value}",
+        fields: {
+          concurrencyCap: "лимит параллельности",
+          dailyCap: "дневной лимит",
+          monthlyCap: "месячный лимит",
+        },
       },
       empty: {
         notFound: "Назначение не найдено",
@@ -1000,6 +1080,9 @@ export const ru: TranslationShape = {
         atCapAria: "Лимит достигнут",
         disableAria: "Отключить {name}",
         enableAria: "Включить {name}",
+        editConcurrencyCapAria: "Изменить лимит параллельности для {name}",
+        editDailyCapAria: "Изменить дневной лимит для {name}",
+        editMonthlyCapAria: "Изменить месячный лимит для {name}",
       },
       builder: {
         titleNew: "Новое назначение",
@@ -1593,6 +1676,16 @@ export const ru: TranslationShape = {
           toast: {
             detached: "{name} отвязано от этой кампании",
             convSaved: "Настройки конверсии сохранены",
+          },
+          bulk: {
+            selectAllAria: "Выбрать все назначения на этой странице",
+            rowSelectAria: "Выбрать {name}",
+            enableAria: "Включить выбранные назначения ({count})",
+            pauseAria: "Поставить на паузу выбранные назначения ({count})",
+            deleteAria: "Удалить выбранные назначения ({count})",
+            enabled: "Включено назначений: {count}",
+            paused: "Поставлено на паузу: {count}",
+            deleted: "Удалено: {count}",
           },
           conversion: {
             title: "Настройки конверсии",
@@ -2757,6 +2850,8 @@ export const ru: TranslationShape = {
       daily: {
         title: "Ежедневные новости",
         description: "Живой срез того, что происходит в бизнесе, технологиях, политике и мире.",
+        fetchError: "Не удалось подключиться к источнику новостей — показываем последнюю кэшированную выборку.",
+        lastUpdated: "Обновлено в {time}",
       },
       coinMarket: {
         title: "Крипторынок",
@@ -3586,6 +3681,12 @@ export const ru: TranslationShape = {
         insights: "Инсайты",
         read: "Прочитанные",
       },
+      alertKinds: {
+        all: "Все",
+        missed: "Пропущенные",
+        capOver: "Лимит",
+        lowAht: "Низкий AHT",
+      },
       groups: {
         today: "Сегодня",
         yesterday: "Вчера",
@@ -4007,6 +4108,15 @@ export const ru: TranslationShape = {
         "Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "Отписаться",
       footerPrivacy: "Конфиденциальность",
+      heroTagline: "Pay-per-call маршрутизация — переосмыслено.",
+      pleaseClick: "Нажмите кнопку ниже, чтобы принять приглашение и присоединиться к аккаунту.",
+      haveQuestion: "Остались вопросы?",
+      haveQuestionBody:
+        "Свяжитесь с нашей командой экспертов по вопросам настройки и тарифов.",
+      helpAvailable: "Мы на связи 24/7.",
+      talkToExpert: "Поговорить с экспертом",
+      requestDemo: "Запросить демо",
+      inviterRole: "Руководитель отдела партнёрств",
     },
   },
 

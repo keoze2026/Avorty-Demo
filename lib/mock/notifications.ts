@@ -5,9 +5,17 @@
 
 export type NotificationSeverity = "critical" | "warn" | "info" | "insight";
 
+/**
+ * Fine-grained alert taxonomy used by the Alerts sub-filter chips. Only set
+ * on alert-level severities (`critical` / `warn`); insight + info ignore it.
+ */
+export type AlertKind = "missed" | "cap-over" | "low-aht" | "other";
+
 export interface NotificationItem {
   id: string;
   severity: NotificationSeverity;
+  /** Sub-classification — drives the Missed / Cap over / Low AHT filter. */
+  alertKind?: AlertKind;
   title: string;
   body: string;
   /** Already-formatted relative time, e.g. "11m". */
@@ -29,10 +37,29 @@ export const SEVERITY_DOT: Record<NotificationSeverity, string> = {
   insight: "bg-[oklch(0.7_0.2_290)]",
 };
 
+/**
+ * Color tokens for the three alert sub-categories. Picked to be visually
+ * distinct so a glance at the dot tells you the alert type.
+ */
+export const ALERT_KIND_DOT: Record<AlertKind, string> = {
+  missed: "bg-[#EF4444]",      // red — missed calls are urgent
+  "cap-over": "bg-[#F97316]",  // orange — cap reached / over
+  "low-aht": "bg-[#FACC15]",   // yellow — low AHT warning
+  other: "bg-muted-foreground",
+};
+
+export const ALERT_KIND_TEXT: Record<AlertKind, string> = {
+  missed: "text-[#EF4444]",
+  "cap-over": "text-[#F97316]",
+  "low-aht": "text-[#FACC15]",
+  other: "text-muted-foreground",
+};
+
 export const MOCK_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "n1",
     severity: "critical",
+    alertKind: "cap-over",
     title: "Buyer Apex hit daily cap",
     body: "Routing temporarily paused. 14 calls re-routed to fallback Tier-2.",
     time: "11m",
@@ -43,11 +70,56 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "n2",
     severity: "warn",
+    alertKind: "low-aht",
     title: "Acceptance dipped in OH / MI",
     body: "Auto Warranty acceptance is 14% over the past 48h vs 22% baseline.",
     time: "26m",
     source: "Auto Warranty",
     delta: -8.4,
+    action: "Investigate",
+  },
+  {
+    id: "n_missed_1",
+    severity: "critical",
+    alertKind: "missed",
+    title: "12 missed calls in the last hour",
+    body: "Solar Nationwide dropped 12 calls between 14:00–15:00. Likely a destination outage.",
+    time: "5m",
+    source: "Solar Nationwide",
+    delta: -18,
+    action: "View calls",
+  },
+  {
+    id: "n_missed_2",
+    severity: "warn",
+    alertKind: "missed",
+    title: "Mass Tort missed 4 calls",
+    body: "All 4 hit the queue but no destination answered within 30s. Worth checking buyer caps.",
+    time: "42m",
+    source: "Mass Tort — Injury",
+    delta: -6,
+    action: "Investigate",
+  },
+  {
+    id: "n_cap_2",
+    severity: "warn",
+    alertKind: "cap-over",
+    title: "TFN +1 (212) 555-0184 hit hourly cap",
+    body: "60 calls in the last hour — hourly cap is 50. Excess routed to fallback.",
+    time: "18m",
+    source: "Health Tier 1",
+    delta: 20,
+    action: "Raise cap",
+  },
+  {
+    id: "n_aht_2",
+    severity: "warn",
+    alertKind: "low-aht",
+    title: "Auto Warranty AHT dropped to 38s",
+    body: "Average handle time on the last 10 calls is under the 60s qualified threshold.",
+    time: "12m",
+    source: "Auto Warranty",
+    delta: -22,
     action: "Investigate",
   },
   {
@@ -109,6 +181,7 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "n9",
     severity: "critical",
+    alertKind: "other",
     title: "Webhook failed for ApexSolutions",
     body: "3 deliveries failed in the last 5 minutes — endpoint returning 502.",
     time: "1d",

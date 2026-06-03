@@ -2,7 +2,7 @@
 
 import { Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 
-import { SEVERITY_DOT, type NotificationItem } from "@/lib/mock/notifications";
+import { ALERT_KIND_DOT, SEVERITY_DOT, type NotificationItem } from "@/lib/mock/notifications";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
  */
 export function NotificationRow({ item }: { item: NotificationItem }) {
   const positive = (item.delta ?? 0) >= 0;
+  // Prefer the fine-grained alert-kind color (missed=red / cap-over=orange
+  // / low-aht=yellow) when present; fall back to the severity dot.
+  const dotClass = item.alertKind
+    ? ALERT_KIND_DOT[item.alertKind]
+    : SEVERITY_DOT[item.severity];
 
   return (
     <li
@@ -19,10 +24,10 @@ export function NotificationRow({ item }: { item: NotificationItem }) {
         !item.read && "bg-secondary/15",
       )}
     >
-      {/* Severity dot */}
+      {/* Severity / alert-kind dot */}
       <span
         aria-hidden
-        className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", SEVERITY_DOT[item.severity])}
+        className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", dotClass)}
       />
 
       {/* Body */}

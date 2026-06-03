@@ -13,10 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_NOTIFICATIONS, type NotificationItem } from "@/lib/mock/notifications";
+import {
+  ALERT_KIND_DOT,
+  MOCK_NOTIFICATIONS,
+  type AlertKind,
+  type NotificationItem,
+} from "@/lib/mock/notifications";
 import { cn } from "@/lib/utils";
 
 type TabId = "all" | "critical" | "insights";
+type AlertFilter = "all" | AlertKind;
 
 /** Cap on the topbar dropdown — the full set lives on /notifications. */
 const POPUP_LIMIT = 6;
@@ -24,6 +30,8 @@ const POPUP_LIMIT = 6;
 export function NotificationsMenu() {
   const { t } = useTranslation();
   const [tab, setTab] = React.useState<TabId>("all");
+  // Sub-filter for the Alerts tab — split alerts by missed / cap / AHT.
+  const [alertFilter, setAlertFilter] = React.useState<AlertFilter>("all");
   const [items, setItems] = React.useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
 
   const tabs: Array<{ id: TabId; label: string }> = [
@@ -34,17 +42,55 @@ export function NotificationsMenu() {
 
   const unread = items.filter((n) => !n.read).length;
 
+  /** All alert-severity items (`critical` + `warn`). Used both for the
+   *  "Alerts" tab count and the sub-chip counts. */
+  const alertItems = items.filter(
+    (x) => x.severity === "critical" || x.severity === "warn",
+  );
+
   const counts: Record<TabId, number> = {
     all: items.length,
-    critical: items.filter((x) => x.severity === "critical" || x.severity === "warn").length,
+    critical: alertItems.length,
     insights: items.filter((x) => x.severity === "insight").length,
   };
+
+  /** Per-alert-kind counts for the sub-chip badges. `all` is the full alerts
+   *  total; the three named kinds count only items tagged with that kind. */
+  const alertKindCounts: Record<AlertFilter, number> = {
+    all: alertItems.length,
+    missed: alertItems.filter((x) => x.alertKind === "missed").length,
+    "cap-over": alertItems.filter((x) => x.alertKind === "cap-over").length,
+    "low-aht": alertItems.filter((x) => x.alertKind === "low-aht").length,
+    other: alertItems.filter((x) => x.alertKind === "other").length,
+  };
+
+  const alertChips: Array<{ id: AlertFilter; label: string; dot?: string }> = [
+    { id: "all", label: t("notificationsUI.menu.alertKinds.all") },
+    {
+      id: "missed",
+      label: t("notificationsUI.menu.alertKinds.missed"),
+      dot: ALERT_KIND_DOT.missed,
+    },
+    {
+      id: "cap-over",
+      label: t("notificationsUI.menu.alertKinds.capOver"),
+      dot: ALERT_KIND_DOT["cap-over"],
+    },
+    {
+      id: "low-aht",
+      label: t("notificationsUI.menu.alertKinds.lowAht"),
+      dot: ALERT_KIND_DOT["low-aht"],
+    },
+  ];
 
   const filtered = items
     .filter((n) => {
       if (tab === "all") return true;
-      if (tab === "critical") return n.severity === "critical" || n.severity === "warn";
-      return n.severity === "insight";
+      if (tab === "insights") return n.severity === "insight";
+      // Alerts tab — also honor the sub-filter chip.
+      if (n.severity !== "critical" && n.severity !== "warn") return false;
+      if (alertFilter === "all") return true;
+      return n.alertKind === alertFilter;
     })
     .slice(0, POPUP_LIMIT);
 
@@ -121,6 +167,40 @@ export function NotificationsMenu() {
               );
             })}
           </div>
+
+          {/* Alert-kind sub-chips — only relevant when Alerts tab is active.
+              Each chip carries its own color dot so the user can spot which
+              category they're filtering at a glance. */}
+          {tab === "critical" && (
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              {alertChips.map((chip) => {
+                const isActive = alertFilter === chip.id;
+                const count = alertKindCounts[chip.id];
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setAlertFilter(chip.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isActive
+                        ? "border-foreground/35 bg-secondary/60 text-foreground"
+                        : "border-border bg-transparent text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {chip.dot && (
+                      <span
+                        aria-hidden
+                        className={cn("h-1.5 w-1.5 shrink-0 rounded-full", chip.dot)}
+                      />
+                    )}
+                    {chip.label}
+                    <span className="tabular-nums opacity-70">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* List */}

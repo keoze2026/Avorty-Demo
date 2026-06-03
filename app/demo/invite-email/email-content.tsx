@@ -9,6 +9,35 @@
  * email templates have to be authored (most mail clients strip <style> and
  * external stylesheets), so this doubles as a sketch of what the actual
  * Mailgun / Postmark template would output.
+ *
+ * Structure (matches the polished SaaS invite template the user provided):
+ *   ┌──────────────────────────────────────────────┐
+ *   │   ░░░ COSMIC GRADIENT HERO ░░░               │
+ *   │            Vortyx                            │
+ *   │       Pay-per-call routing, reimagined.      │
+ *   ├──────────────────────────────────────────────┤
+ *   │   Hi there                                   │
+ *   │                                              │
+ *   │   This email has been sent because           │
+ *   │   {inviter} is using Vortyx ...              │
+ *   │                                              │
+ *   │   Please click below to accept...            │
+ *   │                                              │
+ *   │   [   Accept invitation →   ]                │
+ *   │                                              │
+ *   │   What you'll get                            │
+ *   │   ✓ ...                                      │
+ *   │   ✓ ...                                      │
+ *   │   ✓ ...                                      │
+ *   ├──────────────────────────────────────────────┤
+ *   │   (avatar)  Have a question?                 │
+ *   │            Get in touch with our team...     │
+ *   │            We're here to help 24/7.          │
+ *   │            Talk to an expert / Request demo  │
+ *   ├──────────────────────────────────────────────┤
+ *   │   Plain-text fallback URL                    │
+ *   │   Footer: expiry · address · unsub · privacy │
+ *   └──────────────────────────────────────────────┘
  */
 
 import { useSearchParams } from "next/navigation";
@@ -25,6 +54,8 @@ interface InviteCopy {
   acceptHref: string;
   what: string[];
 }
+
+const INVITER_NAME = "Avery Chen";
 
 function useRole(): Role {
   const params = useSearchParams();
@@ -81,7 +112,6 @@ export function EmailBody() {
         color: "#1F2937",
         fontSize: 15,
         lineHeight: 1.6,
-        padding: "32px 40px 40px",
         background: "#ffffff",
       }}
     >
@@ -97,120 +127,269 @@ export function EmailBody() {
         {copy.preheader}
       </div>
 
-      {/* Brand mark */}
-      <div style={{ marginBottom: 28 }}>
+      {/* ─────────────────────────── HERO ─────────────────────────── */}
+      <div
+        style={{
+          background:
+            "radial-gradient(ellipse at 30% 30%, #5266E0 0%, #1A1F4D 35%, #050810 75%), radial-gradient(ellipse at 75% 70%, rgba(217, 70, 239, 0.35) 0%, transparent 50%)",
+          padding: "48px 40px 56px",
+          textAlign: "center",
+          color: "#ffffff",
+        }}
+      >
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 8,
-            fontWeight: 600,
-            fontSize: 16,
-            color: "#0F1117",
+            gap: 10,
+            fontWeight: 700,
+            fontSize: 28,
+            letterSpacing: "-0.02em",
+            color: "#ffffff",
           }}
         >
           <span
             aria-hidden
             style={{
-              width: 24,
-              height: 24,
+              width: 32,
+              height: 32,
               borderRadius: 999,
               background:
                 "linear-gradient(135deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%)",
               display: "inline-block",
+              boxShadow:
+                "0 0 20px rgba(82, 102, 224, 0.6), inset 0 -4px 12px rgba(0,0,0,0.2)",
             }}
           />
           {t("authUI.inviteEmail.brand")}
         </div>
-      </div>
-
-      <h2
-        style={{
-          margin: 0,
-          fontSize: 22,
-          lineHeight: 1.3,
-          color: "#0F1117",
-          fontWeight: 600,
-        }}
-      >
-        {t("authUI.inviteEmail.headlineTemplate").replace("{role}", copy.roleLabel)}
-      </h2>
-
-      <p style={{ margin: "16px 0 0" }}>{t("authUI.inviteEmail.greeting")}</p>
-
-      <p style={{ margin: "12px 0 0" }}>
-        {(() => {
-          const parts = t("authUI.inviteEmail.bodyTemplate")
-            .replace("{roleLower}", copy.roleLower)
-            .split("{inviter}");
-          return (
-            <>
-              {parts[0]}
-              <strong>Avery Chen</strong>
-              {parts.slice(1).join("{inviter}")}
-            </>
-          );
-        })()}
-      </p>
-
-      {/* CTA */}
-      <div style={{ margin: "28px 0" }}>
-        <a
-          href={copy.acceptHref}
+        <p
           style={{
-            display: "inline-block",
-            padding: "12px 22px",
-            background: "#0F1117",
-            color: "#ffffff",
-            borderRadius: 8,
-            textDecoration: "none",
-            fontWeight: 600,
+            margin: "12px 0 0",
+            color: "rgba(255,255,255,0.78)",
             fontSize: 14,
+            fontWeight: 500,
+            letterSpacing: "0.01em",
           }}
         >
-          {t("authUI.inviteEmail.ctaAccept")}
-        </a>
+          {t("authUI.inviteEmail.heroTagline")}
+        </p>
       </div>
 
-      <p style={{ margin: "20px 0 6px", fontWeight: 600, fontSize: 13 }}>
-        {t("authUI.inviteEmail.whatHeading")}
-      </p>
-      <ul style={{ margin: "4px 0 0", paddingLeft: 20, color: "#374151" }}>
-        {copy.what.map((line) => (
-          <li key={line} style={{ marginBottom: 4 }}>
-            {line}
-          </li>
-        ))}
-      </ul>
+      {/* ─────────────────────────── BODY ─────────────────────────── */}
+      <div style={{ padding: "40px 40px 24px" }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 22,
+            lineHeight: 1.3,
+            color: "#0F1117",
+            fontWeight: 600,
+          }}
+        >
+          {t("authUI.inviteEmail.headlineTemplate").replace(
+            "{role}",
+            copy.roleLabel,
+          )}
+        </h2>
 
-      {/* Plain-text fallback link */}
+        <p style={{ margin: "20px 0 0", color: "#374151" }}>
+          {t("authUI.inviteEmail.greeting")}
+        </p>
+
+        <p style={{ margin: "14px 0 0", color: "#374151" }}>
+          {(() => {
+            const parts = t("authUI.inviteEmail.bodyTemplate")
+              .replace("{roleLower}", copy.roleLower)
+              .split("{inviter}");
+            return (
+              <>
+                {parts[0]}
+                <strong style={{ color: "#0F1117" }}>{INVITER_NAME}</strong>
+                {parts.slice(1).join("{inviter}")}
+              </>
+            );
+          })()}
+        </p>
+
+        <p style={{ margin: "14px 0 0", color: "#374151" }}>
+          {t("authUI.inviteEmail.pleaseClick")}
+        </p>
+
+        {/* CTA — centered, full-width on narrow viewports */}
+        <div style={{ margin: "32px 0 28px", textAlign: "center" }}>
+          <a
+            href={copy.acceptHref}
+            style={{
+              display: "inline-block",
+              padding: "14px 32px",
+              background:
+                "linear-gradient(135deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%)",
+              color: "#ffffff",
+              borderRadius: 10,
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow:
+                "0 12px 28px -10px rgba(82, 102, 224, 0.55), 0 2px 4px rgba(0,0,0,0.08)",
+            }}
+          >
+            {t("authUI.inviteEmail.ctaAccept")}
+          </a>
+        </div>
+
+        {/* What you'll get */}
+        <div
+          style={{
+            marginTop: 12,
+            padding: "20px 22px",
+            background: "#F8FAFF",
+            border: "1px solid #E5E9F7",
+            borderRadius: 12,
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 600,
+              fontSize: 13,
+              color: "#0F1117",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {t("authUI.inviteEmail.whatHeading")}
+          </p>
+          <ul
+            style={{
+              margin: "10px 0 0",
+              paddingLeft: 0,
+              listStyle: "none",
+              color: "#374151",
+            }}
+          >
+            {copy.what.map((line) => (
+              <li
+                key={line}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  marginBottom: 6,
+                  fontSize: 14,
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    flexShrink: 0,
+                    width: 16,
+                    height: 16,
+                    marginTop: 3,
+                    borderRadius: 999,
+                    background:
+                      "linear-gradient(135deg, #3A4BC4 0%, #5266E0 100%)",
+                    color: "#ffffff",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    lineHeight: "16px",
+                    textAlign: "center",
+                  }}
+                >
+                  ✓
+                </span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* ──────────────────────── EXPERT BLOCK ──────────────────────── */}
       <div
         style={{
-          marginTop: 28,
-          padding: "16px 18px",
-          background: "#F3F4F6",
-          border: "1px solid #E5E7EB",
-          borderRadius: 8,
-          fontSize: 12,
-          color: "#4B5563",
-          wordBreak: "break-all",
+          margin: "0 40px",
+          padding: "28px 0 32px",
+          borderTop: "1px solid #E5E7EB",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 18,
         }}
       >
-        {t("authUI.inviteEmail.fallbackPrompt")}
-        <br />
-        <span style={{ color: "#0F1117", fontFamily: "monospace" }}>
-          https://app.vortyx.io{copy.acceptHref}
-        </span>
+        <Avatar />
+        <div style={{ flex: 1 }}>
+          <p
+            style={{
+              margin: 0,
+              fontWeight: 700,
+              fontSize: 15,
+              color: "#0F1117",
+            }}
+          >
+            {t("authUI.inviteEmail.haveQuestion")}
+          </p>
+          <p style={{ margin: "6px 0 0", color: "#374151", fontSize: 14 }}>
+            {t("authUI.inviteEmail.haveQuestionBody")}
+          </p>
+          <p style={{ margin: "10px 0 0", color: "#374151", fontSize: 14 }}>
+            {t("authUI.inviteEmail.helpAvailable")}
+          </p>
+          <p style={{ margin: "14px 0 0", fontSize: 14 }}>
+            <a
+              href="mailto:experts@vortyx.io"
+              style={{
+                color: "#5266E0",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              {t("authUI.inviteEmail.talkToExpert")}
+            </a>
+            <span style={{ color: "#9CA3AF", margin: "0 8px" }}>/</span>
+            <a
+              href="#"
+              style={{
+                color: "#5266E0",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              {t("authUI.inviteEmail.requestDemo")}
+            </a>
+          </p>
+        </div>
       </div>
 
-      {/* Footer */}
+      {/* ─────────── Plain-text fallback URL ─────────── */}
+      <div style={{ padding: "0 40px" }}>
+        <div
+          style={{
+            padding: "14px 16px",
+            background: "#F3F4F6",
+            border: "1px solid #E5E7EB",
+            borderRadius: 8,
+            fontSize: 12,
+            color: "#4B5563",
+            wordBreak: "break-all",
+          }}
+        >
+          {t("authUI.inviteEmail.fallbackPrompt")}
+          <br />
+          <span style={{ color: "#0F1117", fontFamily: "monospace" }}>
+            https://app.vortyx.io{copy.acceptHref}
+          </span>
+        </div>
+      </div>
+
+      {/* ─────────────────────── FOOTER ─────────────────────── */}
       <div
         style={{
-          marginTop: 36,
-          paddingTop: 16,
+          margin: "28px 40px 32px",
+          paddingTop: 18,
           borderTop: "1px solid #E5E7EB",
           color: "#6B7280",
           fontSize: 12,
+          lineHeight: 1.7,
         }}
       >
         {t("authUI.inviteEmail.footerExpiry")}
@@ -226,6 +405,55 @@ export function EmailBody() {
           {t("authUI.inviteEmail.footerPrivacy")}
         </a>
       </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Avatar — initials chip with brand gradient                   */
+/* ──────────────────────────────────────────────────────────── */
+
+function Avatar() {
+  const { t } = useTranslation();
+  return (
+    <div style={{ flexShrink: 0, textAlign: "center" }}>
+      <div
+        style={{
+          width: 72,
+          height: 72,
+          borderRadius: 999,
+          background:
+            "linear-gradient(135deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%)",
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: 26,
+          lineHeight: "72px",
+          textAlign: "center",
+          letterSpacing: "-0.02em",
+          boxShadow: "0 8px 20px -8px rgba(82, 102, 224, 0.55)",
+        }}
+      >
+        AC
+      </div>
+      <p
+        style={{
+          margin: "8px 0 0",
+          fontSize: 11,
+          color: "#6B7280",
+          fontWeight: 600,
+        }}
+      >
+        {INVITER_NAME}
+      </p>
+      <p
+        style={{
+          margin: "1px 0 0",
+          fontSize: 10,
+          color: "#9CA3AF",
+        }}
+      >
+        {t("authUI.inviteEmail.inviterRole")}
+      </p>
     </div>
   );
 }
