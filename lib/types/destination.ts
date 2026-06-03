@@ -8,6 +8,32 @@
  * destination based on the campaign's buyers and their destinations' caps.
  */
 
+export type DestinationForwardType = "number" | "sip";
+
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export interface BusinessHourSlot {
+  id: string;
+  days: Weekday[];
+  /** "HH:MM" 24-hour. */
+  from: string;
+  /** "HH:MM" 24-hour. */
+  to: string;
+}
+
+export interface FilterCondition {
+  id: string;
+  parameter: string;
+  operator: string;
+  value: string;
+}
+
+/** A filter group — conditions inside a group are OR-ed; groups are AND-ed. */
+export interface FilterGroup {
+  id: string;
+  conditions: FilterCondition[];
+}
+
 export interface Destination {
   id: string;
   buyerId: string;
@@ -23,4 +49,18 @@ export interface Destination {
   monthlyCap: number;
   /** When false, the router skips this destination. */
   enabled: boolean;
+  /* ─── Advanced settings (optional — populated via the settings tab) ─── */
+  /** "number" routes to a TFN, "sip" routes to a SIP endpoint. */
+  forwardType?: DestinationForwardType;
+  /** Seconds to ring before redirecting / failing over (default 25). */
+  ringDurationSec?: number;
+  /** When true, the router applies the filter rules below. */
+  filterEnabled?: boolean;
+  /** AND-of-groups, OR-within-group condition tree. */
+  filterGroups?: FilterGroup[];
+  /** When true, the router only dials this destination inside the slots. */
+  businessHoursEnabled?: boolean;
+  businessHourSlots?: BusinessHourSlot[];
+  /** Per-destination timezone override (IANA, e.g. "America/New_York"). */
+  timezone?: string;
 }

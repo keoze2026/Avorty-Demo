@@ -422,18 +422,27 @@ function Avatar() {
           width: 72,
           height: 72,
           borderRadius: 999,
+          padding: 2,
           background:
             "linear-gradient(135deg, #3A4BC4 0%, #5266E0 55%, #818CF8 100%)",
-          color: "#ffffff",
-          fontWeight: 700,
-          fontSize: 26,
-          lineHeight: "72px",
-          textAlign: "center",
-          letterSpacing: "-0.02em",
           boxShadow: "0 8px 20px -8px rgba(82, 102, 224, 0.55)",
+          boxSizing: "border-box",
         }}
       >
-        AC
+        <img
+          src="/avatars/Female-avatar.webp"
+          alt={INVITER_NAME}
+          width={68}
+          height={68}
+          style={{
+            width: 68,
+            height: 68,
+            borderRadius: 999,
+            display: "block",
+            objectFit: "cover",
+            objectPosition: "center",
+          }}
+        />
       </div>
       <p
         style={{

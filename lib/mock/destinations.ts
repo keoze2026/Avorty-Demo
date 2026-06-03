@@ -194,7 +194,55 @@ const GENERATED: Destination[] = (() => {
   return out;
 })();
 
-export const MOCK_DESTINATIONS: Destination[] = [...SEED, ...GENERATED];
+/* ─── Bulk roster (+100 destinations) ──────────────────────────────────
+ * A second deterministic pass that pads the destinations roster with 100
+ * additional rows spread across the active buyer profiles, so the campaign
+ * Routed Destinations table has enough volume to exercise pagination and the
+ * bulk-select toolbar at scale. Naming pattern: "<Buyer> Lane <NN>". */
+const BULK_ROSTER: Destination[] = (() => {
+  const out: Destination[] = [];
+  const BULK_COUNT = 100;
+  let seed = 1000;
+  // Continue id serial right after the GENERATED block to keep ids unique.
+  let serial = 17 + GENERATED.length;
+  const profiles = BUYER_PROFILES;
+  const buyerLabel: Record<string, string> = {
+    b_001: "Medicare",
+    b_002: "Solar",
+    b_003: "MassTort",
+    b_004: "Auto",
+    b_005: "MediConnect",
+    b_006: "HomePro",
+    b_007: "Lendly",
+    b_008: "Sandbox",
+  };
+  for (let i = 0; i < BULK_COUNT; i += 1) {
+    const buyer = profiles[i % profiles.length];
+    const isTollFree = seed % 3 === 0;
+    const numberSeed = seed * 19 + 3;
+    const number = isTollFree ? tollFreeTfn(numberSeed) : tfn(numberSeed);
+    const concurrencyCap = 4 + (seed % 14);
+    const dailyCap = 50 + (seed % 7) * 50;
+    const monthlyCap = dailyCap * 25;
+    const enabled = buyer.defaultEnabled && seed % 13 !== 0;
+    const laneNo = String(i + 1).padStart(2, "0");
+    out.push({
+      id: `dest_${String(serial).padStart(3, "0")}`,
+      buyerId: buyer.id,
+      tfn: number,
+      name: `${buyerLabel[buyer.id] ?? "General"} Lane ${laneNo}`,
+      concurrencyCap,
+      dailyCap,
+      monthlyCap,
+      enabled,
+    });
+    seed += 1;
+    serial += 1;
+  }
+  return out;
+})();
+
+export const MOCK_DESTINATIONS: Destination[] = [...SEED, ...GENERATED, ...BULK_ROSTER];
 
 /** Destinations that the router will actually pick from. */
 export const ROUTABLE_DESTINATIONS = MOCK_DESTINATIONS.filter((d) => d.enabled);

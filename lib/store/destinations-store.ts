@@ -56,7 +56,9 @@ export const useDestinationsStore = create<DestinationsState>()(
     {
       name: "vortyx.destinations",
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      // Bumped to 2 to invalidate older persisted state and pick up the
+      // BULK_ROSTER (+100) rows added to MOCK_DESTINATIONS.
+      version: 2,
     },
   ),
 );

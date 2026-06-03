@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ElementType } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -107,6 +107,8 @@ function pacingTone(pct: number): string {
 export function DestinationsTable({
   destinations,
   onToggle,
+  onEdit,
+  onDelete,
   onUpdateCap,
   selectedIds,
   onSelectionChange,
@@ -185,8 +187,11 @@ export function DestinationsTable({
               <TableHead className="text-center uppercase tracking-wider text-[11px]">
                 {t("networkUI.destinations.table.global")}
               </TableHead>
-              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">
+              <TableHead className="text-center uppercase tracking-wider text-[11px]">
                 {t("networkUI.destinations.table.status")}
+              </TableHead>
+              <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">
+                {t("networkUI.destinations.table.actions")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -194,7 +199,7 @@ export function DestinationsTable({
             {rows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={selectable ? 10 : 9}
+                  colSpan={selectable ? 11 : 10}
                   className="pl-6 py-10 text-center text-sm text-muted-foreground"
                 >
                   {t("networkUI.destinations.table.noResults")}
@@ -364,7 +369,7 @@ export function DestinationsTable({
                     </TableCell>
 
                     {/* STATUS — switch */}
-                    <TableCell className="pr-6 text-center" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={destination.enabled}
                         onCheckedChange={() => onToggle?.(destination.id)}
@@ -375,6 +380,30 @@ export function DestinationsTable({
                         }
                       />
                     </TableCell>
+
+                    {/* ACTIONS — row-level edit / delete */}
+                    <TableCell
+                      className="pr-6 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="inline-flex items-center gap-0.5">
+                        <RowActionIcon
+                          icon={Pencil}
+                          label={t(
+                            "networkUI.destinations.table.editAria",
+                          ).replace("{name}", destination.name)}
+                          onClick={() => onEdit?.(destination.id)}
+                        />
+                        <RowActionIcon
+                          icon={Trash2}
+                          label={t(
+                            "networkUI.destinations.table.deleteAria",
+                          ).replace("{name}", destination.name)}
+                          tone="destructive"
+                          onClick={() => onDelete?.(destination.id)}
+                        />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })
@@ -383,6 +412,40 @@ export function DestinationsTable({
         </Table>
       </div>
     </Card>
+  );
+}
+
+/**
+ * One icon-button inside the destinations table's Actions cell.
+ * Mirrors the muted / destructive tone pattern used by the campaigns +
+ * buyers tables so the row actions look identical across surfaces.
+ */
+function RowActionIcon({
+  icon: Icon,
+  label,
+  onClick,
+  tone = "muted",
+}: {
+  icon: ElementType;
+  label: string;
+  onClick?: () => void;
+  tone?: "muted" | "destructive";
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+        tone === "destructive"
+          ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </button>
   );
 }
 
