@@ -132,10 +132,11 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
   // Survives until the user reploads — sufficient for the demo surface.
   const [conversions, setConversions] = useState<Record<string, ConversionSettings>>({});
 
-  // Pagination for the routed-destinations table — keeps the page short and
-  // scannable instead of dumping every active destination in a campaign.
+  // Pagination for the routed-destinations table — defaults to 100 so the
+  // operator sees a full block at a glance instead of paging through tiny 8-row
+  // chunks. Options step up to 400 for ops teams running 200+ destinations.
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(8);
+  const [pageSize, setPageSize] = useState(100);
   const pageStart = page * pageSize;
   const pageEnd = pageStart + pageSize;
   const pagedDestinations = useMemo(
@@ -363,7 +364,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                 setPageSize(n);
                 setPage(0);
               }}
-              pageSizeOptions={[8, 16, 32, 64]}
+              pageSizeOptions={[100, 200, 300, 400]}
             />
           </div>
         )}
