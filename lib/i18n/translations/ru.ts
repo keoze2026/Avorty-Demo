@@ -4095,6 +4095,20 @@ export const ru: TranslationShape = {
 
   /* ─── Auth flows (signup / forgot / invite + invite email) ─────── */
   authUI: {
+    split: {
+      tagline: "Здесь сходятся все звонки, сигналы и сделки.",
+      taglineSub:
+        "Маршрутизация pay-per-call, AI-инсайты, ежедневные сводки и живые рынки — единое рабочее пространство.",
+      footer: "© 2026 Vortyx · Маршрутизация pay-per-call, переосмысленная",
+      signals: {
+        callsLabel: "Live звонки",
+        callsValue: "247",
+        marketsLabel: "BTC",
+        marketsValue: "+2.4%",
+        briefingsLabel: "Сводки",
+        briefingsValue: "12 новых",
+      },
+    },
     signup: {
       pageTitle: "Начните с Vortyx",
       pageDescription: "Создайте своё рабочее пространство для аналитики звонков за секунды.",

@@ -4113,6 +4113,20 @@ export const en = {
 
   /* ─── Auth flows (signup / forgot / invite + invite email) ─────── */
   authUI: {
+    split: {
+      tagline: "Where every call, signal, and trade lands.",
+      taglineSub:
+        "Pay-per-call routing, AI insights, daily briefings, and live markets — one workspace.",
+      footer: "© 2026 Vortyx · Pay-per-call routing reimagined",
+      signals: {
+        callsLabel: "Live calls",
+        callsValue: "247",
+        marketsLabel: "BTC",
+        marketsValue: "+2.4%",
+        briefingsLabel: "Briefings",
+        briefingsValue: "12 new",
+      },
+    },
     signup: {
       pageTitle: "Start with Vortyx",
       pageDescription: "Spin up your call intelligence workspace in seconds.",

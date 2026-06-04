@@ -4095,6 +4095,20 @@ export const ja: TranslationShape = {
 
   /* ─── Auth flows (signup / forgot / invite + invite email) ─────── */
   authUI: {
+    split: {
+      tagline: "すべての通話・シグナル・取引が集まる場所。",
+      taglineSub:
+        "ペイパーコールのルーティング、AI インサイト、デイリーブリーフィング、ライブマーケット ― 一つのワークスペースに。",
+      footer: "© 2026 Vortyx · ペイパーコール・ルーティングを再構築",
+      signals: {
+        callsLabel: "ライブ通話",
+        callsValue: "247",
+        marketsLabel: "BTC",
+        marketsValue: "+2.4%",
+        briefingsLabel: "ブリーフィング",
+        briefingsValue: "新着 12",
+      },
+    },
     signup: {
       pageTitle: "Vortyx をはじめる",
       pageDescription: "コール インテリジェンスのワークスペースを数秒で立ち上げましょう。",

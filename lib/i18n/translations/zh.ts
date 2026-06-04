@@ -4086,6 +4086,20 @@ export const zh: TranslationShape = {
   },
 
   authUI: {
+    split: {
+      tagline: "每一通来电、每一个信号、每一笔交易,都在这里汇聚。",
+      taglineSub:
+        "按通话付费路由、AI 洞察、每日简报与实时行情 ——一个工作空间。",
+      footer: "© 2026 Vortyx · 重新定义按通话付费路由",
+      signals: {
+        callsLabel: "实时通话",
+        callsValue: "247",
+        marketsLabel: "BTC",
+        marketsValue: "+2.4%",
+        briefingsLabel: "简报",
+        briefingsValue: "12 条新",
+      },
+    },
     signup: {
       pageTitle: "从 Vortyx 开始",
       pageDescription: "几秒内启动您的通话智能工作区。",
