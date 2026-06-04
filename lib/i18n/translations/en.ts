@@ -117,7 +117,7 @@ export const en = {
     },
     integrations: {
       title: "Integrations",
-      description: "Connect Vortyx to the tools your team already runs on.",
+      description: "Connect Aavortyx to the tools your team already runs on.",
     },
     referrals: {
       title: "Referrals",
@@ -200,7 +200,7 @@ export const en = {
   /* ─── Login ──────────────────────────────────────────────── */
   login: {
     welcomeBack: "Welcome back",
-    description: "Sign in to your Vortyx workspace.",
+    description: "Sign in to your Aavortyx workspace.",
     email: "Email",
     password: "Password",
     forgot: "Forgot?",
@@ -366,7 +366,7 @@ export const en = {
       eyebrow: "API keys",
       title: "Programmatic access",
       description:
-        "Tokens used by external systems to talk to Vortyx. Treat each like a password.",
+        "Tokens used by external systems to talk to Aavortyx. Treat each like a password.",
       newKey: "New key",
       createKey: "Create key",
       keyName: "Key name",
@@ -2748,7 +2748,7 @@ export const en = {
     },
     marketplace: {
       pageTitle: "Marketplace",
-      pageDescription: "The Vortyx trading floor — real-time bidding on inbound calls.",
+      pageDescription: "The Aavortyx trading floor — real-time bidding on inbound calls.",
       bidsSession: "{count} bids · session",
       resume: "Resume",
       pauseFloor: "Pause floor",
@@ -2831,7 +2831,7 @@ export const en = {
       pageDescription: "Optimization recommendations, anomaly detection, and a co-pilot you can actually ask.",
       copilotActive: "Co-pilot active",
       hero: {
-        copilotBadge: "Vortyx co-pilot",
+        copilotBadge: "Aavortyx co-pilot",
         greetingMorning: "Good morning",
         greetingAfternoon: "Good afternoon",
         greetingEvening: "Good evening",
@@ -2847,10 +2847,10 @@ export const en = {
         netImpactDelta: "if all applied",
       },
       chat: {
-        title: "Vortyx Copilot",
+        title: "Aavortyx Copilot",
         online: "Online",
         description: "Ask about performance, anomalies, or what to do next.",
-        introLine1: "Hi — I'm the Vortyx Copilot. Ask me anything about your network.",
+        introLine1: "Hi — I'm the Aavortyx Copilot. Ask me anything about your network.",
         introLine2: "I can pull from every campaign, call, and bid you've handled. Try one of the prompts below.",
         inputPlaceholder: "Ask anything…",
         demoNote: "Co-pilot answers are simulated in this demo.",
@@ -3069,7 +3069,7 @@ export const en = {
         whiteGloveSupport: "White-glove support",
         customRateCards: "Custom rate cards",
         directApiQuota: "Direct API quota",
-        vortyxVerifiedBadge: "Vortyx Verified badge",
+        avortyxVerifiedBadge: "Aavortyx Verified badge",
       },
       vectors: {
         identity: {
@@ -3157,7 +3157,7 @@ export const en = {
         dncTitle: "Federal DNC scrub",
         dncBody: "My lists are scrubbed against the National Do Not Call Registry at most 31 days before dial.",
         auditTitle: "Sample call audit",
-        auditBody: "I authorize Vortyx to audit 5 random calls in the next 7 days for compliance signals.",
+        auditBody: "I authorize Aavortyx to audit 5 random calls in the next 7 days for compliance signals.",
         submit: "Submit for verification",
       },
       reputationFlow: {
@@ -3177,7 +3177,7 @@ export const en = {
     },
     referrals: {
       pageTitle: "Referral Program",
-      pageDescription: "Earn {pct} of every client's lifetime spend when you bring them onto Vortyx.",
+      pageDescription: "Earn {pct} of every client's lifetime spend when you bring them onto Aavortyx.",
       partnerBadge: "Referral Partner",
       heroTitleBefore: "Refer a client. We'll send you ",
       heroTitleAfter: " of every dollar they spend — forever.",
@@ -3223,7 +3223,7 @@ export const en = {
     },
     integrations: {
       pageTitle: "Integrations",
-      pageDescription: "Connect the tools you already use — and reach every Vortyx event from anywhere.",
+      pageDescription: "Connect the tools you already use — and reach every Aavortyx event from anywhere.",
       board: {
         available: "Available",
         connected: "Connected",
@@ -3255,13 +3255,13 @@ export const en = {
           active: "Active",
           paused: "Paused",
           tokenLabel: "API token",
-          tokenHint: "Used by Vortyx to authenticate to the partner API.",
+          tokenHint: "Used by Aavortyx to authenticate to the partner API.",
           copyTokenAria: "Copy token",
           rotateTokenAria: "Rotate token",
           toastTokenCopied: "Token copied",
           toastRotateQueued: "Token rotation queued",
           baseUrlLabel: "Base URL",
-          baseUrlHint: "Where Vortyx posts events. Override only if instructed.",
+          baseUrlHint: "Where Aavortyx posts events. Override only if instructed.",
           connectionTestTitle: "Connection test",
           connectionTestHint: "Send a no-op handshake to verify the credentials.",
           test: "Test",
@@ -3270,7 +3270,7 @@ export const en = {
           toastHealthyDesc: "Round-trip {ms}ms",
         },
         events: {
-          intro: "Pick the events Vortyx should send to {name}.",
+          intro: "Pick the events Aavortyx should send to {name}.",
         },
         permissions: {
           intro: "Scopes are enforced server-side — changes take effect within ~30s.",
@@ -3342,11 +3342,11 @@ export const en = {
         dialog: {
           editTitle: "Edit webhook",
           createTitle: "Add webhook",
-          description: "Vortyx posts a JSON payload to your URL for each selected event.",
+          description: "Aavortyx posts a JSON payload to your URL for each selected event.",
           nameLabel: "Name",
           namePlaceholder: "CRM postback",
           urlLabel: "URL",
-          urlPlaceholder: "https://example.com/vortyx/events",
+          urlPlaceholder: "https://example.com/avortyx/events",
           eventsLabel: "Events",
           secretLabel: "Signing secret",
           copySecretAria: "Copy secret",
@@ -3868,7 +3868,7 @@ export const en = {
     },
     hero: {
       trustChipCount: "500+ networks",
-      trustChipSuffix: "routing live on Vortyx",
+      trustChipSuffix: "routing live on Aavortyx",
       headlinePart1: "Turn every ring",
       headlineGradient: "into revenue.",
       subhead:
@@ -3921,7 +3921,7 @@ export const en = {
     features: {
       heading: "Built for modern pay-per-call",
       description:
-        "Vortyx replaces a stack of legacy call-tracking tools with a single, real-time control plane — from inbound ring to buyer settlement.",
+        "Aavortyx replaces a stack of legacy call-tracking tools with a single, real-time control plane — from inbound ring to buyer settlement.",
       learnMore: "Learn more",
       routing: {
         title: "Real-time call routing",
@@ -3939,7 +3939,7 @@ export const en = {
     code: {
       sectionLabel: "AI-powered intelligence",
       heading: "AI optimization that learns your network",
-      descriptionLead: "Vortyx AI.",
+      descriptionLead: "Aavortyx AI.",
       descriptionRest:
         " Suggests where to scale, pause, rebalance, or alert — automatically based on your network's performance patterns.",
       cta: "Explore AI features",
@@ -3947,7 +3947,7 @@ export const en = {
       connected: "Connected",
       leftTitle: "Smart routing suggestions",
       leftDescription:
-        "Vortyx analyzes your network patterns and suggests optimizations to maximize revenue and buyer match rates.",
+        "Aavortyx analyzes your network patterns and suggests optimizations to maximize revenue and buyer match rates.",
       aiLabel: "AI",
       recommendation: "Recommendation",
       action: "Action",
@@ -3960,9 +3960,9 @@ export const en = {
       patternExplanation:
         "Apex Insurance has maintained 98% acceptance rate over the past 48 hours with consistent conversion quality.",
       applySuggestion: "Apply suggestion",
-      rightTitle: "Vortyx SDK",
+      rightTitle: "Aavortyx SDK",
       rightDescription:
-        "Every Vortyx capability is reachable from a single typed SDK — and every event lands on your webhook within milliseconds.",
+        "Every Aavortyx capability is reachable from a single typed SDK — and every event lands on your webhook within milliseconds.",
       routeIncomingCall: "Route incoming call",
     },
     howItWorks: {
@@ -4009,7 +4009,7 @@ export const en = {
       headingPart1: "Built for the calls",
       headingPart2: "that pay",
       description:
-        "Every vertical Vortyx supports ships with the filters, tags, and consent capture that vertical actually needs — so you're not gluing yours together from scratch.",
+        "Every vertical Aavortyx supports ships with the filters, tags, and consent capture that vertical actually needs — so you're not gluing yours together from scratch.",
       health: {
         category: "Health Insurance",
         statLabel: "AVG PAYOUT / QUALIFIED CALL",
@@ -4044,14 +4044,14 @@ export const en = {
     cta: {
       heading: "Ready to route calls smarter?",
       description:
-        "Join leading pay-per-call networks scaling traffic, decisioning, and revenue on Vortyx. Free for your first 2,000 calls — no credit card.",
+        "Join leading pay-per-call networks scaling traffic, decisioning, and revenue on Aavortyx. Free for your first 2,000 calls — no credit card.",
       bookDemo: "Book a demo",
       startFree: "Start free",
     },
     footer: {
       tagline:
         "A real-time call tracking, routing, and analytics platform for modern pay-per-call marketers.",
-      copyrightSuffix: "Vortyx Inc. All rights reserved.",
+      copyrightSuffix: "Aavortyx Inc. All rights reserved.",
       allSystemsOperational: "ALL SYSTEMS OPERATIONAL",
       columns: {
         platform: "Platform",
@@ -4089,15 +4089,15 @@ export const en = {
     chat: {
       openLabel: "Open chat",
       closeLabel: "Close chat",
-      title: "Vortyx AI",
+      title: "Aavortyx AI",
       status: "Online · usually replies instantly",
       greeting:
-        "Hey — I'm Vortyx AI. Ask me anything about the platform, or just chat.",
-      typing: "Vortyx AI is typing…",
+        "Hey — I'm Aavortyx AI. Ask me anything about the platform, or just chat.",
+      typing: "Aavortyx AI is typing…",
       placeholder: "Ask me anything…",
       sendLabel: "Send message",
       closeButton: "Close",
-      dialogLabel: "Vortyx AI chat",
+      dialogLabel: "Aavortyx AI chat",
       networkError: "Network hiccup — please try that again.",
       modelUnreachable: "Sorry, I couldn't reach the model. Try again in a moment.",
       errorPrefix: "Sorry — ",
@@ -4122,7 +4122,7 @@ export const en = {
       navDocumentation: "Documentation",
       liveCalls: "Live Calls",
       activeSuffix: "active",
-      breadcrumbDashboard: "Vortyx dashboard",
+      breadcrumbDashboard: "Aavortyx dashboard",
       breadcrumbNetwork: "Network · 12 verticals",
       breadcrumbDecisioning: "142ms decisioning",
       live: "Live",
@@ -4154,7 +4154,7 @@ export const en = {
       tagline: "Where every call, signal, and trade lands.",
       taglineSub:
         "Pay-per-call routing, AI insights, daily briefings, and live markets — one workspace.",
-      footer: "© 2026 Vortyx · Pay-per-call routing reimagined",
+      footer: "© 2026 Aavortyx · Pay-per-call routing reimagined",
       signals: {
         callsLabel: "Live calls",
         callsValue: "247",
@@ -4165,7 +4165,7 @@ export const en = {
       },
     },
     signup: {
-      pageTitle: "Start with Vortyx",
+      pageTitle: "Start with Aavortyx",
       pageDescription: "Spin up your call intelligence workspace in seconds.",
       footerHasAccount: "Already have an account?",
       footerSignIn: "Sign in",
@@ -4192,7 +4192,7 @@ export const en = {
       sentAfter: "for the reset link.",
     },
     invite: {
-      pageTitleTemplate: "Join Vortyx as a {role}",
+      pageTitleTemplate: "Join Aavortyx as a {role}",
       pageDescriptionTemplate:
         "Accept your invitation and set a password to access the {roleLower} workspace.",
       footerHasAccount: "Already have an account?",
@@ -4221,27 +4221,27 @@ export const en = {
       rolePublisherLower: "publisher",
     },
     inviteEmail: {
-      brand: "Vortyx",
+      brand: "Aavortyx",
       buyerPreheader:
-        "Avery Chen at Vortyx invited you to buy calls on their network.",
-      buyerSubject: "You're invited to Vortyx — start buying qualified calls",
+        "Avery Chen at Aavortyx invited you to buy calls on their network.",
+      buyerSubject: "You're invited to Aavortyx — start buying qualified calls",
       buyerWhat1:
         "Live view of every routed call, including caller geo and intent signals",
       buyerWhat2: "Daily / monthly cap controls and concurrency limits",
       buyerWhat3:
         "Per-vertical bidding with full call recording and dispute tools",
       publisherPreheader:
-        "Avery Chen at Vortyx invited you to monetize your traffic with their buyers.",
-      publisherSubject: "You're invited to Vortyx — start monetizing your calls",
+        "Avery Chen at Aavortyx invited you to monetize your traffic with their buyers.",
+      publisherSubject: "You're invited to Aavortyx — start monetizing your calls",
       publisherWhat1: "Live revenue, payout share, and per-campaign earnings",
       publisherWhat2:
         "Number provisioning and routing assignment in seconds",
       publisherWhat3:
         "Direct payouts with full transparency on every billable call",
-      headlineTemplate: "You're invited to Vortyx as a {role}",
+      headlineTemplate: "You're invited to Aavortyx as a {role}",
       greeting: "Hi there —",
       bodyTemplate:
-        "{inviter} at Vortyx invited you to join their {roleLower} workspace. Click the button below to accept your invitation, set a password, and get started.",
+        "{inviter} at Aavortyx invited you to join their {roleLower} workspace. Click the button below to accept your invitation, set a password, and get started.",
       ctaAccept: "Accept invitation →",
       whatHeading: "What you'll get",
       fallbackPrompt:
@@ -4249,7 +4249,7 @@ export const en = {
       footerExpiry:
         "This invitation expires in 7 days. If you weren't expecting this, you can safely ignore the message.",
       footerAddress:
-        "Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
+        "Aavortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "Unsubscribe",
       footerPrivacy: "Privacy",
       heroTagline: "Pay-per-call routing, reimagined.",

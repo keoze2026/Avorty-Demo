@@ -109,7 +109,7 @@ export const ja: TranslationShape = {
     },
     integrations: {
       title: "連携",
-      description: "チームが既に使用しているツールに Vortyx を接続。",
+      description: "チームが既に使用しているツールに Aavortyx を接続。",
     },
     referrals: {
       title: "リファラル",
@@ -190,7 +190,7 @@ export const ja: TranslationShape = {
 
   login: {
     welcomeBack: "おかえりなさい",
-    description: "Vortyx ワークスペースにサインインしてください。",
+    description: "Aavortyx ワークスペースにサインインしてください。",
     email: "メール",
     password: "パスワード",
     forgot: "忘れた?",
@@ -351,7 +351,7 @@ export const ja: TranslationShape = {
     apiKeysSection: {
       eyebrow: "API キー",
       title: "プログラム的アクセス",
-      description: "外部システムが Vortyx と通信するためのトークンです。パスワード同様に扱ってください。",
+      description: "外部システムが Aavortyx と通信するためのトークンです。パスワード同様に扱ってください。",
       newKey: "新規キー",
       createKey: "キーを作成",
       keyName: "キー名",
@@ -2723,7 +2723,7 @@ export const ja: TranslationShape = {
     },
     marketplace: {
       pageTitle: "マーケットプレイス",
-      pageDescription: "Vortyx のトレーディングフロア — インバウンドコールにリアルタイムで入札。",
+      pageDescription: "Aavortyx のトレーディングフロア — インバウンドコールにリアルタイムで入札。",
       bidsSession: "{count} 件の入札 · セッション",
       resume: "再開",
       pauseFloor: "フロアを一時停止",
@@ -2806,7 +2806,7 @@ export const ja: TranslationShape = {
       pageDescription: "最適化のレコメンド、異常検知、そして本当に質問できるコパイロット。",
       copilotActive: "コパイロット稼働中",
       hero: {
-        copilotBadge: "Vortyx コパイロット",
+        copilotBadge: "Aavortyx コパイロット",
         greetingMorning: "おはようございます",
         greetingAfternoon: "こんにちは",
         greetingEvening: "こんばんは",
@@ -2822,10 +2822,10 @@ export const ja: TranslationShape = {
         netImpactDelta: "すべて適用した場合",
       },
       chat: {
-        title: "Vortyx Copilot",
+        title: "Aavortyx Copilot",
         online: "オンライン",
         description: "パフォーマンス、異常、次の一手について何でも聞いてください。",
-        introLine1: "こんにちは — 私は Vortyx Copilot です。ネットワークについて何でも聞いてください。",
+        introLine1: "こんにちは — 私は Aavortyx Copilot です。ネットワークについて何でも聞いてください。",
         introLine2: "あなたが扱ったすべてのキャンペーン、通話、入札を参照できます。下のプロンプトを試してみてください。",
         inputPlaceholder: "何でも聞いてください…",
         demoNote: "このデモではコパイロットの回答はシミュレートされています。",
@@ -3044,7 +3044,7 @@ export const ja: TranslationShape = {
         whiteGloveSupport: "ホワイトグローブサポート",
         customRateCards: "カスタムレート",
         directApiQuota: "直接 API クォータ",
-        vortyxVerifiedBadge: "Vortyx Verified バッジ",
+        avortyxVerifiedBadge: "Aavortyx Verified バッジ",
       },
       vectors: {
         identity: {
@@ -3152,7 +3152,7 @@ export const ja: TranslationShape = {
     },
     referrals: {
       pageTitle: "リファラルプログラム",
-      pageDescription: "あなたが Vortyx に紹介した顧客のライフタイム消費から {pct} を獲得できます。",
+      pageDescription: "あなたが Aavortyx に紹介した顧客のライフタイム消費から {pct} を獲得できます。",
       partnerBadge: "リファラルパートナー",
       heroTitleBefore: "顧客を紹介してください。彼らが使うすべての ",
       heroTitleAfter: " を — 永久に — お送りします。",
@@ -3198,7 +3198,7 @@ export const ja: TranslationShape = {
     },
     integrations: {
       pageTitle: "連携",
-      pageDescription: "すでに使っているツールに接続し — どこからでも Vortyx のすべてのイベントを取得できます。",
+      pageDescription: "すでに使っているツールに接続し — どこからでも Aavortyx のすべてのイベントを取得できます。",
       board: {
         available: "利用可能",
         connected: "接続中",
@@ -3230,13 +3230,13 @@ export const ja: TranslationShape = {
           active: "アクティブ",
           paused: "一時停止",
           tokenLabel: "API トークン",
-          tokenHint: "Vortyx がパートナー API に認証するために使用します。",
+          tokenHint: "Aavortyx がパートナー API に認証するために使用します。",
           copyTokenAria: "トークンをコピー",
           rotateTokenAria: "トークンを再生成",
           toastTokenCopied: "トークンをコピーしました",
           toastRotateQueued: "トークンの再生成をキューに入れました",
           baseUrlLabel: "ベース URL",
-          baseUrlHint: "Vortyx がイベントを送信する先。指示があった場合のみ変更してください。",
+          baseUrlHint: "Aavortyx がイベントを送信する先。指示があった場合のみ変更してください。",
           connectionTestTitle: "接続テスト",
           connectionTestHint: "資格情報を確認するためのノーオペハンドシェイクを送信。",
           test: "テスト",
@@ -3245,7 +3245,7 @@ export const ja: TranslationShape = {
           toastHealthyDesc: "ラウンドトリップ {ms}ms",
         },
         events: {
-          intro: "Vortyx が {name} に送信するイベントを選択してください。",
+          intro: "Aavortyx が {name} に送信するイベントを選択してください。",
         },
         permissions: {
           intro: "スコープはサーバー側で適用 — 変更は約30秒で反映されます。",
@@ -3317,11 +3317,11 @@ export const ja: TranslationShape = {
         dialog: {
           editTitle: "Webhook を編集",
           createTitle: "Webhook を追加",
-          description: "Vortyx は選択した各イベントについて、あなたの URL に JSON ペイロードを送信します。",
+          description: "Aavortyx は選択した各イベントについて、あなたの URL に JSON ペイロードを送信します。",
           nameLabel: "名前",
           namePlaceholder: "CRM ポストバック",
           urlLabel: "URL",
-          urlPlaceholder: "https://example.com/vortyx/events",
+          urlPlaceholder: "https://example.com/avortyx/events",
           eventsLabel: "イベント",
           secretLabel: "署名シークレット",
           copySecretAria: "シークレットをコピー",
@@ -3843,7 +3843,7 @@ export const ja: TranslationShape = {
     },
     hero: {
       trustChipCount: "500+ ネットワーク",
-      trustChipSuffix: "が Vortyx 上で稼働中",
+      trustChipSuffix: "が Aavortyx 上で稼働中",
       headlinePart1: "着信のすべてを",
       headlineGradient: "収益に変える。",
       subhead:
@@ -3896,7 +3896,7 @@ export const ja: TranslationShape = {
     features: {
       heading: "現代の pay-per-call のために設計",
       description:
-        "Vortyx は旧来のコールトラッキング・ツール群を、着信からバイヤー精算までを束ねる単一のリアルタイム・コントロールプレーンに置き換えます。",
+        "Aavortyx は旧来のコールトラッキング・ツール群を、着信からバイヤー精算までを束ねる単一のリアルタイム・コントロールプレーンに置き換えます。",
       learnMore: "詳細を見る",
       routing: {
         title: "リアルタイム・コールルーティング",
@@ -3914,7 +3914,7 @@ export const ja: TranslationShape = {
     code: {
       sectionLabel: "AI 駆動のインテリジェンス",
       heading: "あなたのネットワークを学習する AI 最適化",
-      descriptionLead: "Vortyx AI。",
+      descriptionLead: "Aavortyx AI。",
       descriptionRest:
         " ネットワークのパフォーマンス・パターンに応じて、拡大・停止・再分配・アラートを自動で提案します。",
       cta: "AI 機能を見る",
@@ -3922,7 +3922,7 @@ export const ja: TranslationShape = {
       connected: "接続済み",
       leftTitle: "スマートなルーティング提案",
       leftDescription:
-        "Vortyx はネットワークのパターンを解析し、収益とバイヤー一致率を最大化する最適化を提案します。",
+        "Aavortyx はネットワークのパターンを解析し、収益とバイヤー一致率を最大化する最適化を提案します。",
       aiLabel: "AI",
       recommendation: "推奨",
       action: "アクション",
@@ -3935,9 +3935,9 @@ export const ja: TranslationShape = {
       patternExplanation:
         "Apex Insurance は過去 48 時間にわたり、安定したコンバージョン品質で 98% の受入率を維持しています。",
       applySuggestion: "提案を適用",
-      rightTitle: "Vortyx SDK",
+      rightTitle: "Aavortyx SDK",
       rightDescription:
-        "Vortyx のあらゆる機能は、型付きの単一 SDK から呼び出せます — そしてすべてのイベントは数ミリ秒で webhook に届きます。",
+        "Aavortyx のあらゆる機能は、型付きの単一 SDK から呼び出せます — そしてすべてのイベントは数ミリ秒で webhook に届きます。",
       routeIncomingCall: "着信コールのルーティング",
     },
     howItWorks: {
@@ -3985,7 +3985,7 @@ export const ja: TranslationShape = {
       headingPart1: "稼ぐコールのために",
       headingPart2: "設計",
       description:
-        "Vortyx が対応するすべてのバーティカルは、その業界に本当に必要なフィルター・タグ・同意取得を備えて出荷されます。ゼロから組み合わせる必要はありません。",
+        "Aavortyx が対応するすべてのバーティカルは、その業界に本当に必要なフィルター・タグ・同意取得を備えて出荷されます。ゼロから組み合わせる必要はありません。",
       health: {
         category: "医療保険",
         statLabel: "1 適格コールあたり平均ペイアウト",
@@ -4026,14 +4026,14 @@ export const ja: TranslationShape = {
     cta: {
       heading: "より賢く通話をルーティングしませんか?",
       description:
-        "トラフィック、判定、収益を Vortyx でスケールさせる、業界トップの pay-per-call ネットワークに加わりましょう。最初の 2,000 コールは無料 — クレジットカード不要。",
+        "トラフィック、判定、収益を Aavortyx でスケールさせる、業界トップの pay-per-call ネットワークに加わりましょう。最初の 2,000 コールは無料 — クレジットカード不要。",
       bookDemo: "デモを予約",
       startFree: "無料で始める",
     },
     footer: {
       tagline:
         "現代の pay-per-call マーケターのためのリアルタイム・コールトラッキング、ルーティング、アナリティクス・プラットフォーム。",
-      copyrightSuffix: "Vortyx Inc. All rights reserved.",
+      copyrightSuffix: "Aavortyx Inc. All rights reserved.",
       allSystemsOperational: "全システム正常稼働中",
       columns: {
         platform: "プラットフォーム",
@@ -4071,15 +4071,15 @@ export const ja: TranslationShape = {
     chat: {
       openLabel: "チャットを開く",
       closeLabel: "チャットを閉じる",
-      title: "Vortyx AI",
+      title: "Aavortyx AI",
       status: "オンライン · 通常すぐに返信します",
       greeting:
-        "やあ — Vortyx AI です。プラットフォームのことなんでも聞いてください、雑談も歓迎です。",
-      typing: "Vortyx AI が入力中…",
+        "やあ — Aavortyx AI です。プラットフォームのことなんでも聞いてください、雑談も歓迎です。",
+      typing: "Aavortyx AI が入力中…",
       placeholder: "なんでも質問してください…",
       sendLabel: "メッセージを送信",
       closeButton: "閉じる",
-      dialogLabel: "Vortyx AI チャット",
+      dialogLabel: "Aavortyx AI チャット",
       networkError: "ネットワークエラー — もう一度お試しください。",
       modelUnreachable: "申し訳ありません、モデルに接続できませんでした。しばらくしてから再度お試しください。",
       errorPrefix: "申し訳ありません — ",
@@ -4104,7 +4104,7 @@ export const ja: TranslationShape = {
       navDocumentation: "ドキュメント",
       liveCalls: "ライブ・コール",
       activeSuffix: "アクティブ",
-      breadcrumbDashboard: "Vortyx ダッシュボード",
+      breadcrumbDashboard: "Aavortyx ダッシュボード",
       breadcrumbNetwork: "ネットワーク · 12 バーティカル",
       breadcrumbDecisioning: "判定 142ms",
       live: "ライブ",
@@ -4136,7 +4136,7 @@ export const ja: TranslationShape = {
       tagline: "すべての通話・シグナル・取引が集まる場所。",
       taglineSub:
         "ペイパーコールのルーティング、AI インサイト、デイリーブリーフィング、ライブマーケット ― 一つのワークスペースに。",
-      footer: "© 2026 Vortyx · ペイパーコール・ルーティングを再構築",
+      footer: "© 2026 Aavortyx · ペイパーコール・ルーティングを再構築",
       signals: {
         callsLabel: "ライブ通話",
         callsValue: "247",
@@ -4147,7 +4147,7 @@ export const ja: TranslationShape = {
       },
     },
     signup: {
-      pageTitle: "Vortyx をはじめる",
+      pageTitle: "Aavortyx をはじめる",
       pageDescription: "コール インテリジェンスのワークスペースを数秒で立ち上げましょう。",
       footerHasAccount: "すでにアカウントをお持ちですか？",
       footerSignIn: "ログイン",
@@ -4174,7 +4174,7 @@ export const ja: TranslationShape = {
       sentAfter: "にリセットリンクをお送りしました。",
     },
     invite: {
-      pageTitleTemplate: "{role} として Vortyx に参加",
+      pageTitleTemplate: "{role} として Aavortyx に参加",
       pageDescriptionTemplate:
         "招待を承諾し、パスワードを設定して {roleLower} ワークスペースにアクセスしてください。",
       footerHasAccount: "すでにアカウントをお持ちですか？",
@@ -4203,26 +4203,26 @@ export const ja: TranslationShape = {
       rolePublisherLower: "パブリッシャー",
     },
     inviteEmail: {
-      brand: "Vortyx",
+      brand: "Aavortyx",
       buyerPreheader:
-        "Vortyx の Avery Chen さんから、ネットワーク上でコールを購入する招待が届きました。",
-      buyerSubject: "Vortyx への招待 — 高品質なコールの購入をはじめましょう",
+        "Aavortyx の Avery Chen さんから、ネットワーク上でコールを購入する招待が届きました。",
+      buyerSubject: "Aavortyx への招待 — 高品質なコールの購入をはじめましょう",
       buyerWhat1:
         "ルーティングされた各コールのライブ表示（発信者の地域・意図シグナル付き）",
       buyerWhat2: "日次／月次キャップと同時接続数の管理",
       buyerWhat3:
         "業種別の入札、完全な通話録音、ディスピュート ツール",
       publisherPreheader:
-        "Vortyx の Avery Chen さんから、バイヤーを通じてトラフィックを収益化する招待が届きました。",
-      publisherSubject: "Vortyx への招待 — コールの収益化をはじめましょう",
+        "Aavortyx の Avery Chen さんから、バイヤーを通じてトラフィックを収益化する招待が届きました。",
+      publisherSubject: "Aavortyx への招待 — コールの収益化をはじめましょう",
       publisherWhat1: "リアルタイムの売上、ペイアウト比率、キャンペーン別収益",
       publisherWhat2: "番号のプロビジョニングとルーティング割り当てを数秒で",
       publisherWhat3:
         "課金対象コールごとに完全な透明性を確保した直接ペイアウト",
-      headlineTemplate: "{role} として Vortyx に招待されました",
+      headlineTemplate: "{role} として Aavortyx に招待されました",
       greeting: "こんにちは —",
       bodyTemplate:
-        "Vortyx の {inviter} さんから、{roleLower} ワークスペースへの招待が届いています。下のボタンから招待を承諾し、パスワードを設定して利用を開始してください。",
+        "Aavortyx の {inviter} さんから、{roleLower} ワークスペースへの招待が届いています。下のボタンから招待を承諾し、パスワードを設定して利用を開始してください。",
       ctaAccept: "招待を承諾 →",
       whatHeading: "ご利用いただける機能",
       fallbackPrompt:
@@ -4230,7 +4230,7 @@ export const ja: TranslationShape = {
       footerExpiry:
         "この招待は 7 日後に期限切れとなります。お心当たりがない場合は、本メッセージを無視していただいて問題ありません。",
       footerAddress:
-        "Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
+        "Aavortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "配信停止",
       footerPrivacy: "プライバシー",
       heroTagline: "ペイパーコール・ルーティングを、再定義。",

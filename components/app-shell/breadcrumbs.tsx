@@ -58,7 +58,7 @@ export function Breadcrumbs({ className }: { className?: string }) {
         {sectionIndex}
       </span>
 
-      {/* Vortyx root */}
+      {/* Avortyx root */}
       <Link
         href={ROUTES.dashboard}
         className="text-muted-foreground transition-colors hover:text-foreground"

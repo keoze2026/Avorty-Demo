@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Vortyx Trust Engine — multi-vector continuous KYC.
+ * Avortyx Trust Engine — multi-vector continuous KYC.
  *
  * Rather than the standard "upload an ID and wait" model, we track FIVE
  * independent verification vectors. Each contributes points to a 0-100 trust
@@ -101,7 +101,7 @@ export const TIERS: KycTierDefinition[] = [
       "White-glove support",
       "Custom rate cards",
       "Direct API quota",
-      "Vortyx Verified badge",
+      "Avortyx Verified badge",
     ],
     badgeClass:
       "bg-[oklch(0.78_0.18_300)]/15 text-[oklch(0.82_0.18_300)] border border-[oklch(0.82_0.18_300)]/30",

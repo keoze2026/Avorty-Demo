@@ -26,7 +26,7 @@ export interface ReferredClient {
 export const REFERRAL_COMMISSION_RATE = 0.05; // 5%
 
 export const MOCK_REFERRAL_CODE = "VORTYX-A4F9X";
-export const MOCK_REFERRAL_LINK = `https://vortyx.io/r/${MOCK_REFERRAL_CODE}`;
+export const MOCK_REFERRAL_LINK = `https://avortyx.io/r/${MOCK_REFERRAL_CODE}`;
 
 export const MOCK_REFERRED_CLIENTS: ReferredClient[] = [
   {

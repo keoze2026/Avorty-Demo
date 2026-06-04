@@ -7,7 +7,7 @@ import { EmailBody, SubjectLine } from "./email-content";
 export const metadata: Metadata = { title: "Invite email preview" };
 
 /**
- * Static preview of the invite email Vortyx would send to a Buyer / Publisher
+ * Static preview of the invite email Avortyx would send to a Buyer / Publisher
  * after an admin invites them. Renders the actual email HTML inside a fake
  * client chrome so it reads like a real Gmail / Outlook preview. The "Accept
  * invitation" button links to the role-scoped invite page in the demo.
@@ -51,7 +51,7 @@ export default function InviteEmailPreviewPage() {
               </div>
               <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                 <strong className="font-medium text-zinc-700">
-                  Vortyx &lt;invites@vortyx.io&gt;
+                  Avortyx &lt;invites@avortyx.io&gt;
                 </strong>
                 <span>·</span>
                 <span>to you</span>
@@ -65,7 +65,7 @@ export default function InviteEmailPreviewPage() {
         </Suspense>
 
         <p className="mt-6 text-center text-[11px] text-zinc-500">
-          This is a static preview. Real sends go through the Vortyx
+          This is a static preview. Real sends go through the Avortyx
           transactional mailer.
         </p>
       </div>

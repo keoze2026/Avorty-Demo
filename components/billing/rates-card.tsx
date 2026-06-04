@@ -3,7 +3,7 @@
 /**
  * Rates — per-country price card.
  *
- * Shows the tariff Vortyx charges for each metered line item (number rentals,
+ * Shows the tariff Avortyx charges for each metered line item (number rentals,
  * per-minute usage, recording, shield checks, etc.) for the selected country.
  * Switching the country in the dropdown swaps the rate tiles below.
  *

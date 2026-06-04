@@ -1,5 +1,5 @@
 /**
- * Vortyx wordmark — logo + product name lock-up.
+ * Avortyx wordmark — logo + product name lock-up.
  * The product name uses an indigo gradient when `gradient` is enabled — gives
  * the navbar / hero a memorable signature flourish that matches the brand.
  */

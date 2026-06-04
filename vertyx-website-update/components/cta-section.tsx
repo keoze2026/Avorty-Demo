@@ -8,7 +8,7 @@ export function CTASection() {
               Ready to route calls smarter?
             </h2>
             <p className="text-zinc-400 max-w-lg">
-              Join leading pay-per-call networks scaling traffic, decisioning, and revenue on Vortyx. Free for your first 2,000 calls — no credit card.
+              Join leading pay-per-call networks scaling traffic, decisioning, and revenue on Avortyx. Free for your first 2,000 calls — no credit card.
             </p>
           </div>
           <div className="flex items-center gap-3">

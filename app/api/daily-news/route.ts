@@ -80,7 +80,7 @@ export async function GET() {
         headers: {
           // Some feeds (notably TechCrunch) 403 a default-UA fetch.
           "User-Agent":
-            "Mozilla/5.0 (compatible; VortyxNewsBot/1.0; +https://vortyx.io)",
+            "Mozilla/5.0 (compatible; AvortyxNewsBot/1.0; +https://avortyx.io)",
           Accept:
             "application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8",
         },

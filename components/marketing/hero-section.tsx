@@ -15,7 +15,7 @@ import { ROUTES } from "@/lib/constants";
  * Headline + CTAs at the top (unchanged from the previous design). Below it
  * a clean browser-chrome frame holds the dashboard mockup, with four small
  * product slices (news, live call, crypto, AI insight) floating around its
- * edges to communicate Vortyx's multi-product nature at a glance. The
+ * edges to communicate Avortyx's multi-product nature at a glance. The
  * orbit cards reuse the same glass formula as the AuthCard on /login so
  * the marketing site and the authenticated app feel like one universe.
  */

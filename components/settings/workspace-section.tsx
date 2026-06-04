@@ -47,7 +47,7 @@ const TABS: Array<{ id: TabId; labelKey: string; icon: React.ComponentType<{ cla
 
 export function WorkspaceSection() {
   const { t } = useTranslation();
-  const [name, setName] = React.useState("Vortyx Demo Co.");
+  const [name, setName] = React.useState("Avortyx Demo Co.");
   // Portal timezone is the single source of truth for the auto-schedule runtime,
   // so write it straight to the auto-schedule store rather than local state.
   const tz = useAutoScheduleStore((s) => s.portalTimezone);

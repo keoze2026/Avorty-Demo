@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Premium chat panel — the "Vortyx Copilot".
+ * Premium chat panel — the "Avortyx Copilot".
  * Suggested prompts as chips → simulated thinking dots → canned multi-line reply.
  * Animated accent halo around the assistant avatar.
  */

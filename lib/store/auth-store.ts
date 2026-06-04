@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>()(
         // Simulated latency
         await new Promise((r) => setTimeout(r, 350));
         const name = email.split("@")[0].replace(/\W+/g, " ").trim() || "User";
-        const user = mockUserFromEmail(email, capitalize(name), role, "Vortyx Demo Co.");
+        const user = mockUserFromEmail(email, capitalize(name), role, "Avortyx Demo Co.");
         set({ user, isAuthenticated: true });
         return user;
       },

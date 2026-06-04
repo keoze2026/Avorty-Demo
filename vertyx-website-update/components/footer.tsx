@@ -16,7 +16,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Phone className="w-5 h-5 text-white" />
-              <span className="text-white font-semibold">Vortyx</span>
+              <span className="text-white font-semibold">Avortyx</span>
             </div>
             <p className="text-zinc-500 text-sm leading-relaxed">
               A real-time call tracking, routing, and analytics platform for modern pay-per-call marketers.
@@ -42,7 +42,7 @@ export function Footer() {
 
         {/* Bottom row */}
         <div className="mt-16 pt-8 border-t border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-zinc-500 text-sm">© 2026 Vortyx Inc. All rights reserved.</p>
+          <p className="text-zinc-500 text-sm">© 2026 Avortyx Inc. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-emerald-400 text-sm flex items-center gap-2 hover:text-emerald-300 transition-colors">
               <span className="w-2 h-2 bg-emerald-400 rounded-full" />

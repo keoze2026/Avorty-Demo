@@ -3,7 +3,7 @@
 /**
  * The top-of-page "co-pilot briefing".
  * Personalized greeting + 3 headline insights, anchored by an animated
- * Vortyx-logo halo that signals "AI is actively analyzing right now".
+ * Avortyx-logo halo that signals "AI is actively analyzing right now".
  */
 
 import { motion } from "framer-motion";

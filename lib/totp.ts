@@ -33,10 +33,10 @@ export function formatSecretForDisplay(secret: string): string {
  * Build the otpauth URL Google Authenticator (and 1Password, Authy, etc.)
  * understands.
  *
- *   otpauth://totp/Vortyx:user@example.com?secret=...&issuer=Vortyx&algorithm=SHA1&digits=6&period=30
+ *   otpauth://totp/Avortyx:user@example.com?secret=...&issuer=Avortyx&algorithm=SHA1&digits=6&period=30
  */
 export function buildOtpauthUrl({
-  issuer = "Vortyx",
+  issuer = "Avortyx",
   account,
   secret,
 }: {

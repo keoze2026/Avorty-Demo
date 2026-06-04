@@ -21,7 +21,7 @@ export function ProfileSection() {
   const setAvatar = useAuthStore((s) => s.setAvatar);
 
   const [name, setName] = useState(user?.name ?? "Avery Quinn");
-  const [email, setEmail] = useState(user?.email ?? "avery@vortyx.io");
+  const [email, setEmail] = useState(user?.email ?? "avery@avortyx.io");
   const [mfa, setMfa] = useState(true);
   const [phone, setPhone] = useState("+14155550184");
 

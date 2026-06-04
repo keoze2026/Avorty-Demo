@@ -110,7 +110,7 @@ async function fetchRss(
       next: { revalidate: revalidateSec },
       headers: {
         Accept: "application/rss+xml, application/xml, text/xml",
-        "User-Agent": "Mozilla/5.0 (compatible; VortyxNewsAggregator/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; AvortyxNewsAggregator/1.0)",
       },
     });
     if (!res.ok) throw new Error(`status ${res.status}`);

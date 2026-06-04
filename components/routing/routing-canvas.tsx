@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * ReactFlow wrapper for the Vortyx routing editor.
+ * ReactFlow wrapper for the Avortyx routing editor.
  * Handles drag-from-palette, connection rules, selection, and exposes the
  * working graph state up to the parent page via callbacks.
  */

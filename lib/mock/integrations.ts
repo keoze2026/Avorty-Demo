@@ -173,7 +173,7 @@ export const MOCK_INTEGRATIONS: IntegrationApp[] = [
   {
     id: "make",
     name: "Make",
-    description: "Visual automation with Vortyx triggers.",
+    description: "Visual automation with Avortyx triggers.",
     category: "automation",
     color: "#6D00CC",
     mark: "Mk",

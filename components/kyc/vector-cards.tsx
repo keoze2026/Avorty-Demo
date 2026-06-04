@@ -175,7 +175,7 @@ function BusinessFlow({ vector, onSubmit }: { vector: KycVector; onSubmit: () =>
     setProgress(vector.id, 0.3);
     // Simulate IRS / state-registry lookup.
     setTimeout(() => {
-      setFound({ name: "Vortyx Demo Co.", state: "Delaware", type: "LLC" });
+      setFound({ name: "Avortyx Demo Co.", state: "Delaware", type: "LLC" });
       setLooking(false);
       setProgress(vector.id, 0.85);
     }, 1400);

@@ -1,5 +1,5 @@
 /**
- * Vortyx logo — vector mark (inline SVG).
+ * Avortyx logo — vector mark (inline SVG).
  * Indigo gradient (#818CF8 → #5266E0 → #3A4BC4) matching the brand palette.
  * Single-hue ramp gives the vortex depth without competing with other colors.
  */

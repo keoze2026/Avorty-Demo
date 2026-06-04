@@ -68,7 +68,7 @@ export const MOCK_WORKSPACE_ACTIVITY: WorkspaceActivityEvent[] = [
     category: "member",
     timestamp: Date.now() - MIN * 24,
     actor: AVERY,
-    target: "devon@vortyx.io",
+    target: "devon@avortyx.io",
     detail: "as Viewer",
   },
   {
@@ -130,7 +130,7 @@ export const MOCK_WORKSPACE_ACTIVITY: WorkspaceActivityEvent[] = [
     timestamp: Date.now() - DAY * 4,
     actor: AVERY,
     target: "Workspace name",
-    detail: "Vortyx Demo → Vortyx Demo Co.",
+    detail: "Avortyx Demo → Avortyx Demo Co.",
   },
   {
     id: "a_009",
@@ -147,7 +147,7 @@ export const MOCK_WORKSPACE_ACTIVITY: WorkspaceActivityEvent[] = [
     category: "member",
     timestamp: Date.now() - DAY * 8,
     actor: AVERY,
-    target: "kai@vortyx.io",
+    target: "kai@avortyx.io",
   },
   {
     id: "a_011",
@@ -155,7 +155,7 @@ export const MOCK_WORKSPACE_ACTIVITY: WorkspaceActivityEvent[] = [
     category: "member",
     timestamp: Date.now() - DAY * 12,
     actor: MORGAN,
-    target: "riley@vortyx.io",
+    target: "riley@avortyx.io",
     detail: "as Publisher",
   },
   {

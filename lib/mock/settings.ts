@@ -14,7 +14,7 @@ export const MOCK_MEMBERS: Member[] = [
   {
     id: "m_001",
     name: "Avery Quinn",
-    email: "avery@vortyx.io",
+    email: "avery@avortyx.io",
     role: "admin",
     initials: "AQ",
     avatar: ["#00e6b8", "#1656d6"],
@@ -26,7 +26,7 @@ export const MOCK_MEMBERS: Member[] = [
   {
     id: "m_002",
     name: "Morgan Reed",
-    email: "morgan@vortyx.io",
+    email: "morgan@avortyx.io",
     role: "manager",
     initials: "MR",
     avatar: ["#22d3ee", "#1656d6"],
@@ -38,7 +38,7 @@ export const MOCK_MEMBERS: Member[] = [
   {
     id: "m_003",
     name: "Riley Chen",
-    email: "riley@vortyx.io",
+    email: "riley@avortyx.io",
     role: "publisher",
     initials: "RC",
     avatar: ["#7de1ff", "#22d3ee"],
@@ -50,7 +50,7 @@ export const MOCK_MEMBERS: Member[] = [
   {
     id: "m_004",
     name: "Priya Desai",
-    email: "priya@vortyx.io",
+    email: "priya@avortyx.io",
     role: "buyer",
     initials: "PD",
     avatar: ["#a855f7", "#1656d6"],
@@ -62,7 +62,7 @@ export const MOCK_MEMBERS: Member[] = [
   {
     id: "m_005",
     name: "Devon Walker",
-    email: "devon@vortyx.io",
+    email: "devon@avortyx.io",
     role: "viewer",
     initials: "DW",
     avatar: ["#f472b6", "#7c3aed"],
@@ -72,7 +72,7 @@ export const MOCK_MEMBERS: Member[] = [
   {
     id: "m_006",
     name: "Hana Becker",
-    email: "hana@vortyx.io",
+    email: "hana@avortyx.io",
     role: "buyer",
     initials: "HB",
     avatar: ["#f59e0b", "#dc2626"],

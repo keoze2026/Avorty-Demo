@@ -36,7 +36,7 @@ export function LoginForm() {
 
   const [phase, setPhase] = useState<"credentials" | "2fa">("credentials");
 
-  const [email, setEmail] = useState("avery@vortyx.io");
+  const [email, setEmail] = useState("avery@avortyx.io");
   const [password, setPassword] = useState("vortyx");
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
@@ -62,7 +62,7 @@ export function LoginForm() {
         setCode("");
         return;
       }
-      toast.success("Welcome back to Vortyx");
+      toast.success("Welcome back to Avortyx");
       finishLogin();
     } catch {
       toast.error("Sign in failed — try again");
@@ -78,7 +78,7 @@ export function LoginForm() {
       return;
     }
     setTwoFactorVerified();
-    toast.success("Welcome back to Vortyx");
+    toast.success("Welcome back to Avortyx");
     finishLogin();
   };
 

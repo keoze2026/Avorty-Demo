@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Vortyx — The next generation of call intelligence',
+  title: 'Avortyx — The next generation of call intelligence',
   description: 'The most intelligent call-tracking platform — real-time routing, live monitoring, and AI-driven optimization for the modern pay-per-call network.',
   generator: 'v0.app',
   icons: {

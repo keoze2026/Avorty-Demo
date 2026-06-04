@@ -4,9 +4,9 @@ export const MOCK_USERS: User[] = [
   {
     id: "u_admin",
     name: "Avery Quinn",
-    email: "avery@vortyx.io",
+    email: "avery@avortyx.io",
     role: "admin",
-    organization: "Vortyx Demo Co.",
+    organization: "Avortyx Demo Co.",
   },
   {
     id: "u_buyer",

@@ -4,7 +4,7 @@
  * Each entry maps to one of the `.theme-*` classes defined in globals.css.
  * Selecting an entry swaps the full palette — background, foreground, cards,
  * sidebar, borders, ring, accent, chart-1 — across both light and dark mode.
- * "Default" is the original Vortyx Indigo+slate look (no class applied).
+ * "Default" is the original Avortyx Indigo+slate look (no class applied).
  *
  * Gradient themes (aurora / sunset / ocean / plasma / ember) additionally
  * carry a `gradient` CSS string used by the swatch and exposed at runtime as

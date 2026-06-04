@@ -109,7 +109,7 @@ export const ru: TranslationShape = {
     },
     integrations: {
       title: "Интеграции",
-      description: "Подключите Vortyx к инструментам вашей команды.",
+      description: "Подключите Aavortyx к инструментам вашей команды.",
     },
     referrals: {
       title: "Рефералы",
@@ -190,7 +190,7 @@ export const ru: TranslationShape = {
 
   login: {
     welcomeBack: "С возвращением",
-    description: "Войдите в рабочее пространство Vortyx.",
+    description: "Войдите в рабочее пространство Aavortyx.",
     email: "Email",
     password: "Пароль",
     forgot: "Забыли?",
@@ -351,7 +351,7 @@ export const ru: TranslationShape = {
     apiKeysSection: {
       eyebrow: "API ключи",
       title: "Программный доступ",
-      description: "Токены для общения внешних систем с Vortyx. Обращайтесь с ними как с паролем.",
+      description: "Токены для общения внешних систем с Aavortyx. Обращайтесь с ними как с паролем.",
       newKey: "Новый ключ",
       createKey: "Создать ключ",
       keyName: "Название ключа",
@@ -2723,7 +2723,7 @@ export const ru: TranslationShape = {
     },
     marketplace: {
       pageTitle: "Маркетплейс",
-      pageDescription: "Торговая площадка Vortyx — ставки на входящие звонки в реальном времени.",
+      pageDescription: "Торговая площадка Aavortyx — ставки на входящие звонки в реальном времени.",
       bidsSession: "{count} ставок · сессия",
       resume: "Продолжить",
       pauseFloor: "Пауза",
@@ -2806,7 +2806,7 @@ export const ru: TranslationShape = {
       pageDescription: "Рекомендации по оптимизации, детектор аномалий и второй пилот, которому можно задавать вопросы.",
       copilotActive: "Второй пилот активен",
       hero: {
-        copilotBadge: "Vortyx — второй пилот",
+        copilotBadge: "Aavortyx — второй пилот",
         greetingMorning: "Доброе утро",
         greetingAfternoon: "Добрый день",
         greetingEvening: "Добрый вечер",
@@ -2822,10 +2822,10 @@ export const ru: TranslationShape = {
         netImpactDelta: "если применить всё",
       },
       chat: {
-        title: "Vortyx Copilot",
+        title: "Aavortyx Copilot",
         online: "Онлайн",
         description: "Спросите о производительности, аномалиях или что делать дальше.",
-        introLine1: "Привет — я Vortyx Copilot. Спросите всё о вашей сети.",
+        introLine1: "Привет — я Aavortyx Copilot. Спросите всё о вашей сети.",
         introLine2: "Я вижу каждую кампанию, звонок и ставку, которую вы обработали. Попробуйте подсказку ниже.",
         inputPlaceholder: "Спросите что-нибудь…",
         demoNote: "Ответы второго пилота в этом демо симулированы.",
@@ -3044,7 +3044,7 @@ export const ru: TranslationShape = {
         whiteGloveSupport: "Персональный менеджер",
         customRateCards: "Индивидуальные тарифы",
         directApiQuota: "Прямая API-квота",
-        vortyxVerifiedBadge: "Бейдж Vortyx Verified",
+        avortyxVerifiedBadge: "Бейдж Aavortyx Verified",
       },
       vectors: {
         identity: {
@@ -3132,7 +3132,7 @@ export const ru: TranslationShape = {
         dncTitle: "Скраб федерального DNC",
         dncBody: "Мои списки сверяются с Национальным реестром Do Not Call не более чем за 31 день до набора.",
         auditTitle: "Аудит выборочных звонков",
-        auditBody: "Я разрешаю Vortyx прослушать 5 случайных звонков за следующие 7 дней для проверки комплаенс-сигналов.",
+        auditBody: "Я разрешаю Aavortyx прослушать 5 случайных звонков за следующие 7 дней для проверки комплаенс-сигналов.",
         submit: "Отправить на проверку",
       },
       reputationFlow: {
@@ -3152,7 +3152,7 @@ export const ru: TranslationShape = {
     },
     referrals: {
       pageTitle: "Реферальная программа",
-      pageDescription: "Получайте {pct} с общего расхода каждого клиента, которого вы приведёте в Vortyx.",
+      pageDescription: "Получайте {pct} с общего расхода каждого клиента, которого вы приведёте в Aavortyx.",
       partnerBadge: "Реферальный партнёр",
       heroTitleBefore: "Приведите клиента. Мы отправим вам ",
       heroTitleAfter: " с каждого его доллара — навсегда.",
@@ -3198,7 +3198,7 @@ export const ru: TranslationShape = {
     },
     integrations: {
       pageTitle: "Интеграции",
-      pageDescription: "Подключите инструменты, которые уже используете, — и получайте каждое событие Vortyx откуда угодно.",
+      pageDescription: "Подключите инструменты, которые уже используете, — и получайте каждое событие Aavortyx откуда угодно.",
       board: {
         available: "Доступные",
         connected: "Подключённые",
@@ -3230,13 +3230,13 @@ export const ru: TranslationShape = {
           active: "Активно",
           paused: "На паузе",
           tokenLabel: "API-токен",
-          tokenHint: "Используется Vortyx для аутентификации в API партнёра.",
+          tokenHint: "Используется Aavortyx для аутентификации в API партнёра.",
           copyTokenAria: "Скопировать токен",
           rotateTokenAria: "Сменить токен",
           toastTokenCopied: "Токен скопирован",
           toastRotateQueued: "Смена токена поставлена в очередь",
           baseUrlLabel: "Базовый URL",
-          baseUrlHint: "Куда Vortyx отправляет события. Меняйте только если указано.",
+          baseUrlHint: "Куда Aavortyx отправляет события. Меняйте только если указано.",
           connectionTestTitle: "Тест соединения",
           connectionTestHint: "Отправить пустое рукопожатие для проверки данных.",
           test: "Тест",
@@ -3245,7 +3245,7 @@ export const ru: TranslationShape = {
           toastHealthyDesc: "Время обхода {ms} мс",
         },
         events: {
-          intro: "Выберите события, которые Vortyx должен отправлять в {name}.",
+          intro: "Выберите события, которые Aavortyx должен отправлять в {name}.",
         },
         permissions: {
           intro: "Скоупы применяются на сервере — изменения вступают в силу за ~30 с.",
@@ -3317,11 +3317,11 @@ export const ru: TranslationShape = {
         dialog: {
           editTitle: "Изменить вебхук",
           createTitle: "Добавить вебхук",
-          description: "Vortyx отправляет JSON-данные на ваш URL для каждого выбранного события.",
+          description: "Aavortyx отправляет JSON-данные на ваш URL для каждого выбранного события.",
           nameLabel: "Имя",
           namePlaceholder: "CRM postback",
           urlLabel: "URL",
-          urlPlaceholder: "https://example.com/vortyx/events",
+          urlPlaceholder: "https://example.com/avortyx/events",
           eventsLabel: "События",
           secretLabel: "Подписной секрет",
           copySecretAria: "Скопировать секрет",
@@ -3843,7 +3843,7 @@ export const ru: TranslationShape = {
     },
     hero: {
       trustChipCount: "500+ сетей",
-      trustChipSuffix: "уже маршрутизируют звонки на Vortyx",
+      trustChipSuffix: "уже маршрутизируют звонки на Aavortyx",
       headlinePart1: "Превратите каждый звонок",
       headlineGradient: "в доход.",
       subhead:
@@ -3896,7 +3896,7 @@ export const ru: TranslationShape = {
     features: {
       heading: "Создано для современного pay-per-call",
       description:
-        "Vortyx заменяет ворох устаревших инструментов call-tracking единой панелью управления в реальном времени — от входящего звонка до расчёта с покупателем.",
+        "Aavortyx заменяет ворох устаревших инструментов call-tracking единой панелью управления в реальном времени — от входящего звонка до расчёта с покупателем.",
       learnMore: "Подробнее",
       routing: {
         title: "Маршрутизация в реальном времени",
@@ -3914,7 +3914,7 @@ export const ru: TranslationShape = {
     code: {
       sectionLabel: "Интеллект на базе AI",
       heading: "AI-оптимизация, которая изучает вашу сеть",
-      descriptionLead: "Vortyx AI.",
+      descriptionLead: "Aavortyx AI.",
       descriptionRest:
         " Подсказывает, где масштабировать, ставить на паузу, перебалансировать или оповещать — автоматически, по паттернам вашей сети.",
       cta: "Возможности AI",
@@ -3922,7 +3922,7 @@ export const ru: TranslationShape = {
       connected: "Подключено",
       leftTitle: "Умные предложения по маршрутизации",
       leftDescription:
-        "Vortyx анализирует паттерны вашей сети и предлагает оптимизации, чтобы увеличить выручку и долю успешных совпадений с покупателями.",
+        "Aavortyx анализирует паттерны вашей сети и предлагает оптимизации, чтобы увеличить выручку и долю успешных совпадений с покупателями.",
       aiLabel: "AI",
       recommendation: "Рекомендация",
       action: "Действие",
@@ -3935,9 +3935,9 @@ export const ru: TranslationShape = {
       patternExplanation:
         "Apex Insurance держит 98% приёма звонков последние 48 часов при стабильном качестве конверсии.",
       applySuggestion: "Применить",
-      rightTitle: "Vortyx SDK",
+      rightTitle: "Aavortyx SDK",
       rightDescription:
-        "Любая возможность Vortyx доступна через единый типизированный SDK — а каждое событие прилетает на ваш webhook за миллисекунды.",
+        "Любая возможность Aavortyx доступна через единый типизированный SDK — а каждое событие прилетает на ваш webhook за миллисекунды.",
       routeIncomingCall: "Маршрутизация входящего",
     },
     howItWorks: {
@@ -3985,7 +3985,7 @@ export const ru: TranslationShape = {
       headingPart1: "Создано для звонков,",
       headingPart2: "которые приносят доход",
       description:
-        "Каждая вертикаль Vortyx идёт с готовыми фильтрами, тегами и сбором согласий, нужными именно этой нише — не нужно собирать всё с нуля.",
+        "Каждая вертикаль Aavortyx идёт с готовыми фильтрами, тегами и сбором согласий, нужными именно этой нише — не нужно собирать всё с нуля.",
       health: {
         category: "Медицинское страхование",
         statLabel: "СРЕДНЯЯ ВЫПЛАТА / КАЧЕСТВЕННЫЙ ЗВОНОК",
@@ -4026,14 +4026,14 @@ export const ru: TranslationShape = {
     cta: {
       heading: "Готовы маршрутизировать звонки умнее?",
       description:
-        "Присоединяйтесь к ведущим pay-per-call сетям, которые масштабируют трафик, решения и выручку на Vortyx. Первые 2 000 звонков бесплатно — без карты.",
+        "Присоединяйтесь к ведущим pay-per-call сетям, которые масштабируют трафик, решения и выручку на Aavortyx. Первые 2 000 звонков бесплатно — без карты.",
       bookDemo: "Записаться на демо",
       startFree: "Начать бесплатно",
     },
     footer: {
       tagline:
         "Платформа call-tracking, маршрутизации и аналитики в реальном времени для современных pay-per-call маркетологов.",
-      copyrightSuffix: "Vortyx Inc. Все права защищены.",
+      copyrightSuffix: "Aavortyx Inc. Все права защищены.",
       allSystemsOperational: "ВСЕ СИСТЕМЫ В НОРМЕ",
       columns: {
         platform: "Платформа",
@@ -4071,15 +4071,15 @@ export const ru: TranslationShape = {
     chat: {
       openLabel: "Открыть чат",
       closeLabel: "Закрыть чат",
-      title: "Vortyx AI",
+      title: "Aavortyx AI",
       status: "В сети · обычно отвечает мгновенно",
       greeting:
-        "Привет — я Vortyx AI. Спросите что угодно о платформе или просто поболтайте.",
-      typing: "Vortyx AI печатает…",
+        "Привет — я Aavortyx AI. Спросите что угодно о платформе или просто поболтайте.",
+      typing: "Aavortyx AI печатает…",
       placeholder: "Спросите что угодно…",
       sendLabel: "Отправить сообщение",
       closeButton: "Закрыть",
-      dialogLabel: "Чат Vortyx AI",
+      dialogLabel: "Чат Aavortyx AI",
       networkError: "Сетевой сбой — попробуйте ещё раз.",
       modelUnreachable: "Извините, не удалось связаться с моделью. Попробуйте позже.",
       errorPrefix: "Извините — ",
@@ -4104,7 +4104,7 @@ export const ru: TranslationShape = {
       navDocumentation: "Документация",
       liveCalls: "Живые звонки",
       activeSuffix: "активных",
-      breadcrumbDashboard: "Дашборд Vortyx",
+      breadcrumbDashboard: "Дашборд Aavortyx",
       breadcrumbNetwork: "Сеть · 12 вертикалей",
       breadcrumbDecisioning: "142 мс на решение",
       live: "В эфире",
@@ -4136,7 +4136,7 @@ export const ru: TranslationShape = {
       tagline: "Здесь сходятся все звонки, сигналы и сделки.",
       taglineSub:
         "Маршрутизация pay-per-call, AI-инсайты, ежедневные сводки и живые рынки — единое рабочее пространство.",
-      footer: "© 2026 Vortyx · Маршрутизация pay-per-call, переосмысленная",
+      footer: "© 2026 Aavortyx · Маршрутизация pay-per-call, переосмысленная",
       signals: {
         callsLabel: "Live звонки",
         callsValue: "247",
@@ -4147,7 +4147,7 @@ export const ru: TranslationShape = {
       },
     },
     signup: {
-      pageTitle: "Начните с Vortyx",
+      pageTitle: "Начните с Aavortyx",
       pageDescription: "Создайте своё рабочее пространство для аналитики звонков за секунды.",
       footerHasAccount: "Уже есть аккаунт?",
       footerSignIn: "Войти",
@@ -4174,7 +4174,7 @@ export const ru: TranslationShape = {
       sentAfter: "— там ссылка для сброса.",
     },
     invite: {
-      pageTitleTemplate: "Присоединиться к Vortyx как {role}",
+      pageTitleTemplate: "Присоединиться к Aavortyx как {role}",
       pageDescriptionTemplate:
         "Примите приглашение и задайте пароль для входа в рабочее пространство «{roleLower}».",
       footerHasAccount: "Уже есть аккаунт?",
@@ -4203,26 +4203,26 @@ export const ru: TranslationShape = {
       rolePublisherLower: "издатель",
     },
     inviteEmail: {
-      brand: "Vortyx",
+      brand: "Aavortyx",
       buyerPreheader:
-        "Эйвери Чен из Vortyx приглашает вас покупать звонки в их сети.",
-      buyerSubject: "Вы приглашены в Vortyx — начните покупать качественные звонки",
+        "Эйвери Чен из Aavortyx приглашает вас покупать звонки в их сети.",
+      buyerSubject: "Вы приглашены в Aavortyx — начните покупать качественные звонки",
       buyerWhat1:
         "Реальный обзор каждого маршрутизированного звонка, включая гео и сигналы намерения",
       buyerWhat2: "Контроль дневных и месячных лимитов, ограничения параллельных звонков",
       buyerWhat3:
         "Ставки по вертикалям, полная запись звонков и инструменты для разрешения споров",
       publisherPreheader:
-        "Эйвери Чен из Vortyx приглашает вас монетизировать трафик через их покупателей.",
-      publisherSubject: "Вы приглашены в Vortyx — начните монетизировать звонки",
+        "Эйвери Чен из Aavortyx приглашает вас монетизировать трафик через их покупателей.",
+      publisherSubject: "Вы приглашены в Aavortyx — начните монетизировать звонки",
       publisherWhat1: "Доход в реальном времени, доля выплат и заработок по каждой кампании",
       publisherWhat2: "Подготовка номеров и назначение маршрутизации за секунды",
       publisherWhat3:
         "Прямые выплаты с полной прозрачностью по каждому оплачиваемому звонку",
-      headlineTemplate: "Вы приглашены в Vortyx как {role}",
+      headlineTemplate: "Вы приглашены в Aavortyx как {role}",
       greeting: "Здравствуйте —",
       bodyTemplate:
-        "{inviter} из Vortyx приглашает вас присоединиться к их рабочему пространству «{roleLower}». Нажмите кнопку ниже, чтобы принять приглашение, задать пароль и начать работу.",
+        "{inviter} из Aavortyx приглашает вас присоединиться к их рабочему пространству «{roleLower}». Нажмите кнопку ниже, чтобы принять приглашение, задать пароль и начать работу.",
       ctaAccept: "Принять приглашение →",
       whatHeading: "Что вы получите",
       fallbackPrompt:
@@ -4230,7 +4230,7 @@ export const ru: TranslationShape = {
       footerExpiry:
         "Это приглашение истекает через 7 дней. Если вы его не ожидали, можно спокойно проигнорировать это сообщение.",
       footerAddress:
-        "Vortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
+        "Aavortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "Отписаться",
       footerPrivacy: "Конфиденциальность",
       heroTagline: "Pay-per-call маршрутизация — переосмыслено.",

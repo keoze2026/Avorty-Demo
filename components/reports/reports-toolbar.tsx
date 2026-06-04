@@ -62,7 +62,7 @@ const REFRESH_SECONDS: Record<RefreshOption, number> = {
  * Subtle hover override used on every outline button in the toolbar.
  *
  * shadcn's outline variant default is `hover:bg-accent hover:text-accent-foreground`,
- * which on Vortyx's dark theme flashes the button to bright teal + near-black
+ * which on Avortyx's dark theme flashes the button to bright teal + near-black
  * text — readable in isolation but jarring here, and easy to mistake for
  * disabled. Swap for a muted background that keeps `--foreground` text.
  */

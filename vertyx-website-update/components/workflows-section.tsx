@@ -153,7 +153,7 @@ export function WorkflowsSection() {
 
           {/* Description */}
           <p className="text-zinc-400 lg:max-w-sm lg:pt-12">
-            Every vertical Vortyx supports ships with the filters, tags, and consent capture that vertical actually needs — so you&apos;re not gluing yours together from scratch.
+            Every vertical Avortyx supports ships with the filters, tags, and consent capture that vertical actually needs — so you&apos;re not gluing yours together from scratch.
           </p>
         </div>
 

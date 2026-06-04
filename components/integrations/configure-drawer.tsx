@@ -5,7 +5,7 @@
  *
  * Four tabs:
  *  - Connection — API token, base URL, test-connection
- *  - Events     — which Vortyx events to sync, with descriptions
+ *  - Events     — which Avortyx events to sync, with descriptions
  *  - Permissions — read/write scopes for the integration
  *  - Activity   — recent sync entries
  *

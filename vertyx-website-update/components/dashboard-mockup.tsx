@@ -70,7 +70,7 @@ export function DashboardMockup() {
         <div className="p-3 border-b border-zinc-800/50">
           <div className="flex items-center gap-2 px-2 py-1.5">
             <Phone className="w-5 h-5 text-white" />
-            <span className="text-white font-semibold text-sm">Vortyx</span>
+            <span className="text-white font-semibold text-sm">Avortyx</span>
             <ChevronDown className="w-3.5 h-3.5 text-zinc-500 ml-auto" />
           </div>
         </div>
@@ -218,7 +218,7 @@ export function DashboardMockup() {
         {/* Header breadcrumb */}
         <div className="px-5 py-3 border-b border-zinc-800/50 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-zinc-500">Vortyx dashboard</span>
+            <span className="text-zinc-500">Avortyx dashboard</span>
             <span className="text-zinc-600">›</span>
             <span className="text-emerald-400">Network · 12 verticals</span>
             <span className="text-zinc-600">›</span>

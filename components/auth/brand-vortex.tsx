@@ -3,11 +3,11 @@
 /**
  * Brand-vortex background for the (auth) layout.
  *
- * The Vortyx logo is a three-arc spiral sweeping toward a bright core — this
+ * The Avortyx logo is a three-arc spiral sweeping toward a bright core — this
  * extrudes that metaphor to ambient scale: concentric rings rotate around a
  * pinned-left centre, signal particles orbit each ring, and stray "inflow"
  * particles drift in from the edges and get pulled toward the core. The
- * visual reads as "Vortyx is the hub that everything (calls, news, crypto,
+ * visual reads as "Avortyx is the hub that everything (calls, news, crypto,
  * insights) funnels through."
  *
  * Strict brand palette — only the four indigo tones from the logo:

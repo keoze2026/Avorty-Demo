@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description: BRAND.description,
   applicationName: BRAND.name,
   icons: {
-    icon: [{ url: "/vortyx-mark.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/avortyx-mark.svg", type: "image/svg+xml" }],
     apple: "/apple-icon.png",
   },
 };

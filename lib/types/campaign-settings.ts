@@ -240,7 +240,7 @@ export const DEFAULT_CAMPAIGN_SETTINGS: CampaignAdvancedSettings = {
     maxLengthSec: 120,
     notificationEmail: "",
   },
-  whisperMessage: { enabled: false, message: "Incoming call from Vortyx campaign." },
+  whisperMessage: { enabled: false, message: "Incoming call from Avortyx campaign." },
   capSettings: { enabled: false, hourlyCap: 0, dailyCap: 0, monthlyCap: 0, scope: "campaign" },
   revenueSaver: { enabled: false, minRevenue: 0, fallback: "deadEnd", rerouteCampaignId: "" },
   concurrency: { enabled: false, maxConcurrent: 10, overflowAction: "queue" },

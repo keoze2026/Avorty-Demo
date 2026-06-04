@@ -99,7 +99,7 @@ export function FeatureCardsSection() {
               className="max-w-md"
             >
               <p className="text-zinc-400 leading-relaxed">
-                Vortyx replaces a stack of legacy call-tracking tools with a single, real-time control plane — from inbound ring to buyer settlement.{" "}
+                Avortyx replaces a stack of legacy call-tracking tools with a single, real-time control plane — from inbound ring to buyer settlement.{" "}
                 <a href="#" className="text-white inline-flex items-center gap-1 hover:underline">
                   Learn more <ChevronRight className="w-4 h-4" />
                 </a>

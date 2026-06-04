@@ -84,7 +84,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
                   </TableCell>
                   <TableCell className="text-sm">{n.label ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {n.vendor ?? "Vortyx"}
+                    {n.vendor ?? "Avortyx"}
                   </TableCell>
                   <TableCell className="font-mono text-xs tabular-nums">
                     {formatCurrency(n.payoutPerCall ?? 0, true)}

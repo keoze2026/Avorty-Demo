@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 3-pane Vortyx dashboard simulation used inside the hero 3D stage.
+ * 3-pane Avortyx dashboard simulation used inside the hero 3D stage.
  * Reskinned to use the project's theme tokens — no hardcoded zinc colors.
  */
 
@@ -72,7 +72,7 @@ export function DashboardMockup() {
         <div className="p-3 border-b border-border/60">
           <div className="flex items-center gap-2 px-2 py-1.5">
             <Phone className="w-5 h-5 text-foreground" />
-            <span className="text-foreground font-semibold text-sm">Vortyx</span>
+            <span className="text-foreground font-semibold text-sm">Avortyx</span>
             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
           </div>
         </div>

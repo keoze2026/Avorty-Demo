@@ -62,7 +62,7 @@ export function AISection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-zinc-400 max-w-md mb-8"
           >
-            <span className="text-white font-medium">Vortyx AI.</span> Suggests where to scale, pause, rebalance, or alert — automatically based on your network&apos;s performance patterns.
+            <span className="text-white font-medium">Avortyx AI.</span> Suggests where to scale, pause, rebalance, or alert — automatically based on your network&apos;s performance patterns.
           </motion.p>
 
           {/* Learn more button */}
@@ -203,7 +203,7 @@ export function AISection() {
               <div className="border-t border-r border-b border-zinc-800/60 pt-12 pr-12 pb-16">
                 <h3 className="text-zinc-200 font-medium text-xl mb-3">Smart routing suggestions</h3>
                 <p className="text-zinc-500 text-base mb-8">
-                  Vortyx analyzes your network patterns and suggests optimizations to maximize revenue and buyer match rates.
+                  Avortyx analyzes your network patterns and suggests optimizations to maximize revenue and buyer match rates.
                 </p>
 
                 {/* AI Suggestion Card */}
@@ -263,9 +263,9 @@ export function AISection() {
 
               {/* Right column */}
               <div className="border-t border-b border-zinc-800/60 pt-12 pl-12 pb-16">
-                <h3 className="text-zinc-200 font-medium text-xl mb-3">Vortyx SDK</h3>
+                <h3 className="text-zinc-200 font-medium text-xl mb-3">Avortyx SDK</h3>
                 <p className="text-zinc-500 text-base mb-8">
-                  Every Vortyx capability is reachable from a single typed SDK — and every event lands on your webhook within milliseconds.
+                  Every Avortyx capability is reachable from a single typed SDK — and every event lands on your webhook within milliseconds.
                 </p>
 
                 {/* SDK Code Snippet */}

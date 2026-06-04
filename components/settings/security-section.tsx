@@ -109,7 +109,7 @@ function TwoFactorCard() {
           </div>
         ) : (
           <TwoFactorSetup
-            accountEmail={user?.email ?? "user@vortyx.io"}
+            accountEmail={user?.email ?? "user@avortyx.io"}
             currentSecret={secret}
             onCancel={() => setSetupOpen(false)}
             onConfirm={(s) => {

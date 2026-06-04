@@ -38,7 +38,7 @@ const BENEFIT_KEYS: Record<string, string> = {
   "White-glove support": "toolsUI.trustEngine.benefits.whiteGloveSupport",
   "Custom rate cards": "toolsUI.trustEngine.benefits.customRateCards",
   "Direct API quota": "toolsUI.trustEngine.benefits.directApiQuota",
-  "Vortyx Verified badge": "toolsUI.trustEngine.benefits.vortyxVerifiedBadge",
+  "Avortyx Verified badge": "toolsUI.trustEngine.benefits.vortyxVerifiedBadge",
 };
 
 const TIER_LABEL_KEYS: Record<string, string> = {

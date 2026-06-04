@@ -37,14 +37,14 @@ const DEMO_TOKENS: Record<string, Invite> = {
   "buyer-demo": {
     email: "morgan@buyersco.com",
     inviterName: "Avery Chen",
-    inviterEmail: "avery@vortyx.io",
-    organization: "Vortyx",
+    inviterEmail: "avery@avortyx.io",
+    organization: "Avortyx",
   },
   "publisher-demo": {
     email: "riley@traffichub.com",
     inviterName: "Avery Chen",
-    inviterEmail: "avery@vortyx.io",
-    organization: "Vortyx",
+    inviterEmail: "avery@avortyx.io",
+    organization: "Avortyx",
   },
 };
 
@@ -55,9 +55,9 @@ function decodeToken(role: "buyer" | "publisher", token: string): Invite {
     DEMO_TOKENS[token] ??
     DEMO_TOKENS[`${role}-demo`] ?? {
       email: `${role}@example.com`,
-      inviterName: "Vortyx team",
-      inviterEmail: "team@vortyx.io",
-      organization: "Vortyx",
+      inviterName: "Avortyx team",
+      inviterEmail: "team@avortyx.io",
+      organization: "Avortyx",
     }
   );
 }

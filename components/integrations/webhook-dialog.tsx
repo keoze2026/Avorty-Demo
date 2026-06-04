@@ -235,7 +235,7 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground">
-              {t("toolsUI.integrations.webhooks.dialog.secretHintBefore")}<span className="font-mono text-foreground">X-Vortyx-Signature</span>{t("toolsUI.integrations.webhooks.dialog.secretHintMid")}
+              {t("toolsUI.integrations.webhooks.dialog.secretHintBefore")}<span className="font-mono text-foreground">X-Avortyx-Signature</span>{t("toolsUI.integrations.webhooks.dialog.secretHintMid")}
             </p>
           </div>
 

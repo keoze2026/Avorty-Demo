@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Vortyx sidebar — HUD-style instrument panel.
+ * Avortyx sidebar — HUD-style instrument panel.
  *
  *   ┌─────────────────────────────┐
- *   │  ◉ Vortyx           v0.1 ◀ │   header (brand + collapse)
+ *   │  ◉ Avortyx           v0.1 ◀ │   header (brand + collapse)
  *   ├─────────────────────────────┤
  *   │  00 / OVERVIEW              │   numbered group labels
  *   │  │ ▣  Dashboard       LIVE │

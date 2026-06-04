@@ -67,7 +67,7 @@ export function Hero3DStage() {
               >
                 <span className="text-zinc-300">500+ networks</span>
                 <span className="text-zinc-600">·</span>
-                <span>routing live on Vortyx</span>
+                <span>routing live on Avortyx</span>
               </motion.div>
 
               <motion.h1

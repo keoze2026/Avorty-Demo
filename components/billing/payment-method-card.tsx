@@ -65,7 +65,7 @@ export function PaymentMethodCard() {
 
           {/* Top row: brand + chip */}
           <div className="relative flex items-start justify-between">
-            <span className="font-sans text-base font-semibold tracking-wide drop-shadow">Vortyx</span>
+            <span className="font-sans text-base font-semibold tracking-wide drop-shadow">Avortyx</span>
             <span className="font-sans text-base font-bold italic tracking-wider opacity-90">{brand}</span>
           </div>
 

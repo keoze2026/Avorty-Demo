@@ -3,7 +3,7 @@
 /**
  * Reusable canvas particle layer extracted from the original hero animation.
  * Dots travel along an invisible grid, leaving short trails — gives the
- * Vortyx hero/dashboard sections their signature "live network" feel.
+ * Avortyx hero/dashboard sections their signature "live network" feel.
  */
 
 import { useEffect, useRef } from "react";

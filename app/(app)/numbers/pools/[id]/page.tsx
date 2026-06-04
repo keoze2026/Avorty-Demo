@@ -151,8 +151,8 @@ export default function NumberPoolDetailPage() {
 function IntegrationCodeCard({ pool }: { pool: NumberPool }) {
   const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
-  const snippet = `<!-- Vortyx number-pool tracker · ${pool.name} -->
-<script src="https://cdn.vortyx.io/track.js" data-pool="${pool.id}" defer></script>`;
+  const snippet = `<!-- Avortyx number-pool tracker · ${pool.name} -->
+<script src="https://cdn.avortyx.io/track.js" data-pool="${pool.id}" defer></script>`;
   return (
     <Card className="p-5">
       <h3 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">

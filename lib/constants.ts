@@ -4,12 +4,12 @@
  */
 
 export const BRAND = {
-  name: "Vortyx",
+  name: "Avortyx",
   tagline: "The next generation of call intelligence.",
   description:
     "A real-time call tracking, routing, and analytics platform built for modern pay-per-call marketers.",
-  domain: "vortyx.io",
-  email: "hello@vortyx.io",
+  domain: "avortyx.io",
+  email: "hello@avortyx.io",
 } as const;
 
 /** Routes — keep paths centralized so renames are safe. */

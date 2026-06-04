@@ -13,13 +13,13 @@
  * Structure (matches the polished SaaS invite template the user provided):
  *   ┌──────────────────────────────────────────────┐
  *   │   ░░░ COSMIC GRADIENT HERO ░░░               │
- *   │            Vortyx                            │
+ *   │            Avortyx                            │
  *   │       Pay-per-call routing, reimagined.      │
  *   ├──────────────────────────────────────────────┤
  *   │   Hi there                                   │
  *   │                                              │
  *   │   This email has been sent because           │
- *   │   {inviter} is using Vortyx ...              │
+ *   │   {inviter} is using Avortyx ...              │
  *   │                                              │
  *   │   Please click below to accept...            │
  *   │                                              │
@@ -336,7 +336,7 @@ export function EmailBody() {
           </p>
           <p style={{ margin: "14px 0 0", fontSize: 14 }}>
             <a
-              href="mailto:experts@vortyx.io"
+              href="mailto:experts@avortyx.io"
               style={{
                 color: "#5266E0",
                 textDecoration: "none",
@@ -376,7 +376,7 @@ export function EmailBody() {
           {t("authUI.inviteEmail.fallbackPrompt")}
           <br />
           <span style={{ color: "#0F1117", fontFamily: "monospace" }}>
-            https://app.vortyx.io{copy.acceptHref}
+            https://app.avortyx.io{copy.acceptHref}
           </span>
         </div>
       </div>
