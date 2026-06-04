@@ -3876,7 +3876,7 @@ export const en = {
       ctaPrimary: "Start free",
       ctaSecondary: "Watch 90-sec demo",
       stage: {
-        calls: { label: "Live calls", value: "247" },
+        briefings: { label: "Daily briefings", value: "12 new" },
         revenue: { label: "Revenue today", value: "$24.3K" },
         markets: { label: "Markets · BTC", value: "$64.8K" },
         ai: { label: "AI confidence", value: "92%" },

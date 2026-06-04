@@ -3850,7 +3850,7 @@ export const zh: TranslationShape = {
       ctaPrimary: "免费开始",
       ctaSecondary: "观看 90 秒演示",
       stage: {
-        calls: { label: "实时通话", value: "247" },
+        briefings: { label: "每日简报", value: "12 条新" },
         revenue: { label: "今日营收", value: "$24.3K" },
         markets: { label: "市场 · BTC", value: "$64.8K" },
         ai: { label: "AI 置信度", value: "92%" },

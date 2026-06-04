@@ -489,9 +489,9 @@ interface AccentSpec {
 const ACCENT_SPECS: AccentSpec[] = [
   {
     position: { left: "8%", top: "16%" },
-    labelKey: "marketingUI.hero.stage.calls.label",
-    valueKey: "marketingUI.hero.stage.calls.value",
-    delta: 12,
+    labelKey: "marketingUI.hero.stage.briefings.label",
+    valueKey: "marketingUI.hero.stage.briefings.value",
+    delta: 24,
     index: 0,
     breathClass: "hero-stage-breath-a",
   },

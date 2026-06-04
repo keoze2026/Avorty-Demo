@@ -3851,7 +3851,7 @@ export const ru: TranslationShape = {
       ctaPrimary: "Начать бесплатно",
       ctaSecondary: "Смотреть 90-сек демо",
       stage: {
-        calls: { label: "Активные звонки", value: "247" },
+        briefings: { label: "Ежедневные сводки", value: "12 новых" },
         revenue: { label: "Доход сегодня", value: "$24.3K" },
         markets: { label: "Рынки · BTC", value: "$64.8K" },
         ai: { label: "AI-уверенность", value: "92%" },

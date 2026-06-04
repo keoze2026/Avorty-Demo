@@ -3851,7 +3851,7 @@ export const ja: TranslationShape = {
       ctaPrimary: "無料で始める",
       ctaSecondary: "90秒デモを見る",
       stage: {
-        calls: { label: "ライブ通話", value: "247" },
+        briefings: { label: "デイリーブリーフィング", value: "新着 12" },
         revenue: { label: "本日の売上", value: "$24.3K" },
         markets: { label: "マーケット · BTC", value: "$64.8K" },
         ai: { label: "AI 信頼度", value: "92%" },
