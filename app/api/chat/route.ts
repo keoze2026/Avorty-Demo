@@ -1,23 +1,11 @@
-/**
- * /api/chat — proxies landing-page chat requests to the Anthropic API.
- *
- * The browser POSTs `{ messages: [{ role, content }, …] }` and gets back
- * `{ reply: "…assistant text…" }`. The API key never leaves the server.
- *
- * Env: ANTHROPIC_API_KEY (required)
- */
-
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
+const MODEL = "llama-3.3-70b-versatile";
 
-const MODEL = "claude-haiku-4-5-20251001";
-const MAX_TOKENS = 512;
-
-const SYSTEM_PROMPT = `You are Vortyx AI, the friendly assistant embedded on the Vortyx landing page.
-Vortyx is a pay-per-call routing platform for buyers, publishers, and call centers.
+const SYSTEM_PROMPT = `You are Keozx AI, the friendly assistant embedded on the Keozx landing page.
+Keozx is a lead generation and web development agency for ambitious brands.
 Keep replies short (1–3 short paragraphs), warm, and helpful. If the user asks
-about Vortyx specifically, point them toward signing up or booking a demo.
+about Keozx specifically, point them toward signing up or booking a demo.
 Otherwise answer general questions naturally.`;
 
 interface IncomingMessage {
@@ -26,11 +14,14 @@ interface IncomingMessage {
 }
 
 export async function POST(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
+
+  console.log(">>> GROQ_API_KEY loaded:", apiKey ? "YES ✅" : "NO ❌");
+
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Server is missing ANTHROPIC_API_KEY." },
-      { status: 500 },
+      { error: "Server is missing GROQ_API_KEY." },
+      { status: 500 }
     );
   }
 
@@ -46,51 +37,56 @@ export async function POST(req: Request) {
       !!m &&
       (m.role === "user" || m.role === "assistant") &&
       typeof m.content === "string" &&
-      m.content.trim().length > 0,
+      m.content.trim().length > 0
   );
 
   if (messages.length === 0) {
     return NextResponse.json({ error: "No messages." }, { status: 400 });
   }
 
-  const trimmed = messages.slice(-20);
-
   try {
-    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+    const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
-        messages: trimmed.map((m) => ({ role: m.role, content: m.content })),
+        max_tokens: 512,
+        temperature: 0.7,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...messages.slice(-20),
+        ],
       }),
     });
 
+    console.log(">>> Groq response status:", upstream.status);
+
     if (!upstream.ok) {
       const detail = await upstream.text();
+      console.error(">>> Groq error detail:", detail);
       return NextResponse.json(
         { error: "Upstream error.", detail },
-        { status: 502 },
+        { status: 502 }
       );
     }
 
-    const data = (await upstream.json()) as {
-      content?: Array<{ type: string; text?: string }>;
+    const data = await upstream.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
     };
-    const reply =
-      data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("\n").trim() ??
-      "";
+
+    const reply = data.choices?.[0]?.message?.content?.trim() ?? "";
+
+    console.log(">>> Reply generated:", reply ? "YES ✅" : "EMPTY ❌");
 
     return NextResponse.json({ reply });
   } catch (err) {
+    console.error(">>> Network error:", err);
     return NextResponse.json(
       { error: "Network error.", detail: String(err) },
-      { status: 502 },
+      { status: 502 }
     );
   }
 }
