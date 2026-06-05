@@ -40,3 +40,37 @@ export interface Invoice {
   status: InvoiceStatus;
   description: string;
 }
+
+/* ─── Capitalist payment integration ─────────────────────────────────
+ *
+ * Capitalist (capitalist.net) is a multi-currency payment processor used
+ * widely in the pay-per-call and affiliate space. Each operator account
+ * holds one or more wallets — typically USD / EUR / RUB — that can be used
+ * for payouts to publishers and top-ups to the platform balance.
+ */
+
+export type CapitalistCurrency = "USD" | "EUR" | "RUB";
+
+export interface CapitalistWallet {
+  /** ISO currency code. */
+  currency: CapitalistCurrency;
+  /** Short visible identifier — last six of the wallet id. */
+  walletId: string;
+  /** Current available balance in the wallet's currency. */
+  balance: number;
+  /** When false, the wallet is suspended (read-only). */
+  active: boolean;
+}
+
+export interface CapitalistAccount {
+  /** Capitalist account number — shown masked in the UI. */
+  accountId: string;
+  /** Display name on the Capitalist side. */
+  accountName: string;
+  /** When false, the integration is disconnected (no API key on file). */
+  connected: boolean;
+  /** ms timestamp of the most recent successful API ping. */
+  lastSyncAt?: number;
+  /** All wallets attached to the account. */
+  wallets: CapitalistWallet[];
+}

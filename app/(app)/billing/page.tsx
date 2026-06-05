@@ -2,6 +2,7 @@
 
 import { ExpensesCard } from "@/components/billing/expenses-card";
 import { InvoicesTable } from "@/components/billing/invoices-table";
+import { PaymentIntegrationsCard } from "@/components/billing/payment-integrations-card";
 import { PaymentMethodCard } from "@/components/billing/payment-method-card";
 import { RatesCard } from "@/components/billing/rates-card";
 import { SubscriptionHero } from "@/components/billing/subscription-hero";
@@ -28,6 +29,11 @@ export default function BillingPage() {
           <PaymentMethodCard />
         </div>
       </div>
+
+      {/* Payment integrations — Capitalist (today) + room for more
+          providers later. Sits on its own row above Rates so the operator
+          sees their payout wallets next to their plan / rates context. */}
+      <PaymentIntegrationsCard />
 
       <RatesCard />
       <ExpensesCard />

@@ -50,8 +50,10 @@ interface Message {
 
 interface TeamMember {
   id: string;
-  /** Two-letter initials shown in the avatar circle. */
+  /** Two-letter initials — fallback only, used when the avatar image fails. */
   initials: string;
+  /** Public-path portrait. When set, renders as <img> instead of initials. */
+  avatar?: string;
   nameKey: string;
   roleKey: string;
   /** Tone class powering the avatar background + status dot. */
@@ -59,9 +61,30 @@ interface TeamMember {
 }
 
 const TEAM: TeamMember[] = [
-  { id: "maya",   initials: "MR", nameKey: "marketingUI.chat.team.maya.name",   roleKey: "marketingUI.chat.team.maya.role",   tone: "accent" },
-  { id: "jordan", initials: "JK", nameKey: "marketingUI.chat.team.jordan.name", roleKey: "marketingUI.chat.team.jordan.role", tone: "success" },
-  { id: "sofia",  initials: "LP", nameKey: "marketingUI.chat.team.sofia.name",  roleKey: "marketingUI.chat.team.sofia.role",  tone: "warning" },
+  {
+    id: "maya",
+    initials: "MR",
+    avatar: "/avatars/83bde38df094aca69d1d004cafe2f7a2-1768088403848.webp",
+    nameKey: "marketingUI.chat.team.maya.name",
+    roleKey: "marketingUI.chat.team.maya.role",
+    tone: "accent",
+  },
+  {
+    id: "jordan",
+    initials: "JK",
+    avatar: "/avatars/c810599af876418d92d1781cb23e9cefydNGi.webp",
+    nameKey: "marketingUI.chat.team.jordan.name",
+    roleKey: "marketingUI.chat.team.jordan.role",
+    tone: "success",
+  },
+  {
+    id: "sofia",
+    initials: "LP",
+    avatar: "/avatars/e691af3ba1427582bb1b2cdf8a9d1f98-1770277350458.webp",
+    nameKey: "marketingUI.chat.team.sofia.name",
+    roleKey: "marketingUI.chat.team.sofia.role",
+    tone: "warning",
+  },
 ];
 
 const TONE_BG: Record<TeamMember["tone"], string> = {
@@ -626,18 +649,29 @@ function TeamOnlineHint() {
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className="inline-flex -space-x-1.5">
-        {TEAM.map((m) => (
-          <span
-            key={m.id}
-            className={cn(
-              "inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-card text-[7px] font-semibold",
-              TONE_BG[m.tone],
-            )}
-            title={t(m.nameKey)}
-          >
-            {m.initials.slice(0, 1)}
-          </span>
-        ))}
+        {TEAM.map((m) =>
+          m.avatar ? (
+            <img
+              key={m.id}
+              src={m.avatar}
+              alt=""
+              title={t(m.nameKey)}
+              loading="lazy"
+              className="h-3.5 w-3.5 rounded-full border border-card object-cover"
+            />
+          ) : (
+            <span
+              key={m.id}
+              className={cn(
+                "inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-card text-[7px] font-semibold",
+                TONE_BG[m.tone],
+              )}
+              title={t(m.nameKey)}
+            >
+              {m.initials.slice(0, 1)}
+            </span>
+          ),
+        )}
       </span>
       <span>
         {t("marketingUI.chat.teamOnline").replace("{count}", String(TEAM.length))}
@@ -660,17 +694,32 @@ function AgentAvatar({
   pulse?: boolean;
 }) {
   const sizeCls = size === "md" ? "h-8 w-8 text-[10px]" : "h-7 w-7 text-[9px]";
+  // Photo failed to decode → fall back to initials so the chip never blanks.
+  const [imgFailed, setImgFailed] = React.useState(false);
   return (
     <span className="relative inline-flex">
-      <span
-        className={cn(
-          "inline-flex items-center justify-center rounded-full font-bold",
-          sizeCls,
-          TONE_BG[member.tone],
-        )}
-      >
-        {member.initials}
-      </span>
+      {member.avatar && !imgFailed ? (
+        <img
+          src={member.avatar}
+          alt=""
+          loading="lazy"
+          onError={() => setImgFailed(true)}
+          className={cn(
+            "rounded-full object-cover ring-1 ring-border/60",
+            sizeCls,
+          )}
+        />
+      ) : (
+        <span
+          className={cn(
+            "inline-flex items-center justify-center rounded-full font-bold",
+            sizeCls,
+            TONE_BG[member.tone],
+          )}
+        >
+          {member.initials}
+        </span>
+      )}
       <span
         aria-hidden
         className={cn(

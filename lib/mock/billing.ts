@@ -1,4 +1,4 @@
-import type { Invoice, PaymentMethod, SubscriptionPlan, UsageMetric } from "@/lib/types";
+import type { CapitalistAccount, Invoice, PaymentMethod, SubscriptionPlan, UsageMetric } from "@/lib/types";
 
 const DAY = 1000 * 60 * 60 * 24;
 const NOW = Date.now();
@@ -24,6 +24,18 @@ export const MOCK_PAYMENT_METHOD: PaymentMethod = {
   expMonth: 11,
   expYear: 2028,
   cardholderName: "Avery Quinn",
+};
+
+export const MOCK_CAPITALIST_ACCOUNT: CapitalistAccount = {
+  accountId: "U•••842601",
+  accountName: "Avortyx Inc.",
+  connected: true,
+  lastSyncAt: NOW - 1000 * 60 * 4, // ~4 minutes ago
+  wallets: [
+    { currency: "USD", walletId: "•••4820", balance:  48_205.50, active: true },
+    { currency: "EUR", walletId: "•••2017", balance:  12_400.00, active: true },
+    { currency: "RUB", walletId: "•••9051", balance: 895_500.00, active: true },
+  ],
 };
 
 function pad(n: number, w = 4) {
