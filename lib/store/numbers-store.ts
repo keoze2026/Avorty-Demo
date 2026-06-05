@@ -11,6 +11,7 @@ interface NumbersState {
   pools: NumberPool[];
 
   addNumber: (input: Omit<TrackingNumber, "id" | "provisionedAt">) => TrackingNumber;
+  updateNumber: (id: string, patch: Partial<TrackingNumber>) => void;
   setNumberStatus: (id: string, status: NumberStatus) => void;
   removeNumber: (id: string) => void;
 
@@ -39,6 +40,10 @@ export const useNumbersStore = create<NumbersState>()(
         set((s) => ({ numbers: [created, ...s.numbers] }));
         return created;
       },
+      updateNumber: (id, patch) =>
+        set((s) => ({
+          numbers: s.numbers.map((n) => (n.id === id ? { ...n, ...patch } : n)),
+        })),
       setNumberStatus: (id, status) =>
         set((s) => ({
           numbers: s.numbers.map((n) => (n.id === id ? { ...n, status } : n)),

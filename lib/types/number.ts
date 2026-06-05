@@ -1,6 +1,10 @@
 export type NumberStatus = "active" | "paused" | "pending" | "expired";
 export type NumberType = "local" | "tollfree" | "international";
 
+export type PayoutType = "amount" | "percentage";
+export type PayoutOn = "converted" | "connected" | "length";
+export type DupeRevenue = "disabled" | "enabled" | "timeLimit";
+
 export interface TrackingNumber {
   id: string;
   /** E.164 dial-string — e.g. "+15125550123". */
@@ -23,6 +27,39 @@ export interface TrackingNumber {
 
   provisionedAt: number;
   lastCallAt?: number;
+
+  /* ─── Tracking-number edit dialog fields ────────────────────────────
+   * These describe how the publisher (vendor in classic call-tracking
+   * lingo — see the campaign settings edit dialog) is compensated and
+   * what caps / traffic-source plumbing is wired around the number. */
+  /** Optional friendly label shown in the NAME column. */
+  label?: string;
+  /** Publisher / vendor name powering this tracking number. */
+  vendor?: string;
+  /** Publisher record id, when one is selected from the publishers store. */
+  publisherId?: string;
+  /** Whether the publisher payout is enabled at all. */
+  vendorEnabled?: boolean;
+  /** Per-call payout amount (USD) when payoutType === "amount". */
+  payoutPerCall?: number;
+  payoutType?: PayoutType;
+  payoutOn?: PayoutOn;
+  /** Duplicate-call revenue handling. */
+  dupeRevenue?: DupeRevenue;
+  /** Days a duplicate stays unbilled when dupeRevenue === "timeLimit". */
+  dupeRevenueDays?: number;
+
+  /** Traffic-source toggle + selected entry. */
+  trafficSourceEnabled?: boolean;
+  trafficSourceId?: string;
+
+  /** Cap settings. */
+  capEnabled?: boolean;
+  dailyCap?: number;
+  monthlyCap?: number;
+  /** Concurrency settings. */
+  concurrencyEnabled?: boolean;
+  concurrencyCap?: number;
 }
 
 export type RotationStrategy = "round-robin" | "weighted" | "priority";

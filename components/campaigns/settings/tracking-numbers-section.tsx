@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Hash, Pencil, Plus, Unlink } from "lucide-react";
 import { toast } from "sonner";
 
+import { TrackingNumberEditDialog } from "@/components/campaigns/settings/tracking-number-edit-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,20 +18,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Hash } from "lucide-react";
 import { useTranslation } from "@/hooks/use-translation";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import { formatCurrency, toE164 } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
   const { t } = useTranslation();
   // Stable selector + useMemo to avoid the new-ref-per-render Zustand loop.
   const allNumbers = useNumbersStore((s) => s.numbers);
   const setNumberStatus = useNumbersStore((s) => s.setNumberStatus);
+  const updateNumber = useNumbersStore((s) => s.updateNumber);
   const numbers = useMemo(
     () => (allNumbers ?? []).filter((n) => n.campaignId === campaignId),
     [allNumbers, campaignId],
   );
+
+  // The id of the tracking number currently being edited in the dialog.
+  // `null` keeps the dialog closed.
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleDetach = (id: string, label: string) => {
+    // Detaching = clear the campaign link so the number drops out of this
+    // section. We don't delete the number itself.
+    updateNumber(id, { campaignId: undefined, campaignName: undefined });
+    toast.success(
+      t("trafficUI.campaigns.settings.trackingNumbers.toast.detached").replace(
+        "{number}",
+        label,
+      ),
+    );
+  };
 
   return (
     <section className="space-y-3">
@@ -66,49 +84,112 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
                 <TableHead className="pl-6 uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.number")}</TableHead>
                 <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.type")}</TableHead>
                 <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.name")}</TableHead>
-                <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.vendor")}</TableHead>
+                <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.publisher")}</TableHead>
                 <TableHead className="uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.payout")}</TableHead>
                 <TableHead className="text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.status")}</TableHead>
+                <TableHead className="pr-6 text-center uppercase tracking-wider text-[11px]">{t("trafficUI.campaigns.settings.trackingNumbers.headers.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {numbers.map((n) => (
-                <TableRow key={n.id}>
-                  <TableCell className="pl-6 font-mono text-xs whitespace-nowrap">
-                    {toE164(n.number)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {n.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{n.label ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {n.vendor ?? "Avortyx"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs tabular-nums">
-                    {formatCurrency(n.payoutPerCall ?? 0, true)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Switch
-                      checked={n.status === "active"}
-                      onCheckedChange={(v) => {
-                        setNumberStatus(n.id, v ? "active" : "paused");
-                        toast.success(
-                          v
-                            ? t("trafficUI.campaigns.settings.trackingNumbers.toast.activated").replace("{number}", toE164(n.number))
-                            : t("trafficUI.campaigns.settings.trackingNumbers.toast.paused").replace("{number}", toE164(n.number)),
-                        );
-                      }}
-                      aria-label={t("trafficUI.numbers.pools.toggle").replace("{name}", toE164(n.number))}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {numbers.map((n) => {
+                const e164 = toE164(n.number);
+                return (
+                  <TableRow key={n.id}>
+                    <TableCell className="pl-6 font-mono text-xs whitespace-nowrap">
+                      {e164}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {n.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{n.label ?? "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {n.vendor ?? "—"}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs tabular-nums">
+                      {formatCurrency(n.payoutPerCall ?? 0, true)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Switch
+                        checked={n.status === "active"}
+                        onCheckedChange={(v) => {
+                          setNumberStatus(n.id, v ? "active" : "paused");
+                          toast.success(
+                            v
+                              ? t("trafficUI.campaigns.settings.trackingNumbers.toast.activated").replace("{number}", e164)
+                              : t("trafficUI.campaigns.settings.trackingNumbers.toast.paused").replace("{number}", e164),
+                          );
+                        }}
+                        aria-label={t("trafficUI.numbers.pools.toggle").replace("{name}", e164)}
+                      />
+                    </TableCell>
+                    <TableCell className="pr-6">
+                      <div className="inline-flex items-center justify-center gap-0.5">
+                        <RowActionIcon
+                          icon={Pencil}
+                          label={t(
+                            "trafficUI.campaigns.settings.trackingNumbers.row.edit",
+                          ).replace("{number}", e164)}
+                          onClick={() => setEditingId(n.id)}
+                        />
+                        <RowActionIcon
+                          icon={Unlink}
+                          label={t(
+                            "trafficUI.campaigns.settings.trackingNumbers.row.detach",
+                          ).replace("{number}", e164)}
+                          tone="destructive"
+                          onClick={() => handleDetach(n.id, e164)}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>
       )}
+
+      {/* Edit dialog — opens when a row's pencil icon is clicked. */}
+      <TrackingNumberEditDialog
+        numberId={editingId}
+        onOpenChange={(open) => !open && setEditingId(null)}
+      />
     </section>
+  );
+}
+
+/**
+ * Single icon-button used in the row Actions cell. Mirrors the muted /
+ * destructive tone pattern used by the destinations + buyers tables so the
+ * row actions look identical across surfaces.
+ */
+function RowActionIcon({
+  icon: Icon,
+  label,
+  onClick,
+  tone = "muted",
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick?: () => void;
+  tone?: "muted" | "destructive";
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+        tone === "destructive"
+          ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </button>
   );
 }
