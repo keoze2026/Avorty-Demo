@@ -27,8 +27,11 @@ import {
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
+import { useNumbersStore } from "@/lib/store/numbers-store";
 import type { Campaign } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+type ProgressState = "ready" | "paused" | "incomplete";
 
 interface CampaignsTableProps {
   campaigns: Campaign[];
@@ -96,6 +99,18 @@ export function CampaignsTable({
 }: CampaignsTableProps) {
   const { t } = useTranslation();
   const router = useRouter();
+  // Live count of tracking numbers attached per campaign — drives the
+  // "Incomplete" progress pill so a campaign with zero TFNs reads as needing
+  // setup, regardless of its on-record `numbersCount`.
+  const allNumbers = useNumbersStore((s) => s.numbers);
+  const numbersByCampaign = React.useMemo(() => {
+    const map = new Map<string, number>();
+    for (const n of allNumbers ?? []) {
+      if (!n.campaignId) continue;
+      map.set(n.campaignId, (map.get(n.campaignId) ?? 0) + 1);
+    }
+    return map;
+  }, [allNumbers]);
   // Uncontrolled fallback so existing callers that don't pass `selectedIds`
   // still get their internal checkbox state. When the parent supplies both
   // `selectedIds` and `onSelectionChange`, the selection lives upstairs.
@@ -150,6 +165,19 @@ export function CampaignsTable({
               const m = makeMetrics(c);
               const isActive = c.status === "active";
               const isPaused = c.status === "paused";
+              // A campaign is "incomplete" when it has no tracking number
+              // attached OR no buyers (and therefore no destinations) wired
+              // up — both are required before any call can be routed. Live
+              // numbers count comes from the numbers store; buyersCount is
+              // already maintained on the Campaign record.
+              const liveNumbers = numbersByCampaign.get(c.id) ?? 0;
+              const isIncomplete =
+                c.status !== "archived" && (liveNumbers === 0 || c.buyersCount === 0);
+              const progressState: ProgressState = isIncomplete
+                ? "incomplete"
+                : isPaused
+                  ? "paused"
+                  : "ready";
               return (
                 <TableRow
                   key={c.id}
@@ -165,7 +193,7 @@ export function CampaignsTable({
                   </TableCell>
                   {columns.progress && (
                     <TableCell>
-                      <ProgressPill paused={isPaused} />
+                      <ProgressPill state={progressState} />
                     </TableCell>
                   )}
                   <TableCell className="text-left font-medium text-foreground">
@@ -252,18 +280,30 @@ function ActiveBadge() {
   );
 }
 
-function ProgressPill({ paused }: { paused: boolean }) {
+function ProgressPill({ state }: { state: ProgressState }) {
   const { t } = useTranslation();
+  // `incomplete` reads as urgent (red) so the operator knows setup is
+  // needed; `paused` is amber for the holding pattern; `ready` is green.
+  const toneClass =
+    state === "incomplete"
+      ? "bg-destructive/15 text-destructive"
+      : state === "paused"
+        ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)]"
+        : "bg-[color:var(--success)]/15 text-[color:var(--success)]";
+  const labelKey =
+    state === "incomplete"
+      ? "trafficUI.campaigns.table.incomplete"
+      : state === "paused"
+        ? "trafficUI.campaigns.table.paused"
+        : "trafficUI.campaigns.table.ready";
   return (
     <span
       className={cn(
         "inline-flex items-center rounded-md px-2.5 py-1 text-[11px] font-medium",
-        paused
-          ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)]"
-          : "bg-[color:var(--success)]/15 text-[color:var(--success)]",
+        toneClass,
       )}
     >
-      {paused ? t("trafficUI.campaigns.table.paused") : t("trafficUI.campaigns.table.ready")}
+      {t(labelKey)}
     </span>
   );
 }

@@ -1598,6 +1598,7 @@ export const ja: TranslationShape = {
         archive: "アーカイブ",
         ready: "準備完了",
         paused: "一時停止",
+        incomplete: "未完了",
       },
       detail: {
         backToList: "キャンペーン一覧",

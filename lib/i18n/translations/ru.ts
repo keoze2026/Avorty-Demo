@@ -1598,6 +1598,7 @@ export const ru: TranslationShape = {
         archive: "В архив",
         ready: "Готово",
         paused: "Пауза",
+        incomplete: "Не завершено",
       },
       detail: {
         backToList: "Все кампании",

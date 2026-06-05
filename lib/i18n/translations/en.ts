@@ -951,6 +951,7 @@ export const en = {
         archive: "Archive",
         ready: "Ready",
         paused: "Paused",
+        incomplete: "Incomplete",
       },
       detail: {
         backToList: "All campaigns",

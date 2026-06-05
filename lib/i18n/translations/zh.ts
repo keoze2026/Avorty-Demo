@@ -931,6 +931,7 @@ export const zh: TranslationShape = {
         archive: "归档",
         ready: "就绪",
         paused: "已暂停",
+        incomplete: "未完成",
       },
       detail: {
         backToList: "全部营销活动",
