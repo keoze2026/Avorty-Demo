@@ -172,7 +172,7 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
       <CardContent>
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 12, right: 4, left: -8, bottom: 0 }}>
+            <ComposedChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="label"
@@ -187,8 +187,11 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                width={32}
+                // 3-digit ticks (e.g. 600, 750) need at least ~44px so the
+                // leading digit isn't clipped on narrow mobile viewports.
+                width={44}
                 allowDecimals={false}
+                tickMargin={4}
               />
               {/* Right-side revenue axis — $ ticks for the Revenue line. */}
               <YAxis
