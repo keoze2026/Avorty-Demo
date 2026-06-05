@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Newspaper, Sparkles, TrendingUp } from "lucide-react";
 
 import { BrandVortex } from "@/components/auth/brand-vortex";
 import { Wordmark } from "@/components/brand/wordmark";
@@ -14,6 +15,11 @@ import { useTranslation } from "@/hooks/use-translation";
  * panels. There's no opaque curtain or hard divider between the columns; the
  * form panel is its own substantial glass card with an accent halo that
  * harmonizes with the orbital colors behind it.
+ *
+ * Three ambient signal chips sit above the tagline — Markets / Briefings /
+ * AI Confidence — to hint at Avortyx's multi-product breadth. We intentionally
+ * leave out a "Live calls" chip because a hardcoded call-count value reads as
+ * inaccurate on a marketing surface.
  *
  * Theme-aware: the vortex and every Tailwind theme variable used here swap
  * cleanly between light and dark mode.
@@ -41,7 +47,25 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           {/* Middle group fills the remaining height between header + footer
               and centres itself vertically with margin-block:auto. Keeps the
               composition balanced even when the viewport is short. */}
-          <div className="my-auto max-w-xl space-y-6">
+          <div className="my-auto max-w-xl space-y-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <SignalChip
+                icon={TrendingUp}
+                label={t("authUI.split.signals.marketsLabel")}
+                value={t("authUI.split.signals.marketsValue")}
+              />
+              <SignalChip
+                icon={Newspaper}
+                label={t("authUI.split.signals.briefingsLabel")}
+                value={t("authUI.split.signals.briefingsValue")}
+              />
+              <SignalChip
+                icon={Sparkles}
+                label={t("authUI.split.signals.aiLabel")}
+                value={t("authUI.split.signals.aiValue")}
+              />
+            </div>
+
             <h2 className="text-4xl font-medium leading-[1.05] tracking-tight text-foreground xl:text-[3.4rem]">
               {t("authUI.split.tagline")}
             </h2>
@@ -74,5 +98,31 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </section>
       </div>
     </main>
+  );
+}
+
+/**
+ * Ambient pill chip — icon + tiny uppercase label + bold value. Brand-tinted
+ * border + halo, theme-aware backgrounds so it reads cleanly in both modes.
+ */
+function SignalChip({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-background/55 px-3 py-1.5 shadow-[0_0_24px_-12px_color-mix(in_oklch,var(--accent)_55%,transparent)] backdrop-blur-md">
+      <Icon className="h-3.5 w-3.5 text-accent" />
+      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </span>
+      <span className="text-xs font-semibold tabular-nums text-foreground">
+        {value}
+      </span>
+    </div>
   );
 }

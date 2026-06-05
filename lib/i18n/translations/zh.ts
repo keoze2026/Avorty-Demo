@@ -109,7 +109,7 @@ export const zh: TranslationShape = {
     },
     integrations: {
       title: "集成",
-      description: "将 Aavortyx 接入您团队正在使用的工具。",
+      description: "将 Avortyx 接入您团队正在使用的工具。",
     },
     referrals: {
       title: "推荐计划",
@@ -190,7 +190,7 @@ export const zh: TranslationShape = {
 
   login: {
     welcomeBack: "欢迎回来",
-    description: "登录到您的 Aavortyx 工作区。",
+    description: "登录到您的 Avortyx 工作区。",
     email: "邮箱",
     password: "密码",
     forgot: "忘记密码?",
@@ -352,7 +352,7 @@ export const zh: TranslationShape = {
       eyebrow: "API 密钥",
       title: "程序化访问",
       description:
-        "外部系统用来与 Aavortyx 通信的令牌。请像对待密码一样对待每一个。",
+        "外部系统用来与 Avortyx 通信的令牌。请像对待密码一样对待每一个。",
       newKey: "新建密钥",
       createKey: "创建密钥",
       keyName: "密钥名称",
@@ -2803,7 +2803,7 @@ export const zh: TranslationShape = {
     },
     marketplace: {
       pageTitle: "市场",
-      pageDescription: "Aavortyx 交易大厅 — 对来电进行实时竞价。",
+      pageDescription: "Avortyx 交易大厅 — 对来电进行实时竞价。",
       bidsSession: "{count} 次出价 · 本次会话",
       resume: "恢复",
       pauseFloor: "暂停交易大厅",
@@ -2886,7 +2886,7 @@ export const zh: TranslationShape = {
       pageDescription: "优化推荐、异常检测,以及一个您真的可以提问的副驾驶。",
       copilotActive: "副驾驶活跃中",
       hero: {
-        copilotBadge: "Aavortyx 副驾驶",
+        copilotBadge: "Avortyx 副驾驶",
         greetingMorning: "早上好",
         greetingAfternoon: "下午好",
         greetingEvening: "晚上好",
@@ -2902,10 +2902,10 @@ export const zh: TranslationShape = {
         netImpactDelta: "若全部应用",
       },
       chat: {
-        title: "Aavortyx Copilot",
+        title: "Avortyx Copilot",
         online: "在线",
         description: "询问表现、异常或下一步该做什么。",
-        introLine1: "您好 — 我是 Aavortyx Copilot。关于您的网络,尽管问。",
+        introLine1: "您好 — 我是 Avortyx Copilot。关于您的网络,尽管问。",
         introLine2: "我能调取您处理过的每一个营销活动、通话和出价。试试下方的提示。",
         inputPlaceholder: "尽管问…",
         demoNote: "演示中的副驾驶回答为模拟。",
@@ -3124,7 +3124,7 @@ export const zh: TranslationShape = {
         whiteGloveSupport: "贴心管家服务",
         customRateCards: "定制费率卡",
         directApiQuota: "直连 API 配额",
-        avortyxVerifiedBadge: "Aavortyx Verified 徽章",
+        avortyxVerifiedBadge: "Avortyx Verified 徽章",
       },
       vectors: {
         identity: {
@@ -3212,7 +3212,7 @@ export const zh: TranslationShape = {
         dncTitle: "联邦 DNC 清洗",
         dncBody: "我的名单在拨号前最多 31 天内对照全国 Do Not Call 注册表进行过清洗。",
         auditTitle: "样本通话审计",
-        auditBody: "我授权 Aavortyx 在未来 7 天审计 5 通随机通话以检查合规信号。",
+        auditBody: "我授权 Avortyx 在未来 7 天审计 5 通随机通话以检查合规信号。",
         submit: "提交以验证",
       },
       reputationFlow: {
@@ -3232,7 +3232,7 @@ export const zh: TranslationShape = {
     },
     referrals: {
       pageTitle: "推荐计划",
-      pageDescription: "每位通过您接入 Aavortyx 的客户,其终身花费的 {pct} 归您。",
+      pageDescription: "每位通过您接入 Avortyx 的客户,其终身花费的 {pct} 归您。",
       partnerBadge: "推荐合作伙伴",
       heroTitleBefore: "推荐一个客户。我们会把他们花费的每一美元的 ",
       heroTitleAfter: " 给您 — 终身。",
@@ -3278,7 +3278,7 @@ export const zh: TranslationShape = {
     },
     integrations: {
       pageTitle: "集成",
-      pageDescription: "连接您已经在用的工具 — 让 Aavortyx 事件触达任何地方。",
+      pageDescription: "连接您已经在用的工具 — 让 Avortyx 事件触达任何地方。",
       board: {
         available: "可用",
         connected: "已连接",
@@ -3310,13 +3310,13 @@ export const zh: TranslationShape = {
           active: "活跃",
           paused: "已暂停",
           tokenLabel: "API 令牌",
-          tokenHint: "Aavortyx 用于向合作方 API 进行身份验证。",
+          tokenHint: "Avortyx 用于向合作方 API 进行身份验证。",
           copyTokenAria: "复制令牌",
           rotateTokenAria: "轮换令牌",
           toastTokenCopied: "令牌已复制",
           toastRotateQueued: "令牌轮换已排队",
           baseUrlLabel: "基础 URL",
-          baseUrlHint: "Aavortyx 发送事件的位置。除非有指示,否则请勿覆盖。",
+          baseUrlHint: "Avortyx 发送事件的位置。除非有指示,否则请勿覆盖。",
           connectionTestTitle: "连接测试",
           connectionTestHint: "发送一次空操作握手以验证凭证。",
           test: "测试",
@@ -3325,7 +3325,7 @@ export const zh: TranslationShape = {
           toastHealthyDesc: "往返 {ms}ms",
         },
         events: {
-          intro: "选择 Aavortyx 应向 {name} 发送的事件。",
+          intro: "选择 Avortyx 应向 {name} 发送的事件。",
         },
         permissions: {
           intro: "权限范围在服务端强制执行 — 变更约 30 秒内生效。",
@@ -3397,7 +3397,7 @@ export const zh: TranslationShape = {
         dialog: {
           editTitle: "编辑 Webhook",
           createTitle: "添加 Webhook",
-          description: "对每个所选事件,Aavortyx 都会向您的 URL 发送 JSON 载荷。",
+          description: "对每个所选事件,Avortyx 都会向您的 URL 发送 JSON 载荷。",
           nameLabel: "名称",
           namePlaceholder: "CRM 回传",
           urlLabel: "URL",
@@ -3921,7 +3921,7 @@ export const zh: TranslationShape = {
     },
     hero: {
       trustChipCount: "500+ 网络",
-      trustChipSuffix: "正在 Aavortyx 上实时路由",
+      trustChipSuffix: "正在 Avortyx 上实时路由",
       headlinePart1: "把每一次振铃",
       headlineGradient: "变成收入。",
       subhead:
@@ -3974,7 +3974,7 @@ export const zh: TranslationShape = {
     features: {
       heading: "为现代按通话付费而生",
       description:
-        "Aavortyx 用一个统一的实时控制平面取代一堆传统通话追踪工具 — 从来电振铃到买家结算。",
+        "Avortyx 用一个统一的实时控制平面取代一堆传统通话追踪工具 — 从来电振铃到买家结算。",
       learnMore: "了解更多",
       routing: {
         title: "实时通话路由",
@@ -3992,7 +3992,7 @@ export const zh: TranslationShape = {
     code: {
       sectionLabel: "AI 驱动智能",
       heading: "懂您网络的 AI 优化",
-      descriptionLead: "Aavortyx AI。",
+      descriptionLead: "Avortyx AI。",
       descriptionRest:
         " 根据您网络的表现模式,自动建议扩量、暂停、再平衡或告警的时机。",
       cta: "探索 AI 功能",
@@ -4000,7 +4000,7 @@ export const zh: TranslationShape = {
       connected: "已连接",
       leftTitle: "智能路由建议",
       leftDescription:
-        "Aavortyx 分析您的网络模式,并建议优化方案以最大化收入和买家匹配率。",
+        "Avortyx 分析您的网络模式,并建议优化方案以最大化收入和买家匹配率。",
       aiLabel: "AI",
       recommendation: "推荐",
       action: "操作",
@@ -4013,9 +4013,9 @@ export const zh: TranslationShape = {
       patternExplanation:
         "Apex Insurance 在过去 48 小时内维持 98% 的接受率,且转化质量稳定。",
       applySuggestion: "应用建议",
-      rightTitle: "Aavortyx SDK",
+      rightTitle: "Avortyx SDK",
       rightDescription:
-        "Aavortyx 的每一项能力都可从一套强类型 SDK 调用 — 每个事件都会在毫秒内落到您的 Webhook。",
+        "Avortyx 的每一项能力都可从一套强类型 SDK 调用 — 每个事件都会在毫秒内落到您的 Webhook。",
       routeIncomingCall: "路由来电",
     },
     howItWorks: {
@@ -4062,7 +4062,7 @@ export const zh: TranslationShape = {
       headingPart1: "为能赚钱的通话",
       headingPart2: "而生",
       description:
-        "Aavortyx 支持的每个垂直行业都自带该行业真正需要的筛选器、标签和同意获取 — 您无需从零拼接。",
+        "Avortyx 支持的每个垂直行业都自带该行业真正需要的筛选器、标签和同意获取 — 您无需从零拼接。",
       health: {
         category: "健康保险",
         statLabel: "每通合格通话平均分成",
@@ -4097,14 +4097,14 @@ export const zh: TranslationShape = {
     cta: {
       heading: "准备好更聪明地路由通话了吗?",
       description:
-        "加入正在 Aavortyx 上扩大流量、决策与收入的领先按通话付费网络。前 2,000 通通话免费 — 无需信用卡。",
+        "加入正在 Avortyx 上扩大流量、决策与收入的领先按通话付费网络。前 2,000 通通话免费 — 无需信用卡。",
       bookDemo: "预约演示",
       startFree: "免费开始",
     },
     footer: {
       tagline:
         "为现代按通话付费营销人员打造的实时通话追踪、路由与分析平台。",
-      copyrightSuffix: "Aavortyx Inc. 版权所有。",
+      copyrightSuffix: "Avortyx Inc. 版权所有。",
       allSystemsOperational: "全部系统正常运行",
       columns: {
         platform: "平台",
@@ -4213,7 +4213,7 @@ export const zh: TranslationShape = {
       navDocumentation: "文档",
       liveCalls: "实时通话",
       activeSuffix: "活跃",
-      breadcrumbDashboard: "Aavortyx 仪表板",
+      breadcrumbDashboard: "Avortyx 仪表板",
       breadcrumbNetwork: "网络 · 12 个垂直行业",
       breadcrumbDecisioning: "142 毫秒决策",
       live: "实时",
@@ -4244,7 +4244,7 @@ export const zh: TranslationShape = {
       tagline: "每一通来电、每一个信号、每一笔交易,都在这里汇聚。",
       taglineSub:
         "按通话付费路由、AI 洞察、每日简报与实时行情 ——一个工作空间。",
-      footer: "© 2026 Aavortyx · 重新定义按通话付费路由",
+      footer: "© 2026 Avortyx · 重新定义按通话付费路由",
       signals: {
         callsLabel: "实时通话",
         callsValue: "247",
@@ -4252,10 +4252,12 @@ export const zh: TranslationShape = {
         marketsValue: "+2.4%",
         briefingsLabel: "简报",
         briefingsValue: "12 条新",
+        aiLabel: "AI 置信度",
+        aiValue: "92%",
       },
     },
     signup: {
-      pageTitle: "从 Aavortyx 开始",
+      pageTitle: "从 Avortyx 开始",
       pageDescription: "几秒内启动您的通话智能工作区。",
       footerHasAccount: "已有账户?",
       footerSignIn: "登录",
@@ -4282,7 +4284,7 @@ export const zh: TranslationShape = {
       sentAfter: "以获取重置链接。",
     },
     invite: {
-      pageTitleTemplate: "以 {role} 身份加入 Aavortyx",
+      pageTitleTemplate: "以 {role} 身份加入 Avortyx",
       pageDescriptionTemplate:
         "接受邀请并设置密码,即可访问 {roleLower} 工作区。",
       footerHasAccount: "已有账户?",
@@ -4311,27 +4313,27 @@ export const zh: TranslationShape = {
       rolePublisherLower: "发布商",
     },
     inviteEmail: {
-      brand: "Aavortyx",
+      brand: "Avortyx",
       buyerPreheader:
-        "Aavortyx 的 Avery Chen 邀请您在其网络上购买通话。",
-      buyerSubject: "您被邀请加入 Aavortyx — 开始购买合格通话",
+        "Avortyx 的 Avery Chen 邀请您在其网络上购买通话。",
+      buyerSubject: "您被邀请加入 Avortyx — 开始购买合格通话",
       buyerWhat1:
         "实时查看每一通已路由的通话,包括来电者地域与意向信号",
       buyerWhat2: "日/月上限控制与并发限制",
       buyerWhat3:
         "按垂直行业出价,带完整通话录音与争议工具",
       publisherPreheader:
-        "Aavortyx 的 Avery Chen 邀请您与其买家一同变现您的流量。",
-      publisherSubject: "您被邀请加入 Aavortyx — 开始变现您的通话",
+        "Avortyx 的 Avery Chen 邀请您与其买家一同变现您的流量。",
+      publisherSubject: "您被邀请加入 Avortyx — 开始变现您的通话",
       publisherWhat1: "实时收入、分成份额与按活动的收益",
       publisherWhat2:
         "秒级号码配置与路由分配",
       publisherWhat3:
         "直接分成,每一通可计费通话全程透明",
-      headlineTemplate: "您被邀请以 {role} 身份加入 Aavortyx",
+      headlineTemplate: "您被邀请以 {role} 身份加入 Avortyx",
       greeting: "您好 —",
       bodyTemplate:
-        "{inviter} 在 Aavortyx 邀请您加入其 {roleLower} 工作区。点击下方按钮接受邀请、设置密码并开始使用。",
+        "{inviter} 在 Avortyx 邀请您加入其 {roleLower} 工作区。点击下方按钮接受邀请、设置密码并开始使用。",
       ctaAccept: "接受邀请 →",
       whatHeading: "您将获得",
       fallbackPrompt:
@@ -4339,7 +4341,7 @@ export const zh: TranslationShape = {
       footerExpiry:
         "此邀请将在 7 天后过期。如果您并未预期收到此邀请,可放心忽略此消息。",
       footerAddress:
-        "Aavortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
+        "Avortyx, Inc. · 548 Market St #28000 · San Francisco, CA 94104",
       footerUnsubscribe: "退订",
       footerPrivacy: "隐私",
       heroTagline: "重塑按通付费的路由方式。",
