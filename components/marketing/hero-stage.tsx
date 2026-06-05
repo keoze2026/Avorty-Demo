@@ -473,8 +473,9 @@ function GlyphField() {
 /* ─────────────────────────────────────────────────────────────────── */
 
 interface AccentSpec {
-  /** Position fraction (left, top) inside the stage. */
-  position: { left: string; top: string };
+  /** Anchor inside the stage — use `right` / `bottom` for the right + bottom
+   *  cards so they hug the edge even on narrow viewports. */
+  position: { left?: string; right?: string; top?: string; bottom?: string };
   /** i18n keys for the chip label + value. */
   labelKey: string;
   valueKey: string;
@@ -487,32 +488,36 @@ interface AccentSpec {
 }
 
 const ACCENT_SPECS: AccentSpec[] = [
+  // Left + top — anchored from the LEFT edge.
   {
-    position: { left: "8%", top: "16%" },
+    position: { left: "4%", top: "10%" },
     labelKey: "marketingUI.hero.stage.briefings.label",
     valueKey: "marketingUI.hero.stage.briefings.value",
     delta: 24,
     index: 0,
     breathClass: "hero-stage-breath-a",
   },
+  // Right + top — anchored from the RIGHT edge so "$285K" never clips.
   {
-    position: { left: "76%", top: "10%" },
+    position: { right: "4%", top: "6%" },
     labelKey: "marketingUI.hero.stage.revenue.label",
     valueKey: "marketingUI.hero.stage.revenue.value",
     delta: 18,
     index: 1,
     breathClass: "hero-stage-breath-b",
   },
+  // Left + bottom.
   {
-    position: { left: "6%", top: "70%" },
+    position: { left: "4%", bottom: "12%" },
     labelKey: "marketingUI.hero.stage.markets.label",
     valueKey: "marketingUI.hero.stage.markets.value",
     delta: 2.4,
     index: 2,
     breathClass: "hero-stage-breath-c",
   },
+  // Right + bottom — anchored from the RIGHT edge so "AI CONFIDENCE" never clips.
   {
-    position: { left: "78%", top: "66%" },
+    position: { right: "4%", bottom: "14%" },
     labelKey: "marketingUI.hero.stage.ai.label",
     valueKey: "marketingUI.hero.stage.ai.value",
     index: 3,
@@ -536,20 +541,26 @@ function AccentCards() {
           }}
           style={{
             left: spec.position.left,
+            right: spec.position.right,
             top: spec.position.top,
+            bottom: spec.position.bottom,
           }}
           className={cn(
-            "absolute z-20 inline-flex flex-col items-start gap-1 rounded-xl border border-accent/12 bg-card/15 px-4 py-3 backdrop-blur-md",
+            // Responsive sizing — chip is tighter on phones (px-2.5 py-2 /
+            // text-base) and expands at sm+ so it never overflows a 360px
+            // viewport. `max-w-[42vw]` caps width so the chip can't push
+            // past the centre of the stage on tiny screens.
+            "absolute z-20 inline-flex max-w-[42vw] flex-col items-start gap-0.5 rounded-xl border border-accent/12 bg-card/15 px-2.5 py-2 backdrop-blur-md sm:max-w-none sm:gap-1 sm:px-4 sm:py-3",
             "transition-transform duration-300 hover:scale-[1.04] hover:border-accent/25",
             spec.breathClass,
           )}
         >
-          <div className="flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent/70" />
-            {t(spec.labelKey)}
+          <div className="flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-muted-foreground sm:gap-2 sm:text-[9px] sm:tracking-[0.18em]">
+            <span className="inline-block h-1 w-1 rounded-full bg-accent/70 sm:h-1.5 sm:w-1.5" />
+            <span className="truncate">{t(spec.labelKey)}</span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <span className="text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">
               {t(spec.valueKey)}
             </span>
             {typeof spec.delta === "number" && (
