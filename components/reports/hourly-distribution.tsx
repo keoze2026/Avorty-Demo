@@ -51,66 +51,74 @@ interface Bucket {
   revenue: number;
 }
 
-function classify(c: Call): "converted" | "notConverted" | "noAnswer" {
-  if (c.status === "missed") return "noAnswer";
+/** Binary classification — collapsed from three categories to two so the
+ *  chart and donut tell the same story:
+ *    "converted" — call connected and qualified (paying conversion)
+ *    "noAnswer"  — everything else (missed, rejected, failed, in-flight)
+ *
+ *  The legacy `notConverted` bucket is kept in the Bucket type with a
+ *  permanent 0 so the chart's data shape doesn't break, but no calls are
+ *  routed to it at runtime. */
+function classify(c: Call): "converted" | "noAnswer" {
   if (c.status === "completed" && c.payout > 0) return "converted";
-  return "notConverted";
+  return "noAnswer";
 }
 
-/** Format an hour 0-23 as 12-hour with AM/PM — e.g. 0 → "12 AM", 13 → "1 PM". */
+/** Format an hour 0-23 as zero-padded 12-hour with lowercase am/pm —
+ *  e.g. 0 → "12:00 am", 13 → "01:00 pm". Matches the advertising
+ *  reference format ("02:00 am" · "04:00 am" · …). */
 function fmt12Hour(h: number): string {
-  const period = h < 12 ? "AM" : "PM";
+  const period = h < 12 ? "am" : "pm";
   const display = h % 12 === 0 ? 12 : h % 12;
-  return `${display} ${period}`;
+  return `${display.toString().padStart(2, "0")}:00 ${period}`;
 }
 
 /**
- * Hand-tuned hourly buckets matching the advertising reference exactly.
+ * Hand-tuned hourly buckets matching the advertising reference **exactly**.
  *
- *   8 AM   181    ramp begins
- *   9 AM   267
- *  10 AM   444
- *  11 AM   607
- *  12 PM   587   (lunch dip)
- *   1 PM   961
- *   2 PM 1,029   ← PEAK
- *   3 PM   697
- *   4 PM   688
- *   5 PM    59   (cliff)
- *   6 PM    55
+ *   7 AM     5    single small tick
+ *   8 AM    70    ramp begins
+ *   9 AM   243
+ *  10 AM   533
+ *  11 AM   625
+ *  12 PM   862
+ *   1 PM   933    ← PEAK
+ *   2 PM   511    mostly purple with a red No Answer sliver at the BOTTOM
+ *                  (41 calls / 8% of column = the visible red segment)
  *
- * Total: 5,575 calls / 4,545 converted (81.5%) / 640 notConverted (11.5%) /
- * 390 noAnswer (7%) / $285,016 revenue (converted × $62.71 average).
+ * Only **8 visible bars** total — nothing before 7 AM or after 2 PM. All
+ * bars render as 100% Converted (purple) except the 2 PM column which adds
+ * a thin No Answer sliver. Total: 3,782 calls / 3,741 converted / 41 noAnswer
+ * / $285K revenue (per-conversion ~$76.10).
  *
  * Hard-coded so the chart always renders the reference silhouette regardless
- * of LCG variance, persisted state, or which destination is filtered — the
- * marketing demo requires this exact shape every render.
+ * of LCG variance, persisted state, or which destination is filtered.
  */
 const HOURLY_REF: Array<Omit<Bucket, "label" | "ts">> = [
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 12 AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 1  AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 2  AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 3  AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 4  AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 5  AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 6  AM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 7  AM
-  { converted: 148, notConverted: 20,  noAnswer: 13,  revenue: 9_281  }, // 8  AM = 181
-  { converted: 218, notConverted: 30,  noAnswer: 19,  revenue: 13_671 }, // 9  AM = 267
-  { converted: 362, notConverted: 51,  noAnswer: 31,  revenue: 22_701 }, // 10 AM = 444
-  { converted: 495, notConverted: 70,  noAnswer: 42,  revenue: 31_041 }, // 11 AM = 607
-  { converted: 478, notConverted: 68,  noAnswer: 41,  revenue: 29_975 }, // 12 PM = 587
-  { converted: 783, notConverted: 111, noAnswer: 67,  revenue: 49_102 }, //  1 PM = 961
-  { converted: 839, notConverted: 118, noAnswer: 72,  revenue: 52_614 }, //  2 PM = 1,029 ← peak
-  { converted: 568, notConverted: 80,  noAnswer: 49,  revenue: 35_619 }, //  3 PM = 697
-  { converted: 561, notConverted: 79,  noAnswer: 48,  revenue: 35_180 }, //  4 PM = 688
-  { converted: 48,  notConverted: 7,   noAnswer: 4,   revenue: 3_010  }, //  5 PM = 59
-  { converted: 45,  notConverted: 6,   noAnswer: 4,   revenue: 2_822  }, //  6 PM = 55
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 7  PM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 8  PM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 9  PM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 10 PM
-  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 11 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, // 12 AM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  1 AM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  2 AM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  3 AM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  4 AM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  5 AM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  6 AM
+  { converted: 5,   notConverted: 0, noAnswer: 0,  revenue: 381    }, //  7 AM = 5
+  { converted: 70,  notConverted: 0, noAnswer: 0,  revenue: 5_327  }, //  8 AM = 70
+  { converted: 243, notConverted: 0, noAnswer: 0,  revenue: 18_492 }, //  9 AM = 243
+  { converted: 533, notConverted: 0, noAnswer: 0,  revenue: 40_561 }, // 10 AM = 533
+  { converted: 625, notConverted: 0, noAnswer: 0,  revenue: 47_563 }, // 11 AM = 625
+  { converted: 862, notConverted: 0, noAnswer: 0,  revenue: 65_598 }, // 12 PM = 862
+  { converted: 933, notConverted: 0, noAnswer: 0,  revenue: 71_001 }, //  1 PM = 933 ← peak
+  { converted: 470, notConverted: 0, noAnswer: 41, revenue: 35_767 }, //  2 PM = 511 (red sliver bottom)
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  3 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  4 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  5 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  6 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  7 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  8 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  9 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, // 10 PM
+  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, // 11 PM
 ];
 
 function bucketize(calls: Call[], grain: Grain): Bucket[] {
@@ -193,6 +201,25 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
 export function HourlyDistribution({ calls }: HourlyDistributionProps) {
   const { t } = useTranslation();
   const [grain, setGrain] = React.useState<Grain>("H");
+  // Track the actual CHART CONTAINER width via ResizeObserver — the
+  // viewport can be 1200px while the chart card only gets ~600px because
+  // of the sidebar + donut neighbour. Three tiers:
+  //   ≥ 760px → full "08:00 am" labels, every 2 hours
+  //   500–759 → compact "8a" labels,    every 2 hours
+  //   < 500px → compact "8a" labels,    every 4 hours
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = React.useState(1024);
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setContainerWidth(entry.contentRect.width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const useCompactLabel = containerWidth < 760;
+  const tickInterval = containerWidth < 500 ? 3 : 1;
   // Buckets + a derived `total` field so the LabelList on the topmost bar
   // can render the column's full call count above the stack (matching the
   // advertising reference: "181 · 267 · 444 · 607 · …" labels per column).
@@ -229,23 +256,31 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-72 w-full">
+        <div ref={containerRef} className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                // Show every hour on the Hour grain instead of skipping odd
-                // hours — operators expect a tick under every bar. `interval=0`
-                // forces Recharts to render all 24, and `minTickGap=0` removes
-                // its auto-thinning. 9px font keeps "11 AM" / "11 PM" fitting
-                // on narrow viewports.
-                interval={grain === "H" ? 0 : "preserveStartEnd"}
+                // Responsive hour-grain ticks driven by the *chart container*
+                // width (not viewport) so the labels adapt even when the
+                // sidebar + donut squeeze the chart card down to ~600px on a
+                // wide screen. See `useCompactLabel` / `tickInterval` above
+                // for the three-tier rules.
+                interval={grain === "H" ? tickInterval : "preserveStartEnd"}
                 minTickGap={grain === "H" ? 0 : 12}
                 tickMargin={8}
+                tickFormatter={(label: string) => {
+                  if (grain !== "H" || !useCompactLabel) return label;
+                  // Collapse "08:00 am" → "8a" / "12:00 pm" → "12p" so the
+                  // axis fits inside a narrow chart card.
+                  const m = label.match(/^(\d{2}):00 (am|pm)$/);
+                  if (!m) return label;
+                  return `${parseInt(m[1], 10)}${m[2][0]}`;
+                }}
               />
               <YAxis
                 yAxisId="count"
@@ -279,42 +314,46 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
                 iconSize={8}
+                // Filter out the now-hidden `notConverted` entry — only show
+                // Converted, No Answer, and Revenue in the legend so it
+                // matches the simplified 2-category donut.
+                payload={[
+                  { value: "converted",  type: "square", color: COLOR_CONVERTED },
+                  { value: "noAnswer",   type: "square", color: COLOR_NOANS },
+                  { value: "revenue",    type: "square", color: COLOR_REVENUE },
+                ]}
                 formatter={(v) =>
                   v === "converted"
                     ? t("toolsUI.reports.hourly.legend.converted")
-                    : v === "notConverted"
-                      ? t("toolsUI.reports.hourly.legend.notConverted")
-                      : v === "noAnswer"
-                        ? t("toolsUI.reports.hourly.legend.noAnswer")
-                        : t("toolsUI.reports.hourly.legend.revenue")
+                    : v === "noAnswer"
+                      ? t("toolsUI.reports.hourly.legend.noAnswer")
+                      : t("toolsUI.reports.hourly.legend.revenue")
                 }
+              />
+              {/* Stack order — bottom to top:
+                   1. noAnswer    (red sliver at bottom)
+                   2. converted   (purple, dominant, top of stack)
+                  The old `notConverted` (yellow) segment was removed
+                  entirely so the chart matches the 2-category donut:
+                  Total = Converted + No Answer. */}
+              <Bar
+                yAxisId="count"
+                dataKey="noAnswer"
+                stackId="calls"
+                fill={COLOR_NOANS}
+                radius={[0, 0, 0, 0]}
               />
               <Bar
                 yAxisId="count"
                 dataKey="converted"
                 stackId="calls"
                 fill={COLOR_CONVERTED}
-                radius={[0, 0, 0, 0]}
-              />
-              <Bar
-                yAxisId="count"
-                dataKey="notConverted"
-                stackId="calls"
-                fill={COLOR_NOTCONV}
-                radius={[0, 0, 0, 0]}
-              />
-              <Bar
-                yAxisId="count"
-                dataKey="noAnswer"
-                stackId="calls"
-                fill={COLOR_NOANS}
                 radius={[3, 3, 0, 0]}
               >
-                {/* Total-count label above each stacked column. Pulls the
-                    pre-computed `total` field from the bucket so it shows the
-                    full call count (converted + notConverted + noAnswer)
-                    instead of just the top segment. Hidden when total is 0
-                    so empty hours don't show a stray "0". */}
+                {/* Total-count label above each stacked column. Lives on the
+                    topmost bar (converted) so the label sits above the full
+                    stack height. `total` is the pre-computed sum of all
+                    three segments; hidden when 0 so empty hours stay clean. */}
                 <LabelList
                   dataKey="total"
                   position="top"

@@ -12,7 +12,7 @@ interface TotalCallsDonutProps {
   calls: Call[];
 }
 
-type SliceKey = "converted" | "notConverted" | "noAnswer";
+type SliceKey = "converted" | "noAnswer";
 
 interface Slice {
   key: SliceKey;
@@ -22,24 +22,27 @@ interface Slice {
   swatch: string;
 }
 
+/** Binary classification:
+ *    "converted" — call connected and qualified (paying conversion)
+ *    "noAnswer"  — everything else (missed, rejected, failed, in-flight)
+ *
+ * We deliberately collapse the old "notConverted" category into "noAnswer"
+ * so the donut reads as a strict 2-slice success/failure split — operators
+ * shouldn't have to disambiguate two different red labels. */
 function classify(c: Call): SliceKey {
-  if (c.status === "missed") return "noAnswer";
   if (c.status === "completed" && c.payout > 0) return "converted";
-  return "notConverted";
+  return "noAnswer";
 }
 
 export function TotalCallsDonut({ calls }: TotalCallsDonutProps) {
   const { t } = useTranslation();
-  const counts = { converted: 0, notConverted: 0, noAnswer: 0 };
+  const counts = { converted: 0, noAnswer: 0 };
   for (const c of calls) counts[classify(c)] += 1;
 
-  // Indigo for the positive outcome; bright destructive red for everything
-  // that didn't convert. Both "Not converted" and "No answer" share the same
-  // red so the donut reads as a strict success/failure split.
+  // Indigo for the positive outcome; destructive red for the rest.
   const slices: Slice[] = [
     { key: "converted", label: t("toolsUI.reports.totalDonut.converted"), count: counts.converted, color: "var(--accent)", swatch: "var(--accent)" },
-    { key: "notConverted", label: t("toolsUI.reports.totalDonut.notConverted"), count: counts.notConverted, color: "var(--destructive)", swatch: "var(--destructive)" },
-    { key: "noAnswer", label: t("toolsUI.reports.totalDonut.noAnswer"), count: counts.noAnswer, color: "var(--destructive)", swatch: "var(--destructive)" },
+    { key: "noAnswer",  label: t("toolsUI.reports.totalDonut.noAnswer"),  count: counts.noAnswer,  color: "var(--destructive)", swatch: "var(--destructive)" },
   ];
   const total = slices.reduce((s, x) => s + x.count, 0);
 
