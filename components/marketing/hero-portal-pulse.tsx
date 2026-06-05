@@ -286,7 +286,7 @@ interface PortalStat {
 const STATS: PortalStat[] = [
   { labelKey: "marketingUI.hero.pulse.stats.networks", target: 500, suffix: "+" },
   { labelKey: "marketingUI.hero.pulse.stats.calls",    target: "2.4M" },
-  { labelKey: "marketingUI.hero.pulse.stats.revenue",  target: "$24K" },
+  { labelKey: "marketingUI.hero.pulse.stats.revenue",  target: "$1.2M" },
 ];
 
 function PortalStats() {

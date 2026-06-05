@@ -19,21 +19,63 @@ export interface HourPoint {
   conversions: number;
 }
 
-/** 24h of data (most recent hour last). */
-export const TODAY_HOURLY: HourPoint[] = Array.from({ length: 24 }, (_, i) => {
-  const wave = Math.sin((i / 24) * Math.PI * 2 - Math.PI / 2) + 1.2; // ~0.2..2.2
-  const noise = rng(i + 7) * 0.4 + 0.8;
-  const calls = Math.round(wave * 28 * noise + 8);
-  const conversions = Math.round(calls * (0.32 + rng(i + 11) * 0.18));
-  const revenue = Math.round(conversions * (28 + rng(i + 21) * 12));
-  return {
+/**
+ * 24h of data — hand-tuned to **exactly** mirror the advertising reference:
+ *
+ *   8 AM   181    ramp begins
+ *   9 AM   267
+ *  10 AM   444
+ *  11 AM   607
+ *  12 PM   587    (slight lunch dip)
+ *   1 PM   961
+ *   2 PM 1,029    ← PEAK
+ *   3 PM   697
+ *   4 PM   688
+ *   5 PM    59    (sharp cliff)
+ *   6 PM    55
+ *
+ * No traffic outside the 8 AM–6 PM window. Totals: **5,575 calls /
+ * 4,544 conversions (81.5%) / $284,959 revenue**. Per-conversion revenue
+ * averages $62.71 (matches campaign payouts × 1.18 buyer margin so the
+ * dashboard, reports, and marketing hero card all read "$285K Revenue
+ * today").
+ */
+export const TODAY_HOURLY: HourPoint[] = (() => {
+  const buckets: Array<[number, number, number]> = [
+    // [calls, conversions, revenue]
+    [0, 0, 0],            // 12 AM
+    [0, 0, 0],            // 1  AM
+    [0, 0, 0],            // 2  AM
+    [0, 0, 0],            // 3  AM
+    [0, 0, 0],            // 4  AM
+    [0, 0, 0],            // 5  AM
+    [0, 0, 0],            // 6  AM
+    [0, 0, 0],            // 7  AM
+    [181, 148, 9281],     // 8  AM — ramp begins
+    [267, 218, 13670],    // 9  AM
+    [444, 362, 22701],    // 10 AM
+    [607, 495, 31041],    // 11 AM
+    [587, 478, 29977],    // 12 PM — lunch dip
+    [961, 783, 49083],    // 1  PM
+    [1029, 839, 52612],   // 2  PM — PEAK
+    [697, 568, 35619],    // 3  PM
+    [688, 561, 35178],    // 4  PM
+    [59, 48, 3010],       // 5  PM — cliff
+    [55, 45, 2822],       // 6  PM
+    [0, 0, 0],            // 7  PM
+    [0, 0, 0],            // 8  PM
+    [0, 0, 0],            // 9  PM
+    [0, 0, 0],            // 10 PM
+    [0, 0, 0],            // 11 PM
+  ];
+  return buckets.map(([calls, conversions, revenue], i) => ({
     hour: i,
     label: `${i.toString().padStart(2, "0")}:00`,
     calls,
     conversions,
     revenue,
-  };
-});
+  }));
+})();
 
 export interface DayPoint {
   /** Days ago (0 = today) */
@@ -45,13 +87,20 @@ export interface DayPoint {
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-/** Last 14 days, oldest first. */
+/** Last 14 days, oldest first.
+ *
+ *   • Day 0 (14d ago)   : ~$210K / ~4,100 calls
+ *   • Day 13 (Today)    : ~$285K / ~5,578 calls
+ *
+ * Clean upward trend so the 14-day revenue chart reads as a growth story
+ * that lines up with today's headline ($285K) and the 24h bell curve. */
 export const LAST_14_DAYS: DayPoint[] = Array.from({ length: 14 }, (_, i) => {
   const offset = 13 - i;
-  const base = 9_000 + i * 380;
-  const noise = (rng(i + 1) - 0.5) * 2_500;
-  const revenue = Math.max(2000, Math.round(base + noise));
-  const calls = Math.round(revenue / (28 + rng(i + 3) * 14));
+  const base = 210_000 + i * 5_770; // day 0 = $210k → day 13 ≈ $285k
+  const noise = (rng(i + 1) - 0.5) * 12_000;
+  const revenue = Math.max(180_000, Math.round(base + noise));
+  // Avg ~$51 per call (revenue ÷ total calls when 81.5% convert at $62.7/conv).
+  const calls = Math.round(revenue / (48 + rng(i + 3) * 6));
   const date = new Date();
   date.setDate(date.getDate() - offset);
   const dayIdx = date.getDay();
@@ -71,13 +120,16 @@ export interface GeoPoint {
   revenue: number;
 }
 
+/** Top 6 states by today's call volume. Together they cover ~70% of the
+ *  5,578 daily calls / $285K revenue figure used everywhere else, with
+ *  per-state per-call revenue averaging ~$51 to stay consistent. */
 export const GEO_DISTRIBUTION: GeoPoint[] = [
-  { state: "TX", name: "Texas", calls: 312, revenue: 13_260 },
-  { state: "CA", name: "California", calls: 287, revenue: 12_140 },
-  { state: "FL", name: "Florida", calls: 198, revenue: 8_910 },
-  { state: "NY", name: "New York", calls: 164, revenue: 7_380 },
-  { state: "PA", name: "Pennsylvania", calls: 122, revenue: 5_490 },
-  { state: "OH", name: "Ohio", calls: 96, revenue: 4_320 },
+  { state: "TX", name: "Texas",        calls: 1_072, revenue: 54_672 },
+  { state: "CA", name: "California",   calls:   943, revenue: 48_093 },
+  { state: "FL", name: "Florida",      calls:   703, revenue: 35_853 },
+  { state: "NY", name: "New York",     calls:   546, revenue: 27_846 },
+  { state: "PA", name: "Pennsylvania", calls:   360, revenue: 18_360 },
+  { state: "OH", name: "Ohio",         calls:   277, revenue: 14_127 },
 ];
 
 /** Sparkline series (8 points) per KPI. */

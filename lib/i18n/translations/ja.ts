@@ -3931,7 +3931,7 @@ export const ja: TranslationShape = {
       ctaSecondary: "90秒デモを見る",
       stage: {
         briefings: { label: "デイリーブリーフィング", value: "新着 12" },
-        revenue: { label: "本日の売上", value: "$24.3K" },
+        revenue: { label: "本日の売上", value: "$285K" },
         markets: { label: "マーケット · BTC", value: "$64.8K" },
         ai: { label: "AI 信頼度", value: "92%" },
       },
@@ -4181,7 +4181,7 @@ export const ja: TranslationShape = {
       team: {
         maya: { name: "マヤ・レイエス", role: "セールスリード" },
         jordan: { name: "ジョーダン・キム", role: "ソリューションエンジニア" },
-        sofia: { name: "ソフィア・ペトロフ", role: "カスタマーサクセス" },
+        sofia: { name: "リナ・パーク", role: "カスタマーサクセス" },
       },
       escalation: {
         heading: "人と話したい?",

@@ -3956,7 +3956,7 @@ export const en = {
       ctaSecondary: "Watch 90-sec demo",
       stage: {
         briefings: { label: "Daily briefings", value: "12 new" },
-        revenue: { label: "Revenue today", value: "$24.3K" },
+        revenue: { label: "Revenue today", value: "$285K" },
         markets: { label: "Markets · BTC", value: "$64.8K" },
         ai: { label: "AI confidence", value: "92%" },
       },
@@ -4199,7 +4199,7 @@ export const en = {
       team: {
         maya: { name: "Maya Reyes", role: "Sales lead" },
         jordan: { name: "Jordan Kim", role: "Solutions engineer" },
-        sofia: { name: "Sofia Petrov", role: "Customer success" },
+        sofia: { name: "Lina Park", role: "Customer success" },
       },
       escalation: {
         heading: "Need a person?",

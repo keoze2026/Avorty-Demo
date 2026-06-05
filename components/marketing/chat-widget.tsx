@@ -61,7 +61,7 @@ interface TeamMember {
 const TEAM: TeamMember[] = [
   { id: "maya",   initials: "MR", nameKey: "marketingUI.chat.team.maya.name",   roleKey: "marketingUI.chat.team.maya.role",   tone: "accent" },
   { id: "jordan", initials: "JK", nameKey: "marketingUI.chat.team.jordan.name", roleKey: "marketingUI.chat.team.jordan.role", tone: "success" },
-  { id: "sofia",  initials: "SP", nameKey: "marketingUI.chat.team.sofia.name",  roleKey: "marketingUI.chat.team.sofia.role",  tone: "warning" },
+  { id: "sofia",  initials: "LP", nameKey: "marketingUI.chat.team.sofia.name",  roleKey: "marketingUI.chat.team.sofia.role",  tone: "warning" },
 ];
 
 const TONE_BG: Record<TeamMember["tone"], string> = {

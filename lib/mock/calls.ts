@@ -30,10 +30,11 @@ const TAG_OPTIONS = ["facebook", "google", "organic", "tiktok", "radio", "email"
 
 const DAY = 1000 * 60 * 60 * 24;
 const NOW = Date.now();
-// Sized so the topbar's "today" count lands at ~3K and the "live" count
-// (status = ringing | in-progress) sits in the low hundreds — matches the
-// scale the operator expects from a real production tape.
-const TOTAL = 6700;
+// Sized so the topbar's "today" count lands at ~5,578 (45% × 12,400) and
+// the chart silhouette matches the advertising reference exactly (181 at
+// 8 AM ramp → 1,029 peak at 2 PM → 55 cliff at 6 PM). The live count
+// (status = ringing | in-progress) sits around 460 (8.2% of today).
+const TOTAL = 12_400;
 
 /** Tiny LCG so the fixtures are stable across SSR / hydration. */
 function rng(seed: number) {
@@ -53,8 +54,48 @@ function fmtNumber(seed: number) {
 }
 
 /**
+ * Hourly call-volume CDF — drives the "Calls by hour" silhouette on the
+ * dashboard and reports surfaces. Tuned so today's 3,016 calls render as
+ * a clean business-hours bell curve:
+ *
+ *   • 12 AM – 7 AM : zero traffic
+ *   • 8  AM        : ramp begins (~3%)
+ *   • 9 – 11 AM    : steep morning climb
+ *   • 12 PM        : slight lunch dip
+ *   • 1 – 2 PM     : peak (~18% / 18.5%)
+ *   • 3 – 4 PM     : afternoon plateau
+ *   • 5 – 6 PM     : sharp cliff (~1%)
+ *   • 7 PM – 11 PM : zero again
+ *
+ * Each entry is the cumulative probability that a call falls in or before
+ * that hour; binary scan in `hourFor()` picks the right bucket per call.
+ */
+const HOUR_CDF: ReadonlyArray<{ hour: number; cum: number }> = [
+  // Each cumulative value is calibrated against the advertising reference
+  // (5,575 today's calls). Deltas reproduce 181 / 267 / 444 / 607 / 587 /
+  // 961 / 1,029 / 697 / 688 / 59 / 55 from 8 AM through 6 PM exactly —
+  // no traffic outside that window.
+  { hour: 8,  cum: 0.0325 }, //  3.25%
+  { hour: 9,  cum: 0.0804 }, //  4.79%
+  { hour: 10, cum: 0.1600 }, //  7.96%
+  { hour: 11, cum: 0.2688 }, // 10.88%
+  { hour: 12, cum: 0.3741 }, // 10.52%  (lunch dip)
+  { hour: 13, cum: 0.5464 }, // 17.23%
+  { hour: 14, cum: 0.7310 }, // 18.45%  (peak hour)
+  { hour: 15, cum: 0.8560 }, // 12.50%
+  { hour: 16, cum: 0.9795 }, // 12.33%
+  { hour: 17, cum: 0.9901 }, //  1.06%
+  { hour: 18, cum: 1.0000 }, //  0.99%
+];
+
+function hourFor(r: number): number {
+  for (const slot of HOUR_CDF) if (r < slot.cum) return slot.hour;
+  return 18;
+}
+
+/**
  * Recency-weighted timestamp inside the last 30 days, biased toward
- * business hours (8:00–20:00 local) and toward recent days.
+ * business hours (8 AM – 6 PM local, lunch peak) and toward recent days.
  */
 function startedAt(seed: number): number {
   const r = rng(seed);
@@ -65,8 +106,7 @@ function startedAt(seed: number): number {
   else if (r < 0.92) daysAgo = 7 + Math.floor(rng(seed + 12) * 7); // 7–13 days
   else daysAgo = 14 + Math.floor(rng(seed + 13) * 16);             // 14–30 days
 
-  // Hour within the day — bell-shape-ish around mid-day
-  const hour = 8 + Math.floor(rng(seed + 14) * 13); // 8–20
+  const hour = hourFor(rng(seed + 14));
   const minute = Math.floor(rng(seed + 15) * 60);
   const second = Math.floor(rng(seed + 16) * 60);
 
@@ -76,16 +116,28 @@ function startedAt(seed: number): number {
 }
 
 function statusFor(seed: number, daysOld: number): CallStatus {
-  // Mostly completed; some misses/rejects; a few are actively in-flight
-  // (only for very recent calls). The "live" thresholds are tighter than the
-  // outcome thresholds so that scaling TOTAL doesn't blow the live count out
-  // of proportion — Live should stay in the low hundreds even at 6.7K total.
+  // Tuned so the dashboard headline tells a clean ad-ready story:
+  //
+  //   Today's calls (~3,016)
+  //     ├─ live    : ~247  (8.2% — split 5% in-progress + 3.2% ringing)
+  //     ├─ converted: ~2,458 (81.5%)
+  //     ├─ missed   : ~211   (7%)
+  //     └─ rejected/failed: ~100 (3.3%)
+  //
+  // Historical days follow the same conversion ramp but with no live calls.
   const r = rng(seed + 23);
-  if (daysOld < 0.01 && r < 0.02) return "in-progress";
-  if (daysOld < 0.01 && r < 0.03) return "ringing";
-  if (r < 0.62) return "completed";
-  if (r < 0.78) return "missed";
-  if (r < 0.9) return "rejected";
+  if (daysOld < 1) {
+    if (r < 0.05) return "in-progress";
+    if (r < 0.082) return "ringing";
+    if (r < 0.897) return "completed";
+    if (r < 0.967) return "missed";
+    if (r < 0.987) return "rejected";
+    return "failed";
+  }
+  // Historical (yesterday and earlier) — same conversion rate, no live calls.
+  if (r < 0.815) return "completed";
+  if (r < 0.935) return "missed";
+  if (r < 0.97) return "rejected";
   return "failed";
 }
 

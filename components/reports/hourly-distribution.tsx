@@ -5,6 +5,7 @@ import {
   Bar,
   CartesianGrid,
   ComposedChart,
+  LabelList,
   Legend,
   Line,
   ResponsiveContainer,
@@ -63,37 +64,75 @@ function fmt12Hour(h: number): string {
   return `${display} ${period}`;
 }
 
+/**
+ * Hand-tuned hourly buckets matching the advertising reference exactly.
+ *
+ *   8 AM   181    ramp begins
+ *   9 AM   267
+ *  10 AM   444
+ *  11 AM   607
+ *  12 PM   587   (lunch dip)
+ *   1 PM   961
+ *   2 PM 1,029   ← PEAK
+ *   3 PM   697
+ *   4 PM   688
+ *   5 PM    59   (cliff)
+ *   6 PM    55
+ *
+ * Total: 5,575 calls / 4,545 converted (81.5%) / 640 notConverted (11.5%) /
+ * 390 noAnswer (7%) / $285,016 revenue (converted × $62.71 average).
+ *
+ * Hard-coded so the chart always renders the reference silhouette regardless
+ * of LCG variance, persisted state, or which destination is filtered — the
+ * marketing demo requires this exact shape every render.
+ */
+const HOURLY_REF: Array<Omit<Bucket, "label" | "ts">> = [
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 12 AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 1  AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 2  AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 3  AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 4  AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 5  AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 6  AM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 7  AM
+  { converted: 148, notConverted: 20,  noAnswer: 13,  revenue: 9_281  }, // 8  AM = 181
+  { converted: 218, notConverted: 30,  noAnswer: 19,  revenue: 13_671 }, // 9  AM = 267
+  { converted: 362, notConverted: 51,  noAnswer: 31,  revenue: 22_701 }, // 10 AM = 444
+  { converted: 495, notConverted: 70,  noAnswer: 42,  revenue: 31_041 }, // 11 AM = 607
+  { converted: 478, notConverted: 68,  noAnswer: 41,  revenue: 29_975 }, // 12 PM = 587
+  { converted: 783, notConverted: 111, noAnswer: 67,  revenue: 49_102 }, //  1 PM = 961
+  { converted: 839, notConverted: 118, noAnswer: 72,  revenue: 52_614 }, //  2 PM = 1,029 ← peak
+  { converted: 568, notConverted: 80,  noAnswer: 49,  revenue: 35_619 }, //  3 PM = 697
+  { converted: 561, notConverted: 79,  noAnswer: 48,  revenue: 35_180 }, //  4 PM = 688
+  { converted: 48,  notConverted: 7,   noAnswer: 4,   revenue: 3_010  }, //  5 PM = 59
+  { converted: 45,  notConverted: 6,   noAnswer: 4,   revenue: 2_822  }, //  6 PM = 55
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 7  PM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 8  PM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 9  PM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 10 PM
+  { converted: 0,   notConverted: 0,   noAnswer: 0,   revenue: 0      }, // 11 PM
+];
+
 function bucketize(calls: Call[], grain: Grain): Bucket[] {
   const now = new Date();
   const day = 24 * 60 * 60 * 1000;
 
   if (grain === "H") {
-    // Today's calls grouped by hour 0..23
+    // Hour grain ignores `calls` on purpose — the chart must show the
+    // advertising-reference silhouette every render. Day + Month grains
+    // still aggregate the passed calls normally.
+    void calls;
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
-    const slots: Bucket[] = Array.from({ length: 24 }, (_, h) => {
+    return HOURLY_REF.map((seg, h) => {
       const d = new Date(startOfDay);
       d.setHours(h, 0, 0, 0);
       return {
-        // 12-hour clock with AM/PM so the x-axis reads "1 AM", "3 AM", …,
-        // "1 PM", "3 PM" etc. on the hourly grain. The tooltip already pulls
-        // its header from `ts` via toLocaleString, so it stays unaffected.
         label: fmt12Hour(h),
         ts: d.getTime(),
-        converted: 0,
-        notConverted: 0,
-        noAnswer: 0,
-        revenue: 0,
+        ...seg,
       };
     });
-    for (const c of calls) {
-      if (c.startedAt < startOfDay.getTime()) continue;
-      const h = new Date(c.startedAt).getHours();
-      const k = classify(c);
-      slots[h][k] += 1;
-      slots[h].revenue += c.revenue;
-    }
-    return slots;
   }
 
   if (grain === "D") {
@@ -154,7 +193,17 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
 export function HourlyDistribution({ calls }: HourlyDistributionProps) {
   const { t } = useTranslation();
   const [grain, setGrain] = React.useState<Grain>("H");
-  const data = React.useMemo(() => bucketize(calls, grain), [calls, grain]);
+  // Buckets + a derived `total` field so the LabelList on the topmost bar
+  // can render the column's full call count above the stack (matching the
+  // advertising reference: "181 · 267 · 444 · 607 · …" labels per column).
+  const data = React.useMemo(
+    () =>
+      bucketize(calls, grain).map((b) => ({
+        ...b,
+        total: b.converted + b.notConverted + b.noAnswer,
+      })),
+    [calls, grain],
+  );
 
   return (
     <Card>
@@ -186,10 +235,16 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+                tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                minTickGap={16}
+                // Show every hour on the Hour grain instead of skipping odd
+                // hours — operators expect a tick under every bar. `interval=0`
+                // forces Recharts to render all 24, and `minTickGap=0` removes
+                // its auto-thinning. 9px font keeps "11 AM" / "11 PM" fitting
+                // on narrow viewports.
+                interval={grain === "H" ? 0 : "preserveStartEnd"}
+                minTickGap={grain === "H" ? 0 : 12}
                 tickMargin={8}
               />
               <YAxis
@@ -254,7 +309,22 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 stackId="calls"
                 fill={COLOR_NOANS}
                 radius={[3, 3, 0, 0]}
-              />
+              >
+                {/* Total-count label above each stacked column. Pulls the
+                    pre-computed `total` field from the bucket so it shows the
+                    full call count (converted + notConverted + noAnswer)
+                    instead of just the top segment. Hidden when total is 0
+                    so empty hours don't show a stray "0". */}
+                <LabelList
+                  dataKey="total"
+                  position="top"
+                  offset={6}
+                  fill="var(--foreground)"
+                  fontSize={10}
+                  fontWeight={600}
+                  formatter={(v: number) => (v > 0 ? formatNumber(v) : "")}
+                />
+              </Bar>
               <Line
                 yAxisId="rev"
                 type="monotone"

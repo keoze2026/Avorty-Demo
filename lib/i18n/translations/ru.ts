@@ -3931,7 +3931,7 @@ export const ru: TranslationShape = {
       ctaSecondary: "Смотреть 90-сек демо",
       stage: {
         briefings: { label: "Ежедневные сводки", value: "12 новых" },
-        revenue: { label: "Доход сегодня", value: "$24.3K" },
+        revenue: { label: "Доход сегодня", value: "$285K" },
         markets: { label: "Рынки · BTC", value: "$64.8K" },
         ai: { label: "AI-уверенность", value: "92%" },
       },
@@ -4181,7 +4181,7 @@ export const ru: TranslationShape = {
       team: {
         maya: { name: "Майя Рейес", role: "Руководитель продаж" },
         jordan: { name: "Джордан Ким", role: "Solutions Engineer" },
-        sofia: { name: "София Петров", role: "Customer Success" },
+        sofia: { name: "Лина Парк", role: "Customer Success" },
       },
       escalation: {
         heading: "Нужен человек?",
