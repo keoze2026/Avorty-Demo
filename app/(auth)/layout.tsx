@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Newspaper, Phone, TrendingUp } from "lucide-react";
 
 import { BrandVortex } from "@/components/auth/brand-vortex";
 import { Wordmark } from "@/components/brand/wordmark";
@@ -42,26 +41,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           {/* Middle group fills the remaining height between header + footer
               and centres itself vertically with margin-block:auto. Keeps the
               composition balanced even when the viewport is short. */}
-          <div className="my-auto max-w-xl space-y-7">
-            <div className="flex flex-wrap items-center gap-2">
-              <SignalChip
-                icon={Phone}
-                label={t("authUI.split.signals.callsLabel")}
-                value={t("authUI.split.signals.callsValue")}
-                pulse
-              />
-              <SignalChip
-                icon={TrendingUp}
-                label={t("authUI.split.signals.marketsLabel")}
-                value={t("authUI.split.signals.marketsValue")}
-              />
-              <SignalChip
-                icon={Newspaper}
-                label={t("authUI.split.signals.briefingsLabel")}
-                value={t("authUI.split.signals.briefingsValue")}
-              />
-            </div>
-
+          <div className="my-auto max-w-xl space-y-6">
             <h2 className="text-4xl font-medium leading-[1.05] tracking-tight text-foreground xl:text-[3.4rem]">
               {t("authUI.split.tagline")}
             </h2>
@@ -94,40 +74,5 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </section>
       </div>
     </main>
-  );
-}
-
-/**
- * Ambient pill chip — icon + tiny uppercase label + bold value. The `pulse`
- * variant gets a soft animated dot ahead of the icon, used on the calls chip
- * so it reads as "live". Brand-tinted border + halo, theme-aware backgrounds.
- */
-function SignalChip({
-  icon: Icon,
-  label,
-  value,
-  pulse,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  pulse?: boolean;
-}) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-background/55 px-3 py-1.5 shadow-[0_0_24px_-12px_color-mix(in_oklch,var(--accent)_55%,transparent)] backdrop-blur-md">
-      {pulse && (
-        <span className="relative inline-flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent/60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-        </span>
-      )}
-      <Icon className="h-3.5 w-3.5 text-accent" />
-      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
-      </span>
-      <span className="text-xs font-semibold tabular-nums text-foreground">
-        {value}
-      </span>
-    </div>
   );
 }

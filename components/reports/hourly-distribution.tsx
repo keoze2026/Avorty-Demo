@@ -56,6 +56,13 @@ function classify(c: Call): "converted" | "notConverted" | "noAnswer" {
   return "notConverted";
 }
 
+/** Format an hour 0-23 as 12-hour with AM/PM — e.g. 0 → "12 AM", 13 → "1 PM". */
+function fmt12Hour(h: number): string {
+  const period = h < 12 ? "AM" : "PM";
+  const display = h % 12 === 0 ? 12 : h % 12;
+  return `${display} ${period}`;
+}
+
 function bucketize(calls: Call[], grain: Grain): Bucket[] {
   const now = new Date();
   const day = 24 * 60 * 60 * 1000;
@@ -68,7 +75,10 @@ function bucketize(calls: Call[], grain: Grain): Bucket[] {
       const d = new Date(startOfDay);
       d.setHours(h, 0, 0, 0);
       return {
-        label: `${h.toString().padStart(2, "0")}:00`,
+        // 12-hour clock with AM/PM so the x-axis reads "1 AM", "3 AM", …,
+        // "1 PM", "3 PM" etc. on the hourly grain. The tooltip already pulls
+        // its header from `ts` via toLocaleString, so it stays unaffected.
+        label: fmt12Hour(h),
         ts: d.getTime(),
         converted: 0,
         notConverted: 0,
