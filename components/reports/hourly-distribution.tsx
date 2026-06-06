@@ -275,11 +275,12 @@ export function HourlyDistribution({ calls }: HourlyDistributionProps) {
                 tickMargin={8}
                 tickFormatter={(label: string) => {
                   if (grain !== "H" || !useCompactLabel) return label;
-                  // Collapse "08:00 am" → "8a" / "12:00 pm" → "12p" so the
-                  // axis fits inside a narrow chart card.
+                  // Collapse "08:00 am" → "8am" / "12:00 pm" → "12pm" so the
+                  // axis fits inside a narrow chart card without dropping
+                  // the readable am/pm suffix.
                   const m = label.match(/^(\d{2}):00 (am|pm)$/);
                   if (!m) return label;
-                  return `${parseInt(m[1], 10)}${m[2][0]}`;
+                  return `${parseInt(m[1], 10)}${m[2]}`;
                 }}
               />
               <YAxis
