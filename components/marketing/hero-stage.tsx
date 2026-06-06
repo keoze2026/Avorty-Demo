@@ -53,7 +53,7 @@ const BRAND_CORE = [238, 241, 254] as const;
 
 export function HeroStage() {
   return (
-    <div className="relative h-[42rem] w-full overflow-hidden">
+    <div className="relative h-[28rem] w-full overflow-hidden sm:h-[34rem] lg:h-[42rem]">
       <HeroVortex />
       <GlyphField />
       <AccentCards />

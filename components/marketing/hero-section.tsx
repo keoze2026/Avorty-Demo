@@ -23,7 +23,7 @@ export function HeroSection() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative overflow-hidden pb-32">
+    <section className="relative overflow-hidden pb-16 sm:pb-32">
       {/* Subtle ambient glow centred behind the headline. */}
       <div
         aria-hidden
@@ -36,7 +36,7 @@ export function HeroSection() {
         }}
       />
 
-      <div className="relative z-10 flex flex-col pt-28">
+      <div className="relative z-10 flex flex-col pt-20 sm:pt-28">
         {/* ─── Top row: copy block + Portal Pulse column ─────────── */}
         <div className="mx-auto mt-8 w-full max-w-6xl px-6">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-12">
@@ -87,18 +87,18 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="mt-8 flex items-center gap-3"
+                className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
               >
                 <Link
                   href={ROUTES.signup}
-                  className="inline-flex items-center gap-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+                  className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 sm:w-auto sm:justify-start"
                 >
                   {t("marketingUI.hero.ctaPrimary")}
                   <span aria-hidden="true">→</span>
                 </Link>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/85 transition-colors hover:bg-secondary/50 hover:text-foreground"
+                  className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/85 transition-colors hover:bg-secondary/50 hover:text-foreground sm:w-auto sm:justify-start"
                 >
                   <Play className="h-4 w-4" />
                   {t("marketingUI.hero.ctaSecondary")}
@@ -143,7 +143,7 @@ export function HeroSection() {
         </div>
 
         {/* ─── Abstract animated stage ──────────────────────────── */}
-        <div className="relative mx-auto mt-16 w-full max-w-6xl px-6">
+        <div className="relative mx-auto mt-8 w-full max-w-6xl px-6 sm:mt-16">
           <HeroStage />
         </div>
       </div>
