@@ -14,8 +14,11 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TIMEZONES as TZ_OPTIONS } from "@/lib/timezones";
@@ -70,12 +73,31 @@ const TOOLBAR_BTN_HOVER =
   "hover:bg-muted hover:text-foreground dark:hover:bg-muted/70";
 
 
+/** Section-visibility flags driven by the toolbar's eye-dropdown. */
+export interface ReportsVisibility {
+  hourly: boolean;
+  donut: boolean;
+  perf: boolean;
+  summary: boolean;
+  log: boolean;
+}
+
+export const DEFAULT_REPORTS_VISIBILITY: ReportsVisibility = {
+  hourly: true,
+  donut: true,
+  perf: true,
+  summary: true,
+  log: true,
+};
+
 interface ReportsToolbarProps {
   dateRange: DateRange | undefined;
   onDateRangeChange: (range: DateRange | undefined) => void;
   onRefresh: () => void;
   filters: ReportFilters;
   onFiltersChange: (filters: ReportFilters) => void;
+  visibility: ReportsVisibility;
+  onVisibilityChange: (next: ReportsVisibility) => void;
 }
 
 export function ReportsToolbar({
@@ -84,6 +106,8 @@ export function ReportsToolbar({
   onRefresh,
   filters,
   onFiltersChange,
+  visibility,
+  onVisibilityChange,
 }: ReportsToolbarProps) {
   const { t } = useTranslation();
   // Default to Eastern Time — first entry in the curated list that matches.
@@ -127,17 +151,67 @@ export function ReportsToolbar({
   const refreshLabel = t(REFRESH_LABEL_KEYS[refresh]);
   const countdownLabel = active ? `${refreshLabel} · ${remaining}s` : refreshLabel;
 
+  // Section toggles surfaced under the eye button. Order matches the page.
+  const SECTION_TOGGLES: Array<{ key: keyof ReportsVisibility; labelKey: string }> = [
+    { key: "hourly",  labelKey: "toolsUI.reports.toolbar.sections.hourly" },
+    { key: "donut",   labelKey: "toolsUI.reports.toolbar.sections.donut" },
+    { key: "perf",    labelKey: "toolsUI.reports.toolbar.sections.perf" },
+    { key: "summary", labelKey: "toolsUI.reports.toolbar.sections.summary" },
+    { key: "log",     labelKey: "toolsUI.reports.toolbar.sections.log" },
+  ];
+  const hiddenCount = SECTION_TOGGLES.filter((s) => !visibility[s.key]).length;
+  const allOn = hiddenCount === 0;
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        className={cn("gap-1.5 px-2.5", TOOLBAR_BTN_HOVER)}
-        aria-label={t("toolsUI.reports.toolbar.viewSettings")}
-      >
-        <Eye className="h-4 w-4" />
-        <ChevronDown className="h-3 w-3 opacity-60" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "gap-1.5 px-2.5",
+              allOn
+                ? TOOLBAR_BTN_HOVER
+                : "border-accent/50 bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent",
+            )}
+            aria-label={t("toolsUI.reports.toolbar.viewSettings")}
+          >
+            <Eye className="h-4 w-4" />
+            {!allOn && (
+              <span className="tabular-nums text-[11px] font-medium">
+                {SECTION_TOGGLES.length - hiddenCount}/{SECTION_TOGGLES.length}
+              </span>
+            )}
+            <ChevronDown className="h-3 w-3 opacity-60" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("toolsUI.reports.toolbar.viewSettings")}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {SECTION_TOGGLES.map((s) => (
+            <DropdownMenuCheckboxItem
+              key={s.key}
+              checked={visibility[s.key]}
+              onCheckedChange={(v) =>
+                onVisibilityChange({ ...visibility, [s.key]: Boolean(v) })
+              }
+              onSelect={(e) => e.preventDefault()}
+            >
+              {t(s.labelKey)}
+            </DropdownMenuCheckboxItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => onVisibilityChange(DEFAULT_REPORTS_VISIBILITY)}
+            disabled={allOn}
+          >
+            {t("toolsUI.reports.toolbar.showAll")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="ml-auto flex flex-wrap items-center gap-2">
         <DropdownMenu>

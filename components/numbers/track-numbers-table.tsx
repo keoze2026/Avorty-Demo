@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { EditNumberDialog } from "./edit-number-dialog";
 import { NumberStatusBadge } from "./number-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -146,12 +148,14 @@ export function TrackNumbersTable({
 }: Props) {
   const { t } = useTranslation();
   const remove = useNumbersStore((s) => s.removeNumber);
+  const [editing, setEditing] = useState<TrackingNumber | null>(null);
 
   const allChecked = numbers.length > 0 && numbers.every((n) => selected.has(n.id));
   // +1 for the checkbox column
   const colSpan = 1 + Array.from(visibleColumns).length;
 
   return (
+    <>
     <Card className="overflow-hidden p-0">
       <div className="overflow-x-auto">
         <Table className="min-w-[1600px]">
@@ -320,7 +324,7 @@ export function TrackNumbersTable({
                           size="icon"
                           className="h-7 w-7"
                           aria-label={t("trafficUI.numbers.track.edit").replace("{number}", toE164(n.number))}
-                          onClick={() => toast(t("trafficUI.numbers.track.editSoon").replace("{number}", toE164(n.number)))}
+                          onClick={() => setEditing(n)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -346,5 +350,11 @@ export function TrackNumbersTable({
         </Table>
       </div>
     </Card>
+    <EditNumberDialog
+      number={editing}
+      open={editing !== null}
+      onOpenChange={(v) => !v && setEditing(null)}
+    />
+    </>
   );
 }

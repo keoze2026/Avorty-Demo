@@ -11,7 +11,11 @@ import { CallSummaryTable } from "@/components/reports/call-summary-table";
 import { HourlyDistribution } from "@/components/reports/hourly-distribution";
 import { EMPTY_FILTERS, type ReportFilters } from "@/components/reports/reports-filter-popover";
 import { ReportsPinGate } from "@/components/reports/reports-pin-gate";
-import { ReportsToolbar } from "@/components/reports/reports-toolbar";
+import {
+  DEFAULT_REPORTS_VISIBILITY,
+  ReportsToolbar,
+  type ReportsVisibility,
+} from "@/components/reports/reports-toolbar";
 import { TotalCallsDonut } from "@/components/reports/total-calls-donut";
 import { PageHeader } from "@/components/shared/page-header";
 import { useTranslation } from "@/hooks/use-translation";
@@ -37,6 +41,7 @@ export default function ReportsPage() {
     return { from: today, to: today };
   });
   const [filters, setFilters] = useState<ReportFilters>(EMPTY_FILTERS);
+  const [visibility, setVisibility] = useState<ReportsVisibility>(DEFAULT_REPORTS_VISIBILITY);
   // Mobile-only chart switch — desktop always shows both. The donut is hidden
   // on mobile because it eats vertical real-estate; the toggle button below
   // swaps which chart occupies the main slot.
@@ -97,52 +102,79 @@ export default function ReportsPage() {
         onRefresh={() => toast.success(t("page.reports.refreshed"))}
         filters={filters}
         onFiltersChange={setFilters}
+        visibility={visibility}
+        onVisibilityChange={setVisibility}
       />
 
       <ReportsPinGate needsPin={needsPin} onCancel={cancelHistorical}>
         {/* Row 1 — Hourly distribution (2/3) + perf card over donut (1/3).
             On mobile, only one of the two charts is shown at a time and the
             toggle button below the toolbar swaps between them. */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="relative lg:col-span-2">
-            {/* Mobile-only chart switcher */}
-            <button
-              type="button"
-              onClick={() =>
-                setMobileChart((v) => (v === "hourly" ? "donut" : "hourly"))
-              }
-              aria-label={
-                mobileChart === "hourly"
-                  ? "Show total calls donut"
-                  : "Show hourly distribution"
-              }
-              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary hover:text-foreground lg:hidden"
-            >
-              {mobileChart === "hourly" ? (
-                <PieChart className="h-4 w-4" />
-              ) : (
-                <BarChart3 className="h-4 w-4" />
-              )}
-            </button>
-            <div className={cn(mobileChart === "hourly" ? "block" : "hidden", "lg:block")}>
-              <HourlyDistribution calls={filtered} />
-            </div>
-            <div className={cn(mobileChart === "donut" ? "block" : "hidden", "lg:hidden")}>
-              <TotalCallsDonut calls={filtered} />
-            </div>
+        {(visibility.hourly || visibility.donut || visibility.perf) && (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {(visibility.hourly || visibility.donut) && (
+              <div className="relative lg:col-span-2">
+                {/* Mobile-only chart switcher — only matters when both are visible */}
+                {visibility.hourly && visibility.donut && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMobileChart((v) => (v === "hourly" ? "donut" : "hourly"))
+                    }
+                    aria-label={
+                      mobileChart === "hourly"
+                        ? "Show total calls donut"
+                        : "Show hourly distribution"
+                    }
+                    className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary hover:text-foreground lg:hidden"
+                  >
+                    {mobileChart === "hourly" ? (
+                      <PieChart className="h-4 w-4" />
+                    ) : (
+                      <BarChart3 className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
+                {visibility.hourly && (
+                  <div
+                    className={cn(
+                      visibility.donut && mobileChart === "donut" ? "hidden" : "block",
+                      "lg:block",
+                    )}
+                  >
+                    <HourlyDistribution calls={filtered} />
+                  </div>
+                )}
+                {visibility.donut && (
+                  <div
+                    className={cn(
+                      visibility.hourly && mobileChart === "hourly" ? "hidden" : "block",
+                      "lg:hidden",
+                    )}
+                  >
+                    <TotalCallsDonut calls={filtered} />
+                  </div>
+                )}
+              </div>
+            )}
+            {(visibility.perf || visibility.donut) && (
+              <div className="flex flex-col gap-4 lg:h-full">
+                {visibility.perf && (
+                  <CallPerfCard revenue={summary.revenue} payout={summary.payout} />
+                )}
+                {visibility.donut && (
+                  <div className="hidden min-h-0 flex-1 lg:block">
+                    <TotalCallsDonut calls={filtered} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <div className="flex flex-col gap-4 lg:h-full">
-            <CallPerfCard revenue={summary.revenue} payout={summary.payout} />
-            {/* Desktop-only — mobile is handled by the toggle above. */}
-            <div className="hidden min-h-0 flex-1 lg:block">
-              <TotalCallsDonut calls={filtered} />
-            </div>
-          </div>
-        </div>
+        )}
 
-        <CallSummaryTable calls={filtered} />
+        {visibility.summary && <CallSummaryTable calls={filtered} />}
 
-        <CallLogTable calls={filtered} />
+        {visibility.log && <CallLogTable calls={filtered} />}
       </ReportsPinGate>
     </>
   );
