@@ -6,7 +6,9 @@ import { Newspaper, Sparkles, TrendingUp } from "lucide-react";
 import { BrandVortex } from "@/components/auth/brand-vortex";
 import { Wordmark } from "@/components/brand/wordmark";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { formatBtcSpot, useBtcSpot } from "@/hooks/use-btc-spot";
 import { useTranslation } from "@/hooks/use-translation";
+import { cn } from "@/lib/utils";
 
 /**
  * Asymmetric split layout. The vortex spans the entire viewport — its centre
@@ -26,6 +28,14 @@ import { useTranslation } from "@/hooks/use-translation";
  */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const btc = useBtcSpot();
+
+  // Live BTC values when available; fall back to the i18n strings otherwise.
+  const marketsValue =
+    btc.ready && btc.priceUsd != null
+      ? formatBtcSpot(btc.priceUsd)
+      : t("authUI.split.signals.marketsValue");
+  const marketsDelta = btc.ready ? btc.change24h : null;
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -52,7 +62,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               <SignalChip
                 icon={TrendingUp}
                 label={t("authUI.split.signals.marketsLabel")}
-                value={t("authUI.split.signals.marketsValue")}
+                value={marketsValue}
+                delta={marketsDelta}
               />
               <SignalChip
                 icon={Newspaper}
@@ -109,10 +120,13 @@ function SignalChip({
   icon: Icon,
   label,
   value,
+  delta,
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
+  /** Optional signed percent shown as a tiny tinted arrow + value. null = hide. */
+  delta?: number | null;
 }) {
   return (
     <div className="inline-flex items-center gap-2 rounded-full border border-accent/25 bg-background/55 px-3 py-1.5 shadow-[0_0_24px_-12px_color-mix(in_oklch,var(--accent)_55%,transparent)] backdrop-blur-md">
@@ -123,6 +137,17 @@ function SignalChip({
       <span className="text-xs font-semibold tabular-nums text-foreground">
         {value}
       </span>
+      {typeof delta === "number" && (
+        <span
+          className={cn(
+            "text-[10px] font-semibold tabular-nums",
+            delta >= 0 ? "text-[color:var(--success)]" : "text-destructive",
+          )}
+        >
+          {delta >= 0 ? "↑" : "↓"}
+          {Math.abs(delta).toFixed(2)}%
+        </span>
+      )}
     </div>
   );
 }

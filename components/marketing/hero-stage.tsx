@@ -40,8 +40,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { formatBtcSpot, useBtcSpot } from "@/hooks/use-btc-spot";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
+
+const MARKETS_LABEL_KEY = "marketingUI.hero.stage.markets.label";
 
 const BRAND_DEEP = [58, 75, 196] as const;
 const BRAND_MID = [82, 102, 224] as const;
@@ -527,9 +530,22 @@ const ACCENT_SPECS: AccentSpec[] = [
 
 function AccentCards() {
   const { t } = useTranslation();
+  const btc = useBtcSpot();
   return (
     <>
-      {ACCENT_SPECS.map((spec) => (
+      {ACCENT_SPECS.map((spec) => {
+        // Override the markets chip with live BTC once the first response lands;
+        // before that the i18n fallback ("$64.8K · 2.4%") stays visible.
+        const isMarkets = spec.labelKey === MARKETS_LABEL_KEY;
+        const liveValue =
+          isMarkets && btc.ready && btc.priceUsd != null
+            ? formatBtcSpot(btc.priceUsd)
+            : null;
+        const liveDelta =
+          isMarkets && btc.ready && btc.change24h != null ? btc.change24h : null;
+        const valueText = liveValue ?? t(spec.valueKey);
+        const deltaPct = liveDelta ?? spec.delta;
+        return (
         <motion.div
           key={spec.labelKey}
           initial={{ opacity: 0, y: 16, scale: 0.94 }}
@@ -561,22 +577,23 @@ function AccentCards() {
           </div>
           <div className="flex items-baseline gap-1.5 sm:gap-2">
             <span className="text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">
-              {t(spec.valueKey)}
+              {valueText}
             </span>
-            {typeof spec.delta === "number" && (
+            {typeof deltaPct === "number" && (
               <span
                 className={cn(
                   "inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums",
-                  spec.delta >= 0 ? "text-[color:var(--success)]" : "text-destructive",
+                  deltaPct >= 0 ? "text-[color:var(--success)]" : "text-destructive",
                 )}
               >
-                {spec.delta >= 0 ? "↑" : "↓"}
-                {Math.abs(spec.delta)}%
+                {deltaPct >= 0 ? "↑" : "↓"}
+                {Math.abs(deltaPct).toFixed(deltaPct % 1 === 0 ? 0 : 1)}%
               </span>
             )}
           </div>
         </motion.div>
-      ))}
+        );
+      })}
 
       {/* Breathing keyframes — out-of-phase translateY floats. */}
       <style jsx global>{`
