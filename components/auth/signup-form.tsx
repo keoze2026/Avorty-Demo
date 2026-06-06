@@ -20,19 +20,27 @@ export function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [organization, setOrganization] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (pending) return;
+    // Light phone check — at least 7 digits, optional leading "+".
+    // The real verification happens via SMS code on the next step.
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 7) {
+      toast.error(t("authUI.signup.validationPhoneInvalid"));
+      return;
+    }
     if (password.length < 8) {
       toast.error(t("authUI.signup.validationPasswordShort"));
       return;
     }
     setPending(true);
     try {
-      await signup({ name, email, organization, password });
+      await signup({ name, email, organization, password, phone: phone.trim() });
       toast.success(
         t("authUI.signup.toastWelcome").replace("{name}", name.split(" ")[0]),
       );
@@ -65,6 +73,21 @@ export function SignupForm() {
       <div className="space-y-2">
         <Label htmlFor="email">{t("authUI.signup.labelEmail")}</Label>
         <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">{t("authUI.signup.labelPhone")}</Label>
+        <Input
+          id="phone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder={t("authUI.signup.phonePlaceholder")}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          required
+        />
+        <p className="text-xs text-muted-foreground">{t("authUI.signup.phoneHint")}</p>
       </div>
 
       <div className="space-y-2">

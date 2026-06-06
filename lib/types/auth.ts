@@ -7,6 +7,7 @@ export interface User {
   role: Role;
   avatarUrl?: string;
   organization: string;
+  phone?: string;
 }
 
 export interface AuthSession {

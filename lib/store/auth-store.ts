@@ -16,7 +16,7 @@ interface AuthState {
   isAuthenticated: boolean;
   hydrated: boolean;
   login: (email: string, password: string, role?: Role) => Promise<User>;
-  signup: (input: { name: string; email: string; password: string; organization: string }) => Promise<User>;
+  signup: (input: { name: string; email: string; password: string; organization: string; phone?: string }) => Promise<User>;
   logout: () => void;
   setRole: (role: Role) => void;
   /** Replace the user's avatar with a data URL (or clear it when null). */
@@ -24,12 +24,19 @@ interface AuthState {
   _setHydrated: () => void;
 }
 
-const mockUserFromEmail = (email: string, name: string, role: Role, organization: string): User => ({
+const mockUserFromEmail = (
+  email: string,
+  name: string,
+  role: Role,
+  organization: string,
+  phone?: string,
+): User => ({
   id: `u_${email.replace(/[^a-z0-9]/gi, "").toLowerCase()}`,
   email,
   name,
   role,
   organization,
+  ...(phone ? { phone } : {}),
 });
 
 export const useAuthStore = create<AuthState>()(
@@ -48,9 +55,9 @@ export const useAuthStore = create<AuthState>()(
         return user;
       },
 
-      signup: async ({ name, email, organization }) => {
+      signup: async ({ name, email, organization, phone }) => {
         await new Promise((r) => setTimeout(r, 450));
-        const user = mockUserFromEmail(email, name, "admin", organization);
+        const user = mockUserFromEmail(email, name, "admin", organization, phone);
         set({ user, isAuthenticated: true });
         return user;
       },
