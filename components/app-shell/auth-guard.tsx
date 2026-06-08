@@ -21,6 +21,17 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAuthed = useAuthStore((s) => s.isAuthenticated);
   const hydrated = useAuthStore((s) => s.hydrated);
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+
+  // Validate the persisted JWT against /api/accounts/me once the persisted
+  // store has rehydrated. If the token is rejected, `bootstrap` clears it
+  // and `isAuthed` flips to false, which then triggers the redirect below.
+  useEffect(() => {
+    if (!hydrated) return;
+    void bootstrap();
+    // Intentionally only fires once after rehydration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;

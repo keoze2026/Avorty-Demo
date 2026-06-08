@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Command, PhoneCall, PhoneIncoming, Search, Wallet } from "lucide-react";
 
 import { NotificationsMenu } from "./notifications-menu";
@@ -10,26 +9,18 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { cn } from "@/lib/utils";
 
 export function Topbar() {
   const { t } = useTranslation();
-  // Lightweight live stats derived from the mock call dataset — recomputes
-  // on each render but cheap since MOCK_CALLS is small.
-  const { rechargeAmount, liveCalls, totalCalls } = useMemo(() => {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const start = startOfDay.getTime();
-
-    let total = 0;
-    let live = 0;
-    for (const c of MOCK_CALLS) {
-      if (c.startedAt >= start) total += 1;
-      if (c.status === "ringing" || c.status === "in-progress") live += 1;
-    }
-    return { rechargeAmount: 12480, liveCalls: live, totalCalls: total };
-  }, []);
+  // Live counters now come straight from the analytics dashboard endpoint,
+  // hydrated on app mount by <StoreHydrator />. Zero values render until the
+  // first response lands; that's accurate, not a degraded state.
+  const kpis = useCallsStore((s) => s.kpis);
+  const rechargeAmount = 12480;
+  const liveCalls = kpis?.liveCalls ?? 0;
+  const totalCalls = kpis?.callsToday ?? 0;
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/50 bg-background/85 backdrop-blur-xl">

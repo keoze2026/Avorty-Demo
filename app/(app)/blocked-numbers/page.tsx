@@ -156,12 +156,12 @@ export default function BlockedNumbersPage() {
     });
   };
 
-  const onBlock = (input: {
+  const onBlock = async (input: {
     number: string;
     scope: BlockedNumberEntry["scope"];
     campaignId?: string;
   }) => {
-    const created = addNumber(input);
+    const created = await addNumber(input);
     toast.success(t("toolsUI.suppression.blockedNumbers.toastBlocked").replace("{number}", created.number));
   };
 

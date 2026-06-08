@@ -76,14 +76,14 @@ export default function NumbersPage() {
   const [createPoolOpen, setCreatePoolOpen] = React.useState(false);
   const [tab, setTab] = React.useState<"all" | "pools">("all");
 
-  const onCreatePool = (input: {
+  const onCreatePool = async (input: {
     name: string;
     country: string;
     closedBrowserDelaySec: number;
     idleTimeSec: number;
     autoBuy: boolean;
   }) => {
-    const created = addPool({
+    const created = await addPool({
       name: input.name,
       // We don't pick a campaign at create-time — that happens on the detail page.
       campaignId: "",

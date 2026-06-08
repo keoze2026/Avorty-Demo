@@ -109,22 +109,34 @@ export default function RoutingEditorPage() {
 
   const onSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
-    setGraph(plan.id, workingNodes, workingEdges);
-    setSaving(false);
-    toast.success("Plan saved");
+    try {
+      await setGraph(plan.id, workingNodes, workingEdges);
+      toast.success("Plan saved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const onPublishToggle = () => {
+  const onPublishToggle = async () => {
     const next = plan.status === "published" ? "draft" : "published";
-    setStatus(plan.id, next);
-    toast.success(next === "published" ? "Plan published" : "Plan unpublished");
+    try {
+      await setStatus(plan.id, next);
+      toast.success(next === "published" ? "Plan published" : "Plan unpublished");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update status");
+    }
   };
 
-  const onDelete = () => {
-    remove(plan.id);
-    toast.success(`${plan.name} deleted`);
-    router.replace(ROUTES.routing);
+  const onDelete = async () => {
+    try {
+      await remove(plan.id);
+      toast.success(`${plan.name} deleted`);
+      router.replace(ROUTES.routing);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Delete failed");
+    }
   };
 
   const onTest = () => {

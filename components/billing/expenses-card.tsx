@@ -27,6 +27,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { useTranslation } from "@/hooks/use-translation";
+import { billingService, type ExpensesReport } from "@/lib/api/services/billing.service";
 
 interface CategoryDef {
   key: string;
@@ -77,16 +78,51 @@ export function ExpensesCard() {
     return { from: today, to: today };
   });
   const [refreshNonce, setRefreshNonce] = React.useState(0);
+  const [remote, setRemote] = React.useState<ExpensesReport | null>(null);
 
-  // Translate category labels at render time so they swap with the active
-  // locale. `label` on each row becomes the localized string.
-  const rows = React.useMemo(
-    () =>
-      buildRows(range).map((r) => ({ ...r, label: t(r.labelKey) })),
-    // refreshNonce is read implicitly — bump to trigger a re-derive
-    [range, refreshNonce, t],
-  );
-  const total = rows.reduce((s, r) => s + r.amount, 0);
+  // Fetch from /api/billing/expenses whenever the range changes or the
+  // refresh button is clicked. Falls back to the local per-day estimate when
+  // the endpoint isn't available (older backends or empty orgs).
+  React.useEffect(() => {
+    let cancelled = false;
+    const fromIso = range?.from ? new Date(range.from).toISOString().slice(0, 10) : undefined;
+    const toIso = range?.to
+      ? new Date(range.to).toISOString().slice(0, 10)
+      : fromIso;
+    void (async () => {
+      try {
+        const res = await billingService.expenses({ dateFrom: fromIso, dateTo: toIso });
+        if (!cancelled) setRemote(res);
+      } catch {
+        if (!cancelled) setRemote(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [range, refreshNonce]);
+
+  // Merge: backend categories take precedence; per-category color/label
+  // metadata comes from the local CATEGORIES list. Categories the backend
+  // doesn't return are shown as $0 so the legend stays visually stable.
+  const rows = React.useMemo(() => {
+    const remoteByKey = new Map<string, number>();
+    if (remote) {
+      for (const c of remote.categories) {
+        remoteByKey.set(c.key.toLowerCase(), c.amount);
+        if (c.label) remoteByKey.set(c.label.toLowerCase(), c.amount);
+      }
+    }
+    return CATEGORIES.map((c) => {
+      const fallback = c.perDay * daysInRange(range);
+      const amount = remote
+        ? (remoteByKey.get(c.key) ?? remoteByKey.get(c.label.toLowerCase()) ?? 0)
+        : Number(fallback.toFixed(4));
+      return { ...c, amount, label: t(c.labelKey) };
+    });
+  }, [range, refreshNonce, remote, t]);
+
+  const total = remote?.total ?? rows.reduce((s, r) => s + r.amount, 0);
   const pieData = rows.filter((r) => r.amount > 0);
 
   return (

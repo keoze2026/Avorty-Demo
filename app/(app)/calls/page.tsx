@@ -13,8 +13,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
 import { filterByRange, totals, type DateRange } from "@/lib/analytics";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
-import { MOCK_CALLS } from "@/lib/mock/calls";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
+import { useCallsStore } from "@/lib/store/calls-store";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { formatCompact, formatCurrency, formatDuration, formatPercent } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 
@@ -48,8 +48,14 @@ export default function CallsPage() {
   const [pageSize, setPageSize] = useState(50);
   const [selected, setSelected] = useState<Call | null>(null);
 
+  // Recent calls hydrated from /api/analytics/calls via <StoreHydrator />.
+  // Heavy date-range / status filtering can be pushed to the backend via
+  // `useCallsStore.fetchPage()` when this surface grows server-side filters.
+  const recentCalls = useCallsStore((s) => s.recent);
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+
   const filtered = useMemo(() => {
-    let calls = filterByRange(MOCK_CALLS, range);
+    let calls = filterByRange(recentCalls, range);
     if (campaignFilter !== "all") calls = calls.filter((c) => c.campaignId === campaignFilter);
     if (statuses.size > 0) calls = calls.filter((c) => statuses.has(c.status));
     if (query.trim()) {
@@ -61,7 +67,7 @@ export default function CallsPage() {
       );
     }
     return calls;
-  }, [query, range, campaignFilter, statuses]);
+  }, [query, range, campaignFilter, statuses, recentCalls]);
 
   const summary = useMemo(() => totals(filtered), [filtered]);
 
@@ -127,12 +133,12 @@ export default function CallsPage() {
         onToggleStatus={toggleStatus}
         campaignFilter={campaignFilter}
         onCampaign={setCampaignFilter}
-        campaigns={MOCK_CAMPAIGNS}
+        campaigns={campaigns}
         visibleColumns={visibleColumns}
         onToggleColumn={toggleColumn}
         onExport={onExport}
         count={filtered.length}
-        total={MOCK_CALLS.length}
+        total={recentCalls.length}
       />
 
       {filtered.length === 0 ? (

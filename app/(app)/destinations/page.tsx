@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact } from "@/lib/format";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useBuyersStore } from "@/lib/store/buyers-store";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 type StatusFilter = "all" | "active" | "disabled";
@@ -32,6 +32,8 @@ export default function DestinationsPage() {
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
   const remove = useDestinationsStore((s) => s.remove);
   const update = useDestinationsStore((s) => s.update);
+  const buyers = useBuyersStore((s) => s.buyers);
+  const recentCalls = useCallsStore((s) => s.recent);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -55,18 +57,18 @@ export default function DestinationsPage() {
       if (statusFilter === "disabled" && d.enabled) return false;
       if (buyerFilter !== "all" && d.buyerId !== buyerFilter) return false;
       if (q) {
-        const buyer = MOCK_BUYERS.find((b) => b.id === d.buyerId);
+        const buyer = buyers.find((b) => b.id === d.buyerId);
         const haystack = `${d.name} ${d.tfn} ${buyer?.name ?? ""}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
     });
-  }, [destinations, query, statusFilter, buyerFilter]);
+  }, [destinations, query, statusFilter, buyerFilter, buyers]);
 
   // Summary stats: live calls per TFN + roll-ups across active destinations.
   const stats = useMemo(() => {
     const live = new Map<string, number>();
-    for (const c of MOCK_CALLS) {
+    for (const c of recentCalls) {
       if (c.status === "ringing" || c.status === "in-progress") {
         live.set(c.destinationNumber, (live.get(c.destinationNumber) ?? 0) + 1);
       }
@@ -91,7 +93,7 @@ export default function DestinationsPage() {
       activeTFNs,
       vacantCC: Math.max(0, totalCC - totalLive),
     };
-  }, [destinations]);
+  }, [destinations, recentCalls]);
 
   const openCreate = () => {
     setEditId(undefined);
@@ -217,7 +219,7 @@ export default function DestinationsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("networkUI.destinations.page.allBuyers")}</SelectItem>
-            {MOCK_BUYERS.map((b) => (
+            {buyers.map((b) => (
               <SelectItem key={b.id} value={b.id}>
                 {b.name}
               </SelectItem>

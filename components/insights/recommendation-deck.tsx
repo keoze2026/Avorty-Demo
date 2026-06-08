@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Filter, Sparkles } from "lucide-react";
 
 import { RecommendationCard } from "./recommendation-card";
-import { MOCK_RECOMMENDATIONS } from "@/lib/mock/insights";
+import { useAiInsightsStore } from "@/lib/store/ai-insights-store";
 import type { AiRecommendation, RecommendationKind, RecommendationStatus } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
@@ -21,8 +21,31 @@ const FILTERS: Array<{ id: "all" | RecommendationKind; labelKey: string }> = [
 
 export function RecommendationDeck() {
   const { t } = useTranslation();
-  const [recs, setRecs] = useState<AiRecommendation[]>(MOCK_RECOMMENDATIONS);
+  // Live recommendations from /api/ai/recommendations — hydrated by
+  // <StoreHydrator />. Locally tracked dismiss/apply state is held in a
+  // sibling map so refetches don't blow away the user's last action.
+  const remoteRecs = useAiInsightsStore((s) => s.recommendations);
+  const [localStatus, setLocalStatus] = useState<Record<string, RecommendationStatus>>({});
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
+
+  // Merge backend recs with any locally-applied/dismissed statuses.
+  const recs = useMemo<AiRecommendation[]>(
+    () =>
+      remoteRecs.map((r) =>
+        localStatus[r.id] ? { ...r, status: localStatus[r.id] } : r,
+      ),
+    [remoteRecs, localStatus],
+  );
+
+  // Reset local statuses when the upstream list churns to keep the map bounded.
+  useEffect(() => {
+    setLocalStatus((prev) => {
+      const ids = new Set(remoteRecs.map((r) => r.id));
+      const next: Record<string, RecommendationStatus> = {};
+      for (const [k, v] of Object.entries(prev)) if (ids.has(k)) next[k] = v;
+      return next;
+    });
+  }, [remoteRecs]);
 
   const open = recs.filter((r) => r.status === "open");
   const visible = useMemo(() => {
@@ -31,7 +54,7 @@ export function RecommendationDeck() {
   }, [open, filter]);
 
   const onAction = (id: string, status: RecommendationStatus) => {
-    setRecs((rs) => rs.map((r) => (r.id === id ? { ...r, status } : r)));
+    setLocalStatus((prev) => ({ ...prev, [id]: status }));
   };
 
   return (

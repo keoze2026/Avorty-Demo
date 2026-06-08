@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/format";
-import { MOCK_INVOICES } from "@/lib/mock/billing";
+import { billingService, type Invoice } from "@/lib/api/services/billing.service";
 import type { InvoiceStatus } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -35,14 +35,43 @@ const STATUS_LABEL_KEYS: Record<InvoiceStatus, string> = {
   uncollectible: "toolsUI.billing.invoices.status.uncollectible",
 };
 
+function normalizeInvoiceStatus(raw: string | undefined): InvoiceStatus {
+  const s = (raw ?? "").toLowerCase();
+  if (s === "paid" || s === "open" || s === "void" || s === "uncollectible") return s;
+  return "open";
+}
+
 export function InvoicesTable() {
   const { t } = useTranslation();
   const [pageSize, setPageSize] = React.useState(25);
   const [page, setPage] = React.useState(0);
+  const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+  const [total, setTotal] = React.useState(0);
+
   React.useEffect(() => {
     setPage(0);
   }, [pageSize]);
-  const visible = MOCK_INVOICES.slice(page * pageSize, page * pageSize + pageSize);
+
+  // Paginate against the backend rather than slicing a local cache so the
+  // table can show every invoice in the org, not just the first page-size.
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await billingService.invoices({ page: page + 1, pageSize });
+        if (cancelled) return;
+        setInvoices(res.items);
+        setTotal(res.total);
+      } catch {
+        // Endpoint may be unavailable in early environments — render empty.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [page, pageSize]);
+
+  const visible = invoices;
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -68,45 +97,57 @@ export function InvoicesTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visible.map((inv, i) => (
-                <motion.tr
-                  key={inv.id}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.025, duration: 0.22 }}
-                  className="border-b border-border/60 transition-colors hover:bg-secondary/20"
-                >
-                  <TableCell className="font-mono text-xs">{inv.number}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {new Date(inv.date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-xs">{inv.description}</TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">{formatCurrency(inv.amount, true)}</TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_VARIANT[inv.status]}>{t(STATUS_LABEL_KEYS[inv.status])}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      aria-label={t("toolsUI.billing.invoices.openAria")}
-                      onClick={() => toast.success(t("toolsUI.billing.invoices.toastDownloaded").replace("{invoice}", inv.number))}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Button>
-                  </TableCell>
-                </motion.tr>
-              ))}
+              {visible.map((inv, i) => {
+                const status = normalizeInvoiceStatus(inv.status);
+                // Derive a date and a description from the period range since
+                // the backend's CallLogListSchema-style invoice doesn't have a
+                // plain `description` field.
+                const date = inv.periodEnd ? new Date(inv.periodEnd) : new Date();
+                const periodStart = inv.periodStart ? new Date(inv.periodStart).toLocaleDateString() : "";
+                const periodEnd = inv.periodEnd ? new Date(inv.periodEnd).toLocaleDateString() : "";
+                const description = periodStart && periodEnd
+                  ? `${periodStart} → ${periodEnd} · ${inv.totalCalls} calls`
+                  : `${inv.totalCalls} calls`;
+                return (
+                  <motion.tr
+                    key={inv.id}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.025, duration: 0.22 }}
+                    className="border-b border-border/60 transition-colors hover:bg-secondary/20"
+                  >
+                    <TableCell className="font-mono text-xs">{inv.invoiceNumber}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {date.toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-xs">{description}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">{formatCurrency(inv.totalAmount, true)}</TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_VARIANT[status]}>{t(STATUS_LABEL_KEYS[status])}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        aria-label={t("toolsUI.billing.invoices.openAria")}
+                        onClick={() => toast.success(t("toolsUI.billing.invoices.toastDownloaded").replace("{invoice}", inv.invoiceNumber))}
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </motion.tr>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
-        {MOCK_INVOICES.length > pageSize && (
+        {total > pageSize && (
           <div className="border-t border-border/60 px-4 py-3">
             <Pagination
               page={page}
               pageSize={pageSize}
-              total={MOCK_INVOICES.length}
+              total={total}
               onPage={setPage}
               onPageSize={setPageSize}
             />

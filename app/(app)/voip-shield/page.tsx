@@ -154,8 +154,8 @@ export default function VoipShieldPage() {
     });
   };
 
-  const onCreate = (name: string) => {
-    const created = add(name);
+  const onCreate = async (name: string) => {
+    const created = await add(name);
     toast.success(t("toolsUI.suppression.voipShield.toastCreated").replace("{name}", name));
     router.push(`${ROUTES.voipShield}/${created.id}`);
   };

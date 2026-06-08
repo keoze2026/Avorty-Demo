@@ -8,7 +8,7 @@ import { CallWaveform } from "@/components/live/call-waveform";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { ROUTES } from "@/lib/constants";
 import { formatCurrency, formatDuration, formatRelativeTime, toE164 } from "@/lib/format";
 import type { CallStatus } from "@/lib/types";
@@ -25,7 +25,7 @@ const STATUS_META: Record<CallStatus, { icon: typeof Phone; color: string; label
 
 export function RecentCallsFeed() {
   const { t } = useTranslation();
-  const calls = MOCK_CALLS.slice(0, 8);
+  const calls = useCallsStore((s) => s.recent.slice(0, 8));
 
   return (
     <Card>

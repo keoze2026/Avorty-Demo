@@ -18,10 +18,10 @@ import {
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useBuyersStore } from "@/lib/store/buyers-store";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { formatNumber, toE164 } from "@/lib/format";
-import type { Buyer, Destination } from "@/lib/types";
+import type { Buyer, Call, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type CapField = "concurrencyCap" | "dailyCap" | "monthlyCap";
@@ -56,7 +56,7 @@ interface Row {
  *   monthly — calls started this month (since the 1st)
  *   global  — all calls ever recorded for this TFN
  */
-function buildRows(destinations: Destination[]): Row[] {
+function buildRows(destinations: Destination[], recentCalls: Call[], buyers: Buyer[]): Row[] {
   const now = new Date();
   const startOfHour = new Date(now);
   startOfHour.setMinutes(0, 0, 0);
@@ -72,7 +72,7 @@ function buildRows(destinations: Destination[]): Row[] {
   const monthly = new Map<string, number>();
   const global = new Map<string, number>();
 
-  for (const c of MOCK_CALLS) {
+  for (const c of recentCalls) {
     const tfn = c.destinationNumber;
     global.set(tfn, (global.get(tfn) ?? 0) + 1);
     if (c.startedAt >= startOfMonth) monthly.set(tfn, (monthly.get(tfn) ?? 0) + 1);
@@ -84,7 +84,7 @@ function buildRows(destinations: Destination[]): Row[] {
   }
 
   const buyerById = new Map<string, Buyer>();
-  for (const b of MOCK_BUYERS) buyerById.set(b.id, b);
+  for (const b of buyers) buyerById.set(b.id, b);
 
   return destinations.map<Row>((destination) => ({
     destination,
@@ -115,7 +115,12 @@ export function DestinationsTable({
 }: DestinationsTableProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const rows = useMemo(() => buildRows(destinations), [destinations]);
+  const recentCalls = useCallsStore((s) => s.recent);
+  const buyers = useBuyersStore((s) => s.buyers);
+  const rows = useMemo(
+    () => buildRows(destinations, recentCalls, buyers),
+    [destinations, recentCalls, buyers],
+  );
 
   const selectable = !!onSelectionChange;
   const visibleIds = destinations.map((d) => d.id);

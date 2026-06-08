@@ -5,6 +5,7 @@ import { InvoicesTable } from "@/components/billing/invoices-table";
 import { PaymentIntegrationsCard } from "@/components/billing/payment-integrations-card";
 import { PaymentMethodCard } from "@/components/billing/payment-method-card";
 import { RatesCard } from "@/components/billing/rates-card";
+import { RechargeBalanceCard } from "@/components/billing/recharge-balance-card";
 import { SubscriptionHero } from "@/components/billing/subscription-hero";
 import { UsageGrid } from "@/components/billing/usage-grid";
 import { PageHeader } from "@/components/shared/page-header";
@@ -34,6 +35,10 @@ export default function BillingPage() {
           providers later. Sits on its own row above Rates so the operator
           sees their payout wallets next to their plan / rates context. */}
       <PaymentIntegrationsCard />
+
+      {/* Recharge balance — pick payment method, enter amount, get redirected
+          to provider checkout (Stripe for cards, Capitalist for USDT). */}
+      <RechargeBalanceCard />
 
       <RatesCard />
       <ExpensesCard />

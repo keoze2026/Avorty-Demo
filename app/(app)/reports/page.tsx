@@ -19,7 +19,7 @@ import {
 import { TotalCallsDonut } from "@/components/reports/total-calls-donut";
 import { PageHeader } from "@/components/shared/page-header";
 import { useTranslation } from "@/hooks/use-translation";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { cn } from "@/lib/utils";
 
 function startOfDay(d: Date) {
@@ -47,6 +47,11 @@ export default function ReportsPage() {
   // swaps which chart occupies the main slot.
   const [mobileChart, setMobileChart] = useState<"hourly" | "donut">("hourly");
 
+  // Reads from the shared calls store (populated by the StoreHydrator on app
+  // mount). Filtering happens client-side for the cached slice; the Call Log
+  // table at the bottom of this page pages directly against the backend.
+  const recentCalls = useCallsStore((s) => s.recent);
+
   const filtered = useMemo(() => {
     const start = dateRange?.from ? startOfDay(dateRange.from).getTime() : -Infinity;
     const end = dateRange?.from
@@ -58,7 +63,7 @@ export default function ReportsPage() {
     const publisherSet = new Set(filters.publisherIds);
     const statusSet = new Set(filters.statuses);
 
-    return MOCK_CALLS.filter((c) => {
+    return recentCalls.filter((c) => {
       if (c.startedAt < start || c.startedAt > end) return false;
       if (campaignSet.size > 0 && !campaignSet.has(c.campaignId)) return false;
       if (buyerSet.size > 0 && (!c.buyerId || !buyerSet.has(c.buyerId))) return false;
@@ -68,7 +73,7 @@ export default function ReportsPage() {
       if (statusSet.size > 0 && !statusSet.has(c.status)) return false;
       return true;
     });
-  }, [dateRange, filters]);
+  }, [dateRange, filters, recentCalls]);
 
   const summary = useMemo(() => {
     const revenue = filtered.reduce((s, c) => s + c.revenue, 0);

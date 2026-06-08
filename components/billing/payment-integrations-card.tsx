@@ -70,10 +70,23 @@ export function PaymentIntegrationsCard() {
   const { t } = useTranslation();
   const account = MOCK_CAPITALIST_ACCOUNT;
 
-  const onTopUp = (currency: CapitalistCurrency) =>
+  const onTopUp = (currency: CapitalistCurrency) => {
+    // Scroll the Recharge Balance card into view (Capitalist is its default
+    // method, so the user lands on the right form) and surface which wallet
+    // they were trying to fund so the action stays traceable.
+    const target = typeof document !== "undefined" ? document.getElementById("recharge-balance") : null;
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Move focus to the amount input so the user can type immediately.
+      window.setTimeout(() => {
+        const input = document.getElementById("recharge-amount") as HTMLInputElement | null;
+        input?.focus();
+      }, 350);
+    }
     toast.success(
       t("toolsUI.billing.integrations.toast.topUp").replace("{currency}", currency),
     );
+  };
 
   const onPayout = (currency: CapitalistCurrency) =>
     toast.success(

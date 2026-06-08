@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { formatNumber } from "@/lib/format";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { MOCK_DESTINATIONS } from "@/lib/mock/destinations";
 import type { Buyer, Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ interface BuyerFunnelChartProps {
 export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
   const { t } = useTranslation();
   const [range, setRange] = useState<RangeId>("30d");
+  const recentCalls = useCallsStore((s) => s.recent);
 
   const CATEGORIES: Array<{ key: FunnelKey; label: string }> = [
     { key: "incoming", label: t("networkUI.buyers.funnel.incoming") },
@@ -90,7 +91,7 @@ export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
     let notConnected = 0;
     let converted = 0;
     let paid = 0;
-    for (const c of MOCK_CALLS) {
+    for (const c of recentCalls) {
       if (c.startedAt < cutoffMs) continue;
       if (!buyerTfns.has(c.destinationNumber)) continue;
       incoming += 1;
@@ -115,7 +116,7 @@ export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
       value: counts[c.key],
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [range, buyerTfns]);
+  }, [range, buyerTfns, recentCalls]);
 
   const subLabel =
     range === "today"

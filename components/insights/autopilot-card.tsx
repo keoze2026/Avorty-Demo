@@ -1,16 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Bot, Check, ShieldAlert, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import { Bot, Check, Loader2, PlayCircle, ShieldAlert, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { MOCK_AUTOPILOT_RULES } from "@/lib/mock/insights";
+import { aiService, type AutopilotConfig } from "@/lib/api/services/ai.service";
+import { useAiInsightsStore } from "@/lib/store/ai-insights-store";
 import type { AutopilotRule } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
+
+/** Translate the backend's flat config into the frontend rule rows. */
+function configToRules(c: AutopilotConfig | null): AutopilotRule[] {
+  return [
+    {
+      id: "pauseOnHighNoAnswer",
+      label: "Pause on high no-answer rate",
+      description: `Auto-pause buyers when 7-day no-answer rate exceeds ${c?.noAnswerThreshold ?? 70}%.`,
+      tone: "caution",
+      enabled: c?.pauseOnHighNoAnswer ?? false,
+    },
+    {
+      id: "alertOnVolumeDrop",
+      label: "Alert on volume drop",
+      description: `Notify when daily call volume drops more than ${c?.volumeDropThreshold ?? 50}% vs. trailing average.`,
+      tone: "safe",
+      enabled: c?.alertOnVolumeDrop ?? false,
+    },
+    {
+      id: "alertOnRevenueDrop",
+      label: "Alert on revenue drop",
+      description: `Notify when daily revenue drops more than ${c?.revenueDropThreshold ?? 40}% vs. trailing average.`,
+      tone: "safe",
+      enabled: c?.alertOnRevenueDrop ?? false,
+    },
+  ];
+}
 
 const TONE: Record<AutopilotRule["tone"], { icon: LucideIcon; chip: string; iconBg: string }> = {
   safe: {
@@ -32,25 +61,76 @@ const TONE: Record<AutopilotRule["tone"], { icon: LucideIcon; chip: string; icon
 
 export function AutopilotCard() {
   const { t } = useTranslation();
-  const [rules, setRules] = useState<AutopilotRule[]>(MOCK_AUTOPILOT_RULES);
+  const [config, setConfig] = useState<AutopilotConfig | null>(null);
+  const rules = configToRules(config);
   const enabledCount = rules.filter((r) => r.enabled).length;
+  const runAutopilot = useAiInsightsStore((s) => s.runAutopilot);
+  const lastActions = useAiInsightsStore((s) => s.autopilotActions);
+  const [running, setRunning] = useState(false);
 
-  const toggle = (id: string) => {
-    setRules((rs) =>
-      rs.map((r) => {
-        if (r.id !== id) return r;
-        const next = { ...r, enabled: !r.enabled };
-        toast.success(
-          next.enabled
-            ? t("toolsUI.insights.autopilot.toastEnabled")
-            : t("toolsUI.insights.autopilot.toastDisabled"),
-          {
-            description: next.label,
-          },
-        );
-        return next;
-      }),
-    );
+  // Hydrate autopilot config from /api/ai/autopilot/config.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const cfg = await aiService.getAutopilotConfig();
+        if (!cancelled) setConfig(cfg);
+      } catch {
+        // Endpoint may be unavailable in early deployments — leave rules disabled.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const onRunPass = async () => {
+    setRunning(true);
+    try {
+      const actions = await runAutopilot();
+      if (actions.length === 0) {
+        toast.success(t("toolsUI.insights.autopilot.title"), {
+          description: "No actions taken — everything looks healthy.",
+        });
+      } else {
+        toast.success(t("toolsUI.insights.autopilot.title"), {
+          description: `${actions.length} action${actions.length === 1 ? "" : "s"} executed`,
+        });
+      }
+    } catch {
+      toast.error("Autopilot pass failed");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  // Persists the toggle to the backend. Maps the rule id to the matching
+  // boolean field on AutopilotConfig and PATCHes the whole object.
+  const toggle = async (id: string) => {
+    if (!config) return;
+    const fieldMap: Record<string, keyof AutopilotConfig> = {
+      pauseOnHighNoAnswer: "pauseOnHighNoAnswer",
+      alertOnVolumeDrop: "alertOnVolumeDrop",
+      alertOnRevenueDrop: "alertOnRevenueDrop",
+    };
+    const field = fieldMap[id];
+    if (!field) return;
+    const prev = config;
+    const next = { ...config, [field]: !config[field] };
+    setConfig(next); // optimistic
+    try {
+      const saved = await aiService.updateAutopilotConfig({ [field]: next[field] } as Partial<AutopilotConfig>);
+      setConfig(saved);
+      toast.success(
+        next[field]
+          ? t("toolsUI.insights.autopilot.toastEnabled")
+          : t("toolsUI.insights.autopilot.toastDisabled"),
+        { description: rules.find((r) => r.id === id)?.label },
+      );
+    } catch (e) {
+      setConfig(prev);
+      toast.error(e instanceof Error ? e.message : "Couldn't update autopilot");
+    }
   };
 
   return (
@@ -99,6 +179,47 @@ export function AutopilotCard() {
             </motion.div>
           );
         })}
+
+        {/* Run-now CTA + last-actions log. The backend exposes a POST endpoint
+            that executes a pass and returns the actions taken. Pure server-
+            side decisioning — the toggle rows above are still local because
+            the backend's rules are baked-in, not configurable from here. */}
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5">
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium">Run autopilot pass</div>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {lastActions.length > 0
+                ? `Last pass executed ${lastActions.length} action${lastActions.length === 1 ? "" : "s"}.`
+                : "Server-side rule engine evaluates current performance and pauses underperformers."}
+            </p>
+          </div>
+          <Button size="sm" onClick={onRunPass} disabled={running} className="shrink-0">
+            {running ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Running…
+              </>
+            ) : (
+              <>
+                <PlayCircle className="h-3.5 w-3.5" /> Run now
+              </>
+            )}
+          </Button>
+        </div>
+
+        {lastActions.length > 0 && (
+          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+            {lastActions.slice(0, 5).map((a, i) => (
+              <li key={`${a.entity}:${i}`} className="flex items-start gap-2">
+                <Check className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--success)]" />
+                <span>
+                  <span className="font-medium text-foreground">{a.action}</span>{" "}
+                  <span className="font-mono">{a.entity}</span>
+                  {a.reason && <span> — {a.reason}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

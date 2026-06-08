@@ -1,108 +1,151 @@
 /**
- * VoIP Shield store. Holds shield records (one row per shield) plus helpers
- * for adding/removing protected campaigns and blocked carriers from within a
- * shield's detail page. Persisted to localStorage so changes survive reloads.
+ * VoIP Shield store — backed by /api/spam/shields/ (shieldType=voip).
+ *
+ * Holds shield records + helpers for managing protected campaigns and
+ * blocked carriers from the detail page. Mutations hit the backend and
+ * patch local state on success.
  */
 
 "use client";
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 
-import { MOCK_VOIP_SHIELD, type VoipShieldEntry } from "@/lib/mock/suppression";
+import { spamService, type Shield } from "@/lib/api/services/spam.service";
+import type { VoipShieldEntry } from "@/lib/mock/suppression";
 
 interface VoipShieldState {
   shields: VoipShieldEntry[];
+  loading: boolean;
+  error: string | null;
+  hydrated: boolean;
+
+  fetch: () => Promise<void>;
   getById: (id: string) => VoipShieldEntry | undefined;
-  add: (name: string) => VoipShieldEntry;
-  rename: (id: string, name: string) => void;
-  remove: (id: string) => void;
-  setCampaigns: (id: string, campaignIds: string[]) => void;
-  addCampaign: (id: string, campaignId: string) => void;
-  removeCampaign: (id: string, campaignId: string) => void;
-  addCarrier: (id: string, carrier: string) => void;
-  removeCarrier: (id: string, carrier: string) => void;
+  add: (name: string) => Promise<VoipShieldEntry>;
+  rename: (id: string, name: string) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  setCampaigns: (id: string, campaignIds: string[]) => Promise<void>;
+  addCampaign: (id: string, campaignId: string) => Promise<void>;
+  removeCampaign: (id: string, campaignId: string) => Promise<void>;
+  addCarrier: (id: string, carrier: string) => Promise<void>;
+  removeCarrier: (id: string, carrier: string) => Promise<void>;
 }
 
-function makeId() {
-  return `v_${Math.random().toString(36).slice(2, 8)}`;
+function shieldToEntry(s: Shield): VoipShieldEntry {
+  return {
+    id: s.id,
+    name: s.name,
+    campaignIds: s.campaignIds,
+    blockedCarriers: s.blockedCarriers,
+  };
 }
 
-export const useVoipShieldStore = create<VoipShieldState>()(
-  persist(
-    (set, get) => ({
-      shields: MOCK_VOIP_SHIELD,
-      getById: (id) => get().shields.find((s) => s.id === id),
+export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
+  shields: [],
+  loading: false,
+  error: null,
+  hydrated: false,
 
-      add: (name) => {
-        const created: VoipShieldEntry = {
-          id: makeId(),
-          name,
-          campaignIds: [],
-          blockedCarriers: [],
-        };
-        set((s) => ({ shields: [created, ...s.shields] }));
-        return created;
-      },
+  fetch: async () => {
+    set({ loading: true, error: null });
+    try {
+      const items = await spamService.listShields({ shieldType: "voip" });
+      set({ shields: items.map(shieldToEntry), loading: false, hydrated: true });
+    } catch (e) {
+      set({ loading: false, error: messageFromError(e) });
+    }
+  },
 
-      rename: (id, name) =>
-        set((s) => ({
-          shields: s.shields.map((x) => (x.id === id ? { ...x, name } : x)),
-        })),
+  getById: (id) => get().shields.find((s) => s.id === id),
 
-      remove: (id) =>
-        set((s) => ({ shields: s.shields.filter((x) => x.id !== id) })),
+  add: async (name) => {
+    const created = await spamService.createShield({ name, shieldType: "voip" });
+    const entry = shieldToEntry(created);
+    set((s) => ({ shields: [entry, ...s.shields] }));
+    return entry;
+  },
 
-      setCampaigns: (id, campaignIds) =>
-        set((s) => ({
-          shields: s.shields.map((x) =>
-            x.id === id ? { ...x, campaignIds } : x,
-          ),
-        })),
+  rename: async (id, name) => {
+    const prev = get().shields;
+    set((s) => ({ shields: s.shields.map((x) => (x.id === id ? { ...x, name } : x)) }));
+    try {
+      await spamService.updateShield(id, { name });
+    } catch (e) {
+      set({ shields: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
 
-      addCampaign: (id, campaignId) =>
-        set((s) => ({
-          shields: s.shields.map((x) =>
-            x.id === id && !x.campaignIds.includes(campaignId)
-              ? { ...x, campaignIds: [...x.campaignIds, campaignId] }
-              : x,
-          ),
-        })),
+  remove: async (id) => {
+    const prev = get().shields;
+    set((s) => ({ shields: s.shields.filter((x) => x.id !== id) }));
+    try {
+      await spamService.deleteShield(id);
+    } catch (e) {
+      set({ shields: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
 
-      removeCampaign: (id, campaignId) =>
-        set((s) => ({
-          shields: s.shields.map((x) =>
-            x.id === id
-              ? { ...x, campaignIds: x.campaignIds.filter((c) => c !== campaignId) }
-              : x,
-          ),
-        })),
+  setCampaigns: async (id, campaignIds) => {
+    const prev = get().shields;
+    set((s) => ({
+      shields: s.shields.map((x) => (x.id === id ? { ...x, campaignIds } : x)),
+    }));
+    try {
+      await spamService.updateShield(id, { campaignIds });
+    } catch (e) {
+      set({ shields: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
 
-      addCarrier: (id, carrier) =>
-        set((s) => ({
-          shields: s.shields.map((x) =>
-            x.id === id && !x.blockedCarriers.includes(carrier)
-              ? { ...x, blockedCarriers: [...x.blockedCarriers, carrier] }
-              : x,
-          ),
-        })),
+  addCampaign: async (id, campaignId) => {
+    const current = get().shields.find((x) => x.id === id);
+    if (!current || current.campaignIds.includes(campaignId)) return;
+    await get().setCampaigns(id, [...current.campaignIds, campaignId]);
+  },
 
-      removeCarrier: (id, carrier) =>
-        set((s) => ({
-          shields: s.shields.map((x) =>
-            x.id === id
-              ? {
-                  ...x,
-                  blockedCarriers: x.blockedCarriers.filter((c) => c !== carrier),
-                }
-              : x,
-          ),
-        })),
-    }),
-    {
-      name: "vortyx.voip-shield",
-      storage: createJSONStorage(() => localStorage),
-      version: 1,
-    },
-  ),
-);
+  removeCampaign: async (id, campaignId) => {
+    const current = get().shields.find((x) => x.id === id);
+    if (!current) return;
+    await get().setCampaigns(id, current.campaignIds.filter((c) => c !== campaignId));
+  },
+
+  addCarrier: async (id, carrier) => {
+    const current = get().shields.find((x) => x.id === id);
+    if (!current || current.blockedCarriers.includes(carrier)) return;
+    const next = [...current.blockedCarriers, carrier];
+    const prev = get().shields;
+    set((s) => ({
+      shields: s.shields.map((x) => (x.id === id ? { ...x, blockedCarriers: next } : x)),
+    }));
+    try {
+      await spamService.updateShield(id, { blockedCarriers: next });
+    } catch (e) {
+      set({ shields: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  removeCarrier: async (id, carrier) => {
+    const current = get().shields.find((x) => x.id === id);
+    if (!current) return;
+    const next = current.blockedCarriers.filter((c) => c !== carrier);
+    const prev = get().shields;
+    set((s) => ({
+      shields: s.shields.map((x) => (x.id === id ? { ...x, blockedCarriers: next } : x)),
+    }));
+    try {
+      await spamService.updateShield(id, { blockedCarriers: next });
+    } catch (e) {
+      set({ shields: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+}));
+
+function messageFromError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return "VoIP shield request failed";
+}

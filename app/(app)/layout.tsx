@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AuthGuard } from "@/components/app-shell/auth-guard";
 import { NotificationRuntime } from "@/components/app-shell/notification-runtime";
 import { AppSidebar } from "@/components/app-shell/sidebar-nav";
+import { StoreHydrator } from "@/components/app-shell/store-hydrator";
 import { Topbar } from "@/components/app-shell/topbar";
 import { SandboxBanner } from "@/components/kyc/sandbox-banner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -20,6 +21,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <Topbar />
           <SandboxBanner />
           <NotificationRuntime />
+          <StoreHydrator />
           {/* `scrollbar-gutter: stable` permanently reserves the scrollbar
               gutter so the layout doesn't shift horizontally when the page
               height crosses the viewport-fit threshold (e.g. Live Monitor

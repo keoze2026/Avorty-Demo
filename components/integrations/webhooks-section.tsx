@@ -8,10 +8,11 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Loader2, MoreVertical, Plug2, Plus, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, History, Loader2, MoreVertical, Plug2, Plus, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { WebhookDialog, type WebhookDraft } from "./webhook-dialog";
+import { WebhookDeliveryDialog } from "./webhook-delivery-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +45,7 @@ export function WebhooksSection() {
   const [hooks, setHooks] = useState<Webhook[]>(MOCK_WEBHOOKS);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Webhook | null>(null);
+  const [deliveriesFor, setDeliveriesFor] = useState<Webhook | null>(null);
 
   const remove = (id: string) => {
     setHooks((h) => h.filter((x) => x.id !== id));
@@ -150,6 +152,9 @@ export function WebhooksSection() {
                       <DropdownMenuItem onSelect={() => toast.success(t("toolsUI.integrations.webhooks.toastTestSent"))}>
                         {t("toolsUI.integrations.webhooks.sendTest")}
                       </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => setDeliveriesFor(h)}>
+                        <History className="h-4 w-4" /> View deliveries
+                      </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => openEdit(h)}>
                         {t("toolsUI.integrations.webhooks.configure")}
                       </DropdownMenuItem>
@@ -195,6 +200,13 @@ export function WebhooksSection() {
         onOpenChange={setEditorOpen}
         initial={editing}
         onSave={onSave}
+      />
+
+      <WebhookDeliveryDialog
+        open={!!deliveriesFor}
+        onOpenChange={(v) => !v && setDeliveriesFor(null)}
+        webhookId={deliveriesFor?.id ?? null}
+        webhookName={deliveriesFor?.name}
       />
     </section>
   );

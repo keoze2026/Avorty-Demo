@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -10,6 +11,7 @@ import {
   Flag,
   Hash,
   MapPin,
+  MessageSquareText,
   Phone,
   PhoneIncoming,
   PlayCircle,
@@ -29,6 +31,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { callsService, type CallDetail } from "@/lib/api/services/calls.service";
 import { ROUTES } from "@/lib/constants";
 import { formatCurrency, formatDuration, formatRelativeTime, toE164 } from "@/lib/format";
 import type { Call } from "@/lib/types";
@@ -83,6 +86,28 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
   const { t } = useTranslation();
   const open = !!call;
   const enrichment = call ? enrich(call) : null;
+
+  // Fetch transcription + sentiment when the sheet opens on a call. Silent
+  // on failure — the sheet still works with just the data passed in.
+  const [detail, setDetail] = useState<CallDetail | null>(null);
+  useEffect(() => {
+    if (!call) {
+      setDetail(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const full = await callsService.get(call.id);
+        if (!cancelled) setDetail(full);
+      } catch {
+        // Backend may not have this call or transcription isn't ready.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [call]);
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
@@ -212,18 +237,92 @@ export function CallDetailSheet({ call, onOpenChange }: Props) {
                 )}
               </section>
 
-              {/* Recording placeholder */}
-              <section className="mt-6 rounded-lg border border-dashed border-border/60 bg-secondary/30 p-4 text-center">
-                <PlayCircle className="mx-auto h-6 w-6 text-accent" />
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {t("toolsUI.callLogs.detail.recordingNote")}
-                </p>
-              </section>
+              {/* Transcription + sentiment — populated lazily from
+                  /api/routing/calls/{id} once the sheet opens. */}
+              {detail?.transcription && detail.transcription.text && (
+                <section className="mt-6 rounded-lg border border-border bg-card p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="inline-flex items-center gap-2 text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                      <MessageSquareText className="h-3.5 w-3.5" />
+                      Transcription
+                    </h3>
+                    {detail.sentiment && (
+                      <SentimentChip
+                        label={detail.sentiment.label}
+                        score={detail.sentiment.score}
+                      />
+                    )}
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                    {detail.transcription.text}
+                  </p>
+                  {detail.transcription.status && detail.transcription.status !== "done" && (
+                    <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Status · {detail.transcription.status}
+                    </p>
+                  )}
+                </section>
+              )}
+
+              {/* Recording — render the player when the backend exposes a URL,
+                  otherwise show the legacy placeholder. */}
+              {(detail?.recordingUrl || call.recordingUrl) ? (
+                <section className="mt-6 rounded-lg border border-border bg-card p-4">
+                  <div className="mb-2 inline-flex items-center gap-2 text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                    <PlayCircle className="h-3.5 w-3.5 text-accent" />
+                    Recording
+                  </div>
+                  <audio
+                    src={detail?.recordingUrl ?? call.recordingUrl}
+                    controls
+                    preload="none"
+                    className="w-full"
+                  />
+                </section>
+              ) : (
+                <section className="mt-6 rounded-lg border border-dashed border-border/60 bg-secondary/30 p-4 text-center">
+                  <PlayCircle className="mx-auto h-6 w-6 text-accent" />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {t("toolsUI.callLogs.detail.recordingNote")}
+                  </p>
+                </section>
+              )}
             </div>
           </>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function SentimentChip({
+  label,
+  score,
+}: {
+  label: "positive" | "neutral" | "negative" | "mixed" | "unknown";
+  score: number | null;
+}) {
+  const tone =
+    label === "positive"
+      ? "border-[color:var(--success)]/40 bg-[color:var(--success)]/10 text-[color:var(--success)]"
+      : label === "negative"
+        ? "border-destructive/40 bg-destructive/10 text-destructive"
+        : label === "mixed"
+          ? "border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 text-[color:var(--warning)]"
+          : "border-border bg-secondary/40 text-muted-foreground";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${tone}`}
+    >
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
+      {label}
+      {typeof score === "number" && (
+        <span className="font-mono tabular-nums opacity-70">
+          {score >= 0 ? "+" : ""}
+          {score.toFixed(2)}
+        </span>
+      )}
+    </span>
   );
 }
 

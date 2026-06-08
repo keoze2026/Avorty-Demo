@@ -151,8 +151,8 @@ export default function TcpaShieldPage() {
     });
   };
 
-  const onCreate = ({ name, type }: { name: string; type: TcpaShieldEntry["type"] }) => {
-    const created = add(name, type);
+  const onCreate = async ({ name, type }: { name: string; type: TcpaShieldEntry["type"] }) => {
+    const created = await add(name, type);
     toast.success(t("toolsUI.suppression.tcpaShield.toastCreated").replace("{name}", name));
     router.push(`${ROUTES.tcpaShield}/${created.id}`);
   };

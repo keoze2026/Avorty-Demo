@@ -127,7 +127,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
   const onSubmit = async () => {
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 500));
-    const created = add({
+    const created = await add({
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       vertical: form.vertical,

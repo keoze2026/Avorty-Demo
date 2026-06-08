@@ -1,36 +1,47 @@
 /**
- * Blocked Numbers store — persists manually-blocked phone numbers / prefixes
- * with optional per-campaign scoping. Mirrors the suppression sibling stores.
+ * Blocked Numbers store — backed by /api/spam/blacklist/*.
+ *
+ * The backend stores number + reason + isActive; the frontend additionally
+ * tracks a `scope` ("global" vs "campaign") + optional `campaignId`. We
+ * encode scope into the reason field as a JSON-tagged prefix so it round-
+ * trips through the backend without requiring schema changes:
+ *
+ *   reason = "scope=campaign:abc-123|<user reason>"
+ *   reason = "scope=global|<user reason>"
+ *
+ * Mutations call the spam service; reads come from the local cache hydrated
+ * on `fetch()`. The CRUD methods preserve the previous sync-style return
+ * value semantics but now perform real network calls.
  */
 
 "use client";
 
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 
+import { spamService, type SpamEntry } from "@/lib/api/services/spam.service";
 import {
-  MOCK_BLOCKED_NUMBERS,
   type BlockedNumberEntry,
   type BlockedNumberScope,
 } from "@/lib/mock/suppression";
 
 interface BlockedNumbersState {
   numbers: BlockedNumberEntry[];
+  loading: boolean;
+  error: string | null;
+  hydrated: boolean;
+
+  fetch: () => Promise<void>;
   getById: (id: string) => BlockedNumberEntry | undefined;
   add: (input: {
     number: string;
     scope: BlockedNumberScope;
     campaignId?: string;
-  }) => BlockedNumberEntry;
+  }) => Promise<BlockedNumberEntry>;
   update: (
     id: string,
     patch: { number?: string; campaignId?: string | undefined },
-  ) => void;
-  remove: (id: string) => void;
-}
-
-function makeId() {
-  return `b_${Math.random().toString(36).slice(2, 8)}`;
+  ) => Promise<void>;
+  remove: (id: string) => Promise<void>;
 }
 
 /** Strip every non-digit so the store always holds canonical digits-only values. */
@@ -38,42 +49,103 @@ function normalizeNumber(input: string): string {
   return input.replace(/\D/g, "");
 }
 
-export const useBlockedNumbersStore = create<BlockedNumbersState>()(
-  persist(
-    (set, get) => ({
-      numbers: MOCK_BLOCKED_NUMBERS,
-      getById: (id) => get().numbers.find((n) => n.id === id),
+/** Pack the frontend-only `scope` ("number" vs "prefix") and optional
+ *  `campaignId` into the backend reason string so round-trips preserve them. */
+function encodeReason(scope: BlockedNumberScope, campaignId: string | undefined): string {
+  const parts = [`scope=${scope}`];
+  if (campaignId) parts.push(`campaign=${campaignId}`);
+  return parts.join(";");
+}
 
-      add: ({ number, scope, campaignId }) => {
-        const created: BlockedNumberEntry = {
-          id: makeId(),
-          number: normalizeNumber(number),
-          scope,
-          campaignId,
-        };
-        set((s) => ({ numbers: [created, ...s.numbers] }));
-        return created;
-      },
+function decodeScope(reason: string | undefined): {
+  scope: BlockedNumberScope;
+  campaignId?: string;
+} {
+  const tokens = (reason ?? "").split(";").map((s) => s.trim());
+  let scope: BlockedNumberScope = "number";
+  let campaignId: string | undefined;
+  for (const tok of tokens) {
+    const [k, v] = tok.split("=");
+    if (k === "scope" && (v === "number" || v === "prefix")) scope = v;
+    else if (k === "campaign" && v) campaignId = v;
+  }
+  return { scope, campaignId };
+}
 
-      update: (id, patch) =>
-        set((s) => ({
-          numbers: s.numbers.map((n) => {
-            if (n.id !== id) return n;
-            const next: BlockedNumberEntry = { ...n };
-            if (patch.number !== undefined) next.number = normalizeNumber(patch.number);
-            // Allow campaignId to be explicitly set to undefined (= "All Campaigns").
-            if ("campaignId" in patch) next.campaignId = patch.campaignId;
-            return next;
-          }),
-        })),
+function wireToEntry(w: SpamEntry): BlockedNumberEntry {
+  const { scope, campaignId } = decodeScope(w.reason);
+  return {
+    id: w.id,
+    number: w.number,
+    scope,
+    campaignId,
+  };
+}
 
-      remove: (id) =>
-        set((s) => ({ numbers: s.numbers.filter((n) => n.id !== id) })),
-    }),
-    {
-      name: "vortyx.blocked-numbers",
-      storage: createJSONStorage(() => localStorage),
-      version: 1,
-    },
-  ),
-);
+export const useBlockedNumbersStore = create<BlockedNumbersState>()((set, get) => ({
+  numbers: [],
+  loading: false,
+  error: null,
+  hydrated: false,
+
+  fetch: async () => {
+    set({ loading: true, error: null });
+    try {
+      const page = await spamService.listBlacklist({ page: 1, pageSize: 500 });
+      set({ numbers: page.items.map(wireToEntry), loading: false, hydrated: true });
+    } catch (e) {
+      set({ loading: false, error: messageFromError(e) });
+    }
+  },
+
+  getById: (id) => get().numbers.find((n) => n.id === id),
+
+  add: async ({ number, scope, campaignId }) => {
+    const normalized = normalizeNumber(number);
+    const wire = await spamService.createBlacklist({
+      number: normalized,
+      reason: encodeReason(scope, campaignId),
+    });
+    const created = wireToEntry(wire);
+    set((s) => ({ numbers: [created, ...s.numbers] }));
+    return created;
+  },
+
+  update: async (id, patch) => {
+    const current = get().numbers.find((n) => n.id === id);
+    if (!current) return;
+    const next: BlockedNumberEntry = { ...current };
+    if (patch.number !== undefined) next.number = normalizeNumber(patch.number);
+    if ("campaignId" in patch) {
+      next.campaignId = patch.campaignId;
+    }
+    // Optimistic update.
+    const prev = get().numbers;
+    set((s) => ({ numbers: s.numbers.map((n) => (n.id === id ? next : n)) }));
+    try {
+      await spamService.updateBlacklist(id, {
+        number: next.number,
+        reason: encodeReason(next.scope, next.campaignId),
+      });
+    } catch (e) {
+      set({ numbers: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  remove: async (id) => {
+    const prev = get().numbers;
+    set((s) => ({ numbers: s.numbers.filter((n) => n.id !== id) }));
+    try {
+      await spamService.deleteBlacklist(id);
+    } catch (e) {
+      set({ numbers: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+}));
+
+function messageFromError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return "Blocked numbers request failed";
+}

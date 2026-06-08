@@ -55,6 +55,11 @@ export const ROUTES = {
 
   // KYC / Trust Engine — multi-vector continuous identity + compliance
   kyc: "/kyc",
+
+  // Phase 6 admin surfaces — backend-only features now with UI.
+  queue: "/queue",
+  ivr: "/ivr",
+  whiteLabel: "/white-label",
 } as const;
 
 /** Brand color stops — single-hue indigo ramp.

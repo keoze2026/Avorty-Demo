@@ -62,27 +62,32 @@ export function NewPlanDialog({ open, onOpenChange, defaultCampaignId }: Props) 
   const onSubmit = async () => {
     if (!name.trim()) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 300));
-    const campaign = campaignId !== "none" ? campaigns.find((c) => c.id === campaignId) : undefined;
-    const created = add({
-      name: name.trim(),
-      description: description.trim() || undefined,
-      campaignId: campaign?.id,
-      campaignName: campaign?.name,
-      status: "draft",
-      nodes: [
-        {
-          id: "n_inbound",
-          type: "inbound",
-          position: { x: 80, y: 200 },
-          data: { kind: "inbound", inbound: { campaignId: campaign?.id } },
-        },
-      ],
-      edges: [],
-    });
-    toast.success(t("trafficUI.routing.newDialog.created").replace("{name}", created.name));
-    onClose(false);
-    router.push(`${ROUTES.routing}/${created.id}`);
+    try {
+      const campaign = campaignId !== "none" ? campaigns.find((c) => c.id === campaignId) : undefined;
+      const created = await add({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        campaignId: campaign?.id,
+        campaignName: campaign?.name,
+        status: "draft",
+        nodes: [
+          {
+            id: "n_inbound",
+            type: "inbound",
+            position: { x: 80, y: 200 },
+            data: { kind: "inbound", inbound: { campaignId: campaign?.id } },
+          },
+        ],
+        edges: [],
+      });
+      toast.success(t("trafficUI.routing.newDialog.created").replace("{name}", created.name));
+      onClose(false);
+      router.push(`${ROUTES.routing}/${created.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't create plan");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

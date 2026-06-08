@@ -7,7 +7,7 @@ import { Gauge } from "lucide-react";
 import { CallsChart } from "@/components/dashboard/calls-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { formatCompact } from "@/lib/format";
 import type { Destination } from "@/lib/types";
 
@@ -17,9 +17,10 @@ interface DestinationOverviewTabProps {
 
 export function DestinationOverviewTab({ destination }: DestinationOverviewTabProps) {
   const { t } = useTranslation();
+  const recentCalls = useCallsStore((s) => s.recent);
   const scopedCalls = useMemo(
-    () => MOCK_CALLS.filter((c) => c.destinationNumber === destination.tfn),
-    [destination.tfn],
+    () => recentCalls.filter((c) => c.destinationNumber === destination.tfn),
+    [destination.tfn, recentCalls],
   );
 
   const { callsToday, callsMonth } = useMemo(() => {

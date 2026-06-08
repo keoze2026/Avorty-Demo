@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Activity, DollarSign, Gauge, PhoneCall } from "lucide-react";
 
 import { useTranslation } from "@/hooks/use-translation";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
 import type { Destination } from "@/lib/types";
 
@@ -14,6 +14,7 @@ interface DestinationStatsRowProps {
 
 export function DestinationStatsRow({ destination }: DestinationStatsRowProps) {
   const { t } = useTranslation();
+  const recentCalls = useCallsStore((s) => s.recent);
   const stats = useMemo(() => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -21,7 +22,7 @@ export function DestinationStatsRow({ destination }: DestinationStatsRowProps) {
     let calls = 0;
     let revenue = 0;
     let cc = 0;
-    for (const c of MOCK_CALLS) {
+    for (const c of recentCalls) {
       if (c.destinationNumber !== destination.tfn) continue;
       if (c.startedAt >= startMs) {
         calls += 1;
@@ -32,7 +33,7 @@ export function DestinationStatsRow({ destination }: DestinationStatsRowProps) {
     const ccPct =
       destination.concurrencyCap > 0 ? (cc / destination.concurrencyCap) * 100 : 0;
     return { calls, revenue, cc, ccPct };
-  }, [destination]);
+  }, [destination, recentCalls]);
 
   const tiles = [
     {

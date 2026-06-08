@@ -19,7 +19,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_ANOMALIES } from "@/lib/mock/insights";
+import { useAiInsightsStore } from "@/lib/store/ai-insights-store";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatRelativeTime } from "@/lib/format";
 import type { Anomaly, AnomalySeverity } from "@/lib/types";
@@ -59,6 +59,8 @@ const SCOPE_HREF = (a: Anomaly): string | undefined => {
 
 export function AnomalyStream() {
   const { t } = useTranslation();
+  // Live anomalies from /api/ai/anomalies, hydrated by <StoreHydrator />.
+  const anomalies = useAiInsightsStore((s) => s.anomalies);
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -67,7 +69,7 @@ export function AnomalyStream() {
           {t("toolsUI.insights.anomalies.title")}
           <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-muted-foreground">
             <Sigma className="h-3 w-3" />
-            {t("toolsUI.insights.anomalies.last24h")} · {t("toolsUI.insights.anomalies.detected").replace("{count}", String(MOCK_ANOMALIES.length))}
+            {t("toolsUI.insights.anomalies.last24h")} · {t("toolsUI.insights.anomalies.detected").replace("{count}", String(anomalies.length))}
           </span>
         </CardTitle>
       </CardHeader>
@@ -79,7 +81,7 @@ export function AnomalyStream() {
             className="pointer-events-none absolute left-[1.25rem] top-2 bottom-2 w-px bg-gradient-to-b from-transparent via-border to-transparent"
           />
 
-          {MOCK_ANOMALIES.map((a, i) => {
+          {anomalies.map((a, i) => {
             const sev = SEVERITY[a.severity];
             const Arrow: LucideIcon = a.delta.pct >= 0 ? ArrowUp : ArrowDown;
             const href = SCOPE_HREF(a);

@@ -20,8 +20,8 @@ import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { ROUTES } from "@/lib/constants";
 import { formatNumber } from "@/lib/format";
-import { MOCK_CALLS } from "@/lib/mock/calls";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
+import { useCallsStore } from "@/lib/store/calls-store";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import type { Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -57,9 +57,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
   const { t } = useTranslation();
   const [range, setRange] = useState<RangeId>("today");
+  const recentCalls = useCallsStore((s) => s.recent);
+  const campaigns = useCampaignsStore((s) => s.campaigns);
 
   const data = useMemo<Row[]>(() => {
-    const source = calls ?? MOCK_CALLS;
+    const source = calls ?? recentCalls;
 
     // For "today" the cutoff is local midnight; for 14d/30d we take a rolling
     // window measured from now so the chart doesn't snap to a calendar boundary.
@@ -73,8 +75,8 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
       cutoffMs = Date.now() - days * DAY_MS;
     }
 
-    const campaignById = new Map<string, (typeof MOCK_CAMPAIGNS)[number]>();
-    for (const c of MOCK_CAMPAIGNS) campaignById.set(c.id, c);
+    const campaignById = new Map<string, (typeof campaigns)[number]>();
+    for (const c of campaigns) campaignById.set(c.id, c);
 
     const m = new Map<string, Row>();
     for (const call of source) {
@@ -98,7 +100,7 @@ export function TopCampaignsBars({ calls }: TopCampaignsBarsProps = {}) {
       .filter((r) => r.connected > 0)
       .sort((a, b) => b.connected - a.connected)
       .slice(0, 6);
-  }, [calls, range]);
+  }, [calls, range, recentCalls, campaigns]);
 
   const subLabel = t("dashboard.topCampaignsHint");
 

@@ -12,7 +12,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useBuyersStore } from "@/lib/store/buyers-store";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
+import { usePublishersStore } from "@/lib/store/publishers-store";
 import type { CallStatus } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
@@ -57,26 +59,23 @@ export function ReportsFilterPopover({ filters, onChange }: ReportsFilterPopover
     [t],
   );
 
-  // Derive option lists from the full mock dataset so the popover always shows
-  // every value the user could pick — not just what's visible in the current
-  // date range. Sorted alphabetically.
+  // Derive option lists from the live entity stores — backend is the source
+  // of truth, so the popover always shows every campaign/buyer/publisher the
+  // user could pick. Sorted alphabetically.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+  const buyers = useBuyersStore((s) => s.buyers);
+  const publishers = usePublishersStore((s) => s.publishers);
   const facets = useMemo(() => {
-    const camp = new Map<string, string>();
-    const buyer = new Map<string, string>();
-    const pub = new Map<string, string>();
-    for (const c of MOCK_CALLS) {
-      if (c.campaignId && !camp.has(c.campaignId)) camp.set(c.campaignId, c.campaignName);
-      if (c.buyerId && c.buyerName && !buyer.has(c.buyerId)) buyer.set(c.buyerId, c.buyerName);
-      if (c.publisherId && c.publisherName && !pub.has(c.publisherId)) {
-        pub.set(c.publisherId, c.publisherName);
-      }
-    }
-    const toList = (m: Map<string, string>) =>
-      Array.from(m.entries())
-        .map(([id, label]) => ({ id, label }))
+    const toList = (rows: Array<{ id: string; name: string }>) =>
+      rows
+        .map((r) => ({ id: r.id, label: r.name }))
         .sort((a, b) => a.label.localeCompare(b.label));
-    return { campaigns: toList(camp), buyers: toList(buyer), publishers: toList(pub) };
-  }, []);
+    return {
+      campaigns: toList(campaigns),
+      buyers: toList(buyers),
+      publishers: toList(publishers),
+    };
+  }, [campaigns, buyers, publishers]);
 
   const total =
     filters.campaignIds.length +

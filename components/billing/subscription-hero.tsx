@@ -3,22 +3,54 @@
 /**
  * The headline plan card. Premium gradient surface with embedded usage ring
  * for "calls included", and "manage / upgrade / cancel" actions.
+ *
+ * Plan fields come from /api/billing/account; usage comes from
+ * /api/analytics/dashboard. Falls back to the mock seeds when the backend
+ * hasn't loaded yet so the first paint isn't blank.
  */
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Calendar, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { billingService, type BillingAccount } from "@/lib/api/services/billing.service";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { MOCK_PLAN, MOCK_USAGE } from "@/lib/mock/billing";
 import { formatCompact, formatCurrency } from "@/lib/format";
 import { useTranslation } from "@/hooks/use-translation";
 
 export function SubscriptionHero() {
   const { t } = useTranslation();
+
+  const [account, setAccount] = useState<BillingAccount | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const acc = await billingService.account();
+        if (!cancelled) setAccount(acc);
+      } catch {
+        // Plan endpoint may not be enabled yet — fall back to the mock seed.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const kpis = useCallsStore((s) => s.kpis);
+  const plan = account?.plan;
+
+  const tier = plan?.tier ?? MOCK_PLAN.tier;
+  const monthlyCost = plan?.monthlyCost ?? MOCK_PLAN.monthlyCost;
+  const callsIncluded = plan?.callsIncluded ?? MOCK_PLAN.callsIncluded;
+  const overageRatePerCall = plan?.overageRatePerCall ?? MOCK_PLAN.overageRatePerCall;
   const callsMetric = MOCK_USAGE.find((m) => m.key === "calls")!;
-  const pct = Math.min(1, callsMetric.used / callsMetric.included);
-  const renews = new Date(MOCK_PLAN.renewsAt);
-  const overage = Math.max(0, callsMetric.used - callsMetric.included) * MOCK_PLAN.overageRatePerCall;
+  const callsUsed = kpis?.totalCalls ?? callsMetric.used;
+  const renews = new Date(plan?.renewsAt ?? MOCK_PLAN.renewsAt);
+  const pct = callsIncluded > 0 ? Math.min(1, callsUsed / callsIncluded) : 0;
+  const overage = Math.max(0, callsUsed - callsIncluded) * overageRatePerCall;
 
   return (
     <motion.section
@@ -55,17 +87,17 @@ export function SubscriptionHero() {
           </div>
 
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            {MOCK_PLAN.tier}
+            {tier}
           </h2>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-mono text-xl font-semibold">{formatCurrency(MOCK_PLAN.monthlyCost)}</span>
+            <span className="font-mono text-xl font-semibold">{formatCurrency(monthlyCost)}</span>
             <span className="text-[13px] text-muted-foreground">{t("toolsUI.billing.subscription.perMonth")}</span>
           </div>
 
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
-            {t("toolsUI.billing.subscription.callsBefore").replace("{calls}", formatCompact(MOCK_PLAN.callsIncluded))}
+            {t("toolsUI.billing.subscription.callsBefore").replace("{calls}", formatCompact(callsIncluded))}
             <span className="font-mono text-foreground">
-              {formatCurrency(MOCK_PLAN.overageRatePerCall, true)}{t("toolsUI.billing.subscription.callsAfter")}
+              {formatCurrency(overageRatePerCall, true)}{t("toolsUI.billing.subscription.callsAfter")}
             </span>
             .{overage > 0 && (
               <>{t("toolsUI.billing.subscription.projectedOverage").replace("{amount}", formatCurrency(overage))}</>
@@ -90,8 +122,8 @@ export function SubscriptionHero() {
         <div className="flex items-center justify-center lg:w-72">
           <UsageRing
             pct={pct}
-            used={callsMetric.used}
-            included={callsMetric.included}
+            used={callsUsed}
+            included={callsIncluded}
           />
         </div>
       </div>

@@ -1,53 +1,95 @@
 /**
- * Campaigns store. Seeded from MOCK_CAMPAIGNS so the demo state survives reloads
- * via Zustand persist; reset by clearing localStorage.
+ * Campaigns store — backed by /api/campaigns/*.
+ * Mirrors the buyers store pattern.
  */
 
 "use client";
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
+import { campaignsService } from "@/lib/api/services/campaigns.service";
 import type { Campaign, CampaignStatus } from "@/lib/types";
 
 interface CampaignsState {
   campaigns: Campaign[];
+  loading: boolean;
+  error: string | null;
+  hydrated: boolean;
+
+  fetch: () => Promise<void>;
   getById: (id: string) => Campaign | undefined;
-  add: (input: Omit<Campaign, "id" | "createdAt">) => Campaign;
-  update: (id: string, patch: Partial<Campaign>) => void;
-  remove: (id: string) => void;
-  setStatus: (id: string, status: CampaignStatus) => void;
+  add: (input: Omit<Campaign, "id" | "createdAt">) => Promise<Campaign>;
+  update: (id: string, patch: Partial<Campaign>) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  setStatus: (id: string, status: CampaignStatus) => Promise<void>;
 }
 
-function makeId() {
-  return `c_${Math.random().toString(36).slice(2, 8)}`;
-}
+export const useCampaignsStore = create<CampaignsState>()((set, get) => ({
+  campaigns: [],
+  loading: false,
+  error: null,
+  hydrated: false,
 
-export const useCampaignsStore = create<CampaignsState>()(
-  persist(
-    (set, get) => ({
-      campaigns: MOCK_CAMPAIGNS,
-      getById: (id) => get().campaigns.find((c) => c.id === id),
-      add: (input) => {
-        const created: Campaign = { ...input, id: makeId(), createdAt: Date.now() };
-        set((s) => ({ campaigns: [created, ...s.campaigns] }));
-        return created;
-      },
-      update: (id, patch) =>
-        set((s) => ({
-          campaigns: s.campaigns.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-        })),
-      remove: (id) => set((s) => ({ campaigns: s.campaigns.filter((c) => c.id !== id) })),
-      setStatus: (id, status) =>
-        set((s) => ({
-          campaigns: s.campaigns.map((c) => (c.id === id ? { ...c, status } : c)),
-        })),
-    }),
-    {
-      name: "vortyx.campaigns",
-      storage: createJSONStorage(() => localStorage),
-      version: 1,
-    },
-  ),
-);
+  fetch: async () => {
+    set({ loading: true, error: null });
+    try {
+      const page = await campaignsService.list({ page: 1, pageSize: 200 });
+      set({ campaigns: page.items, loading: false, hydrated: true });
+    } catch (e) {
+      set({ loading: false, error: messageFromError(e) });
+    }
+  },
+
+  getById: (id) => get().campaigns.find((c) => c.id === id),
+
+  add: async (input) => {
+    const created = await campaignsService.create(input);
+    set((s) => ({ campaigns: [created, ...s.campaigns] }));
+    return created;
+  },
+
+  update: async (id, patch) => {
+    const prev = get().campaigns;
+    set((s) => ({
+      campaigns: s.campaigns.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+    try {
+      const fresh = await campaignsService.update(id, patch);
+      set((s) => ({
+        campaigns: s.campaigns.map((c) => (c.id === id ? fresh : c)),
+      }));
+    } catch (e) {
+      set({ campaigns: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  remove: async (id) => {
+    const prev = get().campaigns;
+    set((s) => ({ campaigns: s.campaigns.filter((c) => c.id !== id) }));
+    try {
+      await campaignsService.remove(id);
+    } catch (e) {
+      set({ campaigns: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  setStatus: async (id, status) => {
+    const prev = get().campaigns;
+    set((s) => ({
+      campaigns: s.campaigns.map((c) => (c.id === id ? { ...c, status } : c)),
+    }));
+    try {
+      await campaignsService.setStatus(id, status);
+    } catch (e) {
+      set({ campaigns: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+}));
+
+function messageFromError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return "Campaigns request failed";
+}

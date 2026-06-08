@@ -1,45 +1,102 @@
+/**
+ * Buyers store — backed by /api/buyers/*.
+ *
+ * Hydrates on first `fetch()`. Mutations (`add`/`update`/`remove`/`setStatus`)
+ * call the backend and then sync local state. The store still exposes
+ * synchronous reads (`buyers`, `getById`) so existing components don't change.
+ */
+
 "use client";
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { buyersService } from "@/lib/api/services/buyers.service";
 import type { Buyer, BuyerStatus } from "@/lib/types";
 
 interface BuyersState {
   buyers: Buyer[];
+  loading: boolean;
+  error: string | null;
+  /** True after the first successful fetch. */
+  hydrated: boolean;
 
+  fetch: () => Promise<void>;
   getById: (id: string) => Buyer | undefined;
-  add: (input: Omit<Buyer, "id" | "createdAt">) => Buyer;
-  update: (id: string, patch: Partial<Buyer>) => void;
-  remove: (id: string) => void;
-  setStatus: (id: string, status: BuyerStatus) => void;
+  add: (input: Omit<Buyer, "id" | "createdAt">) => Promise<Buyer>;
+  update: (id: string, patch: Partial<Buyer>) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  setStatus: (id: string, status: BuyerStatus) => Promise<void>;
 }
 
-function makeId() {
-  return `b_${Math.random().toString(36).slice(2, 8)}`;
-}
+export const useBuyersStore = create<BuyersState>()((set, get) => ({
+  buyers: [],
+  loading: false,
+  error: null,
+  hydrated: false,
 
-export const useBuyersStore = create<BuyersState>()(
-  persist(
-    (set, get) => ({
-      buyers: MOCK_BUYERS,
-      getById: (id) => get().buyers.find((b) => b.id === id),
-      add: (input) => {
-        const created: Buyer = { ...input, id: makeId(), createdAt: Date.now() };
-        set((s) => ({ buyers: [created, ...s.buyers] }));
-        return created;
-      },
-      update: (id, patch) =>
-        set((s) => ({ buyers: s.buyers.map((b) => (b.id === id ? { ...b, ...patch } : b)) })),
-      remove: (id) => set((s) => ({ buyers: s.buyers.filter((b) => b.id !== id) })),
-      setStatus: (id, status) =>
-        set((s) => ({ buyers: s.buyers.map((b) => (b.id === id ? { ...b, status } : b)) })),
-    }),
-    {
-      name: "vortyx.buyers",
-      storage: createJSONStorage(() => localStorage),
-      version: 1,
-    },
-  ),
-);
+  fetch: async () => {
+    set({ loading: true, error: null });
+    try {
+      // Pull the first 200 — Phase 2 will add proper pagination plumbing
+      // for tables that need to page past this.
+      const page = await buyersService.list({ page: 1, pageSize: 200 });
+      set({ buyers: page.items, loading: false, hydrated: true });
+    } catch (e) {
+      set({ loading: false, error: messageFromError(e) });
+    }
+  },
+
+  getById: (id) => get().buyers.find((b) => b.id === id),
+
+  add: async (input) => {
+    const created = await buyersService.create(input);
+    set((s) => ({ buyers: [created, ...s.buyers] }));
+    return created;
+  },
+
+  update: async (id, patch) => {
+    const prev = get().buyers;
+    // Optimistic mutation so the UI flips immediately.
+    set((s) => ({
+      buyers: s.buyers.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    }));
+    try {
+      const fresh = await buyersService.update(id, patch);
+      set((s) => ({
+        buyers: s.buyers.map((b) => (b.id === id ? fresh : b)),
+      }));
+    } catch (e) {
+      set({ buyers: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  remove: async (id) => {
+    const prev = get().buyers;
+    set((s) => ({ buyers: s.buyers.filter((b) => b.id !== id) }));
+    try {
+      await buyersService.remove(id);
+    } catch (e) {
+      set({ buyers: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  setStatus: async (id, status) => {
+    const prev = get().buyers;
+    set((s) => ({
+      buyers: s.buyers.map((b) => (b.id === id ? { ...b, status } : b)),
+    }));
+    try {
+      await buyersService.setStatus(id, status);
+    } catch (e) {
+      set({ buyers: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+}));
+
+function messageFromError(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return "Buyers request failed";
+}

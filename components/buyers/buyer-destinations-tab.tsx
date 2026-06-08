@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { formatCurrency, formatNumber, toE164 } from "@/lib/format";
 import type { Buyer } from "@/lib/types";
@@ -31,8 +31,9 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
     [allDestinations, buyer.id],
   );
   const [builderOpen, setBuilderOpen] = useState(false);
+  const recentCalls = useCallsStore((s) => s.recent);
 
-  // Per-TFN call aggregates from today, computed once per render.
+  // Per-TFN call aggregates from today, recomputed when the calls cache refreshes.
   const statsByTfn = useMemo(() => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -40,7 +41,7 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
     const callsByTfn = new Map<string, number>();
     const revenueByTfn = new Map<string, number>();
     const ccByTfn = new Map<string, number>();
-    for (const c of MOCK_CALLS) {
+    for (const c of recentCalls) {
       if (c.startedAt >= startMs) {
         callsByTfn.set(c.destinationNumber, (callsByTfn.get(c.destinationNumber) ?? 0) + 1);
         revenueByTfn.set(
@@ -53,7 +54,7 @@ export function BuyerDestinationsTab({ buyer }: BuyerDestinationsTabProps) {
       }
     }
     return { callsByTfn, revenueByTfn, ccByTfn };
-  }, []);
+  }, [recentCalls]);
 
   if (destinations.length === 0) {
     return (

@@ -16,11 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useBuyersStore } from "@/lib/store/buyers-store";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { formatCurrency, formatNumber, toE164 } from "@/lib/format";
-import type { Buyer, Destination } from "@/lib/types";
+import type { Buyer, Call, Destination } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface DestinationSummaryTableProps {
@@ -52,16 +52,20 @@ function buildRows(
   destinations: Destination[],
   filter: string | undefined,
   limit: number,
+  recentCalls: Call[],
+  buyers: Buyer[],
 ): Row[] {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const startMs = startOfToday.getTime();
 
-  // Pre-compute per-destination (keyed by TFN) call aggregates from MOCK_CALLS.
+  // Pre-compute per-destination (keyed by TFN) call aggregates from the
+  // shared calls cache. Pass in from the component so the table reactively
+  // updates when fresh calls land.
   const callsByTfn = new Map<string, number>();
   const revenueByTfn = new Map<string, number>();
   const ccByTfn = new Map<string, number>();
-  for (const c of MOCK_CALLS) {
+  for (const c of recentCalls) {
     if (c.startedAt >= startMs) {
       callsByTfn.set(c.destinationNumber, (callsByTfn.get(c.destinationNumber) ?? 0) + 1);
       revenueByTfn.set(
@@ -75,7 +79,7 @@ function buildRows(
   }
 
   const buyerById = new Map<string, Buyer>();
-  for (const b of MOCK_BUYERS) buyerById.set(b.id, b);
+  for (const b of buyers) buyerById.set(b.id, b);
 
   return destinations
     .filter((d) => !filter || d.tfn === filter)
@@ -109,9 +113,11 @@ export function DestinationSummaryTable({
 }: DestinationSummaryTableProps) {
   const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
+  const recentCalls = useCallsStore((s) => s.recent);
+  const buyers = useBuyersStore((s) => s.buyers);
   const rows = useMemo(
-    () => buildRows(destinations, destinationFilter, limit),
-    [destinations, destinationFilter, limit],
+    () => buildRows(destinations, destinationFilter, limit, recentCalls, buyers),
+    [destinations, destinationFilter, limit, recentCalls, buyers],
   );
 
   return (

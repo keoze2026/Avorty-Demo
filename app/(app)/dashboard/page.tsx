@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { MOCK_BUYERS } from "@/lib/mock/buyers";
-import { MOCK_CALLS } from "@/lib/mock/calls";
+import { useCallsStore } from "@/lib/store/calls-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 const ALL_DEST = "all";
@@ -30,32 +30,33 @@ const ALL_DEST = "all";
 // Buyer lookup for nicer destination-dropdown labels.
 const BUYER_BY_ID = new Map(MOCK_BUYERS.map((b) => [b.id, b]));
 
-// Calls-today count per destination TFN — drives the "{N} calls" annotation.
-const CALLS_TODAY_BY_TFN = (() => {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const map = new Map<string, number>();
-  for (const c of MOCK_CALLS) {
-    if (c.startedAt < start.getTime()) continue;
-    map.set(c.destinationNumber, (map.get(c.destinationNumber) ?? 0) + 1);
-  }
-  return map;
-})();
-
 export default function DashboardPage() {
   const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
+  // Calls now stream in from the backend via the calls store. The dashboard's
+  // chart components still aggregate client-side off this list, so we pull a
+  // generous slice (200 by default; tune via fetchRecent) at app mount.
+  const recentCalls = useCallsStore((s) => s.recent);
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
 
+  // Calls-today count per destination TFN — recomputed when recent calls change.
+  const callsTodayByTfn = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const map = new Map<string, number>();
+    for (const c of recentCalls) {
+      if (c.startedAt < start.getTime()) continue;
+      map.set(c.destinationNumber, (map.get(c.destinationNumber) ?? 0) + 1);
+    }
+    return map;
+  }, [recentCalls]);
+
   // When a destination is selected, scope everything to just its calls.
-  // When "All destinations" is selected, pass the full MOCK_CALLS slice so
-  // the chart and donut use the same dataset as the topbar's TOTAL counter
-  // — keeps the headline numbers (3,016 today) consistent across surfaces.
   const scopedCalls = useMemo(() => {
-    if (allSelected) return MOCK_CALLS;
-    return MOCK_CALLS.filter((c) => c.destinationNumber === destinationTfn);
-  }, [destinationTfn, allSelected]);
+    if (allSelected) return recentCalls;
+    return recentCalls.filter((c) => c.destinationNumber === destinationTfn);
+  }, [destinationTfn, allSelected, recentCalls]);
 
   const onExport = (format: ExportFormat) => {
     const rows = buildDestinationExportRows(
@@ -84,7 +85,7 @@ export default function DashboardPage() {
                 <SelectItem value={ALL_DEST}>{t("dashboard.allDestinations")}</SelectItem>
                 {destinations.map((d) => {
                   const buyer = BUYER_BY_ID.get(d.buyerId);
-                  const calls = CALLS_TODAY_BY_TFN.get(d.tfn) ?? 0;
+                  const calls = callsTodayByTfn.get(d.tfn) ?? 0;
                   return (
                     <SelectItem key={d.id} value={d.tfn}>
                       <span className="flex items-center gap-2">
@@ -169,10 +170,14 @@ function buildDestinationExportRows(
   startOfToday.setHours(0, 0, 0, 0);
   const startMs = startOfToday.getTime();
 
+  // Pull the cached calls directly from the store — no React hook here since
+  // this builder runs during the export click handler, not in render.
+  const recentCalls = useCallsStore.getState().recent;
+
   const callsByTfn = new Map<string, number>();
   const revenueByTfn = new Map<string, number>();
   const ccByTfn = new Map<string, number>();
-  for (const c of MOCK_CALLS) {
+  for (const c of recentCalls) {
     if (c.startedAt >= startMs) {
       callsByTfn.set(c.destinationNumber, (callsByTfn.get(c.destinationNumber) ?? 0) + 1);
       revenueByTfn.set(

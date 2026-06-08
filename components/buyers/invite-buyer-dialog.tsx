@@ -54,7 +54,7 @@ export function InviteBuyerDialog({
     if (!name.trim() || !organization.trim()) return;
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 350));
-    const created = add({
+    const created = await add({
       name: name.trim(),
       organization: organization.trim(),
       contactName: contactName.trim() || undefined,

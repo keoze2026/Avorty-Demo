@@ -10,13 +10,13 @@ import { RoutingPath } from "@/components/live/routing-path";
 import { SessionMeter } from "@/components/live/session-meter";
 import { LiveBadge } from "@/components/shared/live-badge";
 import { PageHeader } from "@/components/shared/page-header";
-import { useMockSocket } from "@/hooks/use-mock-socket";
+import { useLiveSocket } from "@/hooks/use-live-socket";
 import { useTranslation } from "@/hooks/use-translation";
 
 export default function LivePage() {
   const { t, locale } = useTranslation();
   const [paused, setPaused] = useState(false);
-  const { inFlight, history, totals } = useMockSocket({ paused, intervalMs: 2400 });
+  const { inFlight, history, totals } = useLiveSocket({ paused });
 
   // Today's date chip — defer formatting to after mount so SSR and the
   // first client paint don't disagree about the locale string.
