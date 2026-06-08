@@ -36,8 +36,8 @@ export function LoginForm() {
 
   const [phase, setPhase] = useState<"credentials" | "2fa">("credentials");
 
-  const [email, setEmail] = useState("avery@avortyx.io");
-  const [password, setPassword] = useState("vortyx");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -137,13 +137,28 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onCredentialsSubmit} className="space-y-4">
+    <form
+      onSubmit={onCredentialsSubmit}
+      className="space-y-4"
+      autoComplete="off"
+      // Chrome ignores autoComplete="off" on forms unless the page also
+      // signals it as a non-credential form. The off-spec `aria-autocomplete`
+      // is harmless and most extensions/managers respect the input-level
+      // hints set below ("off" + new-password).
+    >
       <div className="space-y-2">
         <Label htmlFor="email">{t("login.email")}</Label>
         <Input
           id="email"
+          name="avortyx-email"
           type="email"
-          autoComplete="email"
+          autoComplete="off"
+          // Chromium responds to data-* and arbitrary autocomplete values by
+          // not surfacing saved-password offers for this field. Used alongside
+          // a non-standard field name (`name="avortyx-email"`) so the password
+          // manager doesn't match a generic `email` field.
+          data-lpignore="true"
+          data-1p-ignore="true"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -163,8 +178,14 @@ export function LoginForm() {
         <div className="relative">
           <Input
             id="password"
+            name="avortyx-password"
             type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
+            // `new-password` is the standard hint that tells browsers
+            // "this isn't the field you saved a credential for" — they
+            // skip the autofill prompt.
+            autoComplete="new-password"
+            data-lpignore="true"
+            data-1p-ignore="true"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
