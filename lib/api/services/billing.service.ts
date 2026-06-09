@@ -77,6 +77,26 @@ export interface PaymentMethod {
   isDefault?: boolean;
 }
 
+export interface DepositIntent {
+  /** Stripe `client_secret` used to confirm the payment on the client. */
+  clientSecret: string;
+  /** Stripe payment intent id — useful for follow-up requests / logging. */
+  paymentIntentId: string;
+  /** Optional status echoed by the backend (e.g. "requires_action"). */
+  status?: string;
+}
+
+interface DepositIntentWire {
+  /** Both casings supported — case adapter converts snake_case at the boundary,
+   *  but the wire response may also use either depending on the backend's
+   *  serializer. We accept both for safety. */
+  clientSecret?: string;
+  client_secret?: string;
+  paymentIntentId?: string;
+  payment_intent_id?: string;
+  status?: string;
+}
+
 /* ─── Wire shapes ─────────────────────────────────────────────────────── */
 
 interface BillingAccountWire {
@@ -290,11 +310,30 @@ export const billingService = {
     await http.delete(`/api/billing/payment-methods/${id}`);
   },
 
-  /** Generic deposit — backend returns { client_secret } / { url } depending on provider. */
-  async createDeposit(input: { amount: number; provider: string }): Promise<unknown> {
-    return http.post("/api/billing/deposit", {
-      body: { amount: String(input.amount), provider: input.provider },
+  /**
+   * Create a Stripe PaymentIntent for a card top-up. Backend returns the
+   * `client_secret` (Stripe naming) which the frontend hands to Stripe.js
+   * to confirm the charge against the user's card.
+   *
+   * When `paymentMethodId` is provided, the backend charges that saved card
+   * directly. When omitted, a fresh card must be confirmed client-side via
+   * `stripe.confirmCardPayment(clientSecret, { payment_method: { card } })`.
+   */
+  async createDeposit(input: {
+    amount: number;
+    paymentMethodId?: string;
+  }): Promise<DepositIntent> {
+    const wire = await http.post<DepositIntentWire>("/api/billing/deposit", {
+      body: {
+        amount: input.amount,
+        paymentMethodId: input.paymentMethodId,
+      },
     });
+    return {
+      clientSecret: wire.clientSecret ?? wire.client_secret ?? "",
+      paymentIntentId: wire.paymentIntentId ?? wire.payment_intent_id ?? "",
+      status: wire.status,
+    };
   },
 
   async confirmDeposit(input: { paymentIntentId: string }): Promise<unknown> {
@@ -302,8 +341,11 @@ export const billingService = {
   },
 
   async capitalistDeposit(input: { amount: number; currency?: string }): Promise<unknown> {
+    // Backend reads amount + currency from the query string, not the body
+    // (confirmed by backend dev: "?amount=10&currency=USD"). Sending them in
+    // the body produces a "Field required" validation error.
     return http.post("/api/billing/deposit/capitalist", {
-      body: { amount: String(input.amount), currency: input.currency ?? "USD" },
+      query: { amount: input.amount, currency: input.currency ?? "USD" },
     });
   },
 

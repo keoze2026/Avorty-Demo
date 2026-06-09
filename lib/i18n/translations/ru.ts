@@ -9,6 +9,8 @@ export const ru: TranslationShape = {
     campaigns: "Кампании",
     phoneNumbers: "Номера",
     routing: "Маршрутизация",
+    ivr: "IVR",
+    callQueue: "Очередь звонков",
     buyers: "Покупатели",
     destinations: "Назначения",
     publishers: "Издатели",
@@ -23,6 +25,7 @@ export const ru: TranslationShape = {
     referrals: "Рефералы",
     trustEngine: "Система доверия",
     integrations: "Интеграции",
+    whiteLabel: "Белый лейбл",
     billing: "Биллинг",
     settings: "Настройки",
     section: {

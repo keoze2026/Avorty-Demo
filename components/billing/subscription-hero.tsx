@@ -11,9 +11,8 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Calendar, Sparkles } from "lucide-react";
+import { Calendar, Sparkles } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { billingService, type BillingAccount } from "@/lib/api/services/billing.service";
 import { useCallsStore } from "@/lib/store/calls-store";
 import { MOCK_PLAN, MOCK_USAGE } from "@/lib/mock/billing";
@@ -104,18 +103,11 @@ export function SubscriptionHero() {
             )}
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Button size="sm" className="gap-1.5">
-              <ArrowUpRight className="h-3.5 w-3.5" />
-              {t("toolsUI.billing.subscription.upgrade")}
-            </Button>
-            <Button size="sm" variant="outline">
-              {t("toolsUI.billing.subscription.managePlan")}
-            </Button>
-            <Button size="sm" variant="ghost" className="text-muted-foreground">
-              {t("toolsUI.billing.subscription.cancel")}
-            </Button>
-          </div>
+          {/* Plan-management buttons removed for v1 — there is no backend
+              endpoint for plan changes (`/api/billing/plan` doesn't exist).
+              Upgrade / downgrade / cancel will return when the subscription
+              endpoints ship. Until then, the user can recharge their balance
+              via the card below and contact support to change plan. */}
         </div>
 
         {/* Right: usage ring */}

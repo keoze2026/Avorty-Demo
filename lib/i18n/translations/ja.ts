@@ -9,6 +9,8 @@ export const ja: TranslationShape = {
     campaigns: "キャンペーン",
     phoneNumbers: "電話番号",
     routing: "ルーティング",
+    ivr: "IVR",
+    callQueue: "コールキュー",
     buyers: "バイヤー",
     destinations: "宛先",
     publishers: "パブリッシャー",
@@ -23,6 +25,7 @@ export const ja: TranslationShape = {
     referrals: "リファラル",
     trustEngine: "信頼エンジン",
     integrations: "連携",
+    whiteLabel: "ホワイトラベル",
     billing: "請求",
     settings: "設定",
     section: {

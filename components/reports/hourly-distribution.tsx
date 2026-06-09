@@ -73,74 +73,37 @@ function fmt12Hour(h: number): string {
   return `${display.toString().padStart(2, "0")}:00 ${period}`;
 }
 
-/**
- * Hand-tuned hourly buckets matching the advertising reference **exactly**.
- *
- *   7 AM     5    single small tick
- *   8 AM    70    ramp begins
- *   9 AM   243
- *  10 AM   533
- *  11 AM   625
- *  12 PM   862
- *   1 PM   933    ← PEAK
- *   2 PM   511    mostly purple with a red No Answer sliver at the BOTTOM
- *                  (41 calls / 8% of column = the visible red segment)
- *
- * Only **8 visible bars** total — nothing before 7 AM or after 2 PM. All
- * bars render as 100% Converted (purple) except the 2 PM column which adds
- * a thin No Answer sliver. Total: 3,782 calls / 3,741 converted / 41 noAnswer
- * / $285K revenue (per-conversion ~$76.10).
- *
- * Hard-coded so the chart always renders the reference silhouette regardless
- * of LCG variance, persisted state, or which destination is filtered.
- */
-const HOURLY_REF: Array<Omit<Bucket, "label" | "ts">> = [
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, // 12 AM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  1 AM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  2 AM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  3 AM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  4 AM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  5 AM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  6 AM
-  { converted: 5,   notConverted: 0, noAnswer: 0,  revenue: 381    }, //  7 AM = 5
-  { converted: 70,  notConverted: 0, noAnswer: 0,  revenue: 5_327  }, //  8 AM = 70
-  { converted: 243, notConverted: 0, noAnswer: 0,  revenue: 18_492 }, //  9 AM = 243
-  { converted: 533, notConverted: 0, noAnswer: 0,  revenue: 40_561 }, // 10 AM = 533
-  { converted: 625, notConverted: 0, noAnswer: 0,  revenue: 47_563 }, // 11 AM = 625
-  { converted: 862, notConverted: 0, noAnswer: 0,  revenue: 65_598 }, // 12 PM = 862
-  { converted: 933, notConverted: 0, noAnswer: 0,  revenue: 71_001 }, //  1 PM = 933 ← peak
-  { converted: 470, notConverted: 0, noAnswer: 41, revenue: 35_767 }, //  2 PM = 511 (red sliver bottom)
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  3 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  4 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  5 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  6 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  7 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  8 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, //  9 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, // 10 PM
-  { converted: 0,   notConverted: 0, noAnswer: 0,  revenue: 0      }, // 11 PM
-];
-
 function bucketize(calls: Call[], grain: Grain): Bucket[] {
   const now = new Date();
   const day = 24 * 60 * 60 * 1000;
 
   if (grain === "H") {
-    // Hour grain ignores `calls` on purpose — the chart must show the
-    // advertising-reference silhouette every render. Day + Month grains
-    // still aggregate the passed calls normally.
-    void calls;
+    // 24 hour-buckets for today (00:00 → 23:00 local), aggregated from the
+    // passed-in calls. The legacy HOURLY_REF silhouette is no longer used —
+    // the chart now reflects real call data the same way Day and Month grains do.
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
-    return HOURLY_REF.map((seg, h) => {
+    const slots: Bucket[] = Array.from({ length: 24 }, (_, h) => {
       const d = new Date(startOfDay);
       d.setHours(h, 0, 0, 0);
       return {
         label: fmt12Hour(h),
         ts: d.getTime(),
-        ...seg,
+        converted: 0,
+        notConverted: 0,
+        noAnswer: 0,
+        revenue: 0,
       };
     });
+    for (const c of calls) {
+      if (c.startedAt < startOfDay.getTime()) continue;
+      const hour = new Date(c.startedAt).getHours();
+      if (hour < 0 || hour >= 24) continue;
+      const k = classify(c);
+      slots[hour][k] += 1;
+      slots[hour].revenue += c.revenue;
+    }
+    return slots;
   }
 
   if (grain === "D") {

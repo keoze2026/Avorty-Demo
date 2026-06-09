@@ -68,21 +68,28 @@ const CURRENCY_TONE: Record<CapitalistCurrency, string> = {
 
 export function PaymentIntegrationsCard() {
   const { t } = useTranslation();
-  const account = MOCK_CAPITALIST_ACCOUNT;
+  // The backend doesn't expose a Capitalist wallet-listing endpoint yet —
+  // there's only the deposit endpoint. Until then, this card shows a
+  // "connect to view wallets" state instead of pretending to show real
+  // balances. Flip `account` back to MOCK_CAPITALIST_ACCOUNT (or a real
+  // service call) once `/api/billing/wallets/` lands.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _unused = MOCK_CAPITALIST_ACCOUNT;
+  const account: typeof MOCK_CAPITALIST_ACCOUNT | null = null as typeof MOCK_CAPITALIST_ACCOUNT | null;
 
-  const onTopUp = (currency: CapitalistCurrency) => {
-    // Scroll the Recharge Balance card into view (Capitalist is its default
-    // method, so the user lands on the right form) and surface which wallet
-    // they were trying to fund so the action stays traceable.
+  const scrollToRecharge = () => {
     const target = typeof document !== "undefined" ? document.getElementById("recharge-balance") : null;
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Move focus to the amount input so the user can type immediately.
       window.setTimeout(() => {
         const input = document.getElementById("recharge-amount") as HTMLInputElement | null;
         input?.focus();
       }, 350);
     }
+  };
+
+  const onTopUp = (currency: CapitalistCurrency) => {
+    scrollToRecharge();
     toast.success(
       t("toolsUI.billing.integrations.toast.topUp").replace("{currency}", currency),
     );
@@ -118,46 +125,64 @@ export function PaymentIntegrationsCard() {
 
       <CardContent className="space-y-4">
         {/* ─── Provider header — Capitalist brand + connection status ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className={cn(
-            "relative overflow-hidden rounded-xl border border-accent/20 p-4",
-            "bg-[radial-gradient(circle_at_top_left,color-mix(in_oklch,var(--accent)_18%,transparent),transparent_60%),linear-gradient(135deg,rgba(15,17,35,0.85)_0%,rgba(35,40,90,0.45)_100%)]",
-            "text-foreground",
-          )}
-        >
-          {/* Subtle indigo wash so the card visually identifies itself as a
-              "Capitalist" panel without needing the official logo. */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                <Wallet className="h-5 w-5" />
-              </span>
-              <div className="leading-tight">
-                <div className="text-base font-semibold tracking-tight">
-                  {t("toolsUI.billing.integrations.capitalist.name")}
-                </div>
-                <div className="font-mono text-[11px] text-muted-foreground">
-                  {account.accountId} · {account.accountName}
+        {account ? (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className={cn(
+              "relative overflow-hidden rounded-xl border border-accent/20 p-4",
+              "bg-[radial-gradient(circle_at_top_left,color-mix(in_oklch,var(--accent)_18%,transparent),transparent_60%),linear-gradient(135deg,rgba(15,17,35,0.85)_0%,rgba(35,40,90,0.45)_100%)]",
+              "text-foreground",
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                  <Wallet className="h-5 w-5" />
+                </span>
+                <div className="leading-tight">
+                  <div className="text-base font-semibold tracking-tight">
+                    {t("toolsUI.billing.integrations.capitalist.name")}
+                  </div>
+                  <div className="font-mono text-[11px] text-muted-foreground">
+                    {account.accountId} · {account.accountName}
+                  </div>
                 </div>
               </div>
+              <ConnectionBadge connected={account.connected} />
             </div>
-            <ConnectionBadge connected={account.connected} />
-          </div>
 
-          {account.lastSyncAt && (
-            <div className="mt-3 text-[10px] text-muted-foreground">
-              {t("toolsUI.billing.integrations.lastSync")}{" "}
-              <span className="text-foreground">
-                {formatRelativeTime(account.lastSyncAt, t)}
-              </span>
+            {account.lastSyncAt && (
+              <div className="mt-3 text-[10px] text-muted-foreground">
+                {t("toolsUI.billing.integrations.lastSync")}{" "}
+                <span className="text-foreground">
+                  {formatRelativeTime(account.lastSyncAt, t)}
+                </span>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          /* No real wallet-listing endpoint yet — show an honest empty state
+             instead of pretending wallets exist. Recharge still works via
+             the form below; the operator just can't see balances per-currency. */
+          <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/60 bg-secondary/20 px-4 py-8 text-center">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
+              <Wallet className="h-5 w-5" />
+            </span>
+            <div>
+              <h4 className="text-sm font-semibold">No payment provider connected</h4>
+              <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                Wallet listing isn&apos;t exposed by the backend yet. You can still
+                fund your account using the Recharge form below — payments
+                route to Capitalist USDT.
+              </p>
             </div>
-          )}
-        </motion.div>
+          </div>
+        )}
 
         {/* ─── Wallets — one row per currency ──────────────────────── */}
+        {account && (
         <div>
           <div className="mb-2 flex items-center justify-between">
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
@@ -226,6 +251,7 @@ export function PaymentIntegrationsCard() {
             })}
           </ul>
         </div>
+        )}
 
         {/* ─── Provider footer — manage + add another ──────────────── */}
         <div className="flex items-center justify-between border-t border-border/40 pt-3">

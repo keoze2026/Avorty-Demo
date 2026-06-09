@@ -1,18 +1,19 @@
 "use client";
 
 /**
- * Recharge Balance card — Capitalist USDT only (v1).
+ * Recharge Balance card — two payment paths.
  *
- * Stripe is planned for v2 per backend's confirmation; the bank-card tile
- * was removed. The endpoint accepts a `currency` field, so the user picks
- * USD / EUR / RUB to match their Capitalist wallet currencies. Auto-recharge
- * + low-balance alert toggles persist via PATCH /api/billing/account.
+ *   Bank card → Stripe Elements + PaymentIntent confirm (USD only)
+ *   Capitalist → hosted-checkout redirect (USD / EUR / RUB wallets)
+ *
+ * Auto-recharge + low-balance alert toggles persist via PATCH /api/billing/account.
  */
 
 import * as React from "react";
-import { ArrowUpRight, Bitcoin, Loader2, ShieldCheck, Wallet } from "lucide-react";
+import { Bitcoin, CreditCard, Loader2, ShieldCheck, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
+import { StripeCardForm } from "./stripe-card-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,13 +23,17 @@ import { billingService, type BillingAccount } from "@/lib/api/services/billing.
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
+type Method = "card" | "capitalist";
 type Currency = "USD" | "EUR" | "RUB";
 
-/** Shape we accept from the Capitalist deposit endpoint. */
+/** Shape we accept from the Capitalist deposit endpoint. The backend ships
+ *  `payment_url` (→ `paymentUrl` after case conversion); older deployments
+ *  may use other names, so we look at all of them. */
 interface DepositResponse {
   url?: string;
   redirectUrl?: string;
   checkoutUrl?: string;
+  paymentUrl?: string;
 }
 
 const PRESETS = [50, 100, 250, 500, 1000];
@@ -41,6 +46,7 @@ const CURRENCIES: Array<{ code: Currency; symbol: string; label: string }> = [
 
 export function RechargeBalanceCard() {
   const { t } = useTranslation();
+  const [method, setMethod] = React.useState<Method>("card");
   const [currency, setCurrency] = React.useState<Currency>("USD");
   const [amount, setAmount] = React.useState<string>("");
   const [submitting, setSubmitting] = React.useState(false);
@@ -76,7 +82,8 @@ export function RechargeBalanceCard() {
         currency,
       })) as DepositResponse;
 
-      const redirect = res?.url ?? res?.redirectUrl ?? res?.checkoutUrl;
+      const redirect =
+        res?.paymentUrl ?? res?.url ?? res?.redirectUrl ?? res?.checkoutUrl;
       if (redirect) {
         toast.success(t("toolsUI.billing.recharge.redirecting"));
         window.location.assign(redirect);
@@ -119,18 +126,29 @@ export function RechargeBalanceCard() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* ─── Provider + currency picker — Stripe is v2; Capitalist only for now. */}
+        {/* ─── Payment method picker ──────────────────────────────────── */}
         <section className="space-y-2">
           <Label>{t("toolsUI.billing.recharge.method")}</Label>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-stretch">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <MethodCard
-              selected
-              onClick={() => undefined}
+              selected={method === "card"}
+              onClick={() => setMethod("card")}
+              icon={CreditCard}
+              title={t("toolsUI.billing.recharge.bankCard")}
+              subtitle="Visa · Mastercard · Amex"
+            />
+            <MethodCard
+              selected={method === "capitalist"}
+              onClick={() => setMethod("capitalist")}
               icon={Bitcoin}
               title={t("toolsUI.billing.recharge.capitalist")}
               subtitle="USDT · TRC-20"
             />
-            <div className="flex flex-row gap-2 sm:flex-col">
+          </div>
+
+          {/* Capitalist needs a currency picker; Stripe is USD-only today. */}
+          {method === "capitalist" && (
+            <div className="flex flex-row gap-2 pt-1">
               {CURRENCIES.map((c) => (
                 <button
                   key={c.code}
@@ -149,7 +167,7 @@ export function RechargeBalanceCard() {
                 </button>
               ))}
             </div>
-          </div>
+          )}
         </section>
 
         {/* ─── Amount + Recharge CTA ──────────────────────────────────── */}
@@ -199,26 +217,40 @@ export function RechargeBalanceCard() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <ShieldCheck className="h-3 w-3 text-[color:var(--success)]" />
-              {t("toolsUI.billing.recharge.capitalistNote")}
+          {/* Method-specific submit area: Capitalist → hosted redirect; Card → Stripe Elements. */}
+          {method === "capitalist" ? (
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <ShieldCheck className="h-3 w-3 text-[color:var(--success)]" />
+                {t("toolsUI.billing.recharge.capitalistNote")}
+              </div>
+              <Button onClick={onRecharge} disabled={!amountValid || submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    {t("toolsUI.billing.recharge.processing")}
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="h-3.5 w-3.5" />
+                    {t("toolsUI.billing.recharge.cta")}
+                  </>
+                )}
+              </Button>
             </div>
-            <Button onClick={onRecharge} disabled={!amountValid || submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  {t("toolsUI.billing.recharge.processing")}
-                </>
-              ) : (
-                <>
-                  <Wallet className="h-3.5 w-3.5" />
-                  {t("toolsUI.billing.recharge.cta")}
-                  <ArrowUpRight className="h-3 w-3" />
-                </>
-              )}
-            </Button>
-          </div>
+          ) : (
+            <div className="pt-1">
+              <StripeCardForm
+                amount={amountValid ? parsedAmount : 0}
+                disabled={!amountValid}
+                onSuccess={() => {
+                  setAmount("");
+                  // Refresh the cached billing account so the UI shows the new balance.
+                  void billingService.account().then(setAccount).catch(() => undefined);
+                }}
+              />
+            </div>
+          )}
         </section>
 
         {/* ─── Auto-recharge + low-balance alert ──────────────────────── */}

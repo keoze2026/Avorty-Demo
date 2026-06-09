@@ -9,6 +9,8 @@ export const zh: TranslationShape = {
     campaigns: "营销活动",
     phoneNumbers: "电话号码",
     routing: "路由",
+    ivr: "IVR",
+    callQueue: "通话队列",
     buyers: "买家",
     destinations: "目的地",
     publishers: "发布商",
@@ -23,6 +25,7 @@ export const zh: TranslationShape = {
     referrals: "推荐计划",
     trustEngine: "信任引擎",
     integrations: "集成",
+    whiteLabel: "白标",
     billing: "账单",
     settings: "设置",
     section: {

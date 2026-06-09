@@ -14,6 +14,8 @@ export const en = {
     campaigns: "Campaigns",
     phoneNumbers: "Phone Numbers",
     routing: "Routing",
+    ivr: "IVR",
+    callQueue: "Call Queue",
     buyers: "Buyers",
     destinations: "Destinations",
     publishers: "Publishers",
@@ -28,6 +30,7 @@ export const en = {
     referrals: "Referrals",
     trustEngine: "Trust Engine",
     integrations: "Integrations",
+    whiteLabel: "White Label",
     billing: "Billing",
     settings: "Settings",
     // section labels

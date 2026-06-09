@@ -86,9 +86,20 @@ export function normalizeErrorBody(
           message: it.msg ?? it.message ?? "Invalid",
         };
       });
+      // Build a human-readable top-line message that prefixes the field name
+      // so callers don't have to dig into fieldErrors to know what's wrong.
+      // Multiple errors → "field1, field2: <first message>".
+      const namedFields = fieldErrors
+        .map((fe) => fe.field)
+        .filter((f) => f && f !== "_");
+      const firstMsg = fieldErrors[0]?.message ?? statusText;
+      const message =
+        namedFields.length > 0
+          ? `${namedFields.join(", ")} — ${firstMsg}`
+          : firstMsg;
       return new ApiError({
         status,
-        message: fieldErrors[0]?.message ?? statusText,
+        message,
         fieldErrors,
         body,
       });

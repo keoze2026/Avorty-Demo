@@ -13,13 +13,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
+import { useAiInsightsStore } from "@/lib/store/ai-insights-store";
 import {
   ALERT_KIND_DOT,
-  MOCK_NOTIFICATIONS,
   type AlertKind,
   type NotificationItem,
 } from "@/lib/mock/notifications";
+import { formatRelativeTime } from "@/lib/format";
+import type { Anomaly } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+/** Map an AI anomaly to the dropdown's NotificationItem shape so the UI
+ *  doesn't have to change. Severity comes from the anomaly itself; alertKind
+ *  is derived from the metric name. */
+function anomalyToNotification(a: Anomaly): NotificationItem {
+  const sev: NotificationItem["severity"] =
+    a.severity === "critical" ? "critical" : a.severity === "warning" ? "warn" : "insight";
+  const metric = a.delta.metric.toLowerCase();
+  const alertKind: AlertKind =
+    metric.includes("miss") || metric.includes("no-answer")
+      ? "missed"
+      : metric.includes("cap")
+        ? "cap-over"
+        : metric.includes("aht") || metric.includes("duration")
+          ? "low-aht"
+          : "other";
+  return {
+    id: a.id,
+    severity: sev,
+    alertKind,
+    title: a.title,
+    body: a.body,
+    time: formatRelativeTime(a.detectedAt),
+    delta: a.delta.pct,
+    read: false,
+    source: a.scope.name,
+  };
+}
 
 type TabId = "all" | "critical" | "insights";
 type AlertFilter = "all" | AlertKind;
@@ -32,7 +62,20 @@ export function NotificationsMenu() {
   const [tab, setTab] = React.useState<TabId>("all");
   // Sub-filter for the Alerts tab — split alerts by missed / cap / AHT.
   const [alertFilter, setAlertFilter] = React.useState<AlertFilter>("all");
-  const [items, setItems] = React.useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  // Live anomalies from /api/ai/anomalies become the topbar dropdown's source.
+  // Each anomaly is mapped to the NotificationItem shape the rest of this
+  // component already consumes — read-state is tracked locally since the
+  // anomalies endpoint doesn't have per-row read tracking yet.
+  const anomalies = useAiInsightsStore((s) => s.anomalies);
+  const [readIds, setReadIds] = React.useState<Set<string>>(() => new Set());
+  const items: NotificationItem[] = React.useMemo(
+    () =>
+      anomalies.map((a) => ({
+        ...anomalyToNotification(a),
+        read: readIds.has(a.id),
+      })),
+    [anomalies, readIds],
+  );
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: "all", label: t("notificationsUI.menu.tabs.all") },
@@ -94,7 +137,7 @@ export function NotificationsMenu() {
     })
     .slice(0, POPUP_LIMIT);
 
-  const markAllRead = () => setItems((arr) => arr.map((n) => ({ ...n, read: true })));
+  const markAllRead = () => setReadIds(new Set(anomalies.map((a) => a.id)));
 
   return (
     <DropdownMenu>
