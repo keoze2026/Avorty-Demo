@@ -28,7 +28,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MOCK_MEMBERS } from "@/lib/mock/settings";
 import type { Member, MemberRole } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -125,6 +124,23 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
         </CardHeader>
 
         <CardContent className="p-0">
+          {members.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                <Plus className="h-5 w-5" />
+              </span>
+              <div>
+                <h4 className="text-sm font-semibold">No team members yet</h4>
+                <p className="mt-1 max-w-md text-xs text-muted-foreground">
+                  Invite teammates once the team-members endpoint ships on the
+                  backend. The invite + role + suspend actions all need
+                  <span className="font-mono"> /api/accounts/members</span>
+                  &nbsp;CRUD, which isn&apos;t live yet.
+                </p>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="overflow-x-auto">
             <Table className="min-w-[700px]">
               <TableHeader>
@@ -207,6 +223,8 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
               />
             </div>
           )}
+          </>
+          )}
         </CardContent>
       </Card>
 
@@ -245,5 +263,3 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
   );
 }
 
-/** Default seed — re-exported so the parent doesn't have to know about the mock. */
-export { MOCK_MEMBERS };

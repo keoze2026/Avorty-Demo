@@ -4254,9 +4254,9 @@ export const ru: TranslationShape = {
         direct: "любым вопросом",
       },
       team: {
-        maya: { name: "Майя Рейес", role: "Руководитель продаж" },
+        maya: { name: "Майя Декер", role: "Руководитель продаж" },
         jordan: { name: "Джордан Ким", role: "Solutions Engineer" },
-        sofia: { name: "Лина Парк", role: "Customer Success" },
+        sofia: { name: "Милена Гович", role: "Customer Success" },
       },
       escalation: {
         heading: "Нужен человек?",

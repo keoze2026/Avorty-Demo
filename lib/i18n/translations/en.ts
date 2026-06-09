@@ -4272,9 +4272,9 @@ export const en = {
         direct: "whatever you need",
       },
       team: {
-        maya: { name: "Maya Reyes", role: "Sales lead" },
+        maya: { name: "Maya Decker", role: "Sales lead" },
         jordan: { name: "Jordan Kim", role: "Solutions engineer" },
-        sofia: { name: "Lina Park", role: "Customer success" },
+        sofia: { name: "Milena Govich", role: "Customer success" },
       },
       escalation: {
         heading: "Need a person?",

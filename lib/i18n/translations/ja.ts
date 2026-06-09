@@ -4254,9 +4254,9 @@ export const ja: TranslationShape = {
         direct: "ご要望",
       },
       team: {
-        maya: { name: "マヤ・レイエス", role: "セールスリード" },
+        maya: { name: "マヤ・デッカー", role: "セールスリード" },
         jordan: { name: "ジョーダン・キム", role: "ソリューションエンジニア" },
-        sofia: { name: "リナ・パーク", role: "カスタマーサクセス" },
+        sofia: { name: "ミレーナ・ゴヴィッチ", role: "カスタマーサクセス" },
       },
       escalation: {
         heading: "人と話したい?",

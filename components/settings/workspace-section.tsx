@@ -14,10 +14,7 @@ import {
 import { toast } from "sonner";
 
 import { WorkspaceActivityLog } from "./workspace-activity-log";
-import {
-  MOCK_MEMBERS,
-  WorkspaceMembersTable,
-} from "./workspace-members-table";
+import { WorkspaceMembersTable } from "./workspace-members-table";
 import { WorkspaceRolesTable } from "./workspace-roles-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Member } from "@/lib/types";
+import { useAuthStore } from "@/lib/store/auth-store";
 import { useAutoScheduleStore } from "@/lib/store/auto-schedule-store";
 import { TIMEZONES } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
@@ -47,12 +45,20 @@ const TABS: Array<{ id: TabId; labelKey: string; icon: React.ComponentType<{ cla
 
 export function WorkspaceSection() {
   const { t } = useTranslation();
-  const [name, setName] = React.useState("Avortyx Demo Co.");
+  // Workspace name comes from the signed-in user's organization. If the
+  // backend hasn't populated it yet, the field is blank — the user can
+  // type one and save (the save call is a no-op for now since there's no
+  // org-update endpoint).
+  const orgName = useAuthStore((s) => s.user?.organization ?? "");
+  const [name, setName] = React.useState(orgName);
+  React.useEffect(() => setName(orgName), [orgName]);
   // Portal timezone is the single source of truth for the auto-schedule runtime,
   // so write it straight to the auto-schedule store rather than local state.
   const tz = useAutoScheduleStore((s) => s.portalTimezone);
   const setTz = useAutoScheduleStore((s) => s.setPortalTimezone);
-  const [members, setMembers] = React.useState<Member[]>(MOCK_MEMBERS);
+  // Members start empty — the backend hasn't shipped a list endpoint yet.
+  // Once `/api/accounts/members` exists, wire `useEffect` to load it here.
+  const [members, setMembers] = React.useState<Member[]>([]);
   const [tab, setTab] = React.useState<TabId>("general");
 
   return (

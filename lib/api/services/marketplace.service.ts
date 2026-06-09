@@ -110,12 +110,31 @@ function wireToBid(w: BidWire): Bid {
   };
 }
 
+/** Unwrap a possibly-paginated response into a plain array of wire records.
+ *  The backend ships `{ items, total, page, page_size, pages }` for both
+ *  /api/rtb/auctions and /api/rtb/auctions/{id}/bids. We accept either the
+ *  envelope or a bare array for forward-compatibility. */
+function unwrapItems<W>(res: unknown): W[] {
+  if (Array.isArray(res)) return res as W[];
+  if (res && typeof res === "object" && Array.isArray((res as { items?: unknown }).items)) {
+    return (res as { items: W[] }).items;
+  }
+  return [];
+}
+
 export const marketplaceService = {
   async listAuctions(
     query: { page?: number; pageSize?: number; status?: AuctionStatus } = {},
   ): Promise<Paginated<Auction>> {
-    const res = await http.get<Paginated<AuctionWire>>("/api/rtb/auctions", { query });
-    return { ...res, items: res.items.map(wireToAuction) };
+    const res = await http.get<Paginated<AuctionWire> | AuctionWire[]>("/api/rtb/auctions", { query });
+    const items = unwrapItems<AuctionWire>(res);
+    const envelope = !Array.isArray(res) ? res : null;
+    return {
+      items: items.map(wireToAuction),
+      total: envelope?.total ?? items.length,
+      page: envelope?.page ?? 1,
+      pageSize: envelope?.pageSize ?? items.length,
+    };
   },
 
   async getAuction(id: string): Promise<Auction> {
@@ -123,8 +142,8 @@ export const marketplaceService = {
   },
 
   async listBids(auctionId: string): Promise<Bid[]> {
-    const wire = await http.get<BidWire[]>(`/api/rtb/auctions/${auctionId}/bids`);
-    return wire.map(wireToBid);
+    const res = await http.get<BidWire[] | Paginated<BidWire>>(`/api/rtb/auctions/${auctionId}/bids`);
+    return unwrapItems<BidWire>(res).map(wireToBid);
   },
 
   async submitBid(input: {

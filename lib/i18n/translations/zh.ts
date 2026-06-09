@@ -4246,9 +4246,9 @@ export const zh: TranslationShape = {
         direct: "任何需要",
       },
       team: {
-        maya: { name: "Maya Reyes", role: "销售负责人" },
+        maya: { name: "Maya Decker", role: "销售负责人" },
         jordan: { name: "Jordan Kim", role: "解决方案工程师" },
-        sofia: { name: "Lina Park", role: "客户成功" },
+        sofia: { name: "Milena Govich", role: "客户成功" },
       },
       escalation: {
         heading: "需要真人?",

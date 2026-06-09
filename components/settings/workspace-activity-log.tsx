@@ -87,7 +87,13 @@ export function WorkspaceActivityLog() {
   const [pageSize, setPageSize] = React.useState(25);
   const [page, setPage] = React.useState(0);
 
-  const events = MOCK_WORKSPACE_ACTIVITY;
+  // Activity log starts empty — the backend hasn't shipped a workspace
+  // events endpoint yet. Wire to `/api/accounts/activity` (which exists for
+  // the current user) or a new `/api/accounts/workspace/activity` once
+  // org-wide audit logs are available.
+  const events = React.useMemo<typeof MOCK_WORKSPACE_ACTIVITY>(() => [], []);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _mockUnused = MOCK_WORKSPACE_ACTIVITY;
 
   React.useEffect(() => {
     setPage(0);
