@@ -66,7 +66,7 @@ export const MOCK_MEMBERS: Member[] = [
     role: "viewer",
     initials: "DW",
     avatar: ["#f472b6", "#7c3aed"],
-    status: "invited",
+    status: "active",
     invitedAt: Date.now() - DAY * 4,
   },
   {
@@ -83,11 +83,19 @@ export const MOCK_MEMBERS: Member[] = [
   },
 ];
 
-export const ROLES_IN_ORDER: MemberRole[] = ["admin", "manager", "buyer", "publisher", "viewer"];
+export const ROLES_IN_ORDER: MemberRole[] = [
+  "admin",
+  "manager",
+  "agent",
+  "buyer",
+  "publisher",
+  "viewer",
+];
 
 export const ROLE_DESCRIPTIONS: Record<MemberRole, string> = {
   admin: "Full access. Can manage members and billing.",
   manager: "Run campaigns, routing, and reports.",
+  agent: "Handle live calls and update dispositions.",
   buyer: "View own buyer dashboards, accept calls.",
   publisher: "View own publisher dashboards, manage numbers.",
   viewer: "Read-only access across the workspace.",
@@ -116,6 +124,17 @@ export const DEFAULT_MATRIX: Record<MemberRole, Record<string, boolean>> = {
     "manage.publishers": true,
     "view.reports": true,
     "place.bids": true,
+    "manage.billing": false,
+    "manage.members": false,
+  },
+  agent: {
+    "manage.campaigns": false,
+    "manage.routing": false,
+    "manage.numbers": false,
+    "manage.buyers": false,
+    "manage.publishers": false,
+    "view.reports": true,
+    "place.bids": false,
     "manage.billing": false,
     "manage.members": false,
   },

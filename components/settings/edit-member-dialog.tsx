@@ -28,7 +28,7 @@ import { useTranslation } from "@/hooks/use-translation";
 
 type MemberStatus = Member["status"];
 
-const STATUS_VALUES: MemberStatus[] = ["active", "invited", "suspended"];
+const STATUS_VALUES: MemberStatus[] = ["active", "suspended"];
 
 interface Props {
   member: Member | null;

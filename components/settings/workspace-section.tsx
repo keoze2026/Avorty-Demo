@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { workspaceService, type Workspace } from "@/lib/api/services/workspace.service";
 import type { Member } from "@/lib/types";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useAutoScheduleStore } from "@/lib/store/auto-schedule-store";
@@ -45,21 +46,79 @@ const TABS: Array<{ id: TabId; labelKey: string; icon: React.ComponentType<{ cla
 
 export function WorkspaceSection() {
   const { t } = useTranslation();
-  // Workspace name comes from the signed-in user's organization. If the
-  // backend hasn't populated it yet, the field is blank — the user can
-  // type one and save (the save call is a no-op for now since there's no
-  // org-update endpoint).
   const orgName = useAuthStore((s) => s.user?.organization ?? "");
+
+  // Workspace is loaded once on mount. Until it arrives, the display name
+  // falls back to the user's `organization` field (cached from /me) so the
+  // form isn't blank during the first paint.
+  const [workspace, setWorkspace] = React.useState<Workspace | null>(null);
   const [name, setName] = React.useState(orgName);
-  React.useEffect(() => setName(orgName), [orgName]);
+  const [savingWorkspace, setSavingWorkspace] = React.useState(false);
+
   // Portal timezone is the single source of truth for the auto-schedule runtime,
   // so write it straight to the auto-schedule store rather than local state.
   const tz = useAutoScheduleStore((s) => s.portalTimezone);
   const setTz = useAutoScheduleStore((s) => s.setPortalTimezone);
-  // Members start empty — the backend hasn't shipped a list endpoint yet.
-  // Once `/api/accounts/members` exists, wire `useEffect` to load it here.
+
+  // Members fetched on first switch to Members or Roles tab so the workspace
+  // page is fast on initial paint.
   const [members, setMembers] = React.useState<Member[]>([]);
+  const [membersLoading, setMembersLoading] = React.useState(false);
+  const membersLoadedRef = React.useRef(false);
+
   const [tab, setTab] = React.useState<TabId>("general");
+
+  // Hydrate the workspace once.
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const ws = await workspaceService.get();
+        if (cancelled) return;
+        setWorkspace(ws);
+        setName(ws.name);
+      } catch {
+        // Backend unavailable — keep the auth-store fallback name.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Load members lazily — only when the Members or Roles tab is opened.
+  React.useEffect(() => {
+    if (tab !== "members" && tab !== "roles") return;
+    if (membersLoadedRef.current) return;
+    membersLoadedRef.current = true;
+    setMembersLoading(true);
+    void (async () => {
+      try {
+        const list = await workspaceService.listMembers();
+        setMembers(list);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Couldn't load members");
+        membersLoadedRef.current = false; // allow retry
+      } finally {
+        setMembersLoading(false);
+      }
+    })();
+  }, [tab]);
+
+  const saveWorkspace = async () => {
+    setSavingWorkspace(true);
+    try {
+      const trimmed = name.trim();
+      const updated = await workspaceService.update({ name: trimmed });
+      setWorkspace(updated);
+      setName(updated.name);
+      toast.success(t("workspaceUI.identity.saved"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSavingWorkspace(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -130,9 +189,15 @@ export function WorkspaceSection() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline">{t("workspaceUI.identity.cancel")}</Button>
-                <Button onClick={() => toast.success(t("workspaceUI.identity.saved"))}>
-                  {t("workspaceUI.identity.save")}
+                <Button
+                  variant="outline"
+                  onClick={() => setName(workspace?.name ?? orgName)}
+                  disabled={savingWorkspace}
+                >
+                  {t("workspaceUI.identity.cancel")}
+                </Button>
+                <Button onClick={saveWorkspace} disabled={savingWorkspace || !name.trim()}>
+                  {savingWorkspace ? "Saving…" : t("workspaceUI.identity.save")}
                 </Button>
               </div>
             </CardContent>
@@ -175,7 +240,11 @@ export function WorkspaceSection() {
       )}
 
       {tab === "members" && (
-        <WorkspaceMembersTable members={members} onMembersChange={setMembers} />
+        <WorkspaceMembersTable
+          members={members}
+          onMembersChange={setMembers}
+          loading={membersLoading}
+        />
       )}
 
       {tab === "roles" && <WorkspaceRolesTable members={members} />}

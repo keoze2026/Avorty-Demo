@@ -28,15 +28,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Member, MemberRole } from "@/lib/types";
+import { workspaceService } from "@/lib/api/services/workspace.service";
+import type { Member, MemberRole, MemberStatus } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 
 interface WorkspaceMembersTableProps {
   members: Member[];
   onMembersChange: (next: Member[]) => void;
+  loading?: boolean;
 }
 
-export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMembersTableProps) {
+export function WorkspaceMembersTable({ members, onMembersChange, loading = false }: WorkspaceMembersTableProps) {
   const { t } = useTranslation();
   const [inviteOpen, setInviteOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Member | null>(null);
@@ -47,64 +49,51 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
     setPage(0);
   }, [pageSize, members.length]);
 
-  const onInvite = ({ name, email, role }: { name: string; email: string; role: MemberRole }) => {
-    const initials = name
-      .split(" ")
-      .map((p) => p[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    onMembersChange([
-      {
-        id: `m_${Math.random().toString(36).slice(2, 8)}`,
-        name,
-        email,
-        role,
-        initials,
-        avatar: ["#5266E0", "#818CF8"],
-        status: "invited",
-        invitedAt: Date.now(),
-      },
-      ...members,
-    ]);
+  const onInvite = async ({ email, role }: { name?: string; email: string; role: MemberRole }) => {
+    try {
+      const created = await workspaceService.invite({ email, role });
+      onMembersChange([created, ...members]);
+      toast.success(`${created.email} invited`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't send invite");
+    }
   };
 
-  const onUpdate = ({
+  const onUpdate = async ({
     id,
-    name,
-    email,
     role,
     status,
   }: {
     id: string;
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     role: MemberRole;
-    status: Member["status"];
+    status: MemberStatus;
   }) => {
-    const initials = name
-      .split(" ")
-      .map((p) => p[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    onMembersChange(
-      members.map((m) =>
-        m.id === id ? { ...m, name, email, role, status, initials } : m,
-      ),
-    );
+    try {
+      const updated = await workspaceService.updateMember(id, { role, status });
+      onMembersChange(members.map((m) => (m.id === id ? updated : m)));
+      toast.success(t("workspaceUI.members.updated").replace("{name}", updated.name));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update member");
+    }
   };
 
-  const onRemove = (m: Member) => {
+  const onRemove = async (m: Member) => {
+    const prev = members;
     onMembersChange(members.filter((x) => x.id !== m.id));
-    toast.success(t("workspaceUI.members.removed").replace("{name}", m.name));
     setRemoving(null);
+    try {
+      await workspaceService.remove(m.id);
+      toast.success(t("workspaceUI.members.removed").replace("{name}", m.name));
+    } catch (e) {
+      onMembersChange(prev);
+      toast.error(e instanceof Error ? e.message : "Couldn't remove member");
+    }
   };
 
   const activeCount = members.filter((m) => m.status === "active").length;
-  const invitedCount = members.filter((m) => m.status === "invited").length;
+  const suspendedCount = members.filter((m) => m.status === "suspended").length;
 
   return (
     <>
@@ -113,9 +102,7 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
           <div>
             <CardTitle className="text-base">{t("workspaceUI.members.title")}</CardTitle>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {t("workspaceUI.members.countSummary")
-                .replace("{active}", String(activeCount))
-                .replace("{invited}", String(invitedCount))}
+              {activeCount} active{suspendedCount > 0 ? ` · ${suspendedCount} suspended` : ""}
             </p>
           </div>
           <Button size="sm" onClick={() => setInviteOpen(true)}>
@@ -124,7 +111,12 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
         </CardHeader>
 
         <CardContent className="p-0">
-          {members.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+              <p className="text-xs text-muted-foreground">Loading members…</p>
+            </div>
+          ) : members.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <Plus className="h-5 w-5" />
@@ -132,10 +124,7 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
               <div>
                 <h4 className="text-sm font-semibold">No team members yet</h4>
                 <p className="mt-1 max-w-md text-xs text-muted-foreground">
-                  Invite teammates once the team-members endpoint ships on the
-                  backend. The invite + role + suspend actions all need
-                  <span className="font-mono"> /api/accounts/members</span>
-                  &nbsp;CRUD, which isn&apos;t live yet.
+                  Invite your first teammate using the button above.
                 </p>
               </div>
             </div>
@@ -175,16 +164,8 @@ export function WorkspaceMembersTable({ members, onMembersChange }: WorkspaceMem
                     </TableCell>
                     <TableCell>{t(`workspaceUI.members.role.${m.role}`)}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          m.status === "active"
-                            ? "success"
-                            : m.status === "invited"
-                              ? "outline"
-                              : "destructive"
-                        }
-                      >
-                        {t(`workspaceUI.members.status.${m.status}`)}
+                      <Badge variant={m.status === "active" ? "success" : "destructive"}>
+                        {m.status === "active" ? "Active" : "Suspended"}
                       </Badge>
                     </TableCell>
                     <TableCell className="pr-4">

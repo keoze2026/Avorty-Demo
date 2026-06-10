@@ -2,7 +2,20 @@
 
 import type { Role } from "./auth";
 
-export type MemberRole = Role | "manager" | "viewer";
+/**
+ * Member roles — must match the backend enum at
+ * PATCH /api/accounts/workspace/members/{user_id}/role:
+ *   admin / manager / agent / buyer / publisher / viewer
+ */
+export type MemberRole = Role | "manager" | "agent" | "viewer";
+
+/**
+ * Member status — backend collapses pending invites into `active`, so the
+ * status enum is just `active | suspended`. (`invited` was removed when the
+ * workspace endpoints shipped — invited users appear in /members as active
+ * immediately.)
+ */
+export type MemberStatus = "active" | "suspended";
 
 export interface Member {
   id: string;
@@ -12,8 +25,7 @@ export interface Member {
   /** Initials + a gradient pair used by the avatar */
   initials: string;
   avatar: [string, string];
-  /** "active" once joined; "invited" while pending; "suspended" if revoked */
-  status: "active" | "invited" | "suspended";
+  status: MemberStatus;
   invitedAt: number;
   joinedAt?: number;
   lastActiveAt?: number;

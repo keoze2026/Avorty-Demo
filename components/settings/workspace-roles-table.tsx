@@ -37,12 +37,13 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
     const counts: Record<MemberRole, number> = {
       admin: 0,
       manager: 0,
+      agent: 0,
       buyer: 0,
       publisher: 0,
       viewer: 0,
     };
     for (const m of members) {
-      if (m.status === "active" || m.status === "invited") counts[m.role] += 1;
+      if (m.status === "active") counts[m.role] += 1;
     }
     return counts;
   }, [members]);
@@ -52,6 +53,7 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
     const counts: Record<MemberRole, number> = {
       admin: 0,
       manager: 0,
+      agent: 0,
       buyer: 0,
       publisher: 0,
       viewer: 0,
