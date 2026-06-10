@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES_IN_ORDER } from "@/lib/mock/settings";
+import { INTERNAL_ROLES_IN_ORDER } from "@/lib/mock/settings";
 import type { Member, MemberRole } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -107,7 +107,12 @@ export function EditMemberDialog({ member, onOpenChange, onSave }: Props) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ROLES_IN_ORDER.map((r) => (
+                  {/* Workspace members are internal-only. Include the current role
+                      even if it's a partner role so legacy entries stay editable. */}
+                  {(INTERNAL_ROLES_IN_ORDER.includes(role)
+                    ? INTERNAL_ROLES_IN_ORDER
+                    : [...INTERNAL_ROLES_IN_ORDER, role]
+                  ).map((r) => (
                     <SelectItem key={r} value={r}>
                       {t(`workspaceUI.members.role.${r}`)}
                     </SelectItem>

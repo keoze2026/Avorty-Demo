@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES_IN_ORDER } from "@/lib/mock/settings";
+import { INTERNAL_ROLES_IN_ORDER } from "@/lib/mock/settings";
 import type { MemberRole } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -92,7 +92,7 @@ export function InviteMemberDialog({ open, onOpenChange, onInvite }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ROLES_IN_ORDER.map((r) => (
+                {INTERNAL_ROLES_IN_ORDER.map((r) => (
                   <SelectItem key={r} value={r}>
                     {t(`workspaceUI.members.role.${r}`)}
                   </SelectItem>

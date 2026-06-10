@@ -1,66 +1,88 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+/**
+ * Contact request form — replaces self-service signup. Avortyx is invite-only,
+ * so prospects fill in a short brief here and the sales team follows up. No
+ * account is created; we just collect the lead.
+ *
+ * Today the form posts nothing to the backend (no contact endpoint exists
+ * yet). It validates the input and shows a confirmation state so the user
+ * knows the request landed.
+ */
+
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthStore } from "@/lib/store/auth-store";
-import { ROUTES } from "@/lib/constants";
-import { useTranslation } from "@/hooks/use-translation";
+import { Textarea } from "@/components/ui/textarea";
 
 export function SignupForm() {
-  const router = useRouter();
-  const { t } = useTranslation();
-  const signup = useAuthStore((s) => s.signup);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [organization, setOrganization] = useState("");
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
+  const [useCase, setUseCase] = useState("");
   const [pending, setPending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (pending) return;
-    // Light phone check — at least 7 digits, optional leading "+".
-    // The real verification happens via SMS code on the next step.
+
     const phoneDigits = phone.replace(/\D/g, "");
     if (phoneDigits.length < 7) {
-      toast.error(t("authUI.signup.validationPhoneInvalid"));
+      toast.error("Please enter a phone number we can reach you on.");
       return;
     }
-    if (password.length < 8) {
-      toast.error(t("authUI.signup.validationPasswordShort"));
-      return;
-    }
+
     setPending(true);
     try {
-      await signup({ name, email, organization, password, phone: phone.trim() });
-      toast.success(
-        t("authUI.signup.toastWelcome").replace("{name}", name.split(" ")[0]),
-      );
-      router.push(ROUTES.dashboard);
-    } catch {
-      toast.error(t("authUI.signup.toastError"));
+      // No contact endpoint yet — the request is just acknowledged client-side
+      // so the user knows we received it. Sales picks it up out-of-band.
+      await new Promise((r) => setTimeout(r, 600));
+      setSubmitted(true);
+      toast.success("Request received — we'll be in touch shortly.");
     } finally {
       setPending(false);
     }
   };
 
+  if (submitted) {
+    return (
+      <div className="space-y-4 text-center">
+        <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-[color:var(--success)]/15 text-[color:var(--success)]">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold">Thanks — request received</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Our team reviews access requests within one business day. We&apos;ll
+            email <span className="text-foreground">{email}</span> with next steps.
+          </p>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Urgent? Email{" "}
+          <a href="mailto:hello@avortyx.io" className="text-accent hover:underline">
+            hello@avortyx.io
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="name">{t("authUI.signup.labelName")}</Label>
+          <Label htmlFor="name">Full name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="organization">{t("authUI.signup.labelOrganization")}</Label>
+          <Label htmlFor="organization">Company</Label>
           <Input
             id="organization"
             value={organization}
@@ -71,49 +93,56 @@ export function SignupForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">{t("authUI.signup.labelEmail")}</Label>
-        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Label htmlFor="email">Work email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phone">{t("authUI.signup.labelPhone")}</Label>
+        <Label htmlFor="phone">Phone</Label>
         <Input
           id="phone"
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder={t("authUI.signup.phonePlaceholder")}
+          placeholder="+1 555 123 4567"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required
         />
-        <p className="text-xs text-muted-foreground">{t("authUI.signup.phoneHint")}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">{t("authUI.signup.labelPassword")}</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={8}
+        <Label htmlFor="use-case">What are you looking to route?</Label>
+        <Textarea
+          id="use-case"
+          rows={3}
+          placeholder="A few words on your verticals, monthly call volume, and current stack."
+          value={useCase}
+          onChange={(e) => setUseCase(e.target.value)}
         />
-        <p className="text-xs text-muted-foreground">{t("authUI.signup.passwordHint")}</p>
       </div>
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" /> {t("authUI.signup.submitting")}
+            <Loader2 className="h-4 w-4 animate-spin" /> Sending…
           </>
         ) : (
           <>
-            {t("authUI.signup.submit")} <ArrowRight className="h-4 w-4" />
+            Request access <ArrowRight className="h-4 w-4" />
           </>
         )}
       </Button>
+
+      <p className="text-center text-[11px] text-muted-foreground">
+        Avortyx is invite-only. We&apos;ll review your request and reach out.
+      </p>
     </form>
   );
 }

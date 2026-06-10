@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { AuthGuard } from "@/components/app-shell/auth-guard";
 import { NotificationRuntime } from "@/components/app-shell/notification-runtime";
+import { OnboardingGate } from "@/components/app-shell/onboarding-gate";
 import { AppSidebar } from "@/components/app-shell/sidebar-nav";
 import { StoreHydrator } from "@/components/app-shell/store-hydrator";
 import { Topbar } from "@/components/app-shell/topbar";
@@ -15,28 +16,30 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AuthGuard>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset className="app-canvas !bg-transparent">
-          <Topbar />
-          <SandboxBanner />
-          <NotificationRuntime />
-          <StoreHydrator />
-          {/* `scrollbar-gutter: stable` permanently reserves the scrollbar
-              gutter so the layout doesn't shift horizontally when the page
-              height crosses the viewport-fit threshold (e.g. Live Monitor
-              streaming new cards in / out). Prevents the on/off flicker the
-              vertical scrollbar would otherwise cause. */}
-          <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
-            {/* @container/main lets children respond to the actual content-area
-                width (which depends on whether the sidebar is open) instead of
-                the viewport width. Use `@<bp>/main:` utilities on children. */}
-            <div className="@container/main mx-auto w-full space-y-8 p-4 sm:p-6 lg:p-8">
-              {children}
+      <OnboardingGate>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset className="app-canvas !bg-transparent">
+            <Topbar />
+            <SandboxBanner />
+            <NotificationRuntime />
+            <StoreHydrator />
+            {/* `scrollbar-gutter: stable` permanently reserves the scrollbar
+                gutter so the layout doesn't shift horizontally when the page
+                height crosses the viewport-fit threshold (e.g. Live Monitor
+                streaming new cards in / out). Prevents the on/off flicker the
+                vertical scrollbar would otherwise cause. */}
+            <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+              {/* @container/main lets children respond to the actual content-area
+                  width (which depends on whether the sidebar is open) instead of
+                  the viewport width. Use `@<bp>/main:` utilities on children. */}
+              <div className="@container/main mx-auto w-full space-y-8 p-4 sm:p-6 lg:p-8">
+                {children}
+              </div>
             </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          </SidebarInset>
+        </SidebarProvider>
+      </OnboardingGate>
     </AuthGuard>
   );
 }

@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { billingService, type BillingAccount } from "@/lib/api/services/billing.service";
+import { useOnboardingStore } from "@/lib/store/onboarding-store";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,7 @@ export function RechargeBalanceCard() {
 
   const [account, setAccount] = React.useState<BillingAccount | null>(null);
   const [accountSaving, setAccountSaving] = React.useState(false);
+  const refreshOnboarding = useOnboardingStore((s) => s.refresh);
 
   /* ─── Hydrate account state (auto-recharge + low-balance threshold) ─── */
   React.useEffect(() => {
@@ -247,6 +249,9 @@ export function RechargeBalanceCard() {
                   setAmount("");
                   // Refresh the cached billing account so the UI shows the new balance.
                   void billingService.account().then(setAccount).catch(() => undefined);
+                  // Re-check the onboarding gate — a successful recharge may have
+                  // unlocked the app for a freshly-verified user.
+                  void refreshOnboarding();
                 }}
               />
             </div>

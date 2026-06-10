@@ -92,6 +92,18 @@ export const ROLES_IN_ORDER: MemberRole[] = [
   "viewer",
 ];
 
+/**
+ * Internal team roles only — used by the Workspace > Members invite/edit
+ * flows. Buyer and Publisher accounts are not provisioned through workspace
+ * invites; they sign up via the buyer/publisher onboarding paths.
+ */
+export const INTERNAL_ROLES_IN_ORDER: MemberRole[] = [
+  "admin",
+  "manager",
+  "agent",
+  "viewer",
+];
+
 export const ROLE_DESCRIPTIONS: Record<MemberRole, string> = {
   admin: "Full access. Can manage members and billing.",
   manager: "Run campaigns, routing, and reports.",
