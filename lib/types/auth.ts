@@ -8,6 +8,9 @@ export interface User {
   avatarUrl?: string;
   organization: string;
   phone?: string;
+  /** Backend `is_superuser` flag. Superusers (and any user with role === "admin")
+   *  bypass the onboarding gates (KYC + balance) — they always have full access. */
+  isSuperuser?: boolean;
 }
 
 export interface AuthSession {

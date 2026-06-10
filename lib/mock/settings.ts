@@ -86,7 +86,6 @@ export const MOCK_MEMBERS: Member[] = [
 export const ROLES_IN_ORDER: MemberRole[] = [
   "admin",
   "manager",
-  "agent",
   "buyer",
   "publisher",
   "viewer",

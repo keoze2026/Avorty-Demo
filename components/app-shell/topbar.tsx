@@ -10,6 +10,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { useCallsStore } from "@/lib/store/calls-store";
+import { useOnboardingStore } from "@/lib/store/onboarding-store";
 import { cn } from "@/lib/utils";
 
 export function Topbar() {
@@ -18,7 +19,10 @@ export function Topbar() {
   // hydrated on app mount by <StoreHydrator />. Zero values render until the
   // first response lands; that's accurate, not a degraded state.
   const kpis = useCallsStore((s) => s.kpis);
-  const rechargeAmount = 12480;
+  // Wallet balance comes from the billing account fetched by the onboarding
+  // store on mount (and refreshed after every recharge). Renders 0 until the
+  // first response lands.
+  const balance = useOnboardingStore((s) => s.balance);
   const liveCalls = kpis?.liveCalls ?? 0;
   const totalCalls = kpis?.callsToday ?? 0;
 
@@ -46,7 +50,7 @@ export function Topbar() {
           <div className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/30 px-2 py-1.5 sm:gap-3 sm:px-3">
             <TopStat
               icon={Wallet}
-              value={formatCurrency(rechargeAmount)}
+              value={formatCurrency(balance ?? 0)}
             />
             <span aria-hidden className="h-7 w-px bg-border/70" />
             <TopStat

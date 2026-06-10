@@ -567,6 +567,7 @@ export const ru: TranslationShape = {
       role: {
         admin: "Администратор",
         manager: "Менеджер",
+        agent: "Агент",
         buyer: "Покупатель",
         publisher: "Издатель",
         viewer: "Наблюдатель",

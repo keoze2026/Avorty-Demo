@@ -588,6 +588,7 @@ export const en = {
       role: {
         admin: "Admin",
         manager: "Manager",
+        agent: "Agent",
         buyer: "Buyer",
         publisher: "Publisher",
         viewer: "Viewer",
@@ -634,6 +635,7 @@ export const en = {
       descriptions: {
         admin: "Full access. Can manage members and billing.",
         manager: "Run campaigns, routing, and reports.",
+        agent: "Handle live calls and update dispositions.",
         buyer: "View own buyer dashboards, accept calls.",
         publisher: "View own publisher dashboards, manage numbers.",
         viewer: "Read-only access across the workspace.",

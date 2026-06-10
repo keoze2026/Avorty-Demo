@@ -11,6 +11,10 @@
  * pointing the user at the right action. A small exception list allows the
  * user to actually reach the pages they need to clear the gate (/kyc and
  * /billing), plus settings + logout escape hatches.
+ *
+ * Admin users (role === "admin") and superusers (is_superuser === true)
+ * bypass both checks entirely — they always have full access without
+ * needing to verify KYC or maintain a balance.
  */
 
 import { useEffect } from "react";
@@ -46,14 +50,25 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const { kycStatus, balance, loading, hydrated, refresh } = useOnboardingStore();
   const logout = useAuthStore((s) => s.logout);
   const isAuthed = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
 
-  // Fetch once on mount (only when the user is authenticated — otherwise the
-  // requests will 401 and the AuthGuard will already be redirecting).
+  // Admins and superusers bypass both gates entirely — no KYC, no balance
+  // check, full access. Backend confirmed this on 2026-06-11.
+  const isPrivileged = user?.role === "admin" || user?.isSuperuser === true;
+
+  // Fetch once on mount (only when the user is authenticated AND not a
+  // privileged user — privileged users skip the gate so the fetch is wasted).
   useEffect(() => {
     if (!isAuthed) return;
+    if (isPrivileged) return;
     if (hydrated) return;
     void refresh();
-  }, [isAuthed, hydrated, refresh]);
+  }, [isAuthed, isPrivileged, hydrated, refresh]);
+
+  // Privileged users never see the gate.
+  if (isPrivileged) {
+    return <>{children}</>;
+  }
 
   // While the gate is still figuring out the user's state, render nothing
   // (AuthGuard already paints a loading shell, so there's no flash).

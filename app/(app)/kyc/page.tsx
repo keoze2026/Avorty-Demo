@@ -1,232 +1,621 @@
 "use client";
 
-import * as React from "react";
-import { CheckCircle2, Sparkles } from "lucide-react";
+/**
+ * KYC page — real verification flow bound to /api/kyc/*.
+ *
+ * Flow:
+ *   1. On mount, GET /api/kyc/ to see if a submission already exists.
+ *   2. If status is `submitted`, render the "under review" state.
+ *   3. If status is `approved`, render the approved confirmation.
+ *   4. If status is `rejected` (or no submission), render the form so the
+ *      user can submit (or resubmit) their KYC.
+ *
+ * Documents (gov ID for individuals, business registration for companies)
+ * are uploaded first via POST /api/kyc/documents/upload — the returned URL
+ * is then carried in the submission body. No mocks, no simulated flows.
+ */
 
-import { TrustScoreGauge } from "@/components/kyc/trust-score-gauge";
-import { VectorGrid } from "@/components/kyc/vector-cards";
-import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent } from "@/components/ui/card";
-import { useTranslation } from "@/hooks/use-translation";
+import * as React from "react";
 import {
-  selectNextTier,
-  selectTier,
-  selectTrustScore,
-  TIERS,
-  useKycStore,
-  VECTOR_WEIGHTS,
-  type KycVectorId,
-} from "@/lib/store/kyc-store";
+  Building2,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  ScanFace,
+  Upload,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  kycService,
+  type KycSubmission,
+} from "@/lib/api/services/kyc.service";
+import { useOnboardingStore } from "@/lib/store/onboarding-store";
 import { cn } from "@/lib/utils";
 
-/** Map each English tier-benefit string to its translation key. Falls back
- *  to the raw string if a benefit is missing here. */
-const BENEFIT_KEYS: Record<string, string> = {
-  "Demo data only": "toolsUI.trustEngine.benefits.demoDataOnly",
-  "No payouts": "toolsUI.trustEngine.benefits.noPayouts",
-  "100 calls / day": "toolsUI.trustEngine.benefits.callsPerDay100",
-  "500 calls / day": "toolsUI.trustEngine.benefits.callsPerDay500",
-  "5,000 calls / day": "toolsUI.trustEngine.benefits.callsPerDay5k",
-  "Manual payouts": "toolsUI.trustEngine.benefits.manualPayouts",
-  "Marketplace browse": "toolsUI.trustEngine.benefits.marketplaceBrowse",
-  "Auto payouts (weekly)": "toolsUI.trustEngine.benefits.autoPayoutsWeekly",
-  "Marketplace bid": "toolsUI.trustEngine.benefits.marketplaceBid",
-  "Unlimited routing": "toolsUI.trustEngine.benefits.unlimitedRouting",
-  "Daily payouts": "toolsUI.trustEngine.benefits.dailyPayouts",
-  "Featured marketplace slot": "toolsUI.trustEngine.benefits.featuredMarketplaceSlot",
-  "Priority support": "toolsUI.trustEngine.benefits.prioritySupport",
-  "White-glove support": "toolsUI.trustEngine.benefits.whiteGloveSupport",
-  "Custom rate cards": "toolsUI.trustEngine.benefits.customRateCards",
-  "Direct API quota": "toolsUI.trustEngine.benefits.directApiQuota",
-  "Avortyx Verified badge": "toolsUI.trustEngine.benefits.vortyxVerifiedBadge",
-};
+type KycMode = "individual" | "company";
 
-const TIER_LABEL_KEYS: Record<string, string> = {
-  sandbox: "toolsUI.trustEngine.tiers.sandbox",
-  bronze: "toolsUI.trustEngine.tiers.bronze",
-  silver: "toolsUI.trustEngine.tiers.silver",
-  gold: "toolsUI.trustEngine.tiers.gold",
-  platinum: "toolsUI.trustEngine.tiers.platinum",
-};
+interface UploadedDoc {
+  fileName: string;
+  url: string;
+}
 
 export default function KycPage() {
-  const { t } = useTranslation();
-  // Subscribe to vectors so the gauge / tier ladder re-renders on every
-  // verify. We can't pass `useKycStore.getState` because that would skip
-  // re-renders — Zustand selectors handle reactivity for us.
-  const vectors = useKycStore((s) => s.vectors);
-  const score = useKycStore((s) => selectTrustScore(s));
-  const tier = React.useMemo(() => selectTier(score), [score]);
-  const next = React.useMemo(() => selectNextTier(score), [score]);
+  const refreshOnboarding = useOnboardingStore((s) => s.refresh);
 
-  const verifiedCount = Object.values(vectors).filter(
-    (v) => v.status === "verified",
-  ).length;
-  const totalCount = Object.keys(vectors).length;
+  const [loading, setLoading] = React.useState(true);
+  const [submission, setSubmission] = React.useState<KycSubmission | null>(null);
+  const [mode, setMode] = React.useState<KycMode>("individual");
 
+  // Individual fields
+  const [fullLegalName, setFullLegalName] = React.useState("");
+  const [dateOfBirth, setDateOfBirth] = React.useState("");
+  const [governmentId, setGovernmentId] = React.useState<UploadedDoc | null>(null);
+
+  // Company fields
+  const [companyLegalName, setCompanyLegalName] = React.useState("");
+  const [businessRegistrationNumber, setBusinessRegistrationNumber] = React.useState("");
+  const [taxId, setTaxId] = React.useState("");
+  const [directorName, setDirectorName] = React.useState("");
+  const [businessRegistrationDoc, setBusinessRegistrationDoc] =
+    React.useState<UploadedDoc | null>(null);
+
+  // Shared fields
+  const [country, setCountry] = React.useState("");
+  const [address, setAddress] = React.useState("");
+  const [phoneNumber, setPhoneNumber] = React.useState("");
+
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const loadSubmission = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const current = await kycService.get();
+      setSubmission(current);
+      if (current) {
+        setMode(current.kycType);
+        setCountry(current.country);
+        setAddress(current.address);
+        setPhoneNumber(current.phoneNumber);
+        setFullLegalName(current.fullLegalName ?? "");
+        setDateOfBirth(current.dateOfBirth ?? "");
+        setCompanyLegalName(current.companyLegalName ?? "");
+        setBusinessRegistrationNumber(current.businessRegistrationNumber ?? "");
+        setTaxId(current.taxId ?? "");
+        setDirectorName(current.directorName ?? "");
+        if (current.governmentIdUrl) {
+          setGovernmentId({ fileName: "Previously uploaded", url: current.governmentIdUrl });
+        }
+        if (current.businessRegistrationDocUrl) {
+          setBusinessRegistrationDoc({
+            fileName: "Previously uploaded",
+            url: current.businessRegistrationDocUrl,
+          });
+        }
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Couldn't load KYC status.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadSubmission();
+  }, [loadSubmission]);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+
+    if (mode === "individual") {
+      if (!fullLegalName.trim() || !dateOfBirth || !country.trim() || !address.trim() || !phoneNumber.trim()) {
+        toast.error("Please fill in every field.");
+        return;
+      }
+      if (!governmentId) {
+        toast.error("Upload a copy of your government-issued ID.");
+        return;
+      }
+    } else {
+      if (
+        !companyLegalName.trim() ||
+        !businessRegistrationNumber.trim() ||
+        !taxId.trim() ||
+        !directorName.trim() ||
+        !country.trim() ||
+        !address.trim() ||
+        !phoneNumber.trim()
+      ) {
+        toast.error("Please fill in every field.");
+        return;
+      }
+      if (!businessRegistrationDoc) {
+        toast.error("Upload your business registration certificate.");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    try {
+      const fresh =
+        mode === "individual"
+          ? await kycService.submitIndividual({
+              fullLegalName: fullLegalName.trim(),
+              dateOfBirth,
+              country: country.trim(),
+              address: address.trim(),
+              phoneNumber: phoneNumber.trim(),
+              governmentIdUrl: governmentId!.url,
+            })
+          : await kycService.submitCompany({
+              companyLegalName: companyLegalName.trim(),
+              businessRegistrationNumber: businessRegistrationNumber.trim(),
+              taxId: taxId.trim(),
+              country: country.trim(),
+              address: address.trim(),
+              phoneNumber: phoneNumber.trim(),
+              directorName: directorName.trim(),
+              businessRegistrationDocUrl: businessRegistrationDoc!.url,
+            });
+      setSubmission(fresh);
+      toast.success("Submission received — our compliance team will review it shortly.");
+      // The onboarding gate keys on KYC status; refresh so the gate
+      // re-evaluates once the backend approves the submission.
+      void refreshOnboarding();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Submission failed.";
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <PageHeader title="Verification" description="Verify your account to unlock call routing." />
+        <Card>
+          <CardContent className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading verification status…
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
+
+  // ── Terminal states (submitted / approved) ─────────────────────────
+  if (submission?.status === "submitted") {
+    return (
+      <>
+        <PageHeader title="Verification" description="Verify your account to unlock call routing." />
+        <StatusCard
+          icon={Clock}
+          tone="warning"
+          title="Submission under review"
+          description="Our compliance team is reviewing your KYC submission. Reviews typically complete within one business day."
+          submittedAt={submission.submittedAt}
+        />
+      </>
+    );
+  }
+
+  if (submission?.status === "approved") {
+    return (
+      <>
+        <PageHeader title="Verification" description="Your account is verified." />
+        <StatusCard
+          icon={CheckCircle2}
+          tone="success"
+          title="Verified"
+          description="Your KYC submission has been approved. You now have full access to the platform."
+          reviewedAt={submission.reviewedAt}
+        />
+      </>
+    );
+  }
+
+  // ── Form (no submission, draft, rejected, or expired) ──────────────
   return (
     <>
       <PageHeader
-        title={t("toolsUI.trustEngine.pageTitle")}
-        description={t("toolsUI.trustEngine.pageDescription")}
+        title="Verification"
+        description="Verify your account to unlock call routing. Submissions are reviewed by our compliance team."
       />
 
-      {/* Hero — gauge + tier ladder */}
-      <Card className="overflow-hidden p-0">
-        <div className="grid grid-cols-1 gap-0 lg:grid-cols-[320px_1fr]">
-          {/* Gauge column */}
-          <div className="flex flex-col items-center justify-center gap-3 border-b border-border bg-secondary/15 p-6 lg:border-b-0 lg:border-r">
-            <TrustScoreGauge score={score} tier={tier} next={next} />
-            <div className="text-center text-[11px] text-muted-foreground">
-              {t("toolsUI.trustEngine.vectorsVerified")
-                .replace("{verified}", String(verifiedCount))
-                .replace("{total}", String(totalCount))}
+      {submission?.status === "rejected" && submission.rejectionReason && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="flex items-start gap-3 p-4">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div>
+              <h3 className="text-sm font-semibold text-destructive">Previous submission rejected</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{submission.rejectionReason}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Correct the issue below and resubmit to regain access.
+              </p>
             </div>
-          </div>
-
-          {/* Tier ladder */}
-          <CardContent className="p-6">
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-accent" />
-              <h2 className="text-sm font-semibold">{t("toolsUI.trustEngine.tierLadder")}</h2>
-            </div>
-            <ol className="relative space-y-3 before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-px before:bg-border">
-              {TIERS.map((tierDef) => {
-                const reached = score >= tierDef.minScore;
-                const current = tierDef.id === tier.id;
-                return (
-                  <li
-                    key={tierDef.id}
-                    className={cn(
-                      "relative flex items-start gap-3 rounded-lg border p-3 transition-colors",
-                      current
-                        ? "border-accent/40 bg-accent/5"
-                        : reached
-                          ? "border-border bg-secondary/20"
-                          : "border-border bg-card",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "relative z-10 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
-                        reached
-                          ? "border-[oklch(0.78_0.18_155)]/40 bg-[oklch(0.78_0.18_155)]/15 text-[oklch(0.78_0.18_155)]"
-                          : "border-border bg-card text-muted-foreground",
-                      )}
-                    >
-                      {reached ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <span className="font-mono text-[10px] tabular-nums">
-                          {tierDef.minScore}
-                        </span>
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]",
-                            tierDef.badgeClass,
-                          )}
-                        >
-                          {t(TIER_LABEL_KEYS[tierDef.id] ?? "")}
-                        </span>
-                        {current && (
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-accent">
-                            {t("toolsUI.trustEngine.youAreHere")}
-                          </span>
-                        )}
-                        <span className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground">
-                          {tierDef.minScore}{t("toolsUI.trustEngine.pointsSuffix")}
-                        </span>
-                      </div>
-                      <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                        {tierDef.benefits.map((b) => {
-                          const key = BENEFIT_KEYS[b];
-                          const translated = key ? t(key) : b;
-                          const label = translated === key ? b : translated;
-                          return (
-                            <li
-                              key={b}
-                              className="inline-flex items-center gap-1"
-                            >
-                              <span
-                                aria-hidden
-                                className={cn(
-                                  "inline-block h-1 w-1 rounded-full",
-                                  reached ? "bg-accent" : "bg-border",
-                                )}
-                              />
-                              {label}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
           </CardContent>
-        </div>
-      </Card>
+        </Card>
+      )}
 
-      {/* Vector grid — the actual verification work */}
-      <div className="space-y-3">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-base font-semibold">{t("toolsUI.trustEngine.vectorsGridTitle")}</h2>
+      <form onSubmit={onSubmit} className="space-y-6">
+        {/* Mode picker — individual vs company */}
+        <Card>
+          <CardContent className="p-4">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              Submission type
+            </Label>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <ModeCard
+                selected={mode === "individual"}
+                onClick={() => setMode("individual")}
+                icon={ScanFace}
+                title="Individual"
+                description="Sole operator — verify with a government-issued ID."
+              />
+              <ModeCard
+                selected={mode === "company"}
+                onClick={() => setMode("company")}
+                icon={Building2}
+                title="Company"
+                description="Registered business — verify with company registration."
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Type-specific fields */}
+        <Card>
+          <CardContent className="space-y-4 p-4">
+            <h3 className="text-sm font-semibold">
+              {mode === "individual" ? "Personal details" : "Company details"}
+            </h3>
+
+            {mode === "individual" ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field
+                  id="full-legal-name"
+                  label="Full legal name"
+                  value={fullLegalName}
+                  onChange={setFullLegalName}
+                  required
+                />
+                <Field
+                  id="date-of-birth"
+                  label="Date of birth"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={setDateOfBirth}
+                  required
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field
+                  id="company-legal-name"
+                  label="Legal company name"
+                  value={companyLegalName}
+                  onChange={setCompanyLegalName}
+                  required
+                />
+                <Field
+                  id="director-name"
+                  label="Director / authorized officer"
+                  value={directorName}
+                  onChange={setDirectorName}
+                  required
+                />
+                <Field
+                  id="business-registration-number"
+                  label="Business registration number"
+                  value={businessRegistrationNumber}
+                  onChange={setBusinessRegistrationNumber}
+                  required
+                />
+                <Field
+                  id="tax-id"
+                  label="Tax ID / EIN"
+                  value={taxId}
+                  onChange={setTaxId}
+                  required
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Address + contact */}
+        <Card>
+          <CardContent className="space-y-4 p-4">
+            <h3 className="text-sm font-semibold">Address &amp; contact</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field
+                id="country"
+                label="Country"
+                value={country}
+                onChange={setCountry}
+                placeholder="United States"
+                required
+              />
+              <Field
+                id="phone"
+                label="Phone number"
+                type="tel"
+                value={phoneNumber}
+                onChange={setPhoneNumber}
+                placeholder="+1 555 123 4567"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="address">Address</Label>
+              <Textarea
+                id="address"
+                rows={2}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Street, city, state / region, postal code"
+                required
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Document upload */}
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <h3 className="text-sm font-semibold">
+              {mode === "individual" ? "Government-issued ID" : "Business registration certificate"}
+            </h3>
             <p className="text-xs text-muted-foreground">
-              {t("toolsUI.trustEngine.vectorsGridDescription")}
+              {mode === "individual"
+                ? "Upload a clear photo or scan of your passport, driver's licence, or national ID card."
+                : "Upload your certificate of incorporation or equivalent registration document."}
             </p>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="font-mono tabular-nums text-foreground">
-              {score} / 100
-            </span>
-            <span>{t("toolsUI.trustEngine.ptsLabel")}</span>
-          </div>
-        </div>
-        <VectorGrid />
-      </div>
 
-      {/* Why the Trust Engine is different */}
-      <Card className="bg-secondary/10 p-5">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          {t("toolsUI.trustEngine.whyTitle")}
-        </h3>
-        <ul className="mt-3 grid grid-cols-1 gap-3 text-xs text-muted-foreground sm:grid-cols-3">
-          {WHY_KEYS.map((w) => (
-            <li key={w.id} className="rounded-md border border-border bg-card p-3">
-              <div className="text-foreground font-medium">{t(w.titleKey)}</div>
-              <p className="mt-1 leading-relaxed">{t(w.bodyKey)}</p>
-            </li>
-          ))}
-        </ul>
-      </Card>
+            <DocumentUploader
+              accept="image/*,application/pdf"
+              uploaded={mode === "individual" ? governmentId : businessRegistrationDoc}
+              onUploaded={(doc) =>
+                mode === "individual" ? setGovernmentId(doc) : setBusinessRegistrationDoc(doc)
+              }
+              onClear={() =>
+                mode === "individual" ? setGovernmentId(null) : setBusinessRegistrationDoc(null)
+              }
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-end gap-3">
+          <Button type="submit" size="lg" disabled={submitting}>
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Submitting…
+              </>
+            ) : submission?.status === "rejected" ? (
+              "Resubmit for review"
+            ) : (
+              "Submit for review"
+            )}
+          </Button>
+        </div>
+      </form>
     </>
   );
 }
 
-const WHY_KEYS = [
-  {
-    id: "continuous",
-    titleKey: "toolsUI.trustEngine.whyCards.continuous.title",
-    bodyKey: "toolsUI.trustEngine.whyCards.continuous.body",
-  },
-  {
-    id: "stackable",
-    titleKey: "toolsUI.trustEngine.whyCards.stackable.title",
-    bodyKey: "toolsUI.trustEngine.whyCards.stackable.body",
-  },
-  {
-    id: "autoApproval",
-    titleKey: "toolsUI.trustEngine.whyCards.autoApproval.title",
-    bodyKey: "toolsUI.trustEngine.whyCards.autoApproval.body",
-  },
-];
+/* ────────────────────────────────────────────────────────────────── */
 
-// Keep TypeScript happy on unused imports if any side-effect type narrows.
-void VECTOR_WEIGHTS;
-type _VectorRef = KycVectorId;
+function ModeCard({
+  selected,
+  onClick,
+  icon: Icon,
+  title,
+  description,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  icon: typeof ScanFace;
+  title: string;
+  description: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex items-start gap-3 rounded-xl border p-3 text-left transition-colors",
+        selected
+          ? "border-accent/60 bg-accent/10 ring-1 ring-accent/40"
+          : "border-border bg-secondary/30 hover:border-border/80",
+      )}
+    >
+      <span
+        className={cn(
+          "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+          selected ? "bg-accent/15 text-accent" : "bg-background text-muted-foreground",
+        )}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <div className="text-sm font-semibold">{title}</div>
+        <div className="mt-0.5 text-[11px] text-muted-foreground">{description}</div>
+      </div>
+    </button>
+  );
+}
+
+function Field({
+  id,
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+      />
+    </div>
+  );
+}
+
+function DocumentUploader({
+  accept,
+  uploaded,
+  onUploaded,
+  onClear,
+}: {
+  accept: string;
+  uploaded: UploadedDoc | null;
+  onUploaded: (doc: UploadedDoc) => void;
+  onClear: () => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const { url } = await kycService.uploadDocument(file);
+      onUploaded({ fileName: file.name, url });
+      toast.success(`${file.name} uploaded.`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Upload failed.";
+      toast.error(msg);
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  if (uploaded) {
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-secondary/20 p-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-accent/10 text-accent">
+            <CheckCircle2 className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium">{uploaded.fileName}</div>
+            <a
+              href={uploaded.url}
+              target="_blank"
+              rel="noreferrer"
+              className="truncate text-[11px] text-accent hover:underline"
+            >
+              View uploaded file
+            </a>
+          </div>
+        </div>
+        <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+          Replace
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-secondary/10 p-8 text-center transition-colors hover:border-accent/50 hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {uploading ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Uploading…</span>
+          </>
+        ) : (
+          <>
+            <Upload className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-medium">Click to upload</span>
+            <span className="text-[11px] text-muted-foreground">PDF, JPG, or PNG · up to 10 MB</span>
+          </>
+        )}
+      </button>
+    </>
+  );
+}
+
+function StatusCard({
+  icon: Icon,
+  tone,
+  title,
+  description,
+  submittedAt,
+  reviewedAt,
+}: {
+  icon: typeof Clock;
+  tone: "success" | "warning";
+  title: string;
+  description: string;
+  submittedAt?: number;
+  reviewedAt?: number;
+}) {
+  const toneClasses =
+    tone === "success"
+      ? "border-[color:var(--success)]/40 bg-[color:var(--success)]/5 text-[color:var(--success)]"
+      : "border-[color:var(--warning)]/40 bg-[color:var(--warning)]/5 text-[color:var(--warning)]";
+
+  return (
+    <Card className={cn("border", toneClasses)}>
+      <CardContent className="flex items-start gap-4 p-6">
+        <span className={cn("inline-flex h-12 w-12 items-center justify-center rounded-xl", toneClasses)}>
+          <Icon className="h-6 w-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          {(submittedAt || reviewedAt) && (
+            <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+              {submittedAt && <>Submitted {new Date(submittedAt).toLocaleString()}</>}
+              {submittedAt && reviewedAt && " · "}
+              {reviewedAt && <>Reviewed {new Date(reviewedAt).toLocaleString()}</>}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

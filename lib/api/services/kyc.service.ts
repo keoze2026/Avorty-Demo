@@ -1,14 +1,15 @@
 /**
  * KYC service — /api/kyc/*.
  *
- *   GET  /api/kyc/         — current submission for the org
- *   POST /api/kyc/         — submit individual KYC
- *   POST /api/kyc/company/ — submit company KYC
+ *   GET  /api/kyc/                  — current submission for the org
+ *   POST /api/kyc/                  — submit individual KYC
+ *   POST /api/kyc/company/          — submit company KYC
+ *   POST /api/kyc/documents/upload  — multipart upload, returns { url }
  *
- * Document URLs (`governmentIdUrl`, `businessRegistrationDocUrl`, etc.) are
- * pre-uploaded by the caller (storage proxy or signed URL flow) and the
- * KYC submission carries the resolved URL. Bulk file-upload helpers are not
- * in this service — they'd live in a storage service.
+ * The submission endpoints take pre-uploaded document URLs (`governmentIdUrl`,
+ * `businessRegistrationDocUrl`). The frontend uploads files via the document
+ * endpoint first, then submits the resolved URLs alongside the rest of the
+ * form payload.
  */
 
 import { http } from "@/lib/api/http";
@@ -142,5 +143,24 @@ export const kycService = {
     return wireToSubmission(
       await http.post<KycWire>("/api/kyc/company/", { body: { kycType: "company", ...input } }),
     );
+  },
+
+  /**
+   * Upload a KYC supporting document (government ID, business registration
+   * certificate, etc.). Multipart POST; the backend persists the file and
+   * returns the resolved URL the caller passes into `submitIndividual`
+   * or `submitCompany` as the `governmentIdUrl` / `businessRegistrationDocUrl`
+   * field.
+   */
+  async uploadDocument(file: File): Promise<{ url: string }> {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await http.post<{ url?: string; documentUrl?: string }>(
+      "/api/kyc/documents/upload",
+      { body: form, rawBody: true },
+    );
+    const url = res.url ?? res.documentUrl ?? "";
+    if (!url) throw new Error("Upload succeeded but the server returned no URL.");
+    return { url };
   },
 };

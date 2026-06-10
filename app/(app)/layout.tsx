@@ -6,7 +6,6 @@ import { OnboardingGate } from "@/components/app-shell/onboarding-gate";
 import { AppSidebar } from "@/components/app-shell/sidebar-nav";
 import { StoreHydrator } from "@/components/app-shell/store-hydrator";
 import { Topbar } from "@/components/app-shell/topbar";
-import { SandboxBanner } from "@/components/kyc/sandbox-banner";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 /**
@@ -21,7 +20,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <AppSidebar />
           <SidebarInset className="app-canvas !bg-transparent">
             <Topbar />
-            <SandboxBanner />
             <NotificationRuntime />
             <StoreHydrator />
             {/* `scrollbar-gutter: stable` permanently reserves the scrollbar

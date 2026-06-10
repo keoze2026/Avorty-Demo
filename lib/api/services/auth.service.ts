@@ -37,6 +37,7 @@ interface UserOutWire {
   phoneNumber?: string;
   mfaEnabled?: boolean;
   isEmailVerified?: boolean;
+  isSuperuser?: boolean;
   organizationId?: string | null;
   /** Some deployments expose an avatar URL on /me — optional. */
   avatarUrl?: string;
@@ -65,6 +66,7 @@ function wireToUser(wire: UserOutWire): User {
     avatarUrl: wire.avatarUrl,
     organization: wire.organizationName ?? wire.organizationId ?? "",
     phone: wire.phoneNumber,
+    isSuperuser: wire.isSuperuser === true,
   };
 }
 
