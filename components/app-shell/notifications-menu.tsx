@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 function anomalyToNotification(a: Anomaly): NotificationItem {
   const sev: NotificationItem["severity"] =
     a.severity === "critical" ? "critical" : a.severity === "warning" ? "warn" : "insight";
-  const metric = a.delta.metric.toLowerCase();
+  const metric = (a.delta.metric ?? "").toLowerCase();
   const alertKind: AlertKind =
     metric.includes("miss") || metric.includes("no-answer")
       ? "missed"

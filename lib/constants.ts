@@ -21,6 +21,7 @@ export const ROUTES = {
   login: "/login",
   signup: "/signup",
   forgotPassword: "/forgot-password",
+  setPassword: "/set-password",
 
   // App
   dashboard: "/dashboard",

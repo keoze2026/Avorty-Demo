@@ -42,8 +42,10 @@ interface AiInsightsState {
 
 /* ─── Mappers ─────────────────────────────────────────────────────────── */
 
-function recommendationKindFromAction(action: string): RecommendationKind {
-  const a = action.toLowerCase();
+function recommendationKindFromAction(action: string | null | undefined): RecommendationKind {
+  // Backend may send a row with action missing/null; default to a benign kind
+  // rather than crashing the whole store.
+  const a = (action ?? "").toLowerCase();
   if (a.includes("pause") || a.includes("stop")) return "pause";
   if (a.includes("scale") || a.includes("increase") || a.includes("raise")) return "scale";
   if (a.includes("rebalance") || a.includes("shift") || a.includes("move")) return "rebalance";
@@ -52,11 +54,11 @@ function recommendationKindFromAction(action: string): RecommendationKind {
 }
 
 function scopeFromCategory(
-  cat: string,
+  cat: string | null | undefined,
   entityId: string | null,
   title: string,
 ): AiRecommendation["scope"] {
-  const c = cat.toLowerCase();
+  const c = (cat ?? "").toLowerCase();
   if (c === "buyer") return { type: "buyer", id: entityId ?? undefined, name: title };
   if (c === "publisher") return { type: "publisher", id: entityId ?? undefined, name: title };
   if (c === "campaign") return { type: "campaign", id: entityId ?? undefined, name: title };
@@ -90,8 +92,8 @@ function wireToRecommendation(w: WireRecommendation, idx: number): AiRecommendat
   };
 }
 
-function anomalyKindFromMetric(metric: string): AnomalyKind {
-  const m = metric.toLowerCase();
+function anomalyKindFromMetric(metric: string | null | undefined): AnomalyKind {
+  const m = (metric ?? "").toLowerCase();
   if (m.includes("conversion")) return "conversion-drop";
   if (m.includes("volume")) return "volume-spike";
   if (m.includes("latency")) return "latency-spike";
@@ -110,16 +112,19 @@ function anomalySeverityFromChange(pct: number | null): AnomalySeverity {
 }
 
 function wireToAnomaly(w: WireAnomaly, idx: number): Anomaly {
+  // Backend occasionally returns rows with metric missing; coerce to a string
+  // so downstream consumers (notifications dropdown) can safely .toLowerCase().
+  const metric = w.metric ?? "";
   return {
-    id: `${w.type}:${w.metric}:${idx}`,
-    kind: anomalyKindFromMetric(w.metric),
+    id: `${w.type}:${metric}:${idx}`,
+    kind: anomalyKindFromMetric(metric),
     severity: anomalySeverityFromChange(w.changePercent),
     title: w.title,
     body: w.message,
-    scope: { type: "network", name: w.metric },
+    scope: { type: "network", name: metric },
     detectedAt: Date.now(),
     delta: {
-      metric: w.metric,
+      metric,
       pct: w.changePercent ?? 0,
     },
   };

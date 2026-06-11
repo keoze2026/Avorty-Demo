@@ -5,6 +5,7 @@ import {
   Activity,
   Building2,
   Clock,
+  Inbox,
   Lock,
   Mail,
   Settings as SettingsIcon,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { WorkspaceAccessRequestsTable } from "./workspace-access-requests-table";
 import { WorkspaceActivityLog } from "./workspace-activity-log";
 import { WorkspaceMembersTable } from "./workspace-members-table";
 import { WorkspaceRolesTable } from "./workspace-roles-table";
@@ -35,13 +37,14 @@ import { TIMEZONES } from "@/lib/timezones";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
 
-type TabId = "general" | "members" | "roles" | "activity";
+type TabId = "general" | "members" | "roles" | "access-requests" | "activity";
 
-const TABS: Array<{ id: TabId; labelKey: string; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: "general", labelKey: "workspaceUI.tabs.general", icon: SettingsIcon },
-  { id: "members", labelKey: "workspaceUI.tabs.members", icon: Users },
-  { id: "roles", labelKey: "workspaceUI.tabs.roles", icon: ShieldCheck },
-  { id: "activity", labelKey: "workspaceUI.tabs.activity", icon: Activity },
+const TABS: Array<{ id: TabId; labelKey: string; fallbackLabel: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "general", labelKey: "workspaceUI.tabs.general", fallbackLabel: "General", icon: SettingsIcon },
+  { id: "members", labelKey: "workspaceUI.tabs.members", fallbackLabel: "Members", icon: Users },
+  { id: "roles", labelKey: "workspaceUI.tabs.roles", fallbackLabel: "Roles", icon: ShieldCheck },
+  { id: "access-requests", labelKey: "workspaceUI.tabs.accessRequests", fallbackLabel: "Access requests", icon: Inbox },
+  { id: "activity", labelKey: "workspaceUI.tabs.activity", fallbackLabel: "Activity", icon: Activity },
 ];
 
 export function WorkspaceSection() {
@@ -127,6 +130,10 @@ export function WorkspaceSection() {
         {TABS.map((tab_) => {
           const Icon = tab_.icon;
           const active = tab === tab_.id;
+          // If the i18n key is missing, t() returns the key itself — fall back
+          // to a plain English label so new tabs don't render the raw key.
+          const translated = t(tab_.labelKey);
+          const label = translated === tab_.labelKey ? tab_.fallbackLabel : translated;
           return (
             <button
               key={tab_.id}
@@ -140,7 +147,7 @@ export function WorkspaceSection() {
               )}
             >
               <Icon className="h-3.5 w-3.5" />
-              {t(tab_.labelKey)}
+              {label}
               {active && (
                 <span
                   aria-hidden
@@ -248,6 +255,8 @@ export function WorkspaceSection() {
       )}
 
       {tab === "roles" && <WorkspaceRolesTable members={members} />}
+
+      {tab === "access-requests" && <WorkspaceAccessRequestsTable />}
 
       {tab === "activity" && <WorkspaceActivityLog />}
     </div>

@@ -1,13 +1,10 @@
 "use client";
 
 /**
- * Contact request form — replaces self-service signup. Avortyx is invite-only,
- * so prospects fill in a short brief here and the sales team follows up. No
- * account is created; we just collect the lead.
- *
- * Today the form posts nothing to the backend (no contact endpoint exists
- * yet). It validates the input and shows a confirmation state so the user
- * knows the request landed.
+ * Access request form — Avortyx is invite-only, so prospects fill in their
+ * details here and an admin reviews + approves. On approval the backend
+ * creates the user and emails a one-time setup link; clicking the link lands
+ * the user on /set-password where they pick their password and are signed in.
  */
 
 import { useState, type FormEvent } from "react";
@@ -18,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { accessRequestsService } from "@/lib/api/services/access-requests.service";
+import { ApiError } from "@/lib/api/http";
 
 export function SignupForm() {
   const [name, setName] = useState("");
@@ -40,11 +39,25 @@ export function SignupForm() {
 
     setPending(true);
     try {
-      // No contact endpoint yet — the request is just acknowledged client-side
-      // so the user knows we received it. Sales picks it up out-of-band.
-      await new Promise((r) => setTimeout(r, 600));
+      await accessRequestsService.create({
+        name: name.trim(),
+        company: organization.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        useCase: useCase.trim(),
+      });
       setSubmitted(true);
       toast.success("Request received — we'll be in touch shortly.");
+    } catch (err) {
+      // Backend rate-limits this endpoint to 5/min by IP — surface a friendlier
+      // message than the raw "HTTP 429".
+      const friendly =
+        err instanceof ApiError && err.status === 429
+          ? "Too many requests — please wait a minute and try again."
+          : err instanceof Error
+            ? err.message
+            : "Couldn't send your request. Please try again.";
+      toast.error(friendly);
     } finally {
       setPending(false);
     }
