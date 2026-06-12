@@ -82,8 +82,8 @@ interface KycWire {
   reviewedAt?: string | null;
 }
 
-function normalizeStatus(raw: string): KycStatus {
-  const s = raw.toLowerCase();
+function normalizeStatus(raw: string | null | undefined): KycStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "draft" || s === "submitted" || s === "approved" ||
       s === "rejected" || s === "expired") return s;
   return "draft";

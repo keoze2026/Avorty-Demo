@@ -14,6 +14,7 @@ import { useBlockedNumbersStore } from "@/lib/store/blocked-numbers-store";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useCallsStore } from "@/lib/store/calls-store";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
+import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 import { useRoutingStore } from "@/lib/store/routing-store";
@@ -31,6 +32,8 @@ export function StoreHydrator() {
     void useCampaignsStore.getState().fetch();
     void usePublishersStore.getState().fetch();
     void useNumbersStore.getState().fetch();
+    void useDestinationsStore.getState().fetch();
+    void useDestinationsStore.getState().fetchStats();
     // Dashboard + reports data — KPIs, recent calls, time series.
     void useCallsStore.getState().fetchRecent();
     void useCallsStore.getState().fetchKpis();

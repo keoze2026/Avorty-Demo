@@ -18,7 +18,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { CHART_TOOLTIP_PROPS } from "@/lib/chart-tooltip";
 import { formatNumber } from "@/lib/format";
 import { useCallsStore } from "@/lib/store/calls-store";
-import { MOCK_DESTINATIONS } from "@/lib/mock/destinations";
+import { useDestinationsStore } from "@/lib/store/destinations-store";
 import type { Buyer, Call } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -64,14 +64,16 @@ export function BuyerFunnelChart({ buyer }: BuyerFunnelChartProps) {
     { id: "30d", label: t("networkUI.buyers.funnel.monthly"), days: 30 },
   ];
 
-  // Pre-compute the TFN set owned by this buyer (cheap, runs once per buyer).
+  // Pre-compute the TFN set owned by this buyer (cheap; recomputes when the
+  // destinations cache changes).
+  const destinations = useDestinationsStore((s) => s.destinations);
   const buyerTfns = useMemo(() => {
     const s = new Set<string>();
-    for (const d of MOCK_DESTINATIONS) {
+    for (const d of destinations) {
       if (d.buyerId === buyer.id) s.add(d.tfn);
     }
     return s;
-  }, [buyer.id]);
+  }, [destinations, buyer.id]);
 
   const data = useMemo(() => {
     // Time-window cutoff.

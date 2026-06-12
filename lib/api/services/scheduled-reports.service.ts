@@ -43,8 +43,8 @@ interface ScheduledReportWire {
   createdAt?: string;
 }
 
-function normalizeFreq(raw: string): ReportFrequency {
-  const s = raw.toLowerCase();
+function normalizeFreq(raw: string | null | undefined): ReportFrequency {
+  const s = (raw ?? "").toLowerCase();
   if (s === "daily" || s === "weekly" || s === "monthly") return s;
   return "weekly";
 }

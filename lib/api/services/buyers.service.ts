@@ -52,8 +52,8 @@ interface BuyerStatsWire {
 
 /* ─── Mappers ─────────────────────────────────────────────────────────── */
 
-function normalizeStatus(raw: string): BuyerStatus {
-  const s = raw.toLowerCase();
+function normalizeStatus(raw: string | null | undefined): BuyerStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "paused" || s === "capped" || s === "pending") return s;
   return "active";
 }

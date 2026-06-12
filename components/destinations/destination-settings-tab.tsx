@@ -101,7 +101,10 @@ export function DestinationSettingsTab({ destination }: DestinationSettingsTabPr
   const patch = (p: Partial<Destination>) => {
     const next = { ...draft, ...p };
     setDraft(next);
-    update(draft.id, p);
+    // Fire-and-forget — the store rolls back on backend failure and surfaces
+    // an error in its `error` field. This tab is a settings surface, not a
+    // transactional save, so we don't await.
+    void update(draft.id, p);
   };
 
   const forwardType = draft.forwardType ?? "number";

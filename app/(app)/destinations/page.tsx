@@ -21,7 +21,6 @@ import {
 import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
-import { useCallsStore } from "@/lib/store/calls-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 type StatusFilter = "all" | "active" | "disabled";
@@ -29,11 +28,22 @@ type StatusFilter = "all" | "active" | "disabled";
 export default function DestinationsPage() {
   const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
+  const remoteStats = useDestinationsStore((s) => s.stats);
+  const hydrated = useDestinationsStore((s) => s.hydrated);
+  const fetchDestinations = useDestinationsStore((s) => s.fetch);
+  const fetchStats = useDestinationsStore((s) => s.fetchStats);
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
   const remove = useDestinationsStore((s) => s.remove);
   const update = useDestinationsStore((s) => s.update);
   const buyers = useBuyersStore((s) => s.buyers);
-  const recentCalls = useCallsStore((s) => s.recent);
+
+  // Hydrate on first mount. StoreHydrator may have already fired these once,
+  // but it's idempotent — calling them again refreshes after the user has
+  // been on the page for a while.
+  useEffect(() => {
+    if (!hydrated) void fetchDestinations();
+    void fetchStats();
+  }, [hydrated, fetchDestinations, fetchStats]);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -65,35 +75,29 @@ export default function DestinationsPage() {
     });
   }, [destinations, query, statusFilter, buyerFilter, buyers]);
 
-  // Summary stats: live calls per TFN + roll-ups across active destinations.
+  // Summary stats: prefer the dedicated /api/destinations/stats/ endpoint
+  // (single source of truth for live counters). Fall back to a client-side
+  // roll-up if the endpoint hasn't responded yet — that way the header isn't
+  // blank on first paint.
   const stats = useMemo(() => {
-    const live = new Map<string, number>();
-    for (const c of recentCalls) {
-      if (c.status === "ringing" || c.status === "in-progress") {
-        live.set(c.destinationNumber, (live.get(c.destinationNumber) ?? 0) + 1);
-      }
+    if (remoteStats) {
+      return {
+        activeLive: remoteStats.activeLive,
+        totalLive: remoteStats.totalLive,
+        totalCC: remoteStats.totalCC,
+        activeTFNs: remoteStats.activeTfns,
+        vacantCC: remoteStats.vacantCC,
+      };
     }
-
-    let activeLive = 0;
-    let totalLive = 0;
     let totalCC = 0;
     let activeTFNs = 0;
     for (const d of destinations) {
       if (!d.enabled) continue;
-      const liveOnTfn = live.get(d.tfn) ?? 0;
       activeTFNs += 1;
       totalCC += d.concurrencyCap;
-      totalLive += liveOnTfn;
-      if (liveOnTfn > 0) activeLive += 1;
     }
-    return {
-      activeLive,
-      totalLive,
-      totalCC,
-      activeTFNs,
-      vacantCC: Math.max(0, totalCC - totalLive),
-    };
-  }, [destinations, recentCalls]);
+    return { activeLive: 0, totalLive: 0, totalCC, activeTFNs, vacantCC: totalCC };
+  }, [destinations, remoteStats]);
 
   const openCreate = () => {
     setEditId(undefined);
@@ -105,22 +109,30 @@ export default function DestinationsPage() {
     setBuilderOpen(true);
   };
 
-  const handleToggle = (id: string) => {
+  const handleToggle = async (id: string) => {
     const d = destinations.find((x) => x.id === id);
     if (!d) return;
-    setEnabled(id, !d.enabled);
-    toast.success(
-      d.enabled
-        ? t("networkUI.destinations.toast.paused").replace("{name}", d.name)
-        : t("networkUI.destinations.toast.enabled").replace("{name}", d.name),
-    );
+    try {
+      await setEnabled(id, !d.enabled);
+      toast.success(
+        d.enabled
+          ? t("networkUI.destinations.toast.paused").replace("{name}", d.name)
+          : t("networkUI.destinations.toast.enabled").replace("{name}", d.name),
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update destination");
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const d = destinations.find((x) => x.id === id);
     if (!d) return;
-    remove(id);
-    toast.success(t("networkUI.destinations.toast.removed").replace("{name}", d.name));
+    try {
+      await remove(id);
+      toast.success(t("networkUI.destinations.toast.removed").replace("{name}", d.name));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't delete destination");
+    }
   };
 
   // Resolve current selection against the live destinations list so removed /
@@ -130,54 +142,61 @@ export default function DestinationsPage() {
     [destinations, selectedIds],
   );
 
-  const onBulkPlay = () => {
+  const onBulkPlay = async () => {
     if (selectedDestinations.length === 0) return;
-    for (const d of selectedDestinations) setEnabled(d.id, true);
+    const targets = selectedDestinations;
+    await Promise.allSettled(targets.map((d) => setEnabled(d.id, true)));
     toast.success(
       t("common.bulk.toast.activated")
-        .replace("{count}", String(selectedDestinations.length))
+        .replace("{count}", String(targets.length))
         .replace("{entity}", t("common.bulk.entities.destinations")),
     );
     setSelectedIds(new Set());
   };
 
-  const onBulkPause = () => {
+  const onBulkPause = async () => {
     if (selectedDestinations.length === 0) return;
-    for (const d of selectedDestinations) setEnabled(d.id, false);
+    const targets = selectedDestinations;
+    await Promise.allSettled(targets.map((d) => setEnabled(d.id, false)));
     toast.success(
       t("common.bulk.toast.paused")
-        .replace("{count}", String(selectedDestinations.length))
+        .replace("{count}", String(targets.length))
         .replace("{entity}", t("common.bulk.entities.destinations")),
     );
     setSelectedIds(new Set());
   };
 
-  const onBulkDelete = () => {
+  const onBulkDelete = async () => {
     if (selectedDestinations.length === 0) return;
-    for (const d of selectedDestinations) remove(d.id);
+    const targets = selectedDestinations;
+    await Promise.allSettled(targets.map((d) => remove(d.id)));
     toast.success(
       t("common.bulk.toast.deleted")
-        .replace("{count}", String(selectedDestinations.length))
+        .replace("{count}", String(targets.length))
         .replace("{entity}", t("common.bulk.entities.destinations")),
     );
     setSelectedIds(new Set());
   };
 
-  const handleUpdateCap = (
+  const handleUpdateCap = async (
     id: string,
     field: "concurrencyCap" | "dailyCap" | "monthlyCap",
     value: number,
   ) => {
     const d = destinations.find((x) => x.id === id);
     if (!d) return;
-    update(id, { [field]: value });
-    const fieldLabel = t(`networkUI.destinations.toast.fields.${field}`);
-    toast.success(
-      t("networkUI.destinations.toast.capUpdated")
-        .replace("{name}", d.name)
-        .replace("{field}", fieldLabel)
-        .replace("{value}", value > 0 ? value.toLocaleString() : "∞"),
-    );
+    try {
+      await update(id, { [field]: value });
+      const fieldLabel = t(`networkUI.destinations.toast.fields.${field}`);
+      toast.success(
+        t("networkUI.destinations.toast.capUpdated")
+          .replace("{name}", d.name)
+          .replace("{field}", fieldLabel)
+          .replace("{value}", value > 0 ? value.toLocaleString() : "∞"),
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update cap");
+    }
   };
 
   return (

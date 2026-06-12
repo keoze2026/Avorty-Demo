@@ -47,8 +47,8 @@ interface UserOutWire {
 
 /* ─── Mapper ──────────────────────────────────────────────────────────── */
 
-function normalizeRole(raw: string): Role {
-  const r = raw.toLowerCase();
+function normalizeRole(raw: string | null | undefined): Role {
+  const r = (raw ?? "").toLowerCase();
   if (r === "buyer" || r === "publisher") return r;
   return "admin";
 }

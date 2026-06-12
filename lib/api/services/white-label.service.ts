@@ -56,8 +56,8 @@ interface WhiteLabelWire {
   createdAt?: string;
 }
 
-function normalizeDomainStatus(raw: string): DomainStatus {
-  const s = raw.toLowerCase();
+function normalizeDomainStatus(raw: string | null | undefined): DomainStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "verifying" || s === "verified" || s === "failed") return s;
   return "pending";
 }

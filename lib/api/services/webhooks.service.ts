@@ -63,8 +63,8 @@ interface PixelWire {
   createdAt: string;
 }
 
-function normalizeStatus(raw: string): WebhookStatus {
-  const s = raw.toLowerCase();
+function normalizeStatus(raw: string | null | undefined): WebhookStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "paused" || s === "failed") return s;
   return "active";
 }

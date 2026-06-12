@@ -108,7 +108,6 @@ export function DestinationBuilder({
   const onSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 400));
 
     const payload: Omit<Destination, "id"> = {
       name: form.name.trim(),
@@ -120,15 +119,20 @@ export function DestinationBuilder({
       enabled: form.enabled,
     };
 
-    if (existing) {
-      update(existing.id, payload);
-      toast.success(t("networkUI.destinations.toast.updated").replace("{name}", payload.name));
-    } else {
-      const created = add(payload);
-      toast.success(t("networkUI.destinations.toast.created").replace("{name}", created.name));
+    try {
+      if (existing) {
+        await update(existing.id, payload);
+        toast.success(t("networkUI.destinations.toast.updated").replace("{name}", payload.name));
+      } else {
+        const created = await add(payload);
+        toast.success(t("networkUI.destinations.toast.created").replace("{name}", created.name));
+      }
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
-    onOpenChange(false);
   };
 
   return (

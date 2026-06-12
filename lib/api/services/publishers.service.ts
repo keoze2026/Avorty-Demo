@@ -30,8 +30,8 @@ interface PublisherWire extends PublisherListWire {
 
 /* ─── Mappers ─────────────────────────────────────────────────────────── */
 
-function normalizeStatus(raw: string): PublisherStatus {
-  const s = raw.toLowerCase();
+function normalizeStatus(raw: string | null | undefined): PublisherStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "paused" || s === "pending") return s;
   return "active";
 }

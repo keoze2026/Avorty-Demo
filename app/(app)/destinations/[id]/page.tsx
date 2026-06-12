@@ -32,17 +32,26 @@ export default function DestinationDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const destination = useDestinationsStore((s) => s.getById(params.id));
+  const hydrated = useDestinationsStore((s) => s.hydrated);
+  const fetch = useDestinationsStore((s) => s.fetch);
 
   const [builderOpen, setBuilderOpen] = useState(false);
 
   useBreadcrumbOverride(destination?.name);
 
+  // On direct deep-link the store may not be hydrated yet — trigger a fetch
+  // and wait. Only redirect once we've confirmed the destination really
+  // doesn't exist (hydrated AND still no match).
   useEffect(() => {
+    if (!hydrated) {
+      void fetch();
+      return;
+    }
     if (!destination) {
       const t = setTimeout(() => router.replace(ROUTES.destinations), 600);
       return () => clearTimeout(t);
     }
-  }, [destination, router]);
+  }, [hydrated, destination, fetch, router]);
 
   if (!destination) {
     return (

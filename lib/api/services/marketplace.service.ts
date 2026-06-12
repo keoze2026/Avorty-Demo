@@ -76,8 +76,8 @@ function toTs(s: string | null | undefined): number | undefined {
   return Number.isFinite(t) ? t : undefined;
 }
 
-function normalizeStatus(raw: string): AuctionStatus {
-  const s = raw.toLowerCase();
+function normalizeStatus(raw: string | null | undefined): AuctionStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "settled" || s === "cancelled") return s;
   return "open";
 }

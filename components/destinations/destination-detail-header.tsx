@@ -45,19 +45,27 @@ export function DestinationDetailHeader({
   const remove = useDestinationsStore((s) => s.remove);
   const buyer = useBuyersStore((s) => s.buyers.find((b) => b.id === destination.buyerId));
 
-  const onToggle = () => {
-    setEnabled(destination.id, !destination.enabled);
-    toast.success(
-      destination.enabled
-        ? t("networkUI.destinations.toast.paused").replace("{name}", destination.name)
-        : t("networkUI.destinations.toast.enabled").replace("{name}", destination.name),
-    );
+  const onToggle = async () => {
+    try {
+      await setEnabled(destination.id, !destination.enabled);
+      toast.success(
+        destination.enabled
+          ? t("networkUI.destinations.toast.paused").replace("{name}", destination.name)
+          : t("networkUI.destinations.toast.enabled").replace("{name}", destination.name),
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update destination");
+    }
   };
 
-  const onRemove = () => {
-    remove(destination.id);
-    toast.success(t("networkUI.destinations.toast.removed").replace("{name}", destination.name));
-    router.push(ROUTES.destinations);
+  const onRemove = async () => {
+    try {
+      await remove(destination.id);
+      toast.success(t("networkUI.destinations.toast.removed").replace("{name}", destination.name));
+      router.push(ROUTES.destinations);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't delete destination");
+    }
   };
 
   return (

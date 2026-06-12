@@ -57,8 +57,8 @@ interface RoutingRuleWire {
   }>;
 }
 
-function normalizeStatus(raw: string): RoutingRuleStatus {
-  const s = raw.toLowerCase();
+function normalizeStatus(raw: string | null | undefined): RoutingRuleStatus {
+  const s = (raw ?? "").toLowerCase();
   if (s === "paused" || s === "draft") return s;
   return "active";
 }

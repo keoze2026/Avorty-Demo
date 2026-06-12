@@ -63,8 +63,8 @@ function toTs(s: string | null | undefined): number | undefined {
   return Number.isFinite(t) ? t : undefined;
 }
 
-function normalizeRole(raw: string): MemberRole {
-  const r = raw.toLowerCase();
+function normalizeRole(raw: string | null | undefined): MemberRole {
+  const r = (raw ?? "").toLowerCase();
   if (r === "admin" || r === "manager" || r === "agent" || r === "buyer" ||
       r === "publisher" || r === "viewer") return r;
   return "viewer";

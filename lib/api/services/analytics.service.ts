@@ -139,8 +139,8 @@ function toTs(s: string | number | undefined): number {
   return Date.now();
 }
 
-function normalizeStatus(raw: string): CallStatus {
-  const s = raw.toLowerCase().replace(/_/g, "-");
+function normalizeStatus(raw: string | null | undefined): CallStatus {
+  const s = (raw ?? "").toLowerCase().replace(/_/g, "-");
   if (s === "ringing" || s === "in-progress" || s === "completed" ||
       s === "missed" || s === "rejected" || s === "failed") return s;
   if (s === "queued") return "ringing";
