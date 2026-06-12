@@ -6,6 +6,9 @@
  *   - `code` for backend-supplied error code (when present)
  *   - `fieldErrors` for per-field validation errors (Django Ninja shape)
  *   - `message` for a user-displayable message (fallback: HTTP status text)
+ *   - `friendlyMessage` for a guaranteed human-readable message safe to
+ *     drop into a toast — strips HTML, hides server stack traces, and
+ *     falls back to a clean per-status-code default.
  *
  * Django Ninja typically returns one of:
  *   { "detail": "..." }
@@ -16,6 +19,44 @@
 export interface FieldError {
   field: string;
   message: string;
+}
+
+/** Heuristic — does the message look like an HTML page rather than a
+ *  user-readable error string? Django's default 500 page starts with
+ *  `<!doctype html>` or similar. */
+function looksLikeHtml(s: string): boolean {
+  const trimmed = s.trim().slice(0, 200).toLowerCase();
+  return (
+    trimmed.startsWith("<!doctype") ||
+    trimmed.startsWith("<html") ||
+    /<\/?(?:html|head|body|title|p|h\d|div)\b/.test(trimmed)
+  );
+}
+
+/** Heuristic — does the message look like a Python traceback or other
+ *  backend stack output that we shouldn't show end users? */
+function looksLikeTraceback(s: string): boolean {
+  return (
+    s.includes("Traceback (most recent call last)") ||
+    s.includes("    at ") ||
+    s.includes("File \"")
+  );
+}
+
+/** Map an HTTP status to a clean, end-user-readable fallback message
+ *  for cases where the backend's response body is unusable (HTML page,
+ *  traceback, empty, or just unhelpful). */
+function fallbackForStatus(status: number): string {
+  if (status === 0) return "Couldn't reach the server. Check your connection and try again.";
+  if (status === 400) return "Request couldn't be processed. Please double-check the values and try again.";
+  if (status === 401) return "Your session has expired. Please sign in again.";
+  if (status === 403) return "You don't have permission to do that.";
+  if (status === 404) return "We couldn't find what you were looking for.";
+  if (status === 409) return "This action conflicts with the current state. Please refresh and try again.";
+  if (status === 422) return "Some fields are missing or invalid. Please review and try again.";
+  if (status === 429) return "Too many requests — please wait a moment and try again.";
+  if (status >= 500 && status < 600) return "Something went wrong on our end. Please try again in a moment.";
+  return "Something went wrong. Please try again.";
 }
 
 export class ApiError extends Error {
@@ -48,6 +89,27 @@ export class ApiError extends Error {
   /** True for 5xx — caller can decide to retry / show "server error". */
   get isServerError(): boolean {
     return this.status >= 500;
+  }
+
+  /**
+   * A message that is always safe to show to an end user via toast / inline
+   * error. Strips HTML bodies, Python tracebacks, and overly-verbose
+   * frameworks output. Falls back to a clean per-status-code default when
+   * the raw message isn't usable.
+   */
+  get friendlyMessage(): string {
+    const raw = (this.message ?? "").trim();
+    // HTML page (e.g. Django's default 500 debug page) → never readable.
+    if (!raw || looksLikeHtml(raw) || looksLikeTraceback(raw)) {
+      return fallbackForStatus(this.status);
+    }
+    // Single long line with no spaces (e.g. base64 token, stack trace dump) →
+    // unhelpful, fall back.
+    if (raw.length > 240 && !raw.includes(" ")) {
+      return fallbackForStatus(this.status);
+    }
+    // Otherwise the backend's message is at least plausibly readable.
+    return raw;
   }
 }
 
@@ -122,4 +184,18 @@ export function normalizeErrorBody(
   }
 
   return new ApiError({ status, message: statusText || `HTTP ${status}`, body });
+}
+
+/**
+ * Convenience for callers that just want a clean message from any caught
+ * error — handles `ApiError`, plain `Error`, and unknown values uniformly.
+ */
+export function friendlyErrorMessage(e: unknown, fallback = "Something went wrong"): string {
+  if (e instanceof ApiError) return e.friendlyMessage;
+  if (e instanceof Error) {
+    const raw = e.message ?? "";
+    if (!raw || looksLikeHtml(raw) || looksLikeTraceback(raw)) return fallback;
+    return raw;
+  }
+  return fallback;
 }

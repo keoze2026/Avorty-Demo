@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError } from "@/lib/api/http";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import {
   accessRequestsService,
   type AccessRequest,
@@ -98,7 +99,7 @@ export function WorkspaceAccessRequestsTable() {
       );
       setRequests(list);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't load access requests");
+      toast.error(friendlyErrorMessage(e, "Couldn't load access requests."));
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export function WorkspaceAccessRequestsTable() {
         setApproving(null);
         void load();
       } else {
-        toast.error(e instanceof Error ? e.message : "Approve failed");
+        toast.error(friendlyErrorMessage(e, "Couldn't approve this request."));
       }
     } finally {
       setBusyId(null);
@@ -153,7 +154,7 @@ export function WorkspaceAccessRequestsTable() {
         setRejectReason("");
         void load();
       } else {
-        toast.error(e instanceof Error ? e.message : "Reject failed");
+        toast.error(friendlyErrorMessage(e, "Couldn't reject this request."));
       }
     } finally {
       setBusyId(null);

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/use-translation";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import { formatCompact } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
@@ -120,7 +121,7 @@ export default function DestinationsPage() {
           : t("networkUI.destinations.toast.enabled").replace("{name}", d.name),
       );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't update destination");
+      toast.error(friendlyErrorMessage(e, "Couldn't update destination."));
     }
   };
 
@@ -131,7 +132,7 @@ export default function DestinationsPage() {
       await remove(id);
       toast.success(t("networkUI.destinations.toast.removed").replace("{name}", d.name));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't delete destination");
+      toast.error(friendlyErrorMessage(e, "Couldn't delete destination."));
     }
   };
 
@@ -195,7 +196,7 @@ export default function DestinationsPage() {
           .replace("{value}", value > 0 ? value.toLocaleString() : "∞"),
       );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't update cap");
+      toast.error(friendlyErrorMessage(e, "Couldn't update cap."));
     }
   };
 

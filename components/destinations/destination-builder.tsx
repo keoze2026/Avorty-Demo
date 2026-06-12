@@ -24,8 +24,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/hooks/use-translation";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import { toE164 } from "@/lib/format";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 import type { Destination } from "@/lib/types";
 
@@ -49,7 +50,9 @@ interface FormState {
 const EMPTY: FormState = {
   name: "",
   tfn: "",
-  buyerId: MOCK_BUYERS[0]?.id ?? "",
+  // buyerId is seeded from the real buyers store inside the component once
+  // it's hydrated — empty string here means "no selection yet".
+  buyerId: "",
   concurrencyCap: 10,
   dailyCap: 100,
   monthlyCap: 2500,
@@ -78,6 +81,10 @@ export function DestinationBuilder({
   );
 
   const isEdit = !!existing;
+  // Real buyers hydrated by StoreHydrator on app mount. The dropdown reads
+  // from this — using mock IDs would result in a 500 on POST because the
+  // FK lookup against the real backend would fail.
+  const buyers = useBuyersStore((s) => s.buyers);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [submitting, setSubmitting] = useState(false);
 
@@ -95,9 +102,10 @@ export function DestinationBuilder({
         enabled: existing.enabled,
       });
     } else {
-      setForm(EMPTY);
+      // Default buyerId to the first available real buyer, if any.
+      setForm({ ...EMPTY, buyerId: buyers[0]?.id ?? "" });
     }
-  }, [open, existing]);
+  }, [open, existing, buyers]);
 
   const canSubmit =
     form.name.trim().length >= 2 &&
@@ -129,7 +137,7 @@ export function DestinationBuilder({
       }
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Save failed");
+      toast.error(friendlyErrorMessage(e, "Couldn't save destination."));
     } finally {
       setSubmitting(false);
     }
@@ -187,7 +195,12 @@ export function DestinationBuilder({
                 <SelectValue placeholder={t("networkUI.destinations.builder.pickBuyer")} />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_BUYERS.map((b) => (
+                {buyers.length === 0 && (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                    No buyers yet — create one on the Buyers page first.
+                  </div>
+                )}
+                {buyers.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
                   </SelectItem>

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/use-translation";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import { ROUTES } from "@/lib/constants";
 import { toE164 } from "@/lib/format";
 import { useBuyersStore } from "@/lib/store/buyers-store";
@@ -54,7 +55,7 @@ export function DestinationDetailHeader({
           : t("networkUI.destinations.toast.enabled").replace("{name}", destination.name),
       );
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't update destination");
+      toast.error(friendlyErrorMessage(e, "Couldn't update destination."));
     }
   };
 
@@ -64,7 +65,7 @@ export function DestinationDetailHeader({
       toast.success(t("networkUI.destinations.toast.removed").replace("{name}", destination.name));
       router.push(ROUTES.destinations);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't delete destination");
+      toast.error(friendlyErrorMessage(e, "Couldn't delete destination."));
     }
   };
 
