@@ -1,4 +1,5 @@
 import { CodeSection } from "@/components/marketing/code-section";
+import { ContactSection } from "@/components/marketing/contact-section";
 import { CTASection } from "@/components/marketing/cta-section";
 import { FeaturesSection } from "@/components/marketing/features-section";
 import { HeroSection } from "@/components/marketing/hero-section";
@@ -37,8 +38,16 @@ export default function HomePage() {
         <VerticalsSection />
       </ScrollReveal>
 
+      {/* CTA + Contact rendered side-by-side as matched panels at md+,
+          stacking vertically on mobile. Both panels share the same card
+          treatment so they read as a single conversion section. */}
       <ScrollReveal>
-        <CTASection />
+        <section className="px-6 py-24">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-6 md:grid-cols-2">
+            <CTASection />
+            <ContactSection />
+          </div>
+        </section>
       </ScrollReveal>
     </>
   );

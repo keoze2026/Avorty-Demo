@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -31,7 +30,6 @@ import {
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
-import { VERTICALS } from "@/lib/mock/campaigns";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import type { Campaign, PayoutModel, Weekday } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -63,8 +61,6 @@ const DAY_KEYS: Array<{ id: Weekday; key: string }> = [
 
 interface FormState {
   name: string;
-  description: string;
-  vertical: string;
   payout: number;
   payoutModel: PayoutModel;
   qualifyDurationSec: number;
@@ -78,8 +74,6 @@ interface FormState {
 
 const EMPTY: FormState = {
   name: "",
-  description: "",
-  vertical: VERTICALS[0] ?? "Health Insurance",
   payout: 35,
   payoutModel: "per-qualified",
   qualifyDurationSec: 90,
@@ -115,7 +109,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
   const step: Step = STEPS[stepIdx];
 
   const canAdvance = (() => {
-    if (step === "Basics") return form.name.trim().length >= 3 && !!form.vertical;
+    if (step === "Basics") return form.name.trim().length >= 3;
     if (step === "Payout & caps") return form.payout > 0;
     if (step === "Schedule") return form.days.length > 0 && form.endHour > form.startHour;
     return true;
@@ -129,8 +123,10 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
     await new Promise((r) => setTimeout(r, 500));
     const created = await add({
       name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      vertical: form.vertical,
+      // Vertical is no longer collected in the wizard — backend defaults the
+      // column to "other" when omitted. The `Campaign` type still requires a
+      // string here, so we pass the matching default.
+      vertical: "Other",
       status: "draft",
       payout: form.payout,
       payoutModel: form.payoutModel,
@@ -222,34 +218,6 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                       placeholder={t("trafficUI.campaigns.builder.placeholders.name")}
                       autoFocus
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cb-vert">{t("trafficUI.campaigns.builder.labels.vertical")}</Label>
-                    <Select
-                      value={form.vertical}
-                      onValueChange={(v) => setForm((f) => ({ ...f, vertical: v }))}
-                    >
-                      <SelectTrigger id="cb-vert">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {VERTICALS.map((v) => (
-                          <SelectItem key={v} value={v}>
-                            {v}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cb-desc">{t("trafficUI.campaigns.builder.labels.description")}</Label>
-                    <Textarea
-                      id="cb-desc"
-                      value={form.description}
-                      onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                      placeholder={t("trafficUI.campaigns.builder.placeholders.description")}
-                      rows={3}
                     />
                   </div>
                 </div>
@@ -422,11 +390,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                       <Sparkles className="h-3.5 w-3.5 text-accent" />
                       {form.name || t("trafficUI.campaigns.builder.untitled")}
                     </div>
-                    {form.description && (
-                      <p className="mt-1 text-xs text-muted-foreground">{form.description}</p>
-                    )}
                     <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                      <Field label={t("trafficUI.campaigns.builder.labels.vertical")} value={form.vertical} />
                       <Field label={t("trafficUI.campaigns.builder.labels.payoutModel")} value={form.payoutModel} />
                       <Field label={t("trafficUI.campaigns.builder.labels.payoutLabel")} value={`$${form.payout.toFixed(2)}`} />
                       <Field
