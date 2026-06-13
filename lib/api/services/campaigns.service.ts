@@ -236,7 +236,7 @@ export const campaignsService = {
   },
 
   async get(id: string): Promise<Campaign> {
-    const wire = await http.get<CampaignWire>(`/api/campaigns/${id}`);
+    const wire = await http.get<CampaignWire>(`/api/campaigns/${id}/`);
     return detailWireToCampaign(wire);
   },
 
@@ -282,28 +282,33 @@ export const campaignsService = {
       };
     }
     if (patch.schedule !== undefined) body.schedules = schedulesToWire(patch.schedule);
-    const wire = await http.patch<CampaignWire>(`/api/campaigns/${id}`, { body });
+    const wire = await http.patch<CampaignWire>(`/api/campaigns/${id}/`, { body });
     return detailWireToCampaign(wire);
   },
 
   async remove(id: string): Promise<void> {
-    await http.delete(`/api/campaigns/${id}`);
+    // Trailing slash is REQUIRED. Without it Django's APPEND_SLASH middleware
+    // 301-redirects to the slash-suffixed URL, and browsers downgrade the
+    // DELETE to a GET on redirect — so the request "succeeds" but nothing is
+    // ever deleted. The campaign disappears optimistically on the frontend
+    // and reappears on next refresh. See: same fix for PATCH/GET above.
+    await http.delete(`/api/campaigns/${id}/`);
   },
 
   async setStatus(id: string, status: CampaignStatus): Promise<void> {
     if (status === "active") {
-      await http.post(`/api/campaigns/${id}/activate`);
+      await http.post(`/api/campaigns/${id}/activate/`);
       return;
     }
     if (status === "paused") {
-      await http.post(`/api/campaigns/${id}/pause`);
+      await http.post(`/api/campaigns/${id}/pause/`);
       return;
     }
-    await http.patch(`/api/campaigns/${id}`, { body: { status } });
+    await http.patch(`/api/campaigns/${id}/`, { body: { status } });
   },
 
   async updateCap(id: string, cap: { daily?: number; monthly?: number }): Promise<void> {
-    await http.patch(`/api/campaigns/${id}/cap`, {
+    await http.patch(`/api/campaigns/${id}/cap/`, {
       body: {
         ...(cap.daily !== undefined ? { maxCallsDaily: cap.daily } : {}),
         ...(cap.monthly !== undefined ? { maxCallsMonthly: cap.monthly } : {}),
@@ -312,7 +317,7 @@ export const campaignsService = {
   },
 
   async updateSchedules(id: string, schedule: Campaign["schedule"]): Promise<void> {
-    await http.put(`/api/campaigns/${id}/schedules`, {
+    await http.put(`/api/campaigns/${id}/schedules/`, {
       body: { schedules: schedulesToWire(schedule) },
     });
   },

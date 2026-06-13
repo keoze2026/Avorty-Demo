@@ -84,12 +84,12 @@ function wireToLog(w: LogWire): NotificationLog {
 
 export const notificationsService = {
   async listRules(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<NotificationRule>> {
-    const res = await http.get<Paginated<RuleWire>>("/api/notifications/rules", { query });
+    const res = await http.get<Paginated<RuleWire>>("/api/notifications/rules/", { query });
     return { ...res, items: res.items.map(wireToRule) };
   },
 
   async getRule(id: string): Promise<NotificationRule> {
-    return wireToRule(await http.get<RuleWire>(`/api/notifications/rules/${id}`));
+    return wireToRule(await http.get<RuleWire>(`/api/notifications/rules/${id}/`));
   },
 
   async createRule(input: {
@@ -99,25 +99,25 @@ export const notificationsService = {
     recipients: string[];
     isActive?: boolean;
   }): Promise<NotificationRule> {
-    return wireToRule(await http.post<RuleWire>("/api/notifications/rules", { body: input }));
+    return wireToRule(await http.post<RuleWire>("/api/notifications/rules/", { body: input }));
   },
 
   async updateRule(id: string, patch: Partial<NotificationRule>): Promise<NotificationRule> {
     return wireToRule(
-      await http.patch<RuleWire>(`/api/notifications/rules/${id}`, { body: patch }),
+      await http.patch<RuleWire>(`/api/notifications/rules/${id}/`, { body: patch }),
     );
   },
 
   async deleteRule(id: string): Promise<void> {
-    await http.delete(`/api/notifications/rules/${id}`);
+    await http.delete(`/api/notifications/rules/${id}/`);
   },
 
   async test(input: { event: string; channel: string; recipient: string }): Promise<unknown> {
-    return http.post("/api/notifications/test", { body: input });
+    return http.post("/api/notifications/test/", { body: input });
   },
 
   async listLogs(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<NotificationLog>> {
-    const res = await http.get<Paginated<LogWire>>("/api/notifications/logs", { query });
+    const res = await http.get<Paginated<LogWire>>("/api/notifications/logs/", { query });
     return { ...res, items: res.items.map(wireToLog) };
   },
 };

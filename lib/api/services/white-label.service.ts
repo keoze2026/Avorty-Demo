@@ -117,15 +117,15 @@ export const whiteLabelService = {
 
   async addDomain(input: { domain: string; isPrimary?: boolean }): Promise<WhiteLabelDomain> {
     return wireToDomain(
-      await http.post<DomainWire>("/api/white-label/domains", { body: input }),
+      await http.post<DomainWire>("/api/white-label/domains/", { body: input }),
     );
   },
 
   async removeDomain(id: string): Promise<void> {
-    await http.delete(`/api/white-label/domains/${id}`);
+    await http.delete(`/api/white-label/domains/${id}/`);
   },
 
   async verifyDomain(id: string): Promise<WhiteLabelDomain> {
-    return wireToDomain(await http.post<DomainWire>(`/api/white-label/domains/${id}/verify`));
+    return wireToDomain(await http.post<DomainWire>(`/api/white-label/domains/${id}/verify/`));
   },
 };

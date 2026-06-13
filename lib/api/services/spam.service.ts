@@ -73,63 +73,63 @@ function wireToReport(w: SpamReportWire): SpamReport {
 export const spamService = {
   /* ─── Blacklist ──────────────────────────────────────────────────── */
   async listBlacklist(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<SpamEntry>> {
-    const res = await http.get<Paginated<SpamEntryWire>>("/api/spam/blacklist", { query });
+    const res = await http.get<Paginated<SpamEntryWire>>("/api/spam/blacklist/", { query });
     return { ...res, items: res.items.map(wireToEntry) };
   },
   async getBlacklistEntry(id: string): Promise<SpamEntry> {
-    return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/blacklist/${id}`));
+    return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/blacklist/${id}/`));
   },
   async createBlacklist(input: { number: string; reason?: string }): Promise<SpamEntry> {
-    return wireToEntry(await http.post<SpamEntryWire>("/api/spam/blacklist", { body: input }));
+    return wireToEntry(await http.post<SpamEntryWire>("/api/spam/blacklist/", { body: input }));
   },
   async updateBlacklist(id: string, patch: Partial<SpamEntry>): Promise<SpamEntry> {
-    return wireToEntry(await http.patch<SpamEntryWire>(`/api/spam/blacklist/${id}`, { body: patch }));
+    return wireToEntry(await http.patch<SpamEntryWire>(`/api/spam/blacklist/${id}/`, { body: patch }));
   },
   async deactivateBlacklist(id: string): Promise<void> {
-    await http.post(`/api/spam/blacklist/${id}/deactivate`);
+    await http.post(`/api/spam/blacklist/${id}/deactivate/`);
   },
   async deleteBlacklist(id: string): Promise<void> {
-    await http.delete(`/api/spam/blacklist/${id}`);
+    await http.delete(`/api/spam/blacklist/${id}/`);
   },
 
   /* ─── Whitelist ──────────────────────────────────────────────────── */
   async listWhitelist(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<SpamEntry>> {
-    const res = await http.get<Paginated<SpamEntryWire>>("/api/spam/whitelist", { query });
+    const res = await http.get<Paginated<SpamEntryWire>>("/api/spam/whitelist/", { query });
     return { ...res, items: res.items.map(wireToEntry) };
   },
   async getWhitelistEntry(id: string): Promise<SpamEntry> {
-    return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/whitelist/${id}`));
+    return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/whitelist/${id}/`));
   },
   async createWhitelist(input: { number: string; reason?: string }): Promise<SpamEntry> {
-    return wireToEntry(await http.post<SpamEntryWire>("/api/spam/whitelist", { body: input }));
+    return wireToEntry(await http.post<SpamEntryWire>("/api/spam/whitelist/", { body: input }));
   },
   async updateWhitelist(id: string, patch: Partial<SpamEntry>): Promise<SpamEntry> {
-    return wireToEntry(await http.patch<SpamEntryWire>(`/api/spam/whitelist/${id}`, { body: patch }));
+    return wireToEntry(await http.patch<SpamEntryWire>(`/api/spam/whitelist/${id}/`, { body: patch }));
   },
   async deleteWhitelist(id: string): Promise<void> {
-    await http.delete(`/api/spam/whitelist/${id}`);
+    await http.delete(`/api/spam/whitelist/${id}/`);
   },
 
   /* ─── Spam reports & anonymous-block toggle ──────────────────────── */
   async listReports(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<SpamReport>> {
-    const res = await http.get<Paginated<SpamReportWire>>("/api/spam/reports", { query });
+    const res = await http.get<Paginated<SpamReportWire>>("/api/spam/reports/", { query });
     return { ...res, items: res.items.map(wireToReport) };
   },
 
   async checkNumber(number: string): Promise<{ isSpam: boolean; confidence?: number; reason?: string }> {
-    return http.get(`/api/spam/check`, { query: { number } });
+    return http.get(`/api/spam/check/`, { query: { number } });
   },
 
   async listAnonymousBlocks(): Promise<Array<{ id: string; campaignId: string; isActive: boolean }>> {
-    return http.get("/api/spam/anonymous-block");
+    return http.get("/api/spam/anonymous-block/");
   },
 
   async createAnonymousBlock(input: { campaignId: string; isActive?: boolean }) {
-    return http.post("/api/spam/anonymous-block", { body: input });
+    return http.post("/api/spam/anonymous-block/", { body: input });
   },
 
   async updateAnonymousBlock(campaignId: string, patch: { isActive: boolean }) {
-    return http.patch(`/api/spam/anonymous-block/${campaignId}`, { body: patch });
+    return http.patch(`/api/spam/anonymous-block/${campaignId}/`, { body: patch });
   },
 
   /* ─── Shields (VoIP + TCPA) ─────────────────────────────────────────

@@ -83,13 +83,13 @@ function wireToFlow(w: IvrFlowWire): IvrFlow {
 
 export const ivrService = {
   async listFlows(): Promise<IvrFlow[]> {
-    const res = await http.get<{ items?: IvrFlowWire[] } | IvrFlowWire[]>("/api/ivr/flows");
+    const res = await http.get<{ items?: IvrFlowWire[] } | IvrFlowWire[]>("/api/ivr/flows/");
     const items = Array.isArray(res) ? res : (res.items ?? []);
     return items.map(wireToFlow);
   },
 
   async getFlow(id: string): Promise<IvrFlow> {
-    return wireToFlow(await http.get<IvrFlowWire>(`/api/ivr/flows/${id}`));
+    return wireToFlow(await http.get<IvrFlowWire>(`/api/ivr/flows/${id}/`));
   },
 
   async createFlow(input: {
@@ -100,22 +100,22 @@ export const ivrService = {
     language?: string;
     voice?: string;
   }): Promise<IvrFlow> {
-    return wireToFlow(await http.post<IvrFlowWire>("/api/ivr/flows", { body: input }));
+    return wireToFlow(await http.post<IvrFlowWire>("/api/ivr/flows/", { body: input }));
   },
 
   async updateFlow(id: string, patch: Partial<IvrFlow>): Promise<IvrFlow> {
-    return wireToFlow(await http.patch<IvrFlowWire>(`/api/ivr/flows/${id}`, { body: patch }));
+    return wireToFlow(await http.patch<IvrFlowWire>(`/api/ivr/flows/${id}/`, { body: patch }));
   },
 
   async deleteFlow(id: string): Promise<void> {
-    await http.delete(`/api/ivr/flows/${id}`);
+    await http.delete(`/api/ivr/flows/${id}/`);
   },
 
   async addNode(
     flowId: string,
     input: { nodeType: string; label?: string; config?: Record<string, unknown> },
   ): Promise<IvrNode> {
-    return http.post<IvrNode>(`/api/ivr/flows/${flowId}/nodes`, {
+    return http.post<IvrNode>(`/api/ivr/flows/${flowId}/nodes/`, {
       body: {
         nodeType: input.nodeType,
         label: input.label,
@@ -125,6 +125,6 @@ export const ivrService = {
   },
 
   async addTransition(flowId: string, input: IvrTransition): Promise<IvrTransition> {
-    return http.post<IvrTransition>(`/api/ivr/flows/${flowId}/transitions`, { body: input });
+    return http.post<IvrTransition>(`/api/ivr/flows/${flowId}/transitions/`, { body: input });
   },
 };
