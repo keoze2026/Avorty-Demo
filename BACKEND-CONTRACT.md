@@ -2,7 +2,7 @@
 
 **Audience:** Backend developer
 **Author:** Frontend team
-**Date:** 2026-06-12
+**Date:** 2026-06-14 *(updated again — confirmed backend uses NO trailing slashes; §1.10 + §2.12 rewritten)*
 **Status:** This document is the source of truth for what the frontend sends and expects. Where backend behaviour disagrees with this document, **the backend must change**.
 
 ---
@@ -123,6 +123,45 @@ The frontend accepts both `number` and string-encoded `decimal` (e.g. `"35.00"`)
 - A field listed in the schema below as `Type?` (with `?`) is **optional** on write and may be missing on read.
 - A field without `?` is **required on write** and **must always be present on read**. If your model has a NOT NULL column with no default and the API omits it, the frontend will crash. Either give the column a DB-level default, or always populate it in the serializer.
 
+### 1.10 Trailing slashes — your project uses NO trailing slashes (mostly)
+
+**Confirmed empirically on 2026-06-14**: the backend's canonical URL form for most resources is **without** a trailing slash. We tested this by adding trailing slashes to a wide range of endpoints and watching them all return 404 — Django responded with "Page not found at /api/campaigns/.../" HTML pages.
+
+**Current state of the codebase:**
+
+| Convention | Services |
+|---|---|
+| **WITH trailing slash** (you explicitly confirmed these) | `destinations`, `access-requests`, `kyc`, `scheduled-reports`, `spam/shields`, `webhooks/pixels`, `ai/autopilot/config`, `ai/recommendations`, `ai/anomalies` |
+| **NO trailing slash** (your default; all other resources) | `auth/*`, `workspace/*`, `billing/*`, `campaigns/*`, `buyers/*`, `publishers/*`, `numbers/*`, `dni/pools/*`, `routing/rules/*`, `routing/calls/*`, `ivr/flows/*`, `webhooks/*` (root), `spam/blacklist`, `spam/whitelist`, `spam/reports`, `spam/check`, `spam/anonymous-block`, `notifications/*`, `rtb/auctions/*`, `rtb/bid`, `white-label/domains/*`, `analytics/*`, `queue/*` |
+
+**The problem this causes — silent DELETE/PATCH failures:**
+
+For DELETE and PATCH on resources without trailing slashes, we observed the campaign DELETE silently no-op-ing in production. The optimistic UI update worked, but the row never left the database, and reappeared on refresh.
+
+We have NOT been able to confirm the root cause definitively. Possibilities:
+1. The DELETE handler may not be registered on the route at all (returns 404 silently somehow)
+2. The DELETE handler returns 2xx but doesn't actually delete (a soft-delete bug, or a no-op handler)
+3. Some middleware is short-circuiting the request
+
+**This is now a backend bug we need you to investigate.** See §2.12 for the exact reproducer.
+
+**Required from you:**
+
+1. **Pick a single project-wide convention.** Mixing slashed and non-slashed endpoints across services is a footgun — it causes confusion for every new endpoint added. Django's strong default is trailing slash; we'd prefer that, but if you want to stay no-slash for legacy reasons, that's OK too. **Just pick one and document it.**
+
+2. **Test every per-id DELETE handler manually.** Confirm each one actually removes the row from the database. Suggested smoke test:
+   ```python
+   def test_campaign_delete_actually_deletes(client, campaign):
+       resp = client.delete(f"/api/campaigns/{campaign.id}")
+       assert resp.status_code in (200, 204)
+       assert not Campaign.objects.filter(id=campaign.id).exists()  # ← critical
+   ```
+   Run this for: campaigns, buyers, publishers, numbers, DNI pools, routing rules, IVR flows, webhooks, spam blacklist, spam whitelist, notification rules, payment methods, white-label domains.
+
+3. **Fix any soft-delete handlers** that the list endpoint should be filtering out. If you have a `deleted_at` column, every list query needs `WHERE deleted_at IS NULL`.
+
+4. **Document the convention** at the top of your `urls.py` or routing config so the next person adding an endpoint knows which form to use.
+
 ---
 
 ## 2. Known issues — must fix
@@ -217,6 +256,66 @@ The frontend has hit these specific bugs this week. They block production usabil
 
 - `POST /api/kyc/documents/upload` accepts multipart and returns `{ url }`. **Confirmed working.**
 - For consistency, please use the same pattern for any other file uploads we add later (account avatar already follows it at `POST /api/accounts/me/avatar`).
+
+### 2.12 Silent DELETE failure on campaigns (and likely other resources)
+
+**Reproducer (campaigns):**
+1. Open the campaigns page → see a list of campaigns
+2. Delete a campaign → the row disappears from the UI (frontend optimistic update)
+3. Refresh the page
+4. **The campaign reappears in the list.** It was never actually deleted.
+
+**Frontend behavior:**
+- We send `DELETE /api/campaigns/{id}` (no trailing slash — confirmed your canonical URL)
+- We do NOT get a 4xx or 5xx error — otherwise our store would have rolled back the optimistic update and the user would have seen an error toast
+- We must be getting a 2xx response
+- But the row is still in the database
+
+**This is a backend bug.** It needs your investigation. Possible causes:
+
+1. **No DELETE handler registered** on the route — but Django would return 405 Method Not Allowed, not 2xx
+2. **Soft-delete handler** that marks the row as deleted but the list endpoint isn't filtering them out
+3. **Empty/no-op DELETE handler** that returns 200/204 without touching the DB
+4. **APPEND_SLASH redirect chain** that bounces the DELETE through 301 → 404 but our error parser fails to surface it
+
+**How to investigate:**
+
+```bash
+# 1. Get a campaign id from your DB
+CAMPAIGN_ID=$(psql -tAc "SELECT id FROM campaign LIMIT 1")
+
+# 2. Hit DELETE with curl and print the full response
+curl -i -X DELETE \
+  -H "Authorization: Bearer <admin_token>" \
+  "https://avortyx.io/api/campaigns/${CAMPAIGN_ID}"
+
+# 3. Check the DB
+psql -c "SELECT id, deleted_at FROM campaign WHERE id = '${CAMPAIGN_ID}'"
+```
+
+What we expect to see:
+- HTTP status: `200` or `204`
+- DB query: returns zero rows (row was hard-deleted) OR returns one row with `deleted_at` set
+
+If the DB row exists with `deleted_at = NULL`, your DELETE handler is broken.
+If the DB row exists with `deleted_at` set, your list endpoint isn't filtering soft-deleted rows.
+
+**Same investigation needed on these resources** — the campaigns one is the only confirmed reproduction, but the same handler pattern likely exists across all of these:
+
+- `/api/buyers/{id}` (DELETE)
+- `/api/publishers/{id}` (DELETE)
+- `/api/numbers/{id}/release`
+- `/api/dni/pools/{id}` (DELETE)
+- `/api/routing/rules/{id}` (DELETE)
+- `/api/ivr/flows/{id}` (DELETE)
+- `/api/webhooks/{id}` (DELETE)
+- `/api/spam/blacklist/{id}` (DELETE)
+- `/api/spam/whitelist/{id}` (DELETE)
+- `/api/notifications/rules/{id}` (DELETE)
+- `/api/billing/payment-methods/{id}` (DELETE)
+- `/api/white-label/domains/{id}` (DELETE)
+
+Please test each of these end-to-end (delete → refresh → confirm gone) and fix whichever ones fail.
 
 ---
 
@@ -602,7 +701,7 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 | GET | `/api/billing/transactions` | Paginated |
 | GET | `/api/billing/payment-methods` | |
 | POST | `/api/billing/payment-methods` | |
-| DELETE | `/api/billing/payment-methods/{id}` | |
+| DELETE | `/api/billing/payment-methods/{id}` | No trailing slash — see §1.10 |
 | POST | `/api/billing/deposit` | Returns Stripe `client_secret` |
 | POST | `/api/billing/deposit/confirm` | |
 | POST | `/api/billing/deposit/capitalist?amount=&currency=` | Query params, NOT body |
@@ -610,13 +709,15 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.6 Campaigns (`/api/campaigns/`)
 
+> **Per-id paths use NO trailing slash.** See §1.10. DELETE is observed silently no-op-ing — see §2.12.
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/campaigns/` | Paginated |
 | GET | `/api/campaigns/{id}` | |
 | POST | `/api/campaigns/` | See §3.8 for full body |
 | PATCH | `/api/campaigns/{id}` | |
-| DELETE | `/api/campaigns/{id}` | |
+| DELETE | `/api/campaigns/{id}` | **§2.12 — Returns 2xx but doesn't actually delete the row** |
 | POST | `/api/campaigns/{id}/activate` | Idempotent |
 | POST | `/api/campaigns/{id}/pause` | Idempotent |
 | PATCH | `/api/campaigns/{id}/cap` | Nested cap fields |
@@ -624,13 +725,15 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.7 Buyers (`/api/buyers/`)
 
+> **Per-id paths use NO trailing slash.** See §1.10.
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/buyers/` | Paginated |
 | GET | `/api/buyers/{id}` | |
 | POST | `/api/buyers/` | |
 | PATCH | `/api/buyers/{id}` | |
-| DELETE | `/api/buyers/{id}` | |
+| DELETE | `/api/buyers/{id}` | Verify it actually deletes |
 | POST | `/api/buyers/{id}/activate` | Idempotent |
 | POST | `/api/buyers/{id}/pause` | Idempotent |
 | PATCH | `/api/buyers/{id}/cap` | |
@@ -651,13 +754,15 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.9 Publishers (`/api/publishers/`)
 
+> **Per-id paths use NO trailing slash.** See §1.10.
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/publishers/` | Paginated |
 | GET | `/api/publishers/{id}` | |
 | POST | `/api/publishers/` | |
 | PATCH | `/api/publishers/{id}` | |
-| DELETE | `/api/publishers/{id}` | |
+| DELETE | `/api/publishers/{id}` | Verify it actually deletes |
 | POST | `/api/publishers/{id}/activate` | Idempotent |
 | POST | `/api/publishers/{id}/pause` | Idempotent |
 | PATCH | `/api/publishers/{id}/cap` | |
@@ -666,6 +771,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 | GET | `/api/publishers/{id}/payouts` | |
 
 ### 4.10 Numbers & DNI Pools
+
+> **Per-id paths use NO trailing slash.** See §1.10.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -687,6 +794,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.11 Routing (`/api/routing/rules`)
 
+> **Per-id paths use NO trailing slash.** See §1.10.
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/routing/rules` | Paginated |
@@ -698,6 +807,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 | POST | `/api/routing/rules/{ruleId}/destinations` | This is the routing-weight destination, NOT the Destination resource in §4.8 |
 
 ### 4.12 IVR (`/api/ivr/`)
+
+> **Per-id paths use NO trailing slash.** See §1.10.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -717,6 +828,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.14 Spam & Shields (`/api/spam/`)
 
+> **Per-id paths use NO trailing slash.** See §1.10. **Exception: shields/ uses trailing slash.**
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/spam/blacklist` | **Currently 500** — see §2.1 |
@@ -735,13 +848,15 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 | GET | `/api/spam/anonymous-block` | |
 | POST | `/api/spam/anonymous-block` | |
 | PATCH | `/api/spam/anonymous-block/{campaignId}` | |
-| GET | `/api/spam/shields/?shield_type=voip|tcpa` | |
-| GET | `/api/spam/shields/{id}/` | |
-| POST | `/api/spam/shields/` | |
-| PATCH | `/api/spam/shields/{id}/` | |
-| DELETE | `/api/spam/shields/{id}/` | |
+| GET | `/api/spam/shields/?shield_type=voip|tcpa` | Trailing slash (per your design) |
+| GET | `/api/spam/shields/{id}/` | Trailing slash |
+| POST | `/api/spam/shields/` | Trailing slash |
+| PATCH | `/api/spam/shields/{id}/` | Trailing slash |
+| DELETE | `/api/spam/shields/{id}/` | Trailing slash |
 
-### 4.15 Calls (`/api/routing/calls/`)
+### 4.15 Calls (`/api/routing/calls`)
+
+> **Per-id paths use NO trailing slash.** See §1.10.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -778,6 +893,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.18 Notifications (`/api/notifications/`)
 
+> **Per-id paths use NO trailing slash.** See §1.10.
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/notifications/rules` | |
@@ -790,6 +907,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.19 Webhooks (`/api/webhooks/`)
 
+> **Webhooks per-id paths use NO trailing slash. Pixels DO use trailing slashes (your existing convention).**
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/webhooks/` | |
@@ -799,11 +918,11 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 | DELETE | `/api/webhooks/{id}` | |
 | POST | `/api/webhooks/{id}/test` | Send test webhook |
 | GET | `/api/webhooks/{id}/deliveries` | |
-| GET | `/api/webhooks/pixels/` | |
-| GET | `/api/webhooks/pixels/{id}` | |
-| POST | `/api/webhooks/pixels/` | |
-| PATCH | `/api/webhooks/pixels/{id}/` | |
-| DELETE | `/api/webhooks/pixels/{id}/` | |
+| GET | `/api/webhooks/pixels/` | Trailing slash |
+| GET | `/api/webhooks/pixels/{id}/` | Trailing slash |
+| POST | `/api/webhooks/pixels/` | Trailing slash |
+| PATCH | `/api/webhooks/pixels/{id}/` | Trailing slash |
+| DELETE | `/api/webhooks/pixels/{id}/` | Trailing slash |
 
 ### 4.20 AI Insights (`/api/ai/`)
 
@@ -817,6 +936,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 
 ### 4.21 Marketplace / RTB (`/api/rtb/`)
 
+> **Per-id paths use NO trailing slash.** See §1.10.
+
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/rtb/auctions` | |
@@ -825,6 +946,8 @@ Every URL the frontend calls. Use this as a checklist — every row must respond
 | POST | `/api/rtb/bid` | |
 
 ### 4.22 White Label (`/api/white-label/`)
+
+> **Per-id paths use NO trailing slash.** See §1.10.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -843,9 +966,10 @@ In priority order:
 
 ### Blocker bugs (fix today)
 
-- [ ] §2.1 — `GET /api/spam/blacklist` must stop returning 500
+- [ ] §2.1 — `GET /api/spam/blacklist/` must stop returning 500
 - [ ] §2.2 — `POST /api/destinations/` must stop returning 500 (likely buyer FK or required field issue)
 - [ ] §2.9 — No endpoint should ever return HTML on error; switch to JSON-only error handler
+- [ ] §2.12 — Investigate why `DELETE /api/campaigns/{id}` returns success but doesn't remove the row. Run the curl + psql reproducer in §2.12. Then verify the same on every other DELETE handler (buyers, publishers, numbers, routing rules, etc.) and fix whichever ones are broken.
 
 ### High priority (fix this week)
 
@@ -863,9 +987,10 @@ In priority order:
 
 ### Convention cleanup (any time)
 
-- [ ] Verify every endpoint follows §1.1–1.9 conventions
+- [ ] Verify every endpoint follows §1.1–1.10 conventions
 - [ ] Add OpenAPI spec generation so this contract doc can be auto-checked
 - [ ] Confirm `GET /api/accounts/me` includes `is_superuser`
+- [ ] §1.10 — Pick a project-wide trailing-slash convention and add a CI lint rule that fails any new route violating it
 
 ---
 
@@ -879,7 +1004,10 @@ Please answer these inline and return:
 4. For routing rules: what does `destination_type: "buyer"` resolve to — a `buyer_id` foreign key or a free-text string?
 5. Are there endpoints we're not aware of that you've already built (queue management, IVR node editor, RTB bidding) that we should plug into?
 6. Is there a per-org timezone field we should be reading? Multiple resources (campaigns, schedules) refer to "org timezone" but I don't see it in the workspace or account schema.
+7. **§1.10 trailing-slash convention** — Empirically your project uses NO trailing slashes for most resources, but uses them for destinations, access-requests, KYC, scheduled-reports, spam shields, webhooks pixels, and AI endpoints. This is a footgun for future development. Please pick ONE project-wide convention and document it. If you want to standardize on trailing slashes (Django default), tell me and I'll update the frontend in one sweep. If you want to standardize on no-slash, please remove the trailing slashes from the inconsistent endpoints and tell me which ones to switch.
+
+8. **§2.12 silent DELETE failure** — Why does `DELETE /api/campaigns/{id}` return 2xx but not actually delete the row? Is this a soft-delete bug, an empty handler, or something else? Please reproduce with the curl + psql commands in §2.12 and share the result.
 
 ---
 
-**End of document.** Please respond with status per checklist item in §5 and answers to §6.
+**End of document.** Please respond with status per checklist item in §5 and answers to §6 (questions 7 and 8 are the most important).

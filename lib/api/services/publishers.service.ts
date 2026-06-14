@@ -84,7 +84,7 @@ export const publishersService = {
   },
 
   async get(id: string): Promise<Publisher> {
-    const wire = await http.get<PublisherWire>(`/api/publishers/${id}/`);
+    const wire = await http.get<PublisherWire>(`/api/publishers/${id}`);
     return detailWireToPublisher(wire);
   },
 
@@ -106,39 +106,39 @@ export const publishersService = {
     if (patch.description !== undefined) body.description = patch.description;
     if (patch.email !== undefined) body.email = patch.email;
     if (patch.payoutRate !== undefined) body.payoutAmount = String(patch.payoutRate);
-    const wire = await http.patch<PublisherWire>(`/api/publishers/${id}/`, { body });
+    const wire = await http.patch<PublisherWire>(`/api/publishers/${id}`, { body });
     return detailWireToPublisher(wire);
   },
 
   async remove(id: string): Promise<void> {
-    await http.delete(`/api/publishers/${id}/`);
+    await http.delete(`/api/publishers/${id}`);
   },
 
   async setStatus(id: string, status: PublisherStatus): Promise<void> {
     if (status === "active") {
-      await http.post(`/api/publishers/${id}/activate/`);
+      await http.post(`/api/publishers/${id}/activate`);
       return;
     }
     if (status === "paused") {
-      await http.post(`/api/publishers/${id}/pause/`);
+      await http.post(`/api/publishers/${id}/pause`);
       return;
     }
-    await http.patch(`/api/publishers/${id}/`, { body: { status } });
+    await http.patch(`/api/publishers/${id}`, { body: { status } });
   },
 
   async updateCap(
     id: string,
     cap: { daily?: number; monthly?: number; concurrency?: number },
   ): Promise<void> {
-    await http.patch(`/api/publishers/${id}/cap/`, { body: cap });
+    await http.patch(`/api/publishers/${id}/cap`, { body: cap });
   },
 
   async assignCampaign(id: string, campaignId: string): Promise<void> {
-    await http.post(`/api/publishers/${id}/campaigns/`, { body: { campaignId } });
+    await http.post(`/api/publishers/${id}/campaigns`, { body: { campaignId } });
   },
 
   async removeCampaign(id: string, campaignId: string): Promise<void> {
-    await http.delete(`/api/publishers/${id}/campaigns/${campaignId}/`);
+    await http.delete(`/api/publishers/${id}/campaigns/${campaignId}`);
   },
 
   /**
@@ -148,7 +148,7 @@ export const publishersService = {
    */
   async payouts(id: string): Promise<PayoutWire[]> {
     const res = await http.get<{ items?: PayoutWire[] } | PayoutWire[]>(
-      `/api/publishers/${id}/payouts/`,
+      `/api/publishers/${id}/payouts`,
     );
     if (Array.isArray(res)) return res;
     return res.items ?? [];

@@ -90,12 +90,12 @@ export const routingService = {
   async listRules(
     query: { page?: number; pageSize?: number; campaignId?: string } = {},
   ): Promise<Paginated<RoutingRule>> {
-    const res = await http.get<Paginated<RoutingRuleWire>>("/api/routing/rules/", { query });
+    const res = await http.get<Paginated<RoutingRuleWire>>("/api/routing/rules", { query });
     return { ...res, items: res.items.map(wireToRule) };
   },
 
   async getRule(id: string): Promise<RoutingRule> {
-    return wireToRule(await http.get<RoutingRuleWire>(`/api/routing/rules/${id}/`));
+    return wireToRule(await http.get<RoutingRuleWire>(`/api/routing/rules/${id}`));
   },
 
   async createRule(input: {
@@ -105,22 +105,22 @@ export const routingService = {
     priority?: number;
   }): Promise<RoutingRule> {
     return wireToRule(
-      await http.post<RoutingRuleWire>("/api/routing/rules/", { body: input }),
+      await http.post<RoutingRuleWire>("/api/routing/rules", { body: input }),
     );
   },
 
   async updateRule(id: string, patch: Partial<RoutingRule>): Promise<RoutingRule> {
     return wireToRule(
-      await http.patch<RoutingRuleWire>(`/api/routing/rules/${id}/`, { body: patch }),
+      await http.patch<RoutingRuleWire>(`/api/routing/rules/${id}`, { body: patch }),
     );
   },
 
   async deleteRule(id: string): Promise<void> {
-    await http.delete(`/api/routing/rules/${id}/`);
+    await http.delete(`/api/routing/rules/${id}`);
   },
 
   async addCondition(ruleId: string, conditions: Record<string, unknown>): Promise<RoutingCondition> {
-    return http.post<RoutingCondition>(`/api/routing/rules/${ruleId}/conditions/`, {
+    return http.post<RoutingCondition>(`/api/routing/rules/${ruleId}/conditions`, {
       body: { conditions },
     });
   },
@@ -129,7 +129,7 @@ export const routingService = {
     ruleId: string,
     destination: { buyerId: string; weight?: number; priority?: number },
   ): Promise<RoutingDestination> {
-    return http.post<RoutingDestination>(`/api/routing/rules/${ruleId}/destinations/`, {
+    return http.post<RoutingDestination>(`/api/routing/rules/${ruleId}/destinations`, {
       body: destination,
     });
   },

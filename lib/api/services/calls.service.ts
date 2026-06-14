@@ -69,7 +69,7 @@ function wireToCallDetail(w: RoutingCallWire): CallDetail {
 
 export const callsService = {
   async get(id: string): Promise<CallDetail> {
-    const wire = await http.get<RoutingCallWire>(`/api/routing/calls/${id}/`);
+    const wire = await http.get<RoutingCallWire>(`/api/routing/calls/${id}`);
     return wireToCallDetail(wire);
   },
 
@@ -77,7 +77,7 @@ export const callsService = {
     page?: number;
     pageSize?: number;
   } = {}): Promise<Paginated<Call>> {
-    const res = await http.get<Paginated<RoutingCallWire>>("/api/routing/calls/", { query });
+    const res = await http.get<Paginated<RoutingCallWire>>("/api/routing/calls", { query });
     return {
       ...res,
       items: res.items.map((w) => ({ ...callRecordToCall(w) })),
@@ -86,7 +86,7 @@ export const callsService = {
 
   /** Live in-flight calls (REST snapshot used before the WebSocket connects). */
   async live(): Promise<Call[]> {
-    const wire = await http.get<RoutingCallWire[]>("/api/routing/calls/live/");
+    const wire = await http.get<RoutingCallWire[]>("/api/routing/calls/live");
     return wire.map(callRecordToCall);
   },
 };

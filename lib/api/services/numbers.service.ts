@@ -144,7 +144,7 @@ export const numbersService = {
   },
 
   async get(id: string): Promise<TrackingNumber> {
-    return wireToNumber(await http.get<NumberWire>(`/api/numbers/${id}/`));
+    return wireToNumber(await http.get<NumberWire>(`/api/numbers/${id}`));
   },
 
   async update(id: string, patch: Partial<TrackingNumber>): Promise<TrackingNumber> {
@@ -152,12 +152,12 @@ export const numbersService = {
     if (patch.campaignId !== undefined) body.campaignId = patch.campaignId;
     if (patch.status !== undefined) body.status = patch.status;
     return wireToNumber(
-      await http.patch<NumberWire>(`/api/numbers/${id}/`, { body }),
+      await http.patch<NumberWire>(`/api/numbers/${id}`, { body }),
     );
   },
 
   async release(id: string): Promise<void> {
-    await http.delete(`/api/numbers/${id}/release/`);
+    await http.delete(`/api/numbers/${id}/release`);
   },
 
   async search(query: {
@@ -184,7 +184,7 @@ export const numbersService = {
   },
 
   async assign(id: string, campaignId: string): Promise<void> {
-    await http.post(`/api/numbers/${id}/assign/`, { body: { campaignId } });
+    await http.post(`/api/numbers/${id}/assign`, { body: { campaignId } });
   },
 };
 
@@ -197,7 +197,7 @@ export const poolsService = {
   },
 
   async get(id: string): Promise<NumberPool> {
-    return wireToPool(await http.get<PoolWire>(`/api/dni/pools/${id}/`));
+    return wireToPool(await http.get<PoolWire>(`/api/dni/pools/${id}`));
   },
 
   async create(input: Omit<NumberPool, "id">): Promise<NumberPool> {
@@ -217,18 +217,18 @@ export const poolsService = {
   },
 
   async update(id: string, patch: Partial<NumberPool>): Promise<NumberPool> {
-    return wireToPool(await http.patch<PoolWire>(`/api/dni/pools/${id}/`, { body: patch }));
+    return wireToPool(await http.patch<PoolWire>(`/api/dni/pools/${id}`, { body: patch }));
   },
 
   async remove(id: string): Promise<void> {
-    await http.delete(`/api/dni/pools/${id}/`);
+    await http.delete(`/api/dni/pools/${id}`);
   },
 
   async addNumber(poolId: string, numberId: string): Promise<void> {
-    await http.post(`/api/dni/pools/${poolId}/numbers/`, { body: { numberId } });
+    await http.post(`/api/dni/pools/${poolId}/numbers`, { body: { numberId } });
   },
 
   async removeNumber(poolId: string, numberId: string): Promise<void> {
-    await http.delete(`/api/dni/pools/${poolId}/numbers/${numberId}/`);
+    await http.delete(`/api/dni/pools/${poolId}/numbers/${numberId}`);
   },
 };

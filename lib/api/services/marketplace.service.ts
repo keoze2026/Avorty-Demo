@@ -126,7 +126,7 @@ export const marketplaceService = {
   async listAuctions(
     query: { page?: number; pageSize?: number; status?: AuctionStatus } = {},
   ): Promise<Paginated<Auction>> {
-    const res = await http.get<Paginated<AuctionWire> | AuctionWire[]>("/api/rtb/auctions/", { query });
+    const res = await http.get<Paginated<AuctionWire> | AuctionWire[]>("/api/rtb/auctions", { query });
     const items = unwrapItems<AuctionWire>(res);
     const envelope = !Array.isArray(res) ? res : null;
     return {
@@ -138,11 +138,11 @@ export const marketplaceService = {
   },
 
   async getAuction(id: string): Promise<Auction> {
-    return wireToAuction(await http.get<AuctionWire>(`/api/rtb/auctions/${id}/`));
+    return wireToAuction(await http.get<AuctionWire>(`/api/rtb/auctions/${id}`));
   },
 
   async listBids(auctionId: string): Promise<Bid[]> {
-    const res = await http.get<BidWire[] | Paginated<BidWire>>(`/api/rtb/auctions/${auctionId}/bids/`);
+    const res = await http.get<BidWire[] | Paginated<BidWire>>(`/api/rtb/auctions/${auctionId}/bids`);
     return unwrapItems<BidWire>(res).map(wireToBid);
   },
 
@@ -151,7 +151,7 @@ export const marketplaceService = {
     buyerId: string;
     amount: number;
   }): Promise<Bid> {
-    const wire = await http.post<BidWire>("/api/rtb/bid/", {
+    const wire = await http.post<BidWire>("/api/rtb/bid", {
       body: {
         auctionId: input.auctionId,
         buyerId: input.buyerId,

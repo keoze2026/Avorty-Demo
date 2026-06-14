@@ -114,7 +114,7 @@ export const buyersService = {
   },
 
   async get(id: string): Promise<Buyer> {
-    const wire = await http.get<BuyerWire>(`/api/buyers/${id}/`);
+    const wire = await http.get<BuyerWire>(`/api/buyers/${id}`);
     return detailWireToBuyer(wire);
   },
 
@@ -138,46 +138,46 @@ export const buyersService = {
     if (patch.name !== undefined) body.name = patch.name;
     if (patch.description !== undefined) body.description = patch.description;
     if (patch.bidAmount !== undefined) body.payoutAmount = String(patch.bidAmount);
-    const wire = await http.patch<BuyerWire>(`/api/buyers/${id}/`, { body });
+    const wire = await http.patch<BuyerWire>(`/api/buyers/${id}`, { body });
     return detailWireToBuyer(wire);
   },
 
   async remove(id: string): Promise<void> {
-    await http.delete(`/api/buyers/${id}/`);
+    await http.delete(`/api/buyers/${id}`);
   },
 
   async setStatus(id: string, status: BuyerStatus): Promise<void> {
     // Backend exposes activate/pause as POST endpoints; everything else
     // routes through update.
     if (status === "active") {
-      await http.post(`/api/buyers/${id}/activate/`);
+      await http.post(`/api/buyers/${id}/activate`);
       return;
     }
     if (status === "paused") {
-      await http.post(`/api/buyers/${id}/pause/`);
+      await http.post(`/api/buyers/${id}/pause`);
       return;
     }
     // "capped" / "pending" don't have dedicated endpoints — fall through to
     // a status patch so the server can persist the requested state.
-    await http.patch(`/api/buyers/${id}/`, { body: { status } });
+    await http.patch(`/api/buyers/${id}`, { body: { status } });
   },
 
   async updateCap(
     id: string,
     cap: { daily?: number; monthly?: number; concurrency?: number },
   ): Promise<void> {
-    await http.patch(`/api/buyers/${id}/cap/`, { body: cap });
+    await http.patch(`/api/buyers/${id}/cap`, { body: cap });
   },
 
   async getStats(id: string): Promise<BuyerStatsWire> {
-    return http.get<BuyerStatsWire>(`/api/buyers/${id}/stats/`);
+    return http.get<BuyerStatsWire>(`/api/buyers/${id}/stats`);
   },
 
   async assignCampaign(id: string, campaignId: string): Promise<void> {
-    await http.post(`/api/buyers/${id}/campaigns/`, { body: { campaignId } });
+    await http.post(`/api/buyers/${id}/campaigns`, { body: { campaignId } });
   },
 
   async removeCampaign(id: string, campaignId: string): Promise<void> {
-    await http.delete(`/api/buyers/${id}/campaigns/${campaignId}/`);
+    await http.delete(`/api/buyers/${id}/campaigns/${campaignId}`);
   },
 };

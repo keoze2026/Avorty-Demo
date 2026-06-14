@@ -109,7 +109,7 @@ export const webhooksService = {
   },
 
   async get(id: string): Promise<Webhook> {
-    return wireToWebhook(await http.get<WebhookWire>(`/api/webhooks/${id}/`));
+    return wireToWebhook(await http.get<WebhookWire>(`/api/webhooks/${id}`));
   },
 
   async create(input: {
@@ -123,19 +123,19 @@ export const webhooksService = {
   },
 
   async update(id: string, patch: Partial<Webhook>): Promise<Webhook> {
-    return wireToWebhook(await http.patch<WebhookWire>(`/api/webhooks/${id}/`, { body: patch }));
+    return wireToWebhook(await http.patch<WebhookWire>(`/api/webhooks/${id}`, { body: patch }));
   },
 
   async remove(id: string): Promise<void> {
-    await http.delete(`/api/webhooks/${id}/`);
+    await http.delete(`/api/webhooks/${id}`);
   },
 
   async test(id: string): Promise<unknown> {
-    return http.post(`/api/webhooks/${id}/test/`);
+    return http.post(`/api/webhooks/${id}/test`);
   },
 
   async deliveries(id: string, query: { page?: number; pageSize?: number } = {}) {
-    return http.get<Paginated<WebhookDelivery>>(`/api/webhooks/${id}/deliveries/`, { query });
+    return http.get<Paginated<WebhookDelivery>>(`/api/webhooks/${id}/deliveries`, { query });
   },
 
   /* ─── Conversion pixels ──────────────────────────────────────────── */
@@ -145,7 +145,7 @@ export const webhooksService = {
   },
 
   async getPixel(id: string): Promise<ConversionPixel> {
-    return wireToPixel(await http.get<PixelWire>(`/api/webhooks/pixels/${id}/`));
+    return wireToPixel(await http.get<PixelWire>(`/api/webhooks/pixels/${id}`));
   },
 
   async createPixel(input: {

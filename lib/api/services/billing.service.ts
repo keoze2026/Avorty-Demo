@@ -307,7 +307,7 @@ export const billingService = {
   },
 
   async deletePaymentMethod(id: string): Promise<void> {
-    await http.delete(`/api/billing/payment-methods/${id}/`);
+    await http.delete(`/api/billing/payment-methods/${id}`);
   },
 
   /**
