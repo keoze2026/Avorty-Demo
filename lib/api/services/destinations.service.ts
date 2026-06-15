@@ -110,7 +110,11 @@ function wireToDestination(w: DestinationWire): Destination {
  *  Skips read-only / computed fields (live counters, buyer_name, timestamps). */
 function destinationToWire(patch: Partial<Destination>): Record<string, unknown> {
   const body: Record<string, unknown> = {};
-  if (patch.buyerId !== undefined) body.buyerId = patch.buyerId;
+  // buyerId is optional — empty string means "no buyer assigned yet", send
+  // null so the backend stores an unassigned destination.
+  if (patch.buyerId !== undefined) {
+    body.buyerId = patch.buyerId === "" ? null : patch.buyerId;
+  }
   if (patch.tfn !== undefined) body.tfn = patch.tfn;
   if (patch.name !== undefined) body.name = patch.name;
   if (patch.forwardType !== undefined) body.forwardType = patch.forwardType;

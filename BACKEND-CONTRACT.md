@@ -2,7 +2,7 @@
 
 **Audience:** Backend developer
 **Author:** Frontend team
-**Date:** 2026-06-15 *(updated — added §2.13 + §3.8 live counter fields request)*
+**Date:** 2026-06-15 *(updated — added §2.13 / §3.8 live counter fields request; §2.14 / §3.7 buyer invite endpoint; §2.15 / §3.9 nullable destination buyer_id)*
 **Status:** This document is the source of truth for what the frontend sends and expects. Where backend behaviour disagrees with this document, **the backend must change**.
 
 ---
@@ -257,6 +257,25 @@ The frontend has hit these specific bugs this week. They block production usabil
 - `POST /api/kyc/documents/upload` accepts multipart and returns `{ url }`. **Confirmed working.**
 - For consistency, please use the same pattern for any other file uploads we add later (account avatar already follows it at `POST /api/accounts/me/avatar`).
 
+### 2.14 Buyer create + invite split into two steps
+
+**Old behaviour:** the "Create a buyer" dialog combined creation and invite — it asked for an email up-front and was labelled "they'll receive a setup link by email", implying the buyer would be emailed immediately. In practice no email was actually sent; the dialog just created the buyer record.
+
+**New behaviour (already on the frontend):**
+
+1. **Create a buyer** dialog asks for name, organization, bid, daily cap, and notes. **No email field, no invite framing.** It only creates the buyer record.
+2. **Buyer detail page** has a new "Invite" button in the header. Clicking it opens a separate dialog that captures the email + optional contact name + optional message, then posts to `POST /api/buyers/{id}/invite`.
+
+**Required from you:** Implement `POST /api/buyers/{id}/invite` per §3.7. Until it's live, clicking the Invite button surfaces a 404 / friendly error toast.
+
+### 2.15 Destinations can be created without a buyer (nullable buyer_id)
+
+**Old behaviour:** the destination create form required picking a buyer, and the backend's `buyer_id` was a required non-null FK. Operators couldn't add a destination they planned to assign to a buyer later.
+
+**New behaviour:** the destination create form lets operators leave the buyer field empty ("No buyer (assign later)"). The frontend sends `buyer_id: null` in that case.
+
+**Required from you:** Make `buyer_id` nullable on the Destination model. Per §3.9, the API accepts `null` for the field on `POST /api/destinations/` and `PATCH /api/destinations/{id}/`, and returns `null` on `GET`. The list query at `GET /api/destinations/?buyer_id=<uuid>` should still filter by FK match; please also support `?buyer_id=__unassigned__` (or similar sentinel) to list orphan destinations.
+
 ### 2.13 Missing per-campaign live counters
 
 The campaigns table needs **`liveCalls`**, **`callsHour`**, **`callsMonth`**, and **`callsGlobal`** on every campaign returned by `GET /api/campaigns/` and `GET /api/campaigns/{id}`. See §3.8 "Live counter fields" for the field shapes.
@@ -452,6 +471,19 @@ For each resource, the canonical field set as the frontend sees it. Wire is snak
 | campaigns | uuid[] | – | Attached campaign IDs |
 | createdAt | datetime | ✓ | |
 
+**Invite action (REQUESTED — not yet implemented):**
+
+A buyer is created as a record only. To let the buyer sign in to the platform, an operator can send a setup-link email from the buyer detail page. This is a **separate, optional action** that happens AFTER the buyer record exists — `POST /api/buyers/` no longer triggers any email.
+
+Please add:
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| `POST` | `/api/buyers/{id}/invite` | `{ email, contactName?, message? }` | Generates a one-time setup token, persists it on the buyer record, emails the link to the provided address. Email send must be wrapped in try/except — delivery failures shouldn't 500 the API. |
+
+The setup link format should match the existing access-request flow:
+`https://avortyx.io/set-password?token=<signed_token>&buyer_id={id}` (or similar). The frontend will reuse the existing `/set-password` page once the buyer clicks through.
+
 ### 3.8 Campaign
 
 The most complete schema. Already confirmed against backend.
@@ -518,8 +550,8 @@ All read-only — must be ignored on `POST` / `PATCH`. These are aggregate count
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | id | uuid | ✓ | |
-| buyerId | uuid | ✓ | FK to Buyer |
-| buyerName | string | – | Read-only echo from FK |
+| buyerId | uuid? | – | **Now optional.** FK to Buyer when set; `null` means destination is unassigned and waiting to be attached to a buyer. The frontend allows operators to create a destination without picking a buyer. |
+| buyerName | string? | – | Read-only echo from FK (omitted when `buyerId` is null) |
 | tfn | string | ✓ | E.164 phone OR SIP URI depending on `forwardType` |
 | name | string | ✓ | Operator-friendly label |
 | forwardType | enum (`number` \| `sip`) | – | Default `number` |
@@ -1007,6 +1039,8 @@ In priority order:
 - [ ] §3.12 — Add `GET /api/accounts/workspace/roles/` so we can drop hardcoded role list
 - [ ] §2.5 — Add regression test for `?status=` filter on access requests
 - [ ] §2.13 / §3.8 — Add `liveCalls`, `callsHour`, `callsMonth`, `callsGlobal` to the Campaign list + detail responses so the campaigns table can render real numbers
+- [ ] §2.14 / §3.7 — Add `POST /api/buyers/{id}/invite` so operators can email a setup link to a buyer's contact after the buyer record is created
+- [ ] §2.15 / §3.9 — Make Destination `buyer_id` nullable so operators can create unassigned destinations
 
 ### Convention cleanup (any time)
 

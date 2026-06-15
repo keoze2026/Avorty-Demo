@@ -102,15 +102,16 @@ export function DestinationBuilder({
         enabled: existing.enabled,
       });
     } else {
-      // Default buyerId to the first available real buyer, if any.
-      setForm({ ...EMPTY, buyerId: buyers[0]?.id ?? "" });
+      // Open with no buyer pre-selected — operator can pick one or skip.
+      setForm(EMPTY);
     }
-  }, [open, existing, buyers]);
+  }, [open, existing]);
 
+  // Buyer is OPTIONAL — operators can create an unassigned destination and
+  // attach a buyer later. Backend must accept a null / empty buyer_id.
   const canSubmit =
     form.name.trim().length >= 2 &&
     isValidTfn(form.tfn) &&
-    !!form.buyerId &&
     form.concurrencyCap > 0;
 
   const onSubmit = async () => {
@@ -186,20 +187,23 @@ export function DestinationBuilder({
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="dest-buyer">{t("networkUI.destinations.builder.buyer")}</Label>
+            <Label htmlFor="dest-buyer">
+              {t("networkUI.destinations.builder.buyer")}{" "}
+              <span className="text-[10px] font-normal text-muted-foreground">
+                (optional — assign later)
+              </span>
+            </Label>
             <Select
-              value={form.buyerId}
-              onValueChange={(v) => setForm((f) => ({ ...f, buyerId: v }))}
+              value={form.buyerId || "__none__"}
+              onValueChange={(v) =>
+                setForm((f) => ({ ...f, buyerId: v === "__none__" ? "" : v }))
+              }
             >
               <SelectTrigger id="dest-buyer">
-                <SelectValue placeholder={t("networkUI.destinations.builder.pickBuyer")} />
+                <SelectValue placeholder="No buyer assigned" />
               </SelectTrigger>
               <SelectContent>
-                {buyers.length === 0 && (
-                  <div className="px-3 py-2 text-xs text-muted-foreground">
-                    No buyers yet — create one on the Buyers page first.
-                  </div>
-                )}
+                <SelectItem value="__none__">No buyer (assign later)</SelectItem>
                 {buyers.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
@@ -207,6 +211,12 @@ export function DestinationBuilder({
                 ))}
               </SelectContent>
             </Select>
+            {buyers.length === 0 && (
+              <p className="text-[10px] text-muted-foreground">
+                No buyers yet. You can create the destination now and attach a
+                buyer on the Buyers page later.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-3">

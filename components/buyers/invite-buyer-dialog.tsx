@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * Create-buyer dialog — adds a buyer record (routing target) to the network.
+ *
+ * NOTE: this used to be framed as "Invite a buyer / they'll get a setup link"
+ * which was misleading — sending an email invite is a separate, optional
+ * follow-up action on the buyer detail page. This dialog now only creates
+ * the buyer record; email is captured up-front but never sent here.
+ */
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +26,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 
@@ -28,22 +36,23 @@ export function InviteBuyerDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { t } = useTranslation();
   const router = useRouter();
   const add = useBuyersStore((s) => s.add);
 
   const [name, setName] = useState("");
   const [organization, setOrganization] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [email, setEmail] = useState("");
   const [bidAmount, setBidAmount] = useState(35);
   const [dailyCap, setDailyCap] = useState(200);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
-    setName(""); setOrganization(""); setContactName(""); setEmail("");
-    setBidAmount(35); setDailyCap(200); setDescription(""); setSubmitting(false);
+    setName("");
+    setOrganization("");
+    setBidAmount(35);
+    setDailyCap(200);
+    setDescription("");
+    setSubmitting(false);
   };
   const onClose = (next: boolean) => {
     onOpenChange(next);
@@ -53,33 +62,37 @@ export function InviteBuyerDialog({
   const onSubmit = async () => {
     if (!name.trim() || !organization.trim()) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 350));
-    const created = await add({
-      name: name.trim(),
-      organization: organization.trim(),
-      contactName: contactName.trim() || undefined,
-      email: email.trim() || undefined,
-      description: description.trim() || undefined,
-      status: "pending",
-      bidAmount,
-      payoutModel: "flat",
-      concurrencyCap: 10,
-      dailyCap,
-      monthlyCap: dailyCap * 25,
-      callsToday: 0,
-      callsMonth: 0,
-      spendToday: 0,
-      spendMonth: 0,
-      lifetimeSpend: 0,
-      acceptRate: 0,
-      conversionRate: 0,
-      campaignIds: [],
-    });
-    toast.success(t("networkUI.buyers.invite.invited").replace("{name}", created.name), {
-      description: t("networkUI.buyers.invite.willAppear"),
-    });
-    onClose(false);
-    router.push(`${ROUTES.buyers}/${created.id}`);
+    try {
+      const created = await add({
+        name: name.trim(),
+        organization: organization.trim(),
+        description: description.trim() || undefined,
+        status: "pending",
+        bidAmount,
+        payoutModel: "flat",
+        concurrencyCap: 10,
+        dailyCap,
+        monthlyCap: dailyCap * 25,
+        callsToday: 0,
+        callsMonth: 0,
+        spendToday: 0,
+        spendMonth: 0,
+        lifetimeSpend: 0,
+        acceptRate: 0,
+        conversionRate: 0,
+        campaignIds: [],
+      });
+      toast.success(`${created.name} added`, {
+        description:
+          "You can invite this buyer by email from their detail page.",
+      });
+      onClose(false);
+      router.push(`${ROUTES.buyers}/${created.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't create buyer");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -91,8 +104,11 @@ export function InviteBuyerDialog({
               <Building2 className="h-4 w-4" />
             </span>
             <div>
-              <DialogTitle>{t("networkUI.buyers.invite.title")}</DialogTitle>
-              <DialogDescription>{t("networkUI.buyers.invite.description")}</DialogDescription>
+              <DialogTitle>Create a buyer</DialogTitle>
+              <DialogDescription>
+                Add a buyer to your network. You can invite them by email from
+                the buyer detail page after they&apos;re created.
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -100,27 +116,28 @@ export function InviteBuyerDialog({
         <div className="space-y-3 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ib-name">{t("networkUI.buyers.invite.buyerName")}</Label>
-              <Input id="ib-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("networkUI.buyers.invite.namePh")} />
+              <Label htmlFor="ib-name">Buyer name</Label>
+              <Input
+                id="ib-name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. C11"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ib-org">{t("networkUI.buyers.invite.organization")}</Label>
-              <Input id="ib-org" value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder={t("networkUI.buyers.invite.orgPh")} />
+              <Label htmlFor="ib-org">Organization</Label>
+              <Input
+                id="ib-org"
+                value={organization}
+                onChange={(e) => setOrganization(e.target.value)}
+                placeholder="e.g. Apex Group"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="ib-contact">{t("networkUI.buyers.invite.contactName")}</Label>
-              <Input id="ib-contact" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder={t("networkUI.buyers.invite.contactPh")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ib-email">{t("networkUI.buyers.invite.email")}</Label>
-              <Input id="ib-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("networkUI.buyers.invite.emailPh")} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="ib-bid">{t("networkUI.buyers.invite.bidPerCall")}</Label>
+              <Label htmlFor="ib-bid">Bid per call ($)</Label>
               <Input
                 id="ib-bid"
                 type="number"
@@ -132,7 +149,7 @@ export function InviteBuyerDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ib-cap">{t("networkUI.buyers.invite.dailyCap")}</Label>
+              <Label htmlFor="ib-cap">Daily cap</Label>
               <Input
                 id="ib-cap"
                 type="number"
@@ -144,28 +161,31 @@ export function InviteBuyerDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ib-desc">{t("networkUI.buyers.invite.notes")}</Label>
+            <Label htmlFor="ib-desc">Notes</Label>
             <Textarea
               id="ib-desc"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("networkUI.buyers.invite.notesPh")}
+              placeholder="Vertical, geo, anything routing-affecting."
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onClose(false)}>
-            {t("networkUI.buyers.invite.cancel")}
+            Cancel
           </Button>
-          <Button onClick={onSubmit} disabled={submitting || !name.trim() || !organization.trim()}>
+          <Button
+            onClick={onSubmit}
+            disabled={submitting || !name.trim() || !organization.trim()}
+          >
             {submitting ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.buyers.invite.sending")}
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…
               </>
             ) : (
-              t("networkUI.buyers.invite.send")
+              "Create buyer"
             )}
           </Button>
         </DialogFooter>

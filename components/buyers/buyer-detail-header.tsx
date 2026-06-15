@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Building2, Mail, MoreVertical, Pause, Play, Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, Mail, MoreVertical, Pause, Play, Send, Trash2 } from "lucide-react";
 
+import { BuyerInviteDialog } from "@/components/buyers/buyer-invite-dialog";
 import { BuyerStatsRow } from "@/components/buyers/buyer-stats-row";
 import { PartnerStatusBadge } from "@/components/network/partner-status-badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/use-translation";
@@ -24,6 +25,7 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
   const router = useRouter();
   const setStatus = useBuyersStore((s) => s.setStatus);
   const remove = useBuyersStore((s) => s.remove);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const isActive = buyer.status === "active";
 
@@ -90,6 +92,9 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
 
         <div className="flex items-center gap-2">
           <PartnerStatusBadge status={buyer.status} />
+          <Button size="sm" variant="outline" onClick={() => setInviteOpen(true)}>
+            <Send className="h-3.5 w-3.5" /> Invite
+          </Button>
           <Button size="sm" variant={isActive ? "outline" : "default"} onClick={onToggle}>
             {isActive ? (
               <>
@@ -115,6 +120,11 @@ export function BuyerDetailHeader({ buyer }: { buyer: Buyer }) {
           </DropdownMenu>
         </div>
       </div>
+
+      <BuyerInviteDialog
+        buyer={inviteOpen ? buyer : null}
+        onOpenChange={(open) => setInviteOpen(open)}
+      />
 
       {/* Compact KPI strip docked to the bottom of the header card. Sits on a
           divider so the identity block above and the metrics below visually
