@@ -48,14 +48,7 @@ interface CampaignsTableProps {
 /*  Helpers                                                             */
 /* ─────────────────────────────────────────────────────────────────── */
 
-/** Stable per-id hash so synthetic counters don't flicker across renders. */
-function hash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-interface SyntheticMetrics {
+interface CampaignMetrics {
   liveCurrent: number;
   liveCap: number;
   hourly: number;
@@ -65,24 +58,20 @@ interface SyntheticMetrics {
 }
 
 /**
- * Visual-only synthetic metrics for the table appearance.
- * Stable per-id, populates the rich column layout without touching the
- * underlying Campaign type or any store.
+ * Real metrics pulled from the Campaign record. The backend only ships
+ * `callsToday` per campaign today; until it adds hourly / monthly / global
+ * counters those columns render 0. The "live cap" column is the daily-cap
+ * value the user configured (0 = unlimited).
  */
-function makeMetrics(c: Campaign): SyntheticMetrics {
-  const seed = hash(c.id);
-  const paused = c.status === "paused" || c.status === "archived";
-  const draft = c.status === "draft";
-
-  const liveCap = c.dailyCap > 0 ? c.dailyCap : 200 + (seed % 5) * 100;
-  const liveCurrent = paused || draft ? 0 : seed % Math.max(1, Math.floor(liveCap * 0.35));
-
-  const daily = paused || draft ? 0 : c.callsToday * 4 + (seed % 50);
-  const hourly = paused || draft ? 0 : Math.round(daily / Math.max(1, new Date().getHours() || 1));
-  const monthly = (seed % 30000) + 2000;
-  const global = monthly * (5 + (seed % 8));
-
-  return { liveCurrent, liveCap, hourly, daily, monthly, global };
+function makeMetrics(c: Campaign): CampaignMetrics {
+  return {
+    liveCurrent: 0,
+    liveCap: c.dailyCap,
+    hourly: 0,
+    daily: c.callsToday,
+    monthly: 0,
+    global: 0,
+  };
 }
 
 /* ─────────────────────────────────────────────────────────────────── */
