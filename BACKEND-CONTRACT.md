@@ -2,7 +2,7 @@
 
 **Audience:** Backend developer
 **Author:** Frontend team
-**Date:** 2026-06-14 *(updated again — confirmed backend uses NO trailing slashes; §1.10 + §2.12 rewritten)*
+**Date:** 2026-06-15 *(updated — added §2.13 + §3.8 live counter fields request)*
 **Status:** This document is the source of truth for what the frontend sends and expects. Where backend behaviour disagrees with this document, **the backend must change**.
 
 ---
@@ -257,6 +257,12 @@ The frontend has hit these specific bugs this week. They block production usabil
 - `POST /api/kyc/documents/upload` accepts multipart and returns `{ url }`. **Confirmed working.**
 - For consistency, please use the same pattern for any other file uploads we add later (account avatar already follows it at `POST /api/accounts/me/avatar`).
 
+### 2.13 Missing per-campaign live counters
+
+The campaigns table needs **`liveCalls`**, **`callsHour`**, **`callsMonth`**, and **`callsGlobal`** on every campaign returned by `GET /api/campaigns/` and `GET /api/campaigns/{id}`. See §3.8 "Live counter fields" for the field shapes.
+
+Until you add these, the LIVE / HOURLY / MONTHLY / GLOBAL columns on the Campaigns page all render `0`. (We previously synthesized these from a hash of the campaign id, which is why a brand-new campaign was appearing in the UI with ~17k monthly calls already. That's been removed — accurate-but-empty is better than fake-looking-but-impressive.)
+
 ### 2.12 Silent DELETE failure on campaigns (and likely other resources)
 
 **Reproducer (campaigns):**
@@ -490,6 +496,22 @@ The most complete schema. Already confirmed against backend.
 | createdById | uuid | ✓ | Auto-set from caller |
 | createdAt | datetime | ✓ | |
 | updatedAt | datetime | ✓ | |
+
+**Live counter fields (read-only, REQUESTED — not yet implemented):**
+
+The campaigns table renders five per-campaign counters in the LIVE / HOURLY / DAILY / MONTHLY / GLOBAL columns. We previously synthesized these from a hash of the campaign id (so every new campaign appeared to already have ~17k monthly calls), which we've now removed. Until the backend ships real counters, those columns display `0`.
+
+Please add the following read-only fields to `GET /api/campaigns/` (list) and `GET /api/campaigns/{id}` (detail):
+
+| Field | Type | Notes |
+|---|---|---|
+| liveCalls | int | Currently ringing / in-progress calls on this campaign |
+| callsToday | int | ✅ already returned (keep it) |
+| callsHour | int | Calls started in the current hour (in org timezone) |
+| callsMonth | int | Calls started in the current calendar month |
+| callsGlobal | int | Lifetime call count |
+
+All read-only — must be ignored on `POST` / `PATCH`. These are aggregate counts the backend computes from the `Call` table; no schema change required on the campaign itself, just additional response fields. Same pattern as `GET /api/destinations/stats/` (per §3.9).
 
 ### 3.9 Destination
 
@@ -984,6 +1006,7 @@ In priority order:
 - [ ] Seed dev DB with realistic test data for buyers, campaigns, destinations, publishers — so FK validation passes during E2E testing
 - [ ] §3.12 — Add `GET /api/accounts/workspace/roles/` so we can drop hardcoded role list
 - [ ] §2.5 — Add regression test for `?status=` filter on access requests
+- [ ] §2.13 / §3.8 — Add `liveCalls`, `callsHour`, `callsMonth`, `callsGlobal` to the Campaign list + detail responses so the campaigns table can render real numbers
 
 ### Convention cleanup (any time)
 
