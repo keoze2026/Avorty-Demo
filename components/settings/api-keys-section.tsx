@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Copy, Eye, EyeOff, KeyRound, Loader2, MoreVertical, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertCircle, Copy, Eye, EyeOff, KeyRound, Loader2, MoreVertical, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { SectionShell } from "./profile-section";
@@ -37,7 +37,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatRelativeTime } from "@/lib/format";
-import { MOCK_API_KEYS } from "@/lib/mock/settings";
+import { apiKeysService } from "@/lib/api/services/api-keys.service";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import type { ApiKey, ApiScope } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -49,48 +50,68 @@ const SCOPE_TONE: Record<ApiScope, string> = {
 
 export function ApiKeysSection() {
   const { t } = useTranslation();
-  const [keys, setKeys] = useState<ApiKey[]>(MOCK_API_KEYS);
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [revealed, setRevealed] = useState<{ id: string; token: string } | null>(null);
   const [revealsExpanded, setRevealsExpanded] = useState<Set<string>>(new Set());
   const [rotating, setRotating] = useState<ApiKey | null>(null);
 
-  const onRotate = (key: ApiKey) => {
-    // Generate a new prefix + token; mutate the existing key id in place.
-    const tail = Math.random().toString(36).slice(2, 10);
-    const prefix = `vx_live_${tail.slice(0, 8)}`;
-    const token = `${prefix}${tail.slice(8)}_${Math.random().toString(36).slice(2, 12)}`;
-    setKeys((ks) =>
-      ks.map((k) =>
-        k.id === key.id
-          ? { ...k, prefix, createdAt: Date.now(), lastUsedAt: undefined }
-          : k,
-      ),
-    );
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      setKeys(await apiKeysService.list());
+    } catch (e) {
+      setLoadError(friendlyErrorMessage(e, t("workspaceUI.apiKeys.loadError")));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const onRotate = async (key: ApiKey) => {
     setRotating(null);
-    setRevealed({ id: key.id, token });
-    toast.success(t("workspaceUI.apiKeys.rotated").replace("{name}", key.name), {
-      description: t("workspaceUI.apiKeys.rotatedDescription"),
-    });
+    try {
+      const { key: fresh, token } = await apiKeysService.rotate(key);
+      // Rotate mints a new key id, so swap the old record for the fresh one.
+      setKeys((ks) => [fresh, ...ks.filter((k) => k.id !== key.id)]);
+      setRevealed({ id: fresh.id, token });
+      toast.success(t("workspaceUI.apiKeys.rotated").replace("{name}", key.name), {
+        description: t("workspaceUI.apiKeys.rotatedDescription"),
+      });
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, t("workspaceUI.apiKeys.rotateFailed")));
+    }
   };
 
-  const onCreate = (input: { name: string; scopes: ApiScope[] }) => {
-    const id = `k_${Math.random().toString(36).slice(2, 8)}`;
-    const tail = Math.random().toString(36).slice(2, 10);
-    const prefix = `vx_live_${tail.slice(0, 8)}`;
-    const token = `${prefix}${tail.slice(8)}_${Math.random().toString(36).slice(2, 12)}`;
-    setKeys((ks) => [
-      {
-        id,
-        name: input.name,
-        prefix,
-        scopes: input.scopes,
-        createdAt: Date.now(),
-        createdByName: "Avery Quinn",
-      },
-      ...ks,
-    ]);
-    setRevealed({ id, token });
+  const onCreate = async (input: { name: string; scopes: ApiScope[] }): Promise<boolean> => {
+    try {
+      const { key, token } = await apiKeysService.create(input);
+      setKeys((ks) => [key, ...ks]);
+      setRevealed({ id: key.id, token });
+      return true;
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, t("workspaceUI.apiKeys.createFailed")));
+      return false;
+    }
+  };
+
+  const onRevoke = async (key: ApiKey) => {
+    const prev = keys;
+    // Optimistic removal — roll back if the revoke call fails.
+    setKeys((ks) => ks.filter((x) => x.id !== key.id));
+    try {
+      await apiKeysService.revoke(key.id);
+      toast.success(t("workspaceUI.apiKeys.revoked").replace("{name}", key.name));
+    } catch (e) {
+      setKeys(prev);
+      toast.error(friendlyErrorMessage(e, t("workspaceUI.apiKeys.revokeFailed")));
+    }
   };
 
   const toggleReveal = (id: string) =>
@@ -121,6 +142,24 @@ export function ApiKeysSection() {
         </Button>
       </div>
 
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/20 py-10 text-xs text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("workspaceUI.apiKeys.loading")}
+        </div>
+      ) : loadError ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 py-10 text-center text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" /> {loadError}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => void load()}>
+            <RefreshCw className="h-3.5 w-3.5" /> {t("workspaceUI.apiKeys.retry")}
+          </Button>
+        </div>
+      ) : keys.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border bg-secondary/20 py-10 text-center text-xs text-muted-foreground">
+          {t("workspaceUI.apiKeys.empty")}
+        </div>
+      ) : (
       <div className="space-y-2">
         {keys.map((k, i) => (
           <motion.div
@@ -193,10 +232,7 @@ export function ApiKeysSection() {
                       <RefreshCw className="h-4 w-4" /> {t("workspaceUI.apiKeys.menuRotate")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onSelect={() => {
-                        setKeys((ks) => ks.filter((x) => x.id !== k.id));
-                        toast.success(t("workspaceUI.apiKeys.revoked").replace("{name}", k.name));
-                      }}
+                      onSelect={() => void onRevoke(k)}
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" /> {t("workspaceUI.apiKeys.menuRevoke")}
@@ -208,6 +244,7 @@ export function ApiKeysSection() {
           </motion.div>
         ))}
       </div>
+      )}
 
       <CreateKeyDialog open={createOpen} onOpenChange={setCreateOpen} onCreate={onCreate} />
       <RevealDialog revealed={revealed} onClose={() => setRevealed(null)} />
@@ -245,7 +282,7 @@ function CreateKeyDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (input: { name: string; scopes: ApiScope[] }) => void;
+  onCreate: (input: { name: string; scopes: ApiScope[] }) => Promise<boolean>;
 }) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
@@ -265,9 +302,10 @@ function CreateKeyDialog({
   const onSubmit = async () => {
     if (!name.trim() || scopes.size === 0) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 350));
-    onCreate({ name: name.trim(), scopes: [...scopes] });
-    onClose(false);
+    const ok = await onCreate({ name: name.trim(), scopes: [...scopes] });
+    setSubmitting(false);
+    // Keep the dialog open on failure so the user can retry without re-typing.
+    if (ok) onClose(false);
   };
 
   return (
