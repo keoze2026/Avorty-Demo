@@ -1,15 +1,19 @@
 "use client";
 
 /**
- * Campaign builder — 4-step dialog (Basics → Payout → Schedule → Review).
- * Submits to the local Zustand campaigns store and routes to the new detail page.
+ * Campaign builder — 3-step dialog (Basics → Payout & caps → Review).
+ * Submits to the campaigns store and routes to the new detail page.
+ *
+ * Schedule was removed from the wizard — campaigns are created with no
+ * configured schedule by default; per-day open/close hours can be edited
+ * later on the campaign detail page.
  */
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Clock, DollarSign, Loader2, Megaphone, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, DollarSign, Loader2, Megaphone, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +35,7 @@ import {
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
-import type { Campaign, PayoutModel, Weekday } from "@/lib/types";
+import type { PayoutModel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface CampaignBuilderProps {
@@ -39,25 +43,14 @@ interface CampaignBuilderProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const STEPS = ["Basics", "Payout & caps", "Schedule", "Review"] as const;
+const STEPS = ["Basics", "Payout & caps", "Review"] as const;
 type Step = (typeof STEPS)[number];
 
 const STEP_KEYS: Record<Step, string> = {
   Basics: "trafficUI.campaigns.builder.steps.basics",
   "Payout & caps": "trafficUI.campaigns.builder.steps.payout",
-  Schedule: "trafficUI.campaigns.builder.steps.schedule",
   Review: "trafficUI.campaigns.builder.steps.review",
 };
-
-const DAY_KEYS: Array<{ id: Weekday; key: string }> = [
-  { id: 0, key: "trafficUI.common.days.sun" },
-  { id: 1, key: "trafficUI.common.days.mon" },
-  { id: 2, key: "trafficUI.common.days.tue" },
-  { id: 3, key: "trafficUI.common.days.wed" },
-  { id: 4, key: "trafficUI.common.days.thu" },
-  { id: 5, key: "trafficUI.common.days.fri" },
-  { id: 6, key: "trafficUI.common.days.sat" },
-];
 
 interface FormState {
   name: string;
@@ -66,10 +59,6 @@ interface FormState {
   qualifyDurationSec: number;
   dailyCap: number;
   monthlyCap: number;
-  days: Weekday[];
-  startHour: number;
-  endHour: number;
-  timezone: Campaign["schedule"]["timezone"];
 }
 
 const EMPTY: FormState = {
@@ -79,17 +68,12 @@ const EMPTY: FormState = {
   qualifyDurationSec: 90,
   dailyCap: 200,
   monthlyCap: 5000,
-  days: [1, 2, 3, 4, 5],
-  startHour: 8,
-  endHour: 20,
-  timezone: "auto",
 };
 
 export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const add = useCampaignsStore((s) => s.add);
-  const DAY_LABELS: Array<{ id: Weekday; label: string }> = DAY_KEYS.map((d) => ({ id: d.id, label: t(d.key) }));
 
   const [stepIdx, setStepIdx] = useState(0);
   const [form, setForm] = useState<FormState>(EMPTY);
@@ -111,7 +95,6 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
   const canAdvance = (() => {
     if (step === "Basics") return form.name.trim().length >= 3;
     if (step === "Payout & caps") return form.payout > 0;
-    if (step === "Schedule") return form.days.length > 0 && form.endHour > form.startHour;
     return true;
   })();
 
@@ -133,11 +116,14 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
       qualifyDurationSec: form.qualifyDurationSec,
       dailyCap: form.dailyCap,
       monthlyCap: form.monthlyCap,
+      // Schedule is no longer collected in the wizard. Default to "always on"
+      // (every day, 24 hours, caller's local timezone) — the operator can
+      // restrict hours later from the campaign settings page.
       schedule: {
-        days: form.days,
-        startHour: form.startHour,
-        endHour: form.endHour,
-        timezone: form.timezone,
+        days: [0, 1, 2, 3, 4, 5, 6],
+        startHour: 0,
+        endHour: 24,
+        timezone: "auto",
       },
       numbersCount: 0,
       buyersCount: 0,
@@ -153,12 +139,6 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
     router.push(`${ROUTES.campaigns}/${created.id}`);
   };
 
-  const toggleDay = (d: Weekday) =>
-    setForm((f) => ({
-      ...f,
-      days: f.days.includes(d) ? f.days.filter((x) => x !== d) : [...f.days, d].sort((a, b) => a - b),
-    }));
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl gap-0 p-0">
@@ -173,7 +153,7 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
             </div>
           </div>
           {/* Step indicator */}
-          <div className="mt-4 grid grid-cols-4 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2">
             {STEPS.map((s, i) => {
               const done = i < stepIdx;
               const current = i === stepIdx;
@@ -305,84 +285,6 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                 </div>
               )}
 
-              {step === "Schedule" && (
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <Label>{t("trafficUI.campaigns.builder.labels.activeDays")}</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {DAY_LABELS.map((d) => {
-                        const active = form.days.includes(d.id);
-                        return (
-                          <button
-                            key={d.id}
-                            type="button"
-                            onClick={() => toggleDay(d.id)}
-                            className={cn(
-                              "h-9 w-12 rounded-md border text-xs font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                              active
-                                ? "border-accent bg-accent/10 text-accent"
-                                : "border-border text-muted-foreground hover:text-foreground",
-                            )}
-                          >
-                            {d.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="cb-start">{t("trafficUI.campaigns.builder.labels.startHour")}</Label>
-                      <div className="relative">
-                        <Clock className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          id="cb-start"
-                          type="number"
-                          min={0}
-                          max={23}
-                          value={form.startHour}
-                          onChange={(e) => setForm((f) => ({ ...f, startHour: parseInt(e.target.value) || 0 }))}
-                          className="pl-8 font-mono"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cb-end">{t("trafficUI.campaigns.builder.labels.endHour")}</Label>
-                      <div className="relative">
-                        <Clock className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          id="cb-end"
-                          type="number"
-                          min={1}
-                          max={24}
-                          value={form.endHour}
-                          onChange={(e) => setForm((f) => ({ ...f, endHour: parseInt(e.target.value) || 0 }))}
-                          className="pl-8 font-mono"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("trafficUI.campaigns.builder.labels.timezone")}</Label>
-                    <Select
-                      value={form.timezone}
-                      onValueChange={(v) => setForm((f) => ({ ...f, timezone: v as FormState["timezone"] }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">{t("trafficUI.common.timezones.callerLocalAuto")}</SelectItem>
-                        <SelectItem value="America/New_York">{t("trafficUI.common.timezones.eastern")}</SelectItem>
-                        <SelectItem value="America/Chicago">{t("trafficUI.common.timezones.central")}</SelectItem>
-                        <SelectItem value="America/Denver">{t("trafficUI.common.timezones.mountain")}</SelectItem>
-                        <SelectItem value="America/Los_Angeles">{t("trafficUI.common.timezones.pacific")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
               {step === "Review" && (
                 <div className="space-y-3">
                   <div className="rounded-lg border border-border bg-secondary/30 p-4">
@@ -402,15 +304,6 @@ export function CampaignBuilder({ open, onOpenChange }: CampaignBuilderProps) {
                         label={t("trafficUI.campaigns.builder.labels.monthlyCap")}
                         value={form.monthlyCap === 0 ? t("trafficUI.campaigns.builder.unlimited") : form.monthlyCap.toString()}
                       />
-                      <Field
-                        label={t("trafficUI.campaigns.builder.labels.hours")}
-                        value={`${form.startHour.toString().padStart(2, "0")}:00 – ${form.endHour.toString().padStart(2, "0")}:00`}
-                      />
-                      <Field
-                        label={t("trafficUI.campaigns.builder.labels.days")}
-                        value={DAY_LABELS.filter((d) => form.days.includes(d.id)).map((d) => d.label).join(", ")}
-                      />
-                      <Field label={t("trafficUI.campaigns.builder.labels.timezone")} value={form.timezone === "auto" ? t("trafficUI.common.timezones.callerLocal") : form.timezone} />
                     </dl>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
