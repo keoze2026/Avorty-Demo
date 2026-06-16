@@ -5,6 +5,7 @@ import { Hash, Pencil, Plus, Unlink } from "lucide-react";
 import { toast } from "sonner";
 
 import { TrackingNumberEditDialog } from "@/components/campaigns/settings/tracking-number-edit-dialog";
+import { ProvisionNumberDialog } from "@/components/numbers/provision-number-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,10 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
   // The id of the tracking number currently being edited in the dialog.
   // `null` keeps the dialog closed.
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Controls the "provision a new tracking number" dialog. Both Add buttons
+  // (top-right + empty-state) flip this open. The dialog is pre-locked to
+  // the current campaign so the user doesn't have to re-pick.
+  const [provisionOpen, setProvisionOpen] = useState(false);
 
   const handleDetach = (id: string, label: string) => {
     // Detaching = clear the campaign link so the number drops out of this
@@ -59,7 +64,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
             {t("trafficUI.campaigns.settings.trackingNumbers.description")}
           </p>
         </div>
-        <Button size="sm" onClick={() => toast.info(t("trafficUI.campaigns.settings.trackingNumbers.provisionSoon"))}>
+        <Button size="sm" onClick={() => setProvisionOpen(true)}>
           <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.trackingNumbers.add")}
         </Button>
       </div>
@@ -71,7 +76,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
           title={t("trafficUI.campaigns.settings.trackingNumbers.empty.title")}
           description={t("trafficUI.campaigns.settings.trackingNumbers.empty.description")}
           actions={
-            <Button size="sm">
+            <Button size="sm" onClick={() => setProvisionOpen(true)}>
               <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.trackingNumbers.addTracking")}
             </Button>
           }
@@ -155,6 +160,14 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
       <TrackingNumberEditDialog
         numberId={editingId}
         onOpenChange={(open) => !open && setEditingId(null)}
+      />
+
+      {/* Provision dialog — pre-locked to this campaign so the new number
+          immediately appears in the table above. */}
+      <ProvisionNumberDialog
+        open={provisionOpen}
+        onOpenChange={setProvisionOpen}
+        lockedCampaignId={campaignId}
       />
     </section>
   );

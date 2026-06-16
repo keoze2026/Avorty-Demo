@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Hash, Loader2, Plus } from "lucide-react";
@@ -30,6 +31,13 @@ import type { NumberType } from "@/lib/types";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * When set, the provisioned number(s) are auto-attached to this campaign and
+   * the campaign picker is hidden. Used by the Campaign → Settings → Tracking
+   * Numbers section so the user doesn't have to re-pick the campaign they're
+   * already editing.
+   */
+  lockedCampaignId?: string;
 }
 
 const STATE_OPTIONS = [
@@ -54,21 +62,32 @@ function randomTollfree() {
   return `+1${prefix}${line}`;
 }
 
-export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
+export function ProvisionNumberDialog({ open, onOpenChange, lockedCampaignId }: Props) {
   const { t } = useTranslation();
   const campaigns = useCampaignsStore((s) => s.campaigns);
   const addNumber = useNumbersStore((s) => s.addNumber);
+  const lockedCampaign =
+    lockedCampaignId ? campaigns.find((c) => c.id === lockedCampaignId) : undefined;
 
   const [type, setType] = useState<NumberType>("local");
   const [region, setRegion] = useState(STATE_OPTIONS[0].code);
-  const [campaignId, setCampaignId] = useState<string>("none");
+  // When a campaign is locked in, force the picker value; otherwise default
+  // to "none" so the user can attach manually.
+  const [campaignId, setCampaignId] = useState<string>(lockedCampaignId ?? "none");
   const [count, setCount] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+
+  // Keep the internal selection in sync if the parent swaps which campaign
+  // is locked (e.g. user navigates between campaign detail pages without
+  // unmounting this dialog).
+  React.useEffect(() => {
+    if (lockedCampaignId) setCampaignId(lockedCampaignId);
+  }, [lockedCampaignId]);
 
   const reset = () => {
     setType("local");
     setRegion(STATE_OPTIONS[0].code);
-    setCampaignId("none");
+    setCampaignId(lockedCampaignId ?? "none");
     setCount(1);
     setSubmitting(false);
   };
@@ -80,37 +99,45 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
 
   const onSubmit = async () => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 500));
     const region_ = STATE_OPTIONS.find((s) => s.code === region) ?? STATE_OPTIONS[0];
     const campaign = campaignId !== "none" ? campaigns.find((c) => c.id === campaignId) : undefined;
 
-    for (let i = 0; i < count; i++) {
-      addNumber({
-        number: type === "tollfree" ? randomTollfree() : randomLocalNumber(region_.area),
-        type,
-        status: "active",
-        campaignId: campaign?.id,
-        campaignName: campaign?.name,
-        state: type === "tollfree" ? undefined : region_.code,
-        city: type === "tollfree" ? undefined : region_.city,
-        monthlyCost: type === "tollfree" ? 5 : 2,
-        callsToday: 0,
-        callsMonthly: 0,
-        conversionRate: 0,
-      });
-    }
+    try {
+      // Sequentially provision via the backend — `addNumber` calls
+      // POST /api/numbers/purchase under the hood and patches the store.
+      for (let i = 0; i < count; i++) {
+        await addNumber({
+          number: type === "tollfree" ? randomTollfree() : randomLocalNumber(region_.area),
+          type,
+          status: "active",
+          campaignId: campaign?.id,
+          campaignName: campaign?.name,
+          state: type === "tollfree" ? undefined : region_.code,
+          city: type === "tollfree" ? undefined : region_.city,
+          monthlyCost: type === "tollfree" ? 5 : 2,
+          callsToday: 0,
+          callsMonthly: 0,
+          conversionRate: 0,
+        });
+      }
 
-    toast.success(
-      count === 1
-        ? t("trafficUI.numbers.provision.toast.one")
-        : t("trafficUI.numbers.provision.toast.many").replace("{count}", String(count)),
-      {
-        description: campaign
-          ? t("trafficUI.numbers.provision.toast.attachedTo").replace("{name}", campaign.name)
-          : t("trafficUI.numbers.provision.toast.unattached"),
-      },
-    );
-    onClose(false);
+      toast.success(
+        count === 1
+          ? t("trafficUI.numbers.provision.toast.one")
+          : t("trafficUI.numbers.provision.toast.many").replace("{count}", String(count)),
+        {
+          description: campaign
+            ? t("trafficUI.numbers.provision.toast.attachedTo").replace("{name}", campaign.name)
+            : t("trafficUI.numbers.provision.toast.unattached"),
+        },
+      );
+      onClose(false);
+    } catch (e) {
+      // Surface the backend failure so users don't see a silent "nothing happened".
+      toast.error(e instanceof Error ? e.message : "Failed to provision number");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -174,22 +201,35 @@ export function ProvisionNumberDialog({ open, onOpenChange }: Props) {
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label>{t("trafficUI.numbers.provision.attachCampaign")}</Label>
-            <Select value={campaignId} onValueChange={setCampaignId}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("trafficUI.numbers.provision.leaveUnassigned")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t("trafficUI.numbers.provision.leaveUnassignedItem")}</SelectItem>
-                {campaigns.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {lockedCampaign ? (
+            // Campaign is fixed by the caller (e.g. Campaign → Settings →
+            // Tracking Numbers section). Render a static hint instead of a
+            // picker so the user understands what they're about to do.
+            <div className="space-y-2">
+              <Label>{t("trafficUI.numbers.provision.attachCampaign")}</Label>
+              <div className="flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs">
+                <Hash className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <span className="font-medium text-foreground">{lockedCampaign.name}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>{t("trafficUI.numbers.provision.attachCampaign")}</Label>
+              <Select value={campaignId} onValueChange={setCampaignId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("trafficUI.numbers.provision.leaveUnassigned")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("trafficUI.numbers.provision.leaveUnassignedItem")}</SelectItem>
+                  {campaigns.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="prov-count">{t("trafficUI.numbers.provision.howMany")}</Label>
