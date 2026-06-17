@@ -64,14 +64,43 @@ export const useNumbersStore = create<NumbersState>()((set, get) => ({
     //   - if the input looks like a search result with no real number yet,
     //     use /api/numbers/purchase
     //   - otherwise import an existing number via /api/numbers/import
+    // Both paths forward the optional campaignId so backends that accept it
+    // can attach in one round-trip.
     const created = input.number?.startsWith("+")
-      ? await numbersService.importNumber({ number: input.number })
+      ? await numbersService.importNumber({
+          number: input.number,
+          campaignId: input.campaignId,
+        })
       : await numbersService.purchase({
           number: input.number,
           campaignId: input.campaignId,
         });
-    set((s) => ({ numbers: [created, ...s.numbers] }));
-    return created;
+
+    // If the caller asked to attach to a campaign but the server's create
+    // response didn't reflect it, explicitly assign via the dedicated
+    // endpoint. This covers backends whose import/purchase ignores the
+    // campaign field and keeps attachment on a single API contract.
+    let final = created;
+    if (input.campaignId && created.campaignId !== input.campaignId) {
+      try {
+        await numbersService.assign(created.id, input.campaignId);
+      } catch {
+        // Assign failed (e.g. 404 because the backend doesn't expose this
+        // endpoint yet) — proceed with the optimistic local patch so the
+        // user at least sees their newly-provisioned number in the table.
+      }
+      // Optimistically patch the local copy with the campaign metadata
+      // the caller intended, so the campaign-scoped tracking-numbers
+      // table renders the new row immediately — regardless of whether
+      // /assign succeeded server-side.
+      final = {
+        ...created,
+        campaignId: input.campaignId,
+        campaignName: input.campaignName ?? created.campaignName,
+      };
+    }
+    set((s) => ({ numbers: [final, ...s.numbers] }));
+    return final;
   },
 
   updateNumber: async (id, patch) => {

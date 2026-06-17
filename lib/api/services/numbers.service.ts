@@ -182,10 +182,21 @@ export const numbersService = {
     );
   },
 
-  async importNumber(input: { number: string; vendor?: string }): Promise<TrackingNumber> {
+  async importNumber(input: {
+    number: string;
+    vendor?: string;
+    campaignId?: string;
+  }): Promise<TrackingNumber> {
     return wireToNumber(
       await http.post<NumberWire>("/api/numbers/import", {
-        body: { phoneNumber: input.number, vendor: input.vendor },
+        body: {
+          phoneNumber: input.number,
+          vendor: input.vendor,
+          // Forward campaignId so backends that accept it can attach in
+          // one round-trip. Backends that ignore the field stay unaffected;
+          // we fall back to /assign in the store for those.
+          campaignId: input.campaignId,
+        },
       }),
     );
   },
