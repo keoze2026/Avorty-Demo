@@ -34,8 +34,20 @@ import {
 import { toast } from "sonner";
 
 import { useTranslation } from "@/hooks/use-translation";
+import { ApiError } from "@/lib/api/http";
+import { friendlyErrorMessage } from "@/lib/api/errors";
+import { supportService, type ChatMessage } from "@/lib/api/services/support.service";
 import { pushNotification } from "@/lib/store/push-notifications-store";
+import {
+  getGuestIdentity,
+  getStoredSessionId,
+  storeSessionId,
+} from "@/lib/support-guest-identity";
 import { cn } from "@/lib/utils";
+
+/* Poll interval for fetching agent replies (ms). 3s is the sweet spot
+   between "feels live" and "doesn't hammer the backend". */
+const AGENT_POLL_MS = 3000;
 
 type Sender = "user" | "ai" | "agent" | "system";
 
@@ -116,8 +128,13 @@ export function ChatWidget() {
   /** When set, the visitor is now talking to that team member. */
   const [activeAgent, setActiveAgent] = React.useState<TeamMember | null>(null);
   const [showEscalation, setShowEscalation] = React.useState(false);
+  /** Backend session id for the active human-agent conversation. */
+  const [sessionId, setSessionId] = React.useState<string | null>(null);
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  /** Dedupe key set for agent messages we've already inserted into local state
+   *  (poller fires every few seconds and gets the full transcript each time). */
+  const seenAgentKeys = React.useRef<Set<string>>(new Set());
 
   React.useEffect(() => {
     if (open) {
@@ -143,6 +160,63 @@ export function ChatWidget() {
     }
   }, [seenAiResponses, activeAgent]);
 
+  /* Poll the support transcript for agent replies. Runs only when the
+     widget is open AND a session exists. Agent messages from the backend
+     are dedup'd against `seenAgentKeys` so we never insert the same one
+     twice. We deliberately do NOT mirror visitor messages from the
+     backend — those already live in local state, and round-tripping them
+     would cause flicker. Polling stops as soon as the panel closes or
+     the agent is dismissed. */
+  React.useEffect(() => {
+    if (!open || !activeAgent || !sessionId) return;
+    let cancelled = false;
+    let consecutiveFailures = 0;
+
+    const tick = async () => {
+      try {
+        const transcript = await supportService.fetchSession(sessionId);
+        if (cancelled) return;
+        consecutiveFailures = 0;
+        const fresh = transcript.messages
+          .filter((m) => m.sender === "agent")
+          .filter((m) => {
+            const key = agentMessageKey(m);
+            if (seenAgentKeys.current.has(key)) return false;
+            seenAgentKeys.current.add(key);
+            return true;
+          });
+        if (fresh.length > 0) {
+          setMessages((prev) => [
+            ...prev,
+            ...fresh.map<Message>((m) => ({
+              sender: "agent",
+              agentId: activeAgent.id,
+              content: m.body,
+              at: m.createdAt,
+            })),
+          ]);
+        }
+      } catch {
+        // Silent for transient failures so we don't toast every 3 seconds.
+        // After several in a row we assume the session is gone or the
+        // backend is down; surface one toast then back off.
+        consecutiveFailures += 1;
+        if (consecutiveFailures === 5) {
+          toast.error(t("marketingUI.chat.pollLost"));
+        }
+      }
+    };
+
+    // Run once immediately so the visitor sees agent replies the moment
+    // they pop the panel open, then on the regular cadence.
+    void tick();
+    const id = window.setInterval(tick, AGENT_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [open, activeAgent, sessionId, t]);
+
   const send = async (overrideText?: string) => {
     const trimmed = (overrideText ?? input).trim();
     if (!trimmed || pending) return;
@@ -155,24 +229,39 @@ export function ChatWidget() {
     setInput("");
     setPending(true);
 
-    // When a human agent is active, simulate a typed reply rather than
-    // hitting Anthropic — the bubble comes from the agent.
+    // When a human agent is active, route through the real support API.
+    // First message of a session → POST /api/support/chat (creates the
+    // session + Telegrams the operator). Subsequent messages → POST
+    // /api/support/chat/{sessionId}. Polling (in a separate effect)
+    // picks up the operator's replies.
     if (activeAgent) {
-      window.setTimeout(() => {
-        setMessages((m) => [
-          ...m,
-          {
-            sender: "agent",
+      try {
+        if (!sessionId) {
+          const guest = getGuestIdentity();
+          const result = await supportService.startChat({
+            name: guest.name,
+            email: guest.email,
+            message: trimmed,
             agentId: activeAgent.id,
-            content: t("marketingUI.chat.agentReplyTemplate").replace(
-              "{name}",
-              t(activeAgent.nameKey),
-            ),
-            at: Date.now(),
-          },
-        ]);
+          });
+          setSessionId(result.sessionId);
+          storeSessionId(activeAgent.id, result.sessionId);
+        } else {
+          await supportService.sendMessage(sessionId, { message: trimmed });
+        }
+      } catch (err) {
+        const friendly =
+          err instanceof ApiError && err.status === 429
+            ? t("marketingUI.chat.rateLimited")
+            : friendlyErrorMessage(err, t("marketingUI.chat.sendFailed"));
+        toast.error(friendly);
+        // Roll back the optimistic user bubble so the visitor knows it
+        // didn't go through and can retry.
+        setMessages((m) => m.slice(0, -1));
+        setInput(trimmed);
+      } finally {
         setPending(false);
-      }, 900 + Math.random() * 700);
+      }
       return;
     }
 
@@ -218,12 +307,18 @@ export function ChatWidget() {
     }
   };
 
-  /** Hand off to a team member. Fires a push notification to the operator
-   *  console (so an admin sees "live chat request" in real-time), drops an
-   *  inline system message, and switches the panel into "agent" mode. */
+  /** Hand off to a team member. Switches the panel into "agent" mode and
+   *  resumes any stored session for that agent. The agent's first reply
+   *  comes from the real backend (via Telegram), not from the frontend —
+   *  so we no longer inject a fake intro message here. */
   const handoff = (member: TeamMember, intent: "sales" | "support" | "direct") => {
     setActiveAgent(member);
     setShowEscalation(false);
+    // Reset agent-message dedupe set + restore any stored session id so a
+    // page refresh continues the same Telegram thread.
+    seenAgentKeys.current = new Set();
+    const stored = getStoredSessionId(member.id);
+    setSessionId(stored);
     setMessages((m) => [
       ...m,
       {
@@ -233,17 +328,10 @@ export function ChatWidget() {
           .replace("{role}", t(member.roleKey)),
         at: Date.now(),
       },
-      {
-        sender: "agent",
-        agentId: member.id,
-        content: t("marketingUI.chat.agentIntroTemplate")
-          .replace("{name}", t(member.nameKey))
-          .replace("{intent}", t(`marketingUI.chat.intents.${intent}`)),
-        at: Date.now() + 1,
-      },
     ]);
-    // Real-time alert to the operator surface — the admin app's push banner
-    // system picks this up.
+    // Real-time alert to the operator surface (in-app push banner). This
+    // is intentionally a local notification — the *real* Telegram ping is
+    // sent server-side when the visitor's first message hits POST /api/support/chat.
     pushNotification({
       severity: "info",
       icon: "spark",
@@ -742,4 +830,11 @@ function formatTime(ms: number): string {
   const period = h < 12 ? "AM" : "PM";
   const display = h % 12 === 0 ? 12 : h % 12;
   return `${display}:${m} ${period}`;
+}
+
+/** Stable identity for an agent message — prefer server id, fall back to
+ *  timestamp + first 32 chars of body so we still dedupe on backends that
+ *  don't return ids per message. */
+function agentMessageKey(m: ChatMessage): string {
+  return m.id ?? `${m.createdAt}:${m.body.slice(0, 32)}`;
 }

@@ -172,14 +172,21 @@ export const numbersService = {
     number: string;
     campaignId?: string;
   }): Promise<TrackingNumber> {
+    // Backend expects `phone_number` (not `number`). The http layer
+    // camelToSnake-s the body, so we pass `phoneNumber` here and it
+    // arrives as `phone_number` on the wire.
     return wireToNumber(
-      await http.post<NumberWire>("/api/numbers/purchase", { body: input }),
+      await http.post<NumberWire>("/api/numbers/purchase", {
+        body: { phoneNumber: input.number, campaignId: input.campaignId },
+      }),
     );
   },
 
   async importNumber(input: { number: string; vendor?: string }): Promise<TrackingNumber> {
     return wireToNumber(
-      await http.post<NumberWire>("/api/numbers/import", { body: input }),
+      await http.post<NumberWire>("/api/numbers/import", {
+        body: { phoneNumber: input.number, vendor: input.vendor },
+      }),
     );
   },
 

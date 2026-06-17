@@ -2,9 +2,12 @@
 
 /**
  * Contact section — sits above the footer on the marketing site. Visitors
- * fill in name + email + message; submit POSTs to /api/contact/ which
- * persists the submission, emails the support inbox, and pings the sales
- * Telegram channel.
+ * fill in name + email + message; submit POSTs to /api/support/chat which
+ * opens a support session, pings the admin team via Telegram, and emails
+ * the support inbox. The team replies via Telegram or email and the
+ * response lands in the visitor's Gmail — there is no in-app reply UI
+ * yet, so we discard the returned `sessionId` for now. (When the chat
+ * history UI is built, we'll persist it to localStorage instead.)
  *
  * The visible `support@keozx.com` link in the form acts as a fallback if
  * the visitor would rather write from their own email client directly.
@@ -16,7 +19,7 @@ import { toast } from "sonner";
 
 import { ApiError } from "@/lib/api/http";
 import { friendlyErrorMessage } from "@/lib/api/errors";
-import { contactService } from "@/lib/api/services/contact.service";
+import { supportService } from "@/lib/api/services/support.service";
 
 const SUPPORT_EMAIL = "support@keozx.com";
 
@@ -38,7 +41,7 @@ export function ContactSection() {
 
     setPending(true);
     try {
-      await contactService.send({
+      await supportService.startChat({
         name: name.trim(),
         email: email.trim(),
         message: message.trim(),

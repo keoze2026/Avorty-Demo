@@ -1,0 +1,208 @@
+/**
+ * Support chat service — public contact / chat surface.
+ *
+ *   POST /api/support/chat                  start a session     → { sessionId, message }
+ *   POST /api/support/chat/{sessionId}      visitor follow-up   → { message }
+ *   GET  /api/support/chat/{sessionId}      poll for replies    → { messages: [...] }
+ *
+ * On the visitor's side the admin team monitors incoming sessions via
+ * Telegram and replies via Telegram or email. Replies land in the
+ * visitor's Gmail. The two follow-up endpoints power a future in-app
+ * "view your conversation" experience — they are not used by the
+ * marketing contact form, but the service exports them now so they're
+ * ready when the chat-history UI is built.
+ *
+ * All three endpoints are anonymous (no `Authorization` header) and
+ * rate-limited by IP server-side.
+ */
+
+import { http } from "@/lib/api/http";
+
+/* ─── Inputs ─────────────────────────────────────────────────────────── */
+
+export interface StartChatInput {
+  name: string;
+  email: string;
+  message: string;
+  /**
+   * Which team member the visitor picked from the in-app widget.
+   * Backend uses this to route the Telegram ping to the right operator.
+   * Optional — when omitted the backend round-robins / sends to whoever is on duty.
+   */
+  agentId?: string;
+}
+
+export interface SendMessageInput {
+  message: string;
+}
+
+/* ─── Outputs (frontend-shaped) ──────────────────────────────────────── */
+
+export type ChatSender = "visitor" | "agent";
+
+export interface ChatMessage {
+  /** Stable id assigned by the backend. */
+  id?: string;
+  sender: ChatSender;
+  body: string;
+  /** ms-epoch timestamp normalized from the wire ISO string. */
+  createdAt: number;
+}
+
+export interface StartChatResult {
+  /** Persist this in localStorage so the session can be resumed later. */
+  sessionId: string;
+  /** Server's acknowledgement / echo. Optional in case the backend omits it. */
+  message?: string;
+}
+
+export interface SessionTranscript {
+  sessionId: string;
+  messages: ChatMessage[];
+}
+
+/* ─── Wire shapes (snake_case) ───────────────────────────────────────── */
+
+interface StartChatWire {
+  /** `session_id` arrives camelCased thanks to the http layer's snake→camel pass. */
+  sessionId: string;
+  message?: string;
+}
+
+interface ChatMessageWire {
+  id?: string | number;
+  /** Backends vary: "agent" | "operator" | "team" | "support" | "admin" | "staff" | "visitor" | "user" | "customer". */
+  sender?: string;
+  /** Same field surfaces under several names — we try all of them. */
+  body?: string;
+  message?: string;
+  text?: string;
+  content?: string;
+  createdAt?: string | number;
+  timestamp?: string | number;
+  sentAt?: string | number;
+}
+
+/** The transcript wire shape — accept several common backend conventions
+ *  so we don't silently render an empty conversation when the backend
+ *  picks a slightly different field name. */
+interface SessionTranscriptWire {
+  sessionId?: string;
+  messages?: ChatMessageWire[];
+  /** Some APIs wrap the list as `history`, `items`, `data`, or `chat`. */
+  history?: ChatMessageWire[];
+  items?: ChatMessageWire[];
+  data?: ChatMessageWire[] | { messages?: ChatMessageWire[] };
+  chat?: ChatMessageWire[];
+}
+
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+
+function toTs(v: string | number | undefined | null): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const t = Date.parse(v);
+    return Number.isFinite(t) ? t : Date.now();
+  }
+  return Date.now();
+}
+
+/**
+ * Treat any sender that isn't clearly the visitor side as the agent side.
+ * Backends use many words for the operator: "agent" | "operator" | "team"
+ * | "support" | "admin" | "staff" | "telegram" | "bot". Whitelisting only
+ * "agent" would silently drop those.
+ */
+const VISITOR_SENDERS = new Set(["visitor", "user", "customer", "client", "guest", "me"]);
+function normalizeSender(raw: string | undefined): ChatSender {
+  if (!raw) return "agent"; // missing sender → safer to show than hide
+  return VISITOR_SENDERS.has(raw.toLowerCase()) ? "visitor" : "agent";
+}
+
+function wireToMessage(w: ChatMessageWire): ChatMessage {
+  return {
+    id: w.id !== undefined ? String(w.id) : undefined,
+    sender: normalizeSender(w.sender),
+    body: w.body ?? w.message ?? w.text ?? w.content ?? "",
+    createdAt: toTs(w.createdAt ?? w.timestamp ?? w.sentAt),
+  };
+}
+
+/** Pick the messages array regardless of which wrapper the backend used. */
+function extractMessages(wire: SessionTranscriptWire | ChatMessageWire[]): ChatMessageWire[] {
+  if (Array.isArray(wire)) return wire;
+  if (Array.isArray(wire.messages)) return wire.messages;
+  if (Array.isArray(wire.history)) return wire.history;
+  if (Array.isArray(wire.items)) return wire.items;
+  if (Array.isArray(wire.chat)) return wire.chat;
+  if (Array.isArray(wire.data)) return wire.data;
+  if (wire.data && typeof wire.data === "object" && Array.isArray(wire.data.messages)) {
+    return wire.data.messages;
+  }
+  return [];
+}
+
+/* ─── Service ────────────────────────────────────────────────────────── */
+
+export const supportService = {
+  /**
+   * Start a new support session. Used by the marketing contact form.
+   * The admin team gets an instant Telegram ping with the visitor's details
+   * and replies asynchronously via Telegram or email — replies land in the
+   * visitor's Gmail, not via this API.
+   */
+  async startChat(input: StartChatInput): Promise<StartChatResult> {
+    const wire = await http.post<StartChatWire>("/api/support/chat", {
+      body: input,
+      anonymous: true,
+    });
+    return { sessionId: wire.sessionId, message: wire.message };
+  },
+
+  /**
+   * Visitor follow-up message on an existing session.
+   * Not used yet — reserved for the future in-app chat history view.
+   */
+  async sendMessage(sessionId: string, input: SendMessageInput): Promise<void> {
+    await http.post(`/api/support/chat/${encodeURIComponent(sessionId)}`, {
+      body: input,
+      anonymous: true,
+    });
+  },
+
+  /**
+   * Poll for the full transcript of a session (both visitor + agent messages).
+   * Not used yet — reserved for the future in-app chat history view.
+   *
+   * Call every few seconds while a session is open; stop polling once the
+   * page is hidden or after a back-off if no new messages arrive.
+   */
+  async fetchSession(sessionId: string): Promise<SessionTranscript> {
+    const wire = await http.get<SessionTranscriptWire | ChatMessageWire[]>(
+      `/api/support/chat/${encodeURIComponent(sessionId)}`,
+      { anonymous: true },
+    );
+    const rawMessages = extractMessages(wire);
+
+    // One-time diagnostic when the conversation looks empty but the
+    // payload wasn't. Helps spot field-name mismatches between FE / BE
+    // without having to ship a custom debug build. Dev-only.
+    if (
+      process.env.NODE_ENV !== "production" &&
+      rawMessages.length === 0 &&
+      !Array.isArray(wire) &&
+      Object.keys(wire ?? {}).length > 1
+    ) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "[supportService.fetchSession] no messages extracted — backend response shape:",
+        wire,
+      );
+    }
+
+    return {
+      sessionId: (Array.isArray(wire) ? undefined : wire.sessionId) ?? sessionId,
+      messages: rawMessages.map(wireToMessage),
+    };
+  },
+};
