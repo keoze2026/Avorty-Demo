@@ -54,6 +54,10 @@ export function deriveName(n: TrackingNumber): string {
 }
 
 export function deriveCountry(n: TrackingNumber): string {
+  // Prefer the real value from the backend; fall back to a deterministic
+  // hash-derived placeholder so existing demos keep rendering. When the
+  // backend ships the `country` field this branch silently goes away.
+  if (n.country) return n.country;
   const h = hash(n.id);
   if (n.type === "international") return COUNTRIES_INTL[h % COUNTRIES_INTL.length];
   return COUNTRIES_LOCAL[h % COUNTRIES_LOCAL.length];
@@ -70,22 +74,34 @@ export function derivePurchaseStatus(n: TrackingNumber): {
 }
 
 export function deriveAllocated(n: TrackingNumber): number {
+  // Prefer the real value from the backend; fall back to a deterministic
+  // placeholder so unpopulated demos stay readable.
+  if (typeof n.allocatedCapacity === "number") return n.allocatedCapacity;
   return ALLOCATED_OPTIONS[hash(n.id) % ALLOCATED_OPTIONS.length];
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function deriveRenewDate(n: TrackingNumber): string {
-  const daysOut = 5 + (hash(n.id) % 30); // 5..34 days
-  const d = new Date(Date.now() + daysOut * DAY_MS);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // Prefer the real value from the backend; fall back to a deterministic
+  // 5..34-day offset so the column never blanks out during demos.
+  const ts = n.renewsAt ?? Date.now() + (5 + (hash(n.id) % 30)) * DAY_MS;
+  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function deriveLifetimeDays(n: TrackingNumber): number {
   return Math.max(1, Math.floor((Date.now() - n.provisionedAt) / DAY_MS));
 }
 
+/**
+ * Resolve the carrier shown in the "Publisher" column (the underlying
+ * field is still named `vendor` in our domain types — that's the telecom
+ * industry term — but the UI labels it as "Publisher" per product
+ * preference). Prefer the backend value; fall back to a deterministic
+ * placeholder so empty demos stay readable.
+ */
 export function deriveVendor(n: TrackingNumber): string {
+  if (n.vendor && n.vendor.trim()) return n.vendor;
   return VENDORS[hash(n.id) % VENDORS.length];
 }
 
@@ -121,7 +137,7 @@ export const TRACK_NUMBERS_COLUMNS = [
   { id: "allocated", label: "Allocated", labelKey: "trafficUI.numbers.track.headers.allocated" },
   { id: "renew", label: "Renew", labelKey: "trafficUI.numbers.track.headers.renew" },
   { id: "lifetime", label: "Lifetime", labelKey: "trafficUI.numbers.track.headers.lifetime" },
-  { id: "vendor", label: "Vendor", labelKey: "trafficUI.numbers.track.headers.vendor" },
+  { id: "vendor", label: "Publisher", labelKey: "trafficUI.numbers.track.headers.vendor" },
   { id: "live", label: "Live", labelKey: "trafficUI.numbers.track.headers.live" },
   { id: "hourly", label: "Hourly", labelKey: "trafficUI.numbers.track.headers.hourly" },
   { id: "daily", label: "Daily", labelKey: "trafficUI.numbers.track.headers.daily" },

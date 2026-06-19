@@ -38,15 +38,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { BlockedNumberEntry } from "@/lib/mock/suppression";
 import { useBlockedNumbersStore } from "@/lib/store/blocked-numbers-store";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 const ALL_CAMPAIGNS_ID = "__all__";
 
 type SortKey = "number-asc" | "number-desc" | "campaign-asc";
-
-const CAMPAIGN_NAME_BY_ID = new Map(MOCK_CAMPAIGNS.map((c) => [c.id, c.name]));
 
 /** "18302094480" → "+18302094480"; if scope is prefix we append "*". */
 function displayNumber(entry: BlockedNumberEntry): string {
@@ -70,9 +68,19 @@ export default function BlockedNumbersPage() {
   ];
   const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
 
+  // Live campaigns from the real store (was previously MOCK_CAMPAIGNS).
+  // Hydrated from GET /api/campaigns/ on app boot.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+  const campaignNameById = React.useMemo(
+    () => new Map(campaigns.map((c) => [c.id, c.name])),
+    [campaigns],
+  );
+
   function campaignLabel(entry: BlockedNumberEntry): string {
     if (!entry.campaignId) return t("toolsUI.suppression.allCampaigns");
-    return CAMPAIGN_NAME_BY_ID.get(entry.campaignId) ?? entry.campaignId;
+    // Fall back to the raw id if the matching campaign hasn't loaded yet
+    // (or was deleted) so the row never renders blank.
+    return campaignNameById.get(entry.campaignId) ?? entry.campaignId;
   }
 
   const numbers = useBlockedNumbersStore((s) => s.numbers);
@@ -100,10 +108,9 @@ export default function BlockedNumbersPage() {
   const filterOptions = React.useMemo<FilterOption[]>(
     () => [
       { id: ALL_CAMPAIGNS_ID, label: t("toolsUI.suppression.allCampaigns") },
-      ...MOCK_CAMPAIGNS.map((c) => ({ id: c.id, label: c.name })),
+      ...campaigns.map((c) => ({ id: c.id, label: c.name })),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [campaigns, t],
   );
 
   const rows = React.useMemo(() => {

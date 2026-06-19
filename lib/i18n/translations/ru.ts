@@ -2198,7 +2198,7 @@ export const ru: TranslationShape = {
           allocated: "Выделено",
           renew: "Продление",
           lifetime: "Срок",
-          vendor: "Поставщик",
+          vendor: "Издатель",
           live: "В эфире",
           hourly: "Час",
           daily: "День",

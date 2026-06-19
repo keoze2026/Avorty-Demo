@@ -30,10 +30,22 @@ interface NumberWire {
   poolName?: string;
   state?: string;
   city?: string;
+  /** Backend may surface country as either `country` or `country_code`. */
+  country?: string;
+  countryCode?: string;
+  /** Carrier / vendor (UI labels this "Publisher"). */
+  vendor?: string;
   monthlyCost?: string | number;
   callsToday?: number;
   callsMonthly?: number;
   conversionRate?: number;
+  /** Concurrent channel allocation. Try several naming conventions. */
+  allocatedCapacity?: string | number;
+  allocated?: string | number;
+  capacity?: string | number;
+  /** Renewal date — backend may return ISO string or epoch ms. */
+  renewsAt?: string | number;
+  renewalDate?: string | number;
   provisionedAt?: string | number;
   lastCallAt?: string | number;
 }
@@ -70,6 +82,9 @@ function toTs(v: string | number | undefined): number {
 }
 
 function wireToNumber(w: NumberWire): TrackingNumber {
+  // Pick whichever allocation/renew key the backend chose to populate.
+  const allocatedRaw = w.allocatedCapacity ?? w.allocated ?? w.capacity;
+  const renewRaw = w.renewsAt ?? w.renewalDate;
   return {
     id: w.id,
     number: w.number,
@@ -81,10 +96,15 @@ function wireToNumber(w: NumberWire): TrackingNumber {
     poolName: w.poolName,
     state: w.state,
     city: w.city,
+    country: w.country ?? w.countryCode,
+    vendor: w.vendor,
     monthlyCost: toNum(w.monthlyCost),
     callsToday: w.callsToday ?? 0,
     callsMonthly: w.callsMonthly ?? 0,
     conversionRate: w.conversionRate ?? 0,
+    allocatedCapacity:
+      allocatedRaw !== undefined && allocatedRaw !== null ? toNum(allocatedRaw) : undefined,
+    renewsAt: renewRaw !== undefined && renewRaw !== null ? toTs(renewRaw) : undefined,
     provisionedAt: toTs(w.provisionedAt),
     lastCallAt: w.lastCallAt !== undefined ? toTs(w.lastCallAt) : undefined,
   };

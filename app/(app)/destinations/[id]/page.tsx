@@ -2,26 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  LayoutDashboard,
-  PhoneCall,
-  Settings as SettingsIcon,
-  Target,
-} from "lucide-react";
+import { Target } from "lucide-react";
 
 import { DestinationBuilder } from "@/components/destinations/destination-builder";
-import { DestinationCallsTab } from "@/components/destinations/destination-calls-tab";
 import { DestinationDetailHeader } from "@/components/destinations/destination-detail-header";
-import { DestinationOverviewTab } from "@/components/destinations/destination-overview-tab";
 import { DestinationSettingsTab } from "@/components/destinations/destination-settings-tab";
 import { DestinationStatsRow } from "@/components/destinations/destination-stats-row";
 import { EmptyState } from "@/components/shared/empty-state";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
@@ -65,45 +52,28 @@ export default function DestinationDetailPage() {
   }
 
   return (
-    <>
+    // Max-width wrapper — matches the Campaign settings page (max-w-[928px])
+    // so the form column reads at a consistent width across detail pages.
+    <div className="mx-auto w-full max-w-[928px] space-y-6">
       <DestinationDetailHeader
         destination={destination}
         onEdit={() => setBuilderOpen(true)}
       />
       <DestinationStatsRow destination={destination} />
 
-      <Tabs defaultValue="overview" className="gap-4">
-        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="overview">
-            <LayoutDashboard className="h-3.5 w-3.5" /> {t("networkUI.destinations.tabs.overview")}
-          </TabsTrigger>
-          <TabsTrigger value="calls">
-            <PhoneCall className="h-3.5 w-3.5" /> {t("networkUI.destinations.tabs.calls")}
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <SettingsIcon className="h-3.5 w-3.5" /> {t("networkUI.destinations.tabs.settings")}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <DestinationOverviewTab destination={destination} />
-        </TabsContent>
-        <TabsContent value="calls">
-          <DestinationCallsTab destination={destination} />
-        </TabsContent>
-        <TabsContent value="settings">
-          <DestinationSettingsTab
-            destination={destination}
-            onEdit={() => setBuilderOpen(true)}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Overview and Calls tabs were removed per product direction; the page
+          is settings-only now, so we render the Settings panel directly
+          without the tab chrome. */}
+      <DestinationSettingsTab
+        destination={destination}
+        onEdit={() => setBuilderOpen(true)}
+      />
 
       <DestinationBuilder
         open={builderOpen}
         onOpenChange={setBuilderOpen}
         editId={destination.id}
       />
-    </>
+    </div>
   );
 }

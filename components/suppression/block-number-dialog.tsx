@@ -19,9 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { BlockedNumberScope } from "@/lib/mock/suppression";
 import { useTranslation } from "@/hooks/use-translation";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { cn } from "@/lib/utils";
 
 type ChoiceType = "all" | "campaign";
@@ -44,6 +44,11 @@ interface Props {
  */
 export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
   const { t } = useTranslation();
+  // Read live campaigns from the store (hydrated from GET /api/campaigns/
+  // on app boot — see components/app-shell/store-hydrator.tsx). Previously
+  // this dialog imported the static MOCK_CAMPAIGNS fixture and rendered
+  // those 6 hardcoded entries regardless of backend state.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
   const [choiceType, setChoiceType] = React.useState<ChoiceType>("all");
   const [campaignId, setCampaignId] = React.useState<string>("");
   const [scope, setScope] = React.useState<BlockedNumberScope>("number");
@@ -104,11 +109,17 @@ export function BlockNumberDialog({ open, onOpenChange, onBlock }: Props) {
                   <SelectValue placeholder={t("toolsUI.suppression.blockedNumbers.block.choose")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_CAMPAIGNS.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                  {campaigns.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      {t("toolsUI.suppression.blockedNumbers.block.noCampaigns")}
+                    </div>
+                  ) : (
+                    campaigns.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

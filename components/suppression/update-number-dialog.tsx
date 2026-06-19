@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { BlockedNumberEntry } from "@/lib/mock/suppression";
 import { useTranslation } from "@/hooks/use-translation";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 
 type ChoiceType = "all" | "campaign";
 
@@ -36,6 +36,8 @@ interface Props {
 /** "Update a number" dialog — opened from the row pencil icon. */
 export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
   const { t } = useTranslation();
+  // Live campaigns from the real store (replaces the previous MOCK_CAMPAIGNS import).
+  const campaigns = useCampaignsStore((s) => s.campaigns);
   const open = entry !== null;
   const [choiceType, setChoiceType] = React.useState<ChoiceType>("all");
   const [campaignId, setCampaignId] = React.useState<string>("");
@@ -94,11 +96,17 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
                   <SelectValue placeholder={t("toolsUI.suppression.blockedNumbers.block.choose")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_CAMPAIGNS.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                  {campaigns.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      {t("toolsUI.suppression.blockedNumbers.block.noCampaigns")}
+                    </div>
+                  ) : (
+                    campaigns.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

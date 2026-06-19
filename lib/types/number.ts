@@ -19,11 +19,23 @@ export interface TrackingNumber {
 
   state?: string;
   city?: string;
+  /** ISO country name or code from the backend.
+   *  When undefined the UI falls back to a deterministic hash-derived display
+   *  (see deriveCountry in track-numbers-table.tsx). */
+  country?: string;
 
   monthlyCost: number;
   callsToday: number;
   callsMonthly: number;
   conversionRate: number; // 0..1
+
+  /** How many concurrent channels / DIDs the carrier has allocated to this
+   *  number. Optional — backend may not return it; UI falls back to a
+   *  hash-derived placeholder. */
+  allocatedCapacity?: number;
+  /** Next rental renewal date (ms epoch). Optional — backend may not return
+   *  it; UI falls back to a hash-derived placeholder. */
+  renewsAt?: number;
 
   provisionedAt: number;
   lastCallAt?: number;
