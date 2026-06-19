@@ -51,7 +51,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* ─── Left column ───────────────────────────────────────── */}
         <aside className="relative hidden flex-col px-12 py-10 lg:flex xl:px-20 xl:py-14">
           <header>
-            <Wordmark href={null} size="lg" uid="auth-mark" />
+            {/* Wordmark links to the marketing landing page (ROUTES.home).
+                Previously `href={null}` rendered it as a non-interactive logo. */}
+            <Wordmark size="lg" uid="auth-mark" />
           </header>
 
           {/* Middle group fills the remaining height between header + footer
@@ -100,9 +102,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           />
 
           <div className="relative w-full max-w-[26rem]">
-            {/* Mobile-only brand mark above the form. */}
+            {/* Mobile-only brand mark above the form — also clickable, sends
+                the visitor back to the marketing landing page. */}
             <div className="mb-8 flex justify-center lg:hidden">
-              <Wordmark href={null} size="md" uid="auth-mobile" />
+              <Wordmark size="md" uid="auth-mobile" />
             </div>
             {children}
           </div>
