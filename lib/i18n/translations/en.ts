@@ -4269,6 +4269,7 @@ export const en = {
       sendFailed: "Couldn't send your message — please try again.",
       rateLimited: "You're sending messages quickly — please wait a moment and try again.",
       pollLost: "Lost connection to support — please refresh to reconnect.",
+      sending: "Sending…",
       disclaimer: "Powered by Anthropic · Conversations aren't saved.",
       aiSender: "Avortyx AI",
       you: "You",

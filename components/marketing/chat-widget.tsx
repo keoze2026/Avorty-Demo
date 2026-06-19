@@ -431,8 +431,17 @@ export function ChatWidget() {
                   }
                 />
               ))}
+              {/* While `pending` is true we're awaiting a network response.
+                  In AI mode that genuinely means the model is composing —
+                  the typing dots next to the AI avatar reads correctly.
+                  In human-agent mode it just means our POST is in flight;
+                  the operator hasn't even seen the message yet, so showing
+                  agent-side typing dots falsely implies "Milena is typing".
+                  Render a user-side "Sending…" status there instead. */}
               {pending && (
-                <TypingIndicator activeAgent={activeAgent} />
+                activeAgent
+                  ? <SendingStatus />
+                  : <TypingIndicator activeAgent={null} />
               )}
               {showEscalation && !activeAgent && (
                 <EscalationCard onPick={handoff} />
@@ -724,6 +733,37 @@ function TypingIndicator({ activeAgent }: { activeAgent: TeamMember | null }) {
           40%            { opacity: 1;    transform: scale(1); }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  Sending status — user-side, while the POST is in flight             */
+/* ─────────────────────────────────────────────────────────────────── */
+
+/**
+ * Right-aligned "Sending…" chip shown beneath the user's just-sent message
+ * while the network request is in flight. Replaces the agent-typing bubble
+ * in human-agent mode, where typing dots over an agent avatar wrongly
+ * implied the agent was already composing a reply — when in reality the
+ * message hasn't even reached the operator's Telegram yet.
+ *
+ * Visually deliberate: no avatar, no left-side bubble, no animated dots.
+ * Just a small pill with a spinner that clearly reads as "your message is
+ * being delivered," not "someone is replying."
+ */
+function SendingStatus() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex justify-end pr-1">
+      <span
+        role="status"
+        aria-live="polite"
+        className="inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+      >
+        <Loader2 className="h-3 w-3 animate-spin text-accent" />
+        {t("marketingUI.chat.sending")}
+      </span>
     </div>
   );
 }
