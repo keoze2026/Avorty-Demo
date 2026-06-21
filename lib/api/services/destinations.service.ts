@@ -50,6 +50,15 @@ interface DestinationWire {
   buyerName?: string;
   tfn: string;
   name: string;
+  /**
+   * Canonical wire field is `routing_type` (camelCased to `routingType` by
+   * the http layer). Backend enum: `external` | `sip`.
+   *
+   * We also tolerate legacy `forward_type` echoes from older responses —
+   * either field is read on the way in and mapped to the FE's
+   * `DestinationForwardType` (`number` | `sip`) below.
+   */
+  routingType?: string;
   forwardType?: string;
   concurrencyCap: number;
   hourlyCap?: number;
@@ -82,8 +91,21 @@ interface DestinationStatsWire {
 
 /* ─── Mappers ─────────────────────────────────────────────────────────── */
 
+/**
+ * The backend enum is `external` | `sip`; the FE type is the older
+ * `number` | `sip`. Map at the wire boundary so the rest of the app
+ * doesn't need to learn the new vocabulary.
+ */
 function normalizeForwardType(raw: string | null | undefined): DestinationForwardType {
-  return (raw ?? "").toLowerCase() === "sip" ? "sip" : "number";
+  const v = (raw ?? "").toLowerCase();
+  return v === "sip" ? "sip" : "number";
+}
+
+/** FE forward type → wire `routing_type` enum (`external` | `sip`). */
+function forwardTypeToWire(t: DestinationForwardType | undefined): "external" | "sip" | undefined {
+  if (t === "sip") return "sip";
+  if (t === "number") return "external";
+  return undefined; // unknown / empty → omit so backend default kicks in
 }
 
 function wireToDestination(w: DestinationWire): Destination {
@@ -92,7 +114,9 @@ function wireToDestination(w: DestinationWire): Destination {
     buyerId: w.buyerId,
     tfn: w.tfn,
     name: w.name,
-    forwardType: normalizeForwardType(w.forwardType),
+    // Prefer the canonical `routing_type` field; fall back to legacy
+    // `forward_type` if the backend ever echoes it instead.
+    forwardType: normalizeForwardType(w.routingType ?? w.forwardType),
     concurrencyCap: w.concurrencyCap ?? 0,
     dailyCap: w.dailyCap ?? 0,
     monthlyCap: w.monthlyCap ?? 0,
@@ -117,7 +141,14 @@ function destinationToWire(patch: Partial<Destination>): Record<string, unknown>
   }
   if (patch.tfn !== undefined) body.tfn = patch.tfn;
   if (patch.name !== undefined) body.name = patch.name;
-  if (patch.forwardType !== undefined) body.forwardType = patch.forwardType;
+  // Backend schema: `routing_type` is enum (`external` | `sip`). Empty
+  // string fails validation, so we omit the field entirely when the FE
+  // value is missing / unknown and let the backend's `external` default
+  // kick in.
+  if (patch.forwardType !== undefined) {
+    const mapped = forwardTypeToWire(patch.forwardType);
+    if (mapped !== undefined) body.routingType = mapped;
+  }
   if (patch.concurrencyCap !== undefined) body.concurrencyCap = patch.concurrencyCap;
   if (patch.dailyCap !== undefined) body.dailyCap = patch.dailyCap;
   if (patch.monthlyCap !== undefined) body.monthlyCap = patch.monthlyCap;

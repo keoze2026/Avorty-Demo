@@ -59,13 +59,22 @@ export function InviteBuyerDialog({
     if (!next) setTimeout(reset, 200);
   };
 
+  // Backend schema requires both name and organization to be at least 2
+  // characters. Mirror the rule on the frontend so the operator sees the
+  // error inline instead of submitting and waiting for a 422.
+  const trimmedName = name.trim();
+  const trimmedOrg = organization.trim();
+  const nameTooShort = trimmedName.length > 0 && trimmedName.length < 2;
+  const orgTooShort = trimmedOrg.length > 0 && trimmedOrg.length < 2;
+  const canSubmit = trimmedName.length >= 2 && trimmedOrg.length >= 2;
+
   const onSubmit = async () => {
-    if (!name.trim() || !organization.trim()) return;
+    if (!canSubmit) return;
     setSubmitting(true);
     try {
       const created = await add({
-        name: name.trim(),
-        organization: organization.trim(),
+        name: trimmedName,
+        organization: trimmedOrg,
         description: description.trim() || undefined,
         status: "pending",
         bidAmount,
@@ -123,7 +132,13 @@ export function InviteBuyerDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. C11"
+                aria-invalid={nameTooShort || undefined}
               />
+              {nameTooShort && (
+                <p className="text-xs text-destructive">
+                  Buyer name must be at least 2 characters.
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="ib-org">Organization</Label>
@@ -132,7 +147,13 @@ export function InviteBuyerDialog({
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
                 placeholder="e.g. Apex Group"
+                aria-invalid={orgTooShort || undefined}
               />
+              {orgTooShort && (
+                <p className="text-xs text-destructive">
+                  Organization must be at least 2 characters.
+                </p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -176,10 +197,7 @@ export function InviteBuyerDialog({
           <Button variant="outline" onClick={() => onClose(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={submitting || !name.trim() || !organization.trim()}
-          >
+          <Button onClick={onSubmit} disabled={submitting || !canSubmit}>
             {submitting ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…
