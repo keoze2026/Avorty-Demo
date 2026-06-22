@@ -40,6 +40,20 @@ function shieldToEntry(s: Shield): VoipShieldEntry {
   };
 }
 
+/** Reconstruct the full wire-level Shield from a stored VoIP entry.
+ *  The VoIP store doesn't track `isActive` directly (the UI doesn't expose
+ *  a Shield-level toggle), so we default it to `true`. Update calls go
+ *  through PUT (replace-semantics) — must always be a complete object. */
+function entryToShield(e: VoipShieldEntry): Omit<Shield, "id"> {
+  return {
+    name: e.name,
+    shieldType: "voip",
+    campaignIds: e.campaignIds,
+    blockedCarriers: e.blockedCarriers,
+    isActive: true,
+  };
+}
+
 export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
   shields: [],
   loading: false,
@@ -66,10 +80,15 @@ export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
   },
 
   rename: async (id, name) => {
+    const current = get().shields.find((x) => x.id === id);
+    if (!current) return;
+    const next: VoipShieldEntry = { ...current, name };
     const prev = get().shields;
-    set((s) => ({ shields: s.shields.map((x) => (x.id === id ? { ...x, name } : x)) }));
+    set((s) => ({ shields: s.shields.map((x) => (x.id === id ? next : x)) }));
     try {
-      await spamService.updateShield(id, { name });
+      // PUT requires the full Shield — reconstruct it from `next` so the
+      // existing campaignIds + blockedCarriers are preserved.
+      await spamService.updateShield(id, entryToShield(next));
     } catch (e) {
       set({ shields: prev, error: messageFromError(e) });
       throw e;
@@ -88,12 +107,13 @@ export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
   },
 
   setCampaigns: async (id, campaignIds) => {
+    const current = get().shields.find((x) => x.id === id);
+    if (!current) return;
+    const next: VoipShieldEntry = { ...current, campaignIds };
     const prev = get().shields;
-    set((s) => ({
-      shields: s.shields.map((x) => (x.id === id ? { ...x, campaignIds } : x)),
-    }));
+    set((s) => ({ shields: s.shields.map((x) => (x.id === id ? next : x)) }));
     try {
-      await spamService.updateShield(id, { campaignIds });
+      await spamService.updateShield(id, entryToShield(next));
     } catch (e) {
       set({ shields: prev, error: messageFromError(e) });
       throw e;
@@ -115,13 +135,14 @@ export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
   addCarrier: async (id, carrier) => {
     const current = get().shields.find((x) => x.id === id);
     if (!current || current.blockedCarriers.includes(carrier)) return;
-    const next = [...current.blockedCarriers, carrier];
+    const next: VoipShieldEntry = {
+      ...current,
+      blockedCarriers: [...current.blockedCarriers, carrier],
+    };
     const prev = get().shields;
-    set((s) => ({
-      shields: s.shields.map((x) => (x.id === id ? { ...x, blockedCarriers: next } : x)),
-    }));
+    set((s) => ({ shields: s.shields.map((x) => (x.id === id ? next : x)) }));
     try {
-      await spamService.updateShield(id, { blockedCarriers: next });
+      await spamService.updateShield(id, entryToShield(next));
     } catch (e) {
       set({ shields: prev, error: messageFromError(e) });
       throw e;
@@ -131,13 +152,14 @@ export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
   removeCarrier: async (id, carrier) => {
     const current = get().shields.find((x) => x.id === id);
     if (!current) return;
-    const next = current.blockedCarriers.filter((c) => c !== carrier);
+    const next: VoipShieldEntry = {
+      ...current,
+      blockedCarriers: current.blockedCarriers.filter((c) => c !== carrier),
+    };
     const prev = get().shields;
-    set((s) => ({
-      shields: s.shields.map((x) => (x.id === id ? { ...x, blockedCarriers: next } : x)),
-    }));
+    set((s) => ({ shields: s.shields.map((x) => (x.id === id ? next : x)) }));
     try {
-      await spamService.updateShield(id, { blockedCarriers: next });
+      await spamService.updateShield(id, entryToShield(next));
     } catch (e) {
       set({ shields: prev, error: messageFromError(e) });
       throw e;

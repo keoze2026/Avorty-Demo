@@ -40,24 +40,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import {
   TCPA_PROVIDER_TYPES,
   type TcpaShieldEntry,
 } from "@/lib/mock/suppression";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { useTcpaShieldStore } from "@/lib/store/tcpa-shield-store";
 
 type SortKey = "name-asc" | "name-desc" | "type-asc" | "active-first";
 
-const CAMPAIGN_NAME_BY_ID = new Map(MOCK_CAMPAIGNS.map((c) => [c.id, c.name]));
-
-function campaignLabel(entry: TcpaShieldEntry): string {
-  if (entry.campaignIds.length === 0) return "—";
-  if (entry.campaignIds.length === 1) {
-    return CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
-  }
-  const first = CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
-  return `${first} +${entry.campaignIds.length - 1}`;
+/** Build a "first +N" label from a shield's campaign id list, given a
+ *  live id→name resolver. Defined as a pure helper so the page-level
+ *  useMemo can call it without re-binding the resolver. */
+function makeCampaignLabel(nameById: Map<string, string>) {
+  return (entry: TcpaShieldEntry): string => {
+    if (entry.campaignIds.length === 0) return "—";
+    if (entry.campaignIds.length === 1) {
+      return nameById.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
+    }
+    const first = nameById.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
+    return `${first} +${entry.campaignIds.length - 1}`;
+  };
 }
 
 export default function TcpaShieldPage() {
@@ -84,6 +87,18 @@ export default function TcpaShieldPage() {
   const add = useTcpaShieldStore((s) => s.add);
   const remove = useTcpaShieldStore((s) => s.remove);
   const setActive = useTcpaShieldStore((s) => s.setActive);
+
+  // Live campaigns (was MOCK_CAMPAIGNS). The id→name map is rebuilt only
+  // when the campaigns array reference actually changes.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+  const campaignNameById = React.useMemo(
+    () => new Map(campaigns.map((c) => [c.id, c.name])),
+    [campaigns],
+  );
+  const campaignLabel = React.useMemo(
+    () => makeCampaignLabel(campaignNameById),
+    [campaignNameById],
+  );
 
   const [query, setQuery] = React.useState("");
   const [pageSize, setPageSize] = React.useState<PageSize>(PAGE_SIZE_OPTIONS[1]);
@@ -129,7 +144,7 @@ export default function TcpaShieldPage() {
       }
     });
     return sorted;
-  }, [providers, query, sortKey, typeFilter]);
+  }, [providers, query, sortKey, typeFilter, campaignLabel]);
 
   const visible = rows.slice(page * pageSize, page * pageSize + pageSize);
   const allChecked = visible.length > 0 && visible.every((e) => selected.has(e.id));

@@ -264,28 +264,31 @@ export const spamService = {
     );
   },
 
-  async updateShield(id: string, patch: Partial<Shield>): Promise<Shield> {
-    // Backend contract says PATCH but the live endpoint returns 405 — only
-    // PUT is currently implemented for shields. Workaround: fetch the
-    // current entity, merge the patch on top, then PUT the full object so
-    // unmodified fields aren't silently nulled out by a replace-semantics
-    // update. Remove the GET round-trip if/when the backend ships PATCH.
-    const current = await this.getShield(id);
-    const merged: Shield = {
-      ...current,
-      ...patch,
-      // Preserve identity / discriminator regardless of patch.
-      id: current.id,
-      shieldType: current.shieldType,
-    };
+  /**
+   * Replace a shield with the full, complete object via PUT.
+   *
+   * Backend constraints discovered live (the contract is inaccurate):
+   *   - PATCH /api/spam/shields/{id}/ → 405 Method Not Allowed
+   *   - GET   /api/spam/shields/{id}/ → 405 Method Not Allowed
+   *   - PUT   /api/spam/shields/{id}/ → works, but with REPLACE semantics
+   *
+   * Since GET-single also 405's, we can't do a GET-then-PUT merge — the
+   * caller MUST provide the full Shield. Stores reconstruct this from their
+   * in-memory copy (which is already populated by the `listShields()` call
+   * on app boot) + whatever fields they're changing this round.
+   *
+   * If the backend later ships PATCH on this resource, swap this back to
+   * `http.patch(..., { body: patch })` and drop the full-shield requirement.
+   */
+  async updateShield(id: string, full: Omit<Shield, "id">): Promise<Shield> {
     return wireToShield(
       await http.put<ShieldWire>(`/api/spam/shields/${id}/`, {
         body: {
-          name: merged.name,
-          shieldType: merged.shieldType,
-          campaignIds: merged.campaignIds,
-          blockedCarriers: merged.blockedCarriers,
-          isActive: merged.isActive,
+          name: full.name,
+          shieldType: full.shieldType,
+          campaignIds: full.campaignIds,
+          blockedCarriers: full.blockedCarriers,
+          isActive: full.isActive,
         },
       }),
     );

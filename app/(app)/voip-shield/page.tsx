@@ -40,13 +40,11 @@ import {
 } from "@/components/ui/table";
 import { ROUTES } from "@/lib/constants";
 import { formatNumber } from "@/lib/format";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import type { VoipShieldEntry } from "@/lib/mock/suppression";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { useVoipShieldStore } from "@/lib/store/voip-shield-store";
 
 type SortKey = "name-asc" | "name-desc" | "size-desc" | "size-asc";
-
-const CAMPAIGN_NAME_BY_ID = new Map(MOCK_CAMPAIGNS.map((c) => [c.id, c.name]));
 
 export default function VoipShieldPage() {
   const { t } = useTranslation();
@@ -67,12 +65,21 @@ export default function VoipShieldPage() {
   ];
   const DEFAULT_COLUMNS = new Set(COLUMN_OPTIONS.map((c) => c.id));
 
+  // Live campaigns from the real store (was MOCK_CAMPAIGNS) — hydrated from
+  // GET /api/campaigns/ on app boot. We rebuild the id→name map via useMemo
+  // so any new/edited campaign reflects in the chips here without a refresh.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+  const campaignNameById = React.useMemo(
+    () => new Map(campaigns.map((c) => [c.id, c.name])),
+    [campaigns],
+  );
+
   function campaignLabel(entry: VoipShieldEntry): string {
     if (entry.campaignIds.length === 0) return t("toolsUI.suppression.allCampaigns");
     if (entry.campaignIds.length === 1) {
-      return CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
+      return campaignNameById.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
     }
-    const first = CAMPAIGN_NAME_BY_ID.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
+    const first = campaignNameById.get(entry.campaignIds[0]) ?? entry.campaignIds[0];
     return `${first} +${entry.campaignIds.length - 1}`;
   }
 
@@ -98,10 +105,9 @@ export default function VoipShieldPage() {
   const filterOptions = React.useMemo<FilterOption[]>(
     () => [
       { id: "__all__", label: t("toolsUI.suppression.allCampaigns") },
-      ...MOCK_CAMPAIGNS.map((c) => ({ id: c.id, label: c.name })),
+      ...campaigns.map((c) => ({ id: c.id, label: c.name })),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [campaigns, t],
   );
 
   const rows = React.useMemo(() => {

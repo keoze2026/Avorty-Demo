@@ -11,8 +11,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MOCK_CAMPAIGNS } from "@/lib/mock/campaigns";
 import { useTranslation } from "@/hooks/use-translation";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -35,12 +35,16 @@ export function ProtectedCampaignsCard({
   const [open, setOpen] = React.useState(false);
   const [filter, setFilter] = React.useState("");
 
+  // Live campaigns from the real store (was previously MOCK_CAMPAIGNS).
+  // Hydrated from GET /api/campaigns/ on app boot via StoreHydrator.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+
   const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
 
   const choices = React.useMemo(() => {
     const q = filter.trim().toLowerCase();
-    return MOCK_CAMPAIGNS.filter((c) => !q || c.name.toLowerCase().includes(q));
-  }, [filter]);
+    return campaigns.filter((c) => !q || c.name.toLowerCase().includes(q));
+  }, [campaigns, filter]);
 
   return (
     <Card className="p-5">
@@ -56,7 +60,7 @@ export function ProtectedCampaignsCard({
       {selectedIds.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {selectedIds.map((id) => {
-            const c = MOCK_CAMPAIGNS.find((x) => x.id === id);
+            const c = campaigns.find((x) => x.id === id);
             return (
               <span
                 key={id}
