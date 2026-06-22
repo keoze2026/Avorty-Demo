@@ -1,9 +1,24 @@
 "use client";
 
+/**
+ * Referrals page — live data, no mocks.
+ *
+ * Wires the four GET endpoints exposed by the Referral Program backend on
+ * mount:
+ *   GET /api/referrals/                  → program (code, link, rate, earnings)
+ *   GET /api/referrals/stats             → summary stats
+ *   GET /api/referrals/referred-clients  → list of all referred clients
+ *
+ * The 4th endpoint (`/spending-tracker`) is consumed inside `ReferralSpendChart`
+ * because the range selector lives there. The 5th endpoint (`/invite`) is
+ * fired from `InviteReferralDialog` when the partner sends an invite.
+ */
+
 import * as React from "react";
-import { Check, Copy, Gift, Mail, Users } from "lucide-react";
+import { AlertTriangle, Check, Copy, Gift, Loader2, Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { InviteReferralDialog } from "@/components/referrals/invite-referral-dialog";
 import { ReferralSpendChart } from "@/components/referrals/referral-spend-chart";
 import { PageHeader } from "@/components/shared/page-header";
 import { Pagination } from "@/components/shared/pagination";
@@ -19,48 +34,78 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency, formatNumber, formatRelativeTime } from "@/lib/format";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import {
-  MOCK_REFERRAL_CODE,
-  MOCK_REFERRAL_LINK,
-  MOCK_REFERRED_CLIENTS,
-  REFERRAL_COMMISSION_RATE,
-} from "@/lib/mock/referrals";
+  referralsService,
+  type ReferralProgram,
+  type ReferralStats,
+  type ReferredClient,
+} from "@/lib/api/services/referrals.service";
+import { formatCurrency, formatNumber, formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export default function ReferralsPage() {
   const { t } = useTranslation();
+
+  // ── Live data state ──────────────────────────────────────────────────
+  const [program, setProgram] = React.useState<ReferralProgram | null>(null);
+  const [stats, setStats] = React.useState<ReferralStats | null>(null);
+  const [clients, setClients] = React.useState<ReferredClient[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // ── UI state ────────────────────────────────────────────────────────
   const [copied, setCopied] = React.useState(false);
   const [pageSize, setPageSize] = React.useState(25);
   const [page, setPage] = React.useState(0);
+  const [inviteOpen, setInviteOpen] = React.useState(false);
+
   React.useEffect(() => {
     setPage(0);
   }, [pageSize]);
-  const visibleClients = React.useMemo(
-    () => MOCK_REFERRED_CLIENTS.slice(page * pageSize, page * pageSize + pageSize),
-    [page, pageSize],
-  );
 
-  const stats = React.useMemo(() => {
-    let lifetimeSpend = 0;
-    let monthSpend = 0;
-    let activeCount = 0;
-    for (const c of MOCK_REFERRED_CLIENTS) {
-      lifetimeSpend += c.lifetimeSpend;
-      monthSpend += c.monthSpend;
-      if (c.status === "active") activeCount += 1;
-    }
-    return {
-      clientCount: MOCK_REFERRED_CLIENTS.length,
-      activeCount,
-      lifetimeEarnings: lifetimeSpend * REFERRAL_COMMISSION_RATE,
-      monthEarnings: monthSpend * REFERRAL_COMMISSION_RATE,
+  // Fire all three top-of-page fetches in parallel on mount.
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      referralsService.getProgram(),
+      referralsService.getStats(),
+      referralsService.getReferredClients(),
+    ])
+      .then(([p, s, c]) => {
+        if (cancelled) return;
+        setProgram(p);
+        setStats(s);
+        setClients(c);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(friendlyErrorMessage(e, "Couldn't load the Referral Program"));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
   }, []);
 
+  const visibleClients = React.useMemo(
+    () => clients.slice(page * pageSize, page * pageSize + pageSize),
+    [clients, page, pageSize],
+  );
+
+  // Prefer stats endpoint for the commission rate (it's authoritative);
+  // fall back to the program endpoint if the stats call failed.
+  const commissionRate = stats?.commissionRate ?? program?.commissionRate ?? 0;
+  const commissionPct = `${(commissionRate * 100).toFixed(0)}%`;
+
   const onCopy = async () => {
+    if (!program?.link) return;
     try {
-      await navigator.clipboard.writeText(MOCK_REFERRAL_LINK);
+      await navigator.clipboard.writeText(program.link);
       setCopied(true);
       toast.success(t("toolsUI.referrals.toastCopied"));
       setTimeout(() => setCopied(false), 1500);
@@ -69,8 +114,6 @@ export default function ReferralsPage() {
     }
   };
 
-  const commissionPct = `${(REFERRAL_COMMISSION_RATE * 100).toFixed(0)}%`;
-
   return (
     <>
       <PageHeader
@@ -78,7 +121,16 @@ export default function ReferralsPage() {
         description={t("toolsUI.referrals.pageDescription").replace("{pct}", commissionPct)}
       />
 
-      {/* Hero — referral link + share CTA */}
+      {error && !loading && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="flex items-center gap-2 p-4 text-sm text-destructive">
+            <AlertTriangle className="h-4 w-4" />
+            {error}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hero — referral link + share CTA + lifetime earnings */}
       <Card className="overflow-hidden p-0">
         <div className="grid grid-cols-1 gap-0 md:grid-cols-[1fr_320px]">
           <CardContent className="space-y-3 p-6">
@@ -100,9 +152,15 @@ export default function ReferralsPage() {
                 {t("toolsUI.referrals.yourLink")}
               </span>
               <span className="flex-1 truncate font-mono text-xs text-foreground">
-                {MOCK_REFERRAL_LINK}
+                {loading && !program ? "—" : (program?.link ?? "—")}
               </span>
-              <Button size="sm" variant="outline" onClick={onCopy} className="gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onCopy}
+                disabled={!program?.link}
+                className="gap-1.5"
+              >
                 {copied ? (
                   <>
                     <Check className="h-3.5 w-3.5" /> {t("toolsUI.referrals.copied")}
@@ -118,13 +176,15 @@ export default function ReferralsPage() {
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
                 {t("toolsUI.referrals.codeLabel")}
               </span>
-              <span className="font-mono text-xs text-foreground">{MOCK_REFERRAL_CODE}</span>
+              <span className="font-mono text-xs text-foreground">
+                {loading && !program ? "—" : (program?.code ?? "—")}
+              </span>
               <span className="mx-2 h-3 w-px self-center bg-border" />
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-7 gap-1.5 text-xs"
-                onClick={() => toast.success(t("toolsUI.referrals.toastInviteSoon"))}
+                onClick={() => setInviteOpen(true)}
               >
                 <Mail className="h-3.5 w-3.5" /> {t("toolsUI.referrals.emailContact")}
               </Button>
@@ -137,10 +197,13 @@ export default function ReferralsPage() {
               {t("toolsUI.referrals.lifetimeEarnings")}
             </span>
             <span className="text-3xl font-semibold tabular-nums text-foreground">
-              {formatCurrency(stats.lifetimeEarnings)}
+              {loading && !program ? "—" : formatCurrency(program?.lifetimeEarnings ?? 0)}
             </span>
             <span className="text-[11px] text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]">
-              {t("toolsUI.referrals.earnedThisMonth").replace("{amount}", formatCurrency(stats.monthEarnings))}
+              {t("toolsUI.referrals.earnedThisMonth").replace(
+                "{amount}",
+                formatCurrency(program?.thisMonthEarnings ?? stats?.thisMonthEarnings ?? 0),
+              )}
             </span>
           </div>
         </div>
@@ -151,22 +214,26 @@ export default function ReferralsPage() {
         <StatCard
           icon={Users}
           label={t("toolsUI.referrals.stats.totalReferrals")}
-          value={formatNumber(stats.clientCount)}
+          value={loading && !stats ? "—" : formatNumber(stats?.totalReferrals ?? 0)}
         />
         <StatCard
           icon={Users}
           label={t("toolsUI.referrals.stats.activeReferrals")}
-          value={formatNumber(stats.activeCount)}
+          value={loading && !stats ? "—" : formatNumber(stats?.activeReferrals ?? 0)}
         />
         <StatCard
           icon={Gift}
           label={t("toolsUI.referrals.stats.commissionRate")}
-          value={`${(REFERRAL_COMMISSION_RATE * 100).toFixed(0)}%`}
+          value={commissionPct}
         />
         <StatCard
           icon={Gift}
           label={t("toolsUI.referrals.stats.thisMonth")}
-          value={formatCurrency(stats.monthEarnings)}
+          value={
+            loading && !stats
+              ? "—"
+              : formatCurrency(stats?.thisMonthEarnings ?? program?.thisMonthEarnings ?? 0)
+          }
         />
       </div>
 
@@ -192,14 +259,26 @@ export default function ReferralsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {visibleClients.map((c) => {
-                const commission = c.lifetimeSpend * REFERRAL_COMMISSION_RATE;
-                return (
+              {loading && clients.length === 0 ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <span className="inline-flex items-center gap-2 text-xs">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Loading referred clients…
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ) : visibleClients.length === 0 ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={7} className="py-10 text-center text-xs text-muted-foreground">
+                    No referred clients yet — share your link to start earning.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                visibleClients.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="pl-6 text-left font-medium">{c.name}</TableCell>
-                    <TableCell className="text-left text-muted-foreground">
-                      {c.vertical}
-                    </TableCell>
+                    <TableCell className="text-left text-muted-foreground">{c.vertical}</TableCell>
                     <TableCell className="text-left text-xs text-muted-foreground">
                       {formatRelativeTime(c.joinedAt)}
                     </TableCell>
@@ -211,32 +290,28 @@ export default function ReferralsPage() {
                         {c.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="tabular-nums">
-                      {formatCurrency(c.monthSpend)}
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {formatCurrency(c.lifetimeSpend)}
-                    </TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(c.monthSpend)}</TableCell>
+                    <TableCell className="tabular-nums">{formatCurrency(c.lifetimeSpend)}</TableCell>
                     <TableCell
                       className={cn(
                         "pr-6 font-medium tabular-nums",
                         "text-[oklch(0.5_0.18_155)] dark:text-[oklch(0.78_0.18_155)]",
                       )}
                     >
-                      {formatCurrency(commission)}
+                      {formatCurrency(c.commission)}
                     </TableCell>
                   </TableRow>
-                );
-              })}
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
-        {MOCK_REFERRED_CLIENTS.length > pageSize && (
+        {clients.length > pageSize && (
           <div className="border-t border-border px-6 py-3">
             <Pagination
               page={page}
               pageSize={pageSize}
-              total={MOCK_REFERRED_CLIENTS.length}
+              total={clients.length}
               onPage={setPage}
               onPageSize={setPageSize}
             />
@@ -244,9 +319,10 @@ export default function ReferralsPage() {
         )}
       </Card>
 
-      {/* Spending tracker — daily bars + your-commission line so the partner
-          can see how their referred clients are pacing over time. */}
+      {/* Spending tracker — fetches its own time series based on range. */}
       <ReferralSpendChart />
+
+      <InviteReferralDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </>
   );
 }
