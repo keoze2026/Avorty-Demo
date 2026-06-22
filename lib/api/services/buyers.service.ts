@@ -119,13 +119,16 @@ export const buyersService = {
   },
 
   async create(input: Omit<Buyer, "id" | "createdAt">): Promise<Buyer> {
+    // Backend schema for `routing_type` is enum (`external` | `sip`) with a
+    // default of `external`. The create dialog doesn't expose a SIP option
+    // yet, so we OMIT the field entirely and let the backend default kick
+    // in. Previously we sent `routingType: "standard"` which 422'd against
+    // the validator. Per backend dev — "if you are not sending it, leave
+    // the field out entirely".
     const wire = await http.post<BuyerWire>("/api/buyers/", {
       body: {
         name: input.name,
         description: input.description,
-        // Default routing type — most deployments use "standard" or "direct".
-        // The backend can ignore unknown keys; this is a sensible default.
-        routingType: "standard",
         payoutAmount: String(input.bidAmount ?? 0),
         maxConcurrency: input.concurrencyCap || undefined,
       },
