@@ -3,7 +3,7 @@
 /**
  * Live-socket hook — drop-in replacement for `useMockSocket`.
  *
- * Connects to the real backend WebSocket (`wss://avortyx.io/ws/calls/`),
+ * Connects to the real backend WebSocket (`wss://avortyx.io/ws/live-calls/`),
  * subscribes to the call lifecycle events, and exposes the same
  * `{ inFlight, history, totals }` shape the Live Monitor already consumes.
  *

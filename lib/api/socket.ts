@@ -61,7 +61,10 @@ interface SocketState {
 
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30_000;
-const WS_PATH = "/ws/calls/";
+// Canonical WS path per backend dev (2026-06-23). Previously `/ws/calls/`
+// which the server doesn't expose — that path 404'd silently and the live
+// stream stayed empty.
+const WS_PATH = "/ws/live-calls/";
 
 export interface CallSocket {
   connect(): void;
