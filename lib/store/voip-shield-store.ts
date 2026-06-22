@@ -117,11 +117,21 @@ export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
     if (!current || current.blockedCarriers.includes(carrier)) return;
     const next = [...current.blockedCarriers, carrier];
     const prev = get().shields;
+    // Optimistic flip while the PATCH is in flight.
     set((s) => ({
       shields: s.shields.map((x) => (x.id === id ? { ...x, blockedCarriers: next } : x)),
     }));
     try {
-      await spamService.updateShield(id, { blockedCarriers: next });
+      const updated = await spamService.updateShield(id, { blockedCarriers: next });
+      // Reconcile with backend reality. If the backend silently dropped
+      // `blocked_carriers` from the patch (it's currently not in their
+      // PATCH-allowed field list), `updated.blockedCarriers` will still be
+      // the OLD list — and the UI reverts NOW instead of on refresh.
+      set((s) => ({
+        shields: s.shields.map((x) =>
+          x.id === id ? { ...x, blockedCarriers: updated.blockedCarriers } : x,
+        ),
+      }));
     } catch (e) {
       set({ shields: prev, error: messageFromError(e) });
       throw e;
@@ -137,7 +147,12 @@ export const useVoipShieldStore = create<VoipShieldState>()((set, get) => ({
       shields: s.shields.map((x) => (x.id === id ? { ...x, blockedCarriers: next } : x)),
     }));
     try {
-      await spamService.updateShield(id, { blockedCarriers: next });
+      const updated = await spamService.updateShield(id, { blockedCarriers: next });
+      set((s) => ({
+        shields: s.shields.map((x) =>
+          x.id === id ? { ...x, blockedCarriers: updated.blockedCarriers } : x,
+        ),
+      }));
     } catch (e) {
       set({ shields: prev, error: messageFromError(e) });
       throw e;

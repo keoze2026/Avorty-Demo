@@ -89,13 +89,20 @@ interface TcpaShieldState {
   updateConfig: (id: string, patch: Partial<TcpaProviderConfig>) => Promise<void>;
 }
 
-async function pushMeta(id: string, current: TcpaShieldEntry): Promise<void> {
-  // PATCH only the meta-bearing field. type/active/config are packed into
-  // `blockedCarriers` via encodeMeta so they round-trip through the
-  // backend's flat shield schema without backend changes.
-  await spamService.updateShield(id, {
-    blockedCarriers: entryToCarriers(current),
+/** PATCH the meta-bearing `blocked_carriers` field and return what the
+ *  backend actually persisted (decoded back into an entry). Callers MUST
+ *  apply this reconciled entry to the store — if the backend silently
+ *  ignored `blocked_carriers` (it's not in their documented PATCH-allowed
+ *  field list), the returned entry will reflect the OLD meta values, and
+ *  the optimistic UI flip should be reverted immediately rather than
+ *  waiting for a refresh. */
+async function pushMeta(id: string, next: TcpaShieldEntry): Promise<TcpaShieldEntry> {
+  const updated = await spamService.updateShield(id, {
+    blockedCarriers: entryToCarriers(next),
   });
+  // shieldToEntry decodes the meta blob back from `blocked_carriers`. The
+  // resulting entry reflects whatever the backend stored, not what we sent.
+  return { ...shieldToEntry(updated), id };
 }
 
 export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
@@ -170,8 +177,12 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
     try {
       // `active` lives inside the meta blob, which is packed into the
       // `blocked_carriers` field on the wire — that's why this is a
-      // pushMeta call rather than a plain field PATCH.
-      await pushMeta(id, next);
+      // pushMeta call rather than a plain field PATCH. Reconciliation
+      // with the response surfaces backend rejections immediately.
+      const reconciled = await pushMeta(id, next);
+      set((s) => ({
+        providers: s.providers.map((x) => (x.id === id ? reconciled : x)),
+      }));
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
@@ -219,7 +230,13 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
       providers: s.providers.map((x) => (x.id === id ? next : x)),
     }));
     try {
-      await pushMeta(id, next);
+      // Same reconcile rule as setActive — config also lives in the meta
+      // blob, so the backend silently dropping `blocked_carriers` would
+      // otherwise show a delayed-revert on refresh.
+      const reconciled = await pushMeta(id, next);
+      set((s) => ({
+        providers: s.providers.map((x) => (x.id === id ? reconciled : x)),
+      }));
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
