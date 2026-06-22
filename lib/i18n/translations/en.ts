@@ -2688,6 +2688,8 @@ export const en = {
           allCampaigns: "All Campaigns",
           selectCampaign: "Select Campaign",
           numberLabel: "Number",
+          numberImmutableHint:
+            "The phone number can't be changed after blocking. To change it, delete this entry and add it again.",
           cancel: "Cancel",
           confirm: "Update Number",
         },

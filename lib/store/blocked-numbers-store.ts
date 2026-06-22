@@ -37,9 +37,14 @@ interface BlockedNumbersState {
     scope: BlockedNumberScope;
     campaignId?: string;
   }) => Promise<BlockedNumberEntry>;
+  /** Update mutable fields on an existing blocked number.
+   *  NOTE: `phone_number` is immutable on the backend after creation —
+   *  delete + re-add if the operator needs to change the number itself.
+   *  Only the campaign association (which we round-trip through the
+   *  backend's `reason` field) can be edited here. */
   update: (
     id: string,
-    patch: { number?: string; campaignId?: string | undefined },
+    patch: { campaignId?: string | undefined },
   ) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
@@ -115,7 +120,7 @@ export const useBlockedNumbersStore = create<BlockedNumbersState>()((set, get) =
     const current = get().numbers.find((n) => n.id === id);
     if (!current) return;
     const next: BlockedNumberEntry = { ...current };
-    if (patch.number !== undefined) next.number = normalizeNumber(patch.number);
+    // `next.number` stays the same — phone numbers are immutable.
     if ("campaignId" in patch) {
       next.campaignId = patch.campaignId;
     }
@@ -123,8 +128,9 @@ export const useBlockedNumbersStore = create<BlockedNumbersState>()((set, get) =
     const prev = get().numbers;
     set((s) => ({ numbers: s.numbers.map((n) => (n.id === id ? next : n)) }));
     try {
+      // Only send the mutable field (`reason` — we encode scope + campaignId
+      // into it). The backend rejects `phone_number` updates with 400.
       const updated = await spamService.updateBlacklist(id, {
-        number: next.number,
         reason: encodeReason(next.scope, next.campaignId),
       });
       // Overwrite the optimistic row with whatever the backend echoed back.

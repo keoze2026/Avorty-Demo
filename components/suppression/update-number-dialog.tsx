@@ -92,7 +92,7 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
             <div className="space-y-2">
               <Label htmlFor="un-campaign">{t("toolsUI.suppression.blockedNumbers.update.selectCampaign")}</Label>
               <Select value={campaignId} onValueChange={setCampaignId}>
-                <SelectTrigger id="un-campaign">
+                <SelectTrigger id="un-campaign" autoFocus>
                   <SelectValue placeholder={t("toolsUI.suppression.blockedNumbers.block.choose")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -112,18 +112,26 @@ export function UpdateNumberDialog({ entry, onOpenChange, onSave }: Props) {
             </div>
           )}
 
+          {/* Phone number is intentionally immutable after creation — confirmed
+              by the backend dev (2026-06-23). Sending a `phone_number` change
+              via PATCH now returns 400 with an error. Show the existing value
+              read-only so the operator has context, and surface a one-line
+              hint that explains the constraint + suggests the workaround
+              (delete + re-add). */}
           <div className="space-y-2">
             <Label htmlFor="un-number">{t("toolsUI.suppression.blockedNumbers.update.numberLabel")}</Label>
             <Input
               id="un-number"
-              autoFocus
               value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onSubmit();
-              }}
+              disabled
+              readOnly
+              aria-readonly
+              className="cursor-not-allowed opacity-70"
               inputMode="tel"
             />
+            <p className="text-[11px] text-muted-foreground">
+              {t("toolsUI.suppression.blockedNumbers.update.numberImmutableHint")}
+            </p>
           </div>
         </div>
 

@@ -150,10 +150,12 @@ export const spamService = {
   },
   async updateBlacklist(id: string, patch: Partial<SpamEntry>): Promise<SpamEntry> {
     const body: Record<string, unknown> = {};
-    // Rename `number` → `phoneNumber` (wire `phone_number`) on the way out.
-    if (patch.number !== undefined) body.phoneNumber = patch.number;
+    // `phone_number` is intentionally immutable on the backend — sending it
+    // returns 400 (confirmed by the backend dev). We deliberately drop
+    // `patch.number` here so accidental callers can't trigger that error.
     if (patch.reason !== undefined) body.reason = patch.reason;
     if (patch.isActive !== undefined) body.isActive = patch.isActive;
+    if (patch.expiresAt !== undefined) body.expiresAt = patch.expiresAt;
     return wireToEntry(
       await http.patch<SpamEntryWire>(`/api/spam/blacklist/${id}`, { body }),
     );
@@ -184,9 +186,11 @@ export const spamService = {
   },
   async updateWhitelist(id: string, patch: Partial<SpamEntry>): Promise<SpamEntry> {
     const body: Record<string, unknown> = {};
-    if (patch.number !== undefined) body.phoneNumber = patch.number;
+    // `phone_number` is immutable on the whitelist endpoint too — same rule
+    // as blacklist above.
     if (patch.reason !== undefined) body.reason = patch.reason;
     if (patch.isActive !== undefined) body.isActive = patch.isActive;
+    if (patch.expiresAt !== undefined) body.expiresAt = patch.expiresAt;
     return wireToEntry(
       await http.patch<SpamEntryWire>(`/api/spam/whitelist/${id}`, { body }),
     );
@@ -228,12 +232,12 @@ export const spamService = {
   async listShields(
     query: { shieldType?: ShieldType; page?: number; pageSize?: number } = {},
   ): Promise<Shield[]> {
-    const res = await http.get<{ items?: ShieldWire[] } | ShieldWire[]>(
-      "/api/spam/shields/",
-      { query },
-    );
-    const items = Array.isArray(res) ? res : (res.items ?? []);
-    return items.map(wireToShield);
+    const raw = await http.get<unknown>("/api/spam/shields/", { query });
+    // Reuse the same tolerant envelope extractor as the blacklist/whitelist
+    // list endpoints so DRF `{ results }`, `{ data }`, or bare-array shapes
+    // all parse correctly. Previously a non-`{items}` shape made the list
+    // render empty after refresh.
+    return extractList<ShieldWire>(raw, "/api/spam/shields/").items.map(wireToShield);
   },
 
   async getShield(id: string): Promise<Shield> {
@@ -261,8 +265,29 @@ export const spamService = {
   },
 
   async updateShield(id: string, patch: Partial<Shield>): Promise<Shield> {
+    // Backend contract says PATCH but the live endpoint returns 405 — only
+    // PUT is currently implemented for shields. Workaround: fetch the
+    // current entity, merge the patch on top, then PUT the full object so
+    // unmodified fields aren't silently nulled out by a replace-semantics
+    // update. Remove the GET round-trip if/when the backend ships PATCH.
+    const current = await this.getShield(id);
+    const merged: Shield = {
+      ...current,
+      ...patch,
+      // Preserve identity / discriminator regardless of patch.
+      id: current.id,
+      shieldType: current.shieldType,
+    };
     return wireToShield(
-      await http.patch<ShieldWire>(`/api/spam/shields/${id}/`, { body: patch }),
+      await http.put<ShieldWire>(`/api/spam/shields/${id}/`, {
+        body: {
+          name: merged.name,
+          shieldType: merged.shieldType,
+          campaignIds: merged.campaignIds,
+          blockedCarriers: merged.blockedCarriers,
+          isActive: merged.isActive,
+        },
+      }),
     );
   },
 

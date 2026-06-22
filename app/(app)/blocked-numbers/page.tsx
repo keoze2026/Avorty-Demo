@@ -178,10 +178,12 @@ export default function BlockedNumbersPage() {
     campaignId,
   }: {
     id: string;
+    /** Read-only echo of the entry's number; backend treats this as immutable
+     *  after creation, so we keep it in the toast text but DO NOT send it. */
     number: string;
     campaignId?: string;
   }) => {
-    updateNumber(id, { number, campaignId });
+    updateNumber(id, { campaignId });
     toast.success(t("toolsUI.suppression.blockedNumbers.toastUpdated").replace("{number}", number));
   };
 
