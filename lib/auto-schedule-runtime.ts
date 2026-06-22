@@ -55,22 +55,34 @@ function getPortalMinuteOfDay(timezone: string): number {
 }
 
 export function useAutoScheduleRuntime() {
+  // IMPORTANT: subscribe ONLY to the schedule maps + timezone. We deliberately
+  // do NOT subscribe to the `campaigns`, `buyers`, or `destinations` arrays
+  // (read them via `getState()` inside `tick` instead).
+  //
+  // Why: those arrays change reference on every store mutation — adding a
+  // buyer, an optimistic status flip, etc. — and if `tick` is also writing
+  // back to those same stores (via setStatus / setEnabled), each write
+  // re-triggers the effect, re-runs tick, and we hit React error #185
+  // (max update depth) on the next render cycle. By depending only on the
+  // schedule maps, the effect re-installs the interval only when the user
+  // actually changes a schedule.
   const portalTimezone = useAutoScheduleStore((s) => s.portalTimezone);
   const campaignSchedules = useAutoScheduleStore((s) => s.campaignSchedules);
   const buyerSchedules = useAutoScheduleStore((s) => s.buyerSchedules);
   const destinationSchedules = useAutoScheduleStore((s) => s.destinationSchedules);
 
-  const campaigns = useCampaignsStore((s) => s.campaigns);
-  const buyers = useBuyersStore((s) => s.buyers);
-  const destinations = useDestinationsStore((s) => s.destinations);
-
-  const setCampaignStatus = useCampaignsStore((s) => s.setStatus);
-  const setBuyerStatus = useBuyersStore((s) => s.setStatus);
-  const setDestinationEnabled = useDestinationsStore((s) => s.setEnabled);
-
   React.useEffect(() => {
     const tick = () => {
       const minuteOfDay = getPortalMinuteOfDay(portalTimezone);
+
+      // Read the latest entity arrays + setter methods at tick time so we
+      // always act on fresh data without subscribing to them.
+      const campaigns = useCampaignsStore.getState().campaigns;
+      const setCampaignStatus = useCampaignsStore.getState().setStatus;
+      const buyers = useBuyersStore.getState().buyers;
+      const setBuyerStatus = useBuyersStore.getState().setStatus;
+      const destinations = useDestinationsStore.getState().destinations;
+      const setDestinationEnabled = useDestinationsStore.getState().setEnabled;
 
       // Campaigns
       for (const [id, schedule] of Object.entries(campaignSchedules)) {
@@ -113,16 +125,5 @@ export function useAutoScheduleRuntime() {
     tick();
     const id = window.setInterval(tick, TICK_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [
-    portalTimezone,
-    campaignSchedules,
-    buyerSchedules,
-    destinationSchedules,
-    campaigns,
-    buyers,
-    destinations,
-    setCampaignStatus,
-    setBuyerStatus,
-    setDestinationEnabled,
-  ]);
+  }, [portalTimezone, campaignSchedules, buyerSchedules, destinationSchedules]);
 }
