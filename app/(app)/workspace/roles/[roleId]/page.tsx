@@ -33,7 +33,9 @@ export default function SetupRolePage({
   const roleName = isLocalized ? localizedRole : formatRoleName(roleId);
 
   return (
-    <>
+    // Max-width wrapper — matches the Campaign / Destination / Buyer settings
+    // pages (max-w-[928px]) so every settings surface reads at the same width.
+    <div className="mx-auto w-full max-w-[928px] space-y-6">
       <Link
         href={ROUTES.workspace}
         className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -45,6 +47,6 @@ export default function SetupRolePage({
       <PageHeader title={roleName} description={t("workspaceUI.setupRole.pageDescription")} />
 
       <SetupRoleForm roleId={roleId} />
-    </>
+    </div>
   );
 }
