@@ -25,7 +25,16 @@ const STATUS_META: Record<CallStatus, { icon: typeof Phone; color: string; label
 
 export function RecentCallsFeed() {
   const { t } = useTranslation();
-  const calls = useCallsStore((s) => s.recent.slice(0, 8));
+  // IMPORTANT: subscribe to `s.recent` directly. Returning `s.recent.slice(0, 8)`
+  // from inside the selector creates a NEW array reference on every call —
+  // useSyncExternalStore invokes the selector twice during render to detect
+  // tearing, sees the two new refs, and throws React error #185
+  // (max update depth / "result of getSnapshot should be cached"). Slicing
+  // *outside* the selector keeps the subscription tied to the stable
+  // `s.recent` reference, then we render the visible window from the
+  // local-scoped slice.
+  const recent = useCallsStore((s) => s.recent);
+  const calls = recent.slice(0, 8);
 
   return (
     <Card>
