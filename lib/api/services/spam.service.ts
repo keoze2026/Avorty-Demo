@@ -26,7 +26,11 @@ export interface SpamReport {
 
 interface SpamEntryWire {
   id: string;
-  number: string;
+  /** Canonical wire field is `phone_number` (camelCased here by the http
+   *  layer). The legacy `number` alias stays in the type as a fallback for
+   *  any older response that hasn't been migrated yet. */
+  phoneNumber?: string;
+  number?: string;
   reason?: string;
   isActive: boolean;
   expiresAt?: string | null;
@@ -35,7 +39,8 @@ interface SpamEntryWire {
 
 interface SpamReportWire {
   id: string;
-  number: string;
+  phoneNumber?: string;
+  number?: string;
   reportType: string;
   source: string;
   confidence?: number;
@@ -51,7 +56,8 @@ function toTs(s: string | null | undefined): number | undefined {
 function wireToEntry(w: SpamEntryWire): SpamEntry {
   return {
     id: w.id,
-    number: w.number,
+    // Prefer the canonical `phone_number` field; fall back to legacy `number`.
+    number: w.phoneNumber ?? w.number ?? "",
     reason: w.reason,
     isActive: !!w.isActive,
     expiresAt: toTs(w.expiresAt ?? null),
@@ -62,7 +68,7 @@ function wireToEntry(w: SpamEntryWire): SpamEntry {
 function wireToReport(w: SpamReportWire): SpamReport {
   return {
     id: w.id,
-    number: w.number,
+    number: w.phoneNumber ?? w.number ?? "",
     reportType: w.reportType,
     source: w.source,
     confidence: w.confidence,
@@ -80,10 +86,24 @@ export const spamService = {
     return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/blacklist/${id}`));
   },
   async createBlacklist(input: { number: string; reason?: string }): Promise<SpamEntry> {
-    return wireToEntry(await http.post<SpamEntryWire>("/api/spam/blacklist", { body: input }));
+    // Backend expects `phone_number` (not `number`). The http layer
+    // camel-cases this to snake on the wire — pass `phoneNumber` and it
+    // arrives as `phone_number`. Previously sending `number` 422'd.
+    return wireToEntry(
+      await http.post<SpamEntryWire>("/api/spam/blacklist", {
+        body: { phoneNumber: input.number, reason: input.reason },
+      }),
+    );
   },
   async updateBlacklist(id: string, patch: Partial<SpamEntry>): Promise<SpamEntry> {
-    return wireToEntry(await http.patch<SpamEntryWire>(`/api/spam/blacklist/${id}`, { body: patch }));
+    const body: Record<string, unknown> = {};
+    // Rename `number` → `phoneNumber` (wire `phone_number`) on the way out.
+    if (patch.number !== undefined) body.phoneNumber = patch.number;
+    if (patch.reason !== undefined) body.reason = patch.reason;
+    if (patch.isActive !== undefined) body.isActive = patch.isActive;
+    return wireToEntry(
+      await http.patch<SpamEntryWire>(`/api/spam/blacklist/${id}`, { body }),
+    );
   },
   async deactivateBlacklist(id: string): Promise<void> {
     await http.post(`/api/spam/blacklist/${id}/deactivate`);
@@ -101,10 +121,21 @@ export const spamService = {
     return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/whitelist/${id}`));
   },
   async createWhitelist(input: { number: string; reason?: string }): Promise<SpamEntry> {
-    return wireToEntry(await http.post<SpamEntryWire>("/api/spam/whitelist", { body: input }));
+    // Same field-rename rule as the blacklist endpoint above.
+    return wireToEntry(
+      await http.post<SpamEntryWire>("/api/spam/whitelist", {
+        body: { phoneNumber: input.number, reason: input.reason },
+      }),
+    );
   },
   async updateWhitelist(id: string, patch: Partial<SpamEntry>): Promise<SpamEntry> {
-    return wireToEntry(await http.patch<SpamEntryWire>(`/api/spam/whitelist/${id}`, { body: patch }));
+    const body: Record<string, unknown> = {};
+    if (patch.number !== undefined) body.phoneNumber = patch.number;
+    if (patch.reason !== undefined) body.reason = patch.reason;
+    if (patch.isActive !== undefined) body.isActive = patch.isActive;
+    return wireToEntry(
+      await http.patch<SpamEntryWire>(`/api/spam/whitelist/${id}`, { body }),
+    );
   },
   async deleteWhitelist(id: string): Promise<void> {
     await http.delete(`/api/spam/whitelist/${id}`);
@@ -117,7 +148,9 @@ export const spamService = {
   },
 
   async checkNumber(number: string): Promise<{ isSpam: boolean; confidence?: number; reason?: string }> {
-    return http.get(`/api/spam/check`, { query: { number } });
+    // Matches the rest of the spam resource: send as `phoneNumber` so the
+    // http layer serializes the query param as `phone_number`.
+    return http.get(`/api/spam/check`, { query: { phoneNumber: number } });
   },
 
   async listAnonymousBlocks(): Promise<Array<{ id: string; campaignId: string; isActive: boolean }>> {
