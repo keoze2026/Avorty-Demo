@@ -265,32 +265,26 @@ export const spamService = {
   },
 
   /**
-   * Replace a shield with the full, complete object via PUT.
+   * Partial update via PATCH. The backend dev shipped PATCH support on
+   * 2026-06-23; the previous PUT-with-full-object workaround was dropped.
    *
-   * Backend constraints discovered live (the contract is inaccurate):
-   *   - PATCH /api/spam/shields/{id}/ → 405 Method Not Allowed
-   *   - GET   /api/spam/shields/{id}/ → 405 Method Not Allowed
-   *   - PUT   /api/spam/shields/{id}/ → works, but with REPLACE semantics
+   * Documented PATCH-allowed fields per the dev's message:
+   *   `name`, `campaign_ids`, `is_active`
    *
-   * Since GET-single also 405's, we can't do a GET-then-PUT merge — the
-   * caller MUST provide the full Shield. Stores reconstruct this from their
-   * in-memory copy (which is already populated by the `listShields()` call
-   * on app boot) + whatever fields they're changing this round.
-   *
-   * If the backend later ships PATCH on this resource, swap this back to
-   * `http.patch(..., { body: patch })` and drop the full-shield requirement.
+   * We also send `blocked_carriers` here because the dev didn't explicitly
+   * call it out and it's the only mechanism we have for managing the VoIP
+   * carrier list + TCPA provider meta blob. If a future call hits a 422 on
+   * `blocked_carriers`, ping the backend dev to add it to the writable
+   * field set or expose a dedicated sub-endpoint.
    */
-  async updateShield(id: string, full: Omit<Shield, "id">): Promise<Shield> {
+  async updateShield(id: string, patch: Partial<Shield>): Promise<Shield> {
+    const body: Record<string, unknown> = {};
+    if (patch.name !== undefined) body.name = patch.name;
+    if (patch.campaignIds !== undefined) body.campaignIds = patch.campaignIds;
+    if (patch.isActive !== undefined) body.isActive = patch.isActive;
+    if (patch.blockedCarriers !== undefined) body.blockedCarriers = patch.blockedCarriers;
     return wireToShield(
-      await http.put<ShieldWire>(`/api/spam/shields/${id}/`, {
-        body: {
-          name: full.name,
-          shieldType: full.shieldType,
-          campaignIds: full.campaignIds,
-          blockedCarriers: full.blockedCarriers,
-          isActive: full.isActive,
-        },
-      }),
+      await http.patch<ShieldWire>(`/api/spam/shields/${id}/`, { body }),
     );
   },
 

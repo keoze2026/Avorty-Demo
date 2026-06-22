@@ -72,20 +72,6 @@ function entryToCarriers(e: Pick<TcpaShieldEntry, "type" | "active" | "config">)
   return [encodeMeta({ type: e.type, active: e.active, config: e.config })];
 }
 
-/** Reconstruct the full wire-level Shield from a stored TCPA entry.
- *  The TCPA store doesn't track Shield-level `isActive` (the toggle is
- *  stored INSIDE the meta blob), so we default the wire field to `true`.
- *  PUT requires a complete object — backend rejects PATCH and GET-single. */
-function entryToShield(e: TcpaShieldEntry): Omit<Shield, "id"> {
-  return {
-    name: e.name,
-    shieldType: "tcpa",
-    campaignIds: e.campaignIds,
-    blockedCarriers: entryToCarriers(e),
-    isActive: true,
-  };
-}
-
 interface TcpaShieldState {
   providers: TcpaShieldEntry[];
   loading: boolean;
@@ -103,11 +89,13 @@ interface TcpaShieldState {
   updateConfig: (id: string, patch: Partial<TcpaProviderConfig>) => Promise<void>;
 }
 
-async function pushFullEntry(id: string, current: TcpaShieldEntry): Promise<void> {
-  // PUT semantics — must send the complete Shield body. `entryToShield`
-  // packs the TCPA meta (type/active/config) into blockedCarriers as we
-  // already do, and includes the wire-level name + campaignIds.
-  await spamService.updateShield(id, entryToShield(current));
+async function pushMeta(id: string, current: TcpaShieldEntry): Promise<void> {
+  // PATCH only the meta-bearing field. type/active/config are packed into
+  // `blockedCarriers` via encodeMeta so they round-trip through the
+  // backend's flat shield schema without backend changes.
+  await spamService.updateShield(id, {
+    blockedCarriers: entryToCarriers(current),
+  });
 }
 
 export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
@@ -148,15 +136,12 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
   },
 
   rename: async (id, name) => {
-    const current = get().providers.find((x) => x.id === id);
-    if (!current) return;
-    const next: TcpaShieldEntry = { ...current, name };
     const prev = get().providers;
     set((s) => ({
-      providers: s.providers.map((x) => (x.id === id ? next : x)),
+      providers: s.providers.map((x) => (x.id === id ? { ...x, name } : x)),
     }));
     try {
-      await pushFullEntry(id, next);
+      await spamService.updateShield(id, { name });
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
@@ -177,13 +162,16 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
   setActive: async (id, active) => {
     const current = get().providers.find((x) => x.id === id);
     if (!current) return;
-    const next: TcpaShieldEntry = { ...current, active };
+    const next = { ...current, active };
     const prev = get().providers;
     set((s) => ({
       providers: s.providers.map((x) => (x.id === id ? next : x)),
     }));
     try {
-      await pushFullEntry(id, next);
+      // `active` lives inside the meta blob, which is packed into the
+      // `blocked_carriers` field on the wire — that's why this is a
+      // pushMeta call rather than a plain field PATCH.
+      await pushMeta(id, next);
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
@@ -193,16 +181,13 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
   addCampaign: async (id, campaignId) => {
     const current = get().providers.find((x) => x.id === id);
     if (!current || current.campaignIds.includes(campaignId)) return;
-    const next: TcpaShieldEntry = {
-      ...current,
-      campaignIds: [...current.campaignIds, campaignId],
-    };
+    const next = [...current.campaignIds, campaignId];
     const prev = get().providers;
     set((s) => ({
-      providers: s.providers.map((x) => (x.id === id ? next : x)),
+      providers: s.providers.map((x) => (x.id === id ? { ...x, campaignIds: next } : x)),
     }));
     try {
-      await pushFullEntry(id, next);
+      await spamService.updateShield(id, { campaignIds: next });
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
@@ -212,16 +197,13 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
   removeCampaign: async (id, campaignId) => {
     const current = get().providers.find((x) => x.id === id);
     if (!current) return;
-    const next: TcpaShieldEntry = {
-      ...current,
-      campaignIds: current.campaignIds.filter((c) => c !== campaignId),
-    };
+    const next = current.campaignIds.filter((c) => c !== campaignId);
     const prev = get().providers;
     set((s) => ({
-      providers: s.providers.map((x) => (x.id === id ? next : x)),
+      providers: s.providers.map((x) => (x.id === id ? { ...x, campaignIds: next } : x)),
     }));
     try {
-      await pushFullEntry(id, next);
+      await spamService.updateShield(id, { campaignIds: next });
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
@@ -231,16 +213,13 @@ export const useTcpaShieldStore = create<TcpaShieldState>()((set, get) => ({
   updateConfig: async (id, patch) => {
     const current = get().providers.find((x) => x.id === id);
     if (!current) return;
-    const next: TcpaShieldEntry = {
-      ...current,
-      config: { ...current.config, ...patch },
-    };
+    const next = { ...current, config: { ...current.config, ...patch } };
     const prev = get().providers;
     set((s) => ({
       providers: s.providers.map((x) => (x.id === id ? next : x)),
     }));
     try {
-      await pushFullEntry(id, next);
+      await pushMeta(id, next);
     } catch (e) {
       set({ providers: prev, error: messageFromError(e) });
       throw e;
