@@ -119,14 +119,23 @@ export const useBlockedNumbersStore = create<BlockedNumbersState>()((set, get) =
     if ("campaignId" in patch) {
       next.campaignId = patch.campaignId;
     }
-    // Optimistic update.
+    // Optimistic update — flips the UI immediately while the PATCH is in flight.
     const prev = get().numbers;
     set((s) => ({ numbers: s.numbers.map((n) => (n.id === id ? next : n)) }));
     try {
-      await spamService.updateBlacklist(id, {
+      const updated = await spamService.updateBlacklist(id, {
         number: next.number,
         reason: encodeReason(next.scope, next.campaignId),
       });
+      // Overwrite the optimistic row with whatever the backend echoed back.
+      // If the backend persisted the change, this is a no-op repaint. If it
+      // silently kept the old value (e.g. validation succeeded but no actual
+      // update was applied), the UI reverts NOW instead of waiting for the
+      // user to refresh — so the failed update is visible immediately.
+      const reconciled = wireToEntry(updated);
+      set((s) => ({
+        numbers: s.numbers.map((n) => (n.id === id ? reconciled : n)),
+      }));
     } catch (e) {
       set({ numbers: prev, error: messageFromError(e) });
       throw e;
