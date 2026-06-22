@@ -17,11 +17,16 @@ interface PublisherListWire {
   payoutAmount: string;
   uniqueId: string;
   createdAt: string;
+  /** Read-only echo of the workspace the publisher belongs to. Backend
+   *  confirmed this field is returned (`organization_name`) and must NOT
+   *  be sent in any create/update body. */
+  organizationName?: string;
 }
 
 interface PublisherWire extends PublisherListWire {
   description?: string;
   phoneNumber?: string;
+  /** FK reference (uuid). Read-only — display via `organizationName` above. */
   organizationId?: string;
   createdById?: string | null;
   cap?: { daily?: number; monthly?: number; concurrency?: number } | null;
@@ -49,7 +54,8 @@ function listWireToPublisher(w: PublisherListWire): Publisher {
   return {
     id: w.id,
     name: w.name,
-    organization: "",
+    // Read-only echo from the backend's `organization_name` field.
+    organization: w.organizationName ?? "",
     email: w.email,
     status: normalizeStatus(w.status),
     payoutRate: toNum(w.payoutAmount),
@@ -70,7 +76,8 @@ function detailWireToPublisher(w: PublisherWire): Publisher {
   return {
     ...listWireToPublisher(w),
     description: w.description,
-    organization: w.organizationId ?? "",
+    // Prefer human-readable name; fall back to the uuid for legacy responses.
+    organization: w.organizationName ?? w.organizationId ?? "",
     campaignIds: (w.campaigns ?? []).map((c) => c.campaignId),
   };
 }

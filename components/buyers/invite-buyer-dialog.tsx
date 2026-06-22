@@ -40,7 +40,6 @@ export function InviteBuyerDialog({
   const add = useBuyersStore((s) => s.add);
 
   const [name, setName] = useState("");
-  const [organization, setOrganization] = useState("");
   const [bidAmount, setBidAmount] = useState(35);
   const [dailyCap, setDailyCap] = useState(200);
   const [description, setDescription] = useState("");
@@ -48,7 +47,6 @@ export function InviteBuyerDialog({
 
   const reset = () => {
     setName("");
-    setOrganization("");
     setBidAmount(35);
     setDailyCap(200);
     setDescription("");
@@ -59,14 +57,13 @@ export function InviteBuyerDialog({
     if (!next) setTimeout(reset, 200);
   };
 
-  // Backend schema requires both name and organization to be at least 2
-  // characters. Mirror the rule on the frontend so the operator sees the
-  // error inline instead of submitting and waiting for a 422.
+  // Backend schema requires the buyer name to be at least 2 characters.
+  // (Organization used to be a separate field but the backend now derives
+  // it server-side from the workspace context — read-only on responses,
+  // not accepted in request bodies. So no FE input or validation for it.)
   const trimmedName = name.trim();
-  const trimmedOrg = organization.trim();
   const nameTooShort = trimmedName.length > 0 && trimmedName.length < 2;
-  const orgTooShort = trimmedOrg.length > 0 && trimmedOrg.length < 2;
-  const canSubmit = trimmedName.length >= 2 && trimmedOrg.length >= 2;
+  const canSubmit = trimmedName.length >= 2;
 
   const onSubmit = async () => {
     if (!canSubmit) return;
@@ -74,7 +71,11 @@ export function InviteBuyerDialog({
     try {
       const created = await add({
         name: trimmedName,
-        organization: trimmedOrg,
+        // Organization is read-only — the backend fills it in from the
+        // workspace context and echoes it on the response. The empty
+        // placeholder here gets overwritten via the store's wire mapper
+        // as soon as the create response lands.
+        organization: "",
         description: description.trim() || undefined,
         status: "pending",
         bidAmount,
@@ -123,38 +124,21 @@ export function InviteBuyerDialog({
         </DialogHeader>
 
         <div className="space-y-3 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="ib-name">Buyer name</Label>
-              <Input
-                id="ib-name"
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. C11"
-                aria-invalid={nameTooShort || undefined}
-              />
-              {nameTooShort && (
-                <p className="text-xs text-destructive">
-                  Buyer name must be at least 2 characters.
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ib-org">Organization</Label>
-              <Input
-                id="ib-org"
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-                placeholder="e.g. Apex Group"
-                aria-invalid={orgTooShort || undefined}
-              />
-              {orgTooShort && (
-                <p className="text-xs text-destructive">
-                  Organization must be at least 2 characters.
-                </p>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="ib-name">Buyer name</Label>
+            <Input
+              id="ib-name"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. C11"
+              aria-invalid={nameTooShort || undefined}
+            />
+            {nameTooShort && (
+              <p className="text-xs text-destructive">
+                Buyer name must be at least 2 characters.
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">

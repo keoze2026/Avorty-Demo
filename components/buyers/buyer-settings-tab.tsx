@@ -89,9 +89,11 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
     }
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 350));
+    // NOTE: `organization` is intentionally omitted — backend schema makes
+    // it read-only (returned as `organization_name`, never accepted in a
+    // write body). The form still displays the value via a disabled input.
     update(buyer.id, {
       name: form.name.trim(),
-      organization: form.organization.trim(),
       contactName: form.contactName.trim() || undefined,
       email: form.email.trim() || undefined,
       description: form.description.trim() || undefined,
@@ -132,13 +134,16 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="bs-org">{t("networkUI.buyers.settings.organization")}</Label>
+            {/* Read-only — backend's `organization_name` is shown here for
+                context but never sent back in a request body. */}
             <Input
               id="bs-org"
               value={form.organization}
-              onChange={(e) => set("organization", e.target.value)}
-              aria-invalid={!!errors.organization}
+              disabled
+              readOnly
+              aria-readonly
+              className="cursor-not-allowed opacity-70"
             />
-            {errors.organization && <ErrorLine>{t(errors.organization)}</ErrorLine>}
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="bs-desc">{t("networkUI.buyers.settings.notes")}</Label>
@@ -340,7 +345,8 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
 function validate(form: FormState) {
   const errs: Record<string, string> = {};
   if (form.name.trim().length < 2) errs.name = "networkUI.buyers.settings.errNameRequired";
-  if (form.organization.trim().length < 2) errs.organization = "networkUI.buyers.settings.errOrgRequired";
+  // `organization` validation removed — backend treats it as read-only, so
+  // there's nothing the user can fix here even if it were empty.
   if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) errs.email = "networkUI.buyers.settings.errInvalidEmail";
   if (form.bidAmount < 0) errs.bidAmount = "networkUI.buyers.settings.errBidNegative";
   return errs;

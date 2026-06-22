@@ -54,12 +54,14 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
   }, [buyer]);
 
   const onSubmit = async () => {
-    if (!buyer || !name.trim() || !organization.trim()) return;
+    if (!buyer || !name.trim()) return;
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 250));
+    // NOTE: `organization` is intentionally omitted from the patch — backend
+    // schema treats it as read-only (derived from workspace context, echoed
+    // via `organization_name` on responses). Sending it would 422.
     update(buyer.id, {
       name: name.trim(),
-      organization: organization.trim(),
       contactName: contactName.trim() || undefined,
       email: email.trim() || undefined,
       description: description.trim() || undefined,
@@ -95,10 +97,15 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
             </div>
             <div className="space-y-2">
               <Label htmlFor="eb-org">{t("networkUI.buyers.edit.organization")}</Label>
+              {/* Read-only — backend's `organization_name` is echoed here
+                  for context but cannot be edited from this dialog. */}
               <Input
                 id="eb-org"
                 value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
+                disabled
+                readOnly
+                aria-readonly
+                className="cursor-not-allowed opacity-70"
               />
             </div>
           </div>
@@ -162,10 +169,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("networkUI.buyers.edit.cancel")}
           </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={submitting || !name.trim() || !organization.trim()}
-          >
+          <Button onClick={onSubmit} disabled={submitting || !name.trim()}>
             {submitting ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.buyers.edit.saving")}

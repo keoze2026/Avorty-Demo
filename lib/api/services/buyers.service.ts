@@ -21,6 +21,10 @@ interface BuyerListWire {
   phoneNumber: string;
   payoutAmount: string;
   createdAt: string;
+  /** Read-only echo of the workspace the buyer belongs to. Backend confirmed
+   *  this field is returned (snake-case `organization_name` → camelCase here)
+   *  and must NOT be sent in any create/update body. */
+  organizationName?: string;
 }
 
 interface BuyerWire extends BuyerListWire {
@@ -30,6 +34,7 @@ interface BuyerWire extends BuyerListWire {
   maxConcurrency?: number;
   dupWindowDays?: number;
   qualityScore?: number;
+  /** FK reference (uuid). Read-only — display via `organizationName` above. */
   organizationId?: string;
   createdById?: string | null;
   cap?: {
@@ -71,7 +76,9 @@ function listWireToBuyer(w: BuyerListWire): Buyer {
   return {
     id: w.id,
     name: w.name,
-    organization: "",
+    // Read-only echo from the backend's `organization_name` field. The FE
+    // never sends this back; the user can only see it.
+    organization: w.organizationName ?? "",
     status: normalizeStatus(w.status),
     bidAmount: toNum(w.payoutAmount),
     payoutModel: "flat",
@@ -94,7 +101,10 @@ function detailWireToBuyer(w: BuyerWire): Buyer {
   return {
     ...listWireToBuyer(w),
     description: w.description,
-    organization: w.organizationId ?? "",
+    // Prefer `organization_name` (human-readable) over `organization_id`
+    // (uuid). The legacy id-only fallback stays in place for old responses
+    // that haven't been updated yet.
+    organization: w.organizationName ?? w.organizationId ?? "",
     concurrencyCap: w.cap?.concurrency ?? w.maxConcurrency ?? 0,
     dailyCap: w.cap?.daily ?? 0,
     monthlyCap: w.cap?.monthly ?? 0,

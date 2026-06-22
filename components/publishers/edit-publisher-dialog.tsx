@@ -52,12 +52,13 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
   }, [publisher]);
 
   const onSubmit = async () => {
-    if (!publisher || !name.trim() || !organization.trim()) return;
+    if (!publisher || !name.trim()) return;
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 250));
+    // `organization` is intentionally omitted — backend treats it as
+    // read-only (`organization_name` echo). Sending it would 422.
     update(publisher.id, {
       name: name.trim(),
-      organization: organization.trim(),
       contactName: contactName.trim() || undefined,
       email: email.trim() || undefined,
       description: description.trim() || undefined,
@@ -91,10 +92,14 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
             </div>
             <div className="space-y-2">
               <Label htmlFor="ep-org">{t("networkUI.publishers.edit.organization")}</Label>
+              {/* Read-only — backend's `organization_name` echo. */}
               <Input
                 id="ep-org"
                 value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
+                disabled
+                readOnly
+                aria-readonly
+                className="cursor-not-allowed opacity-70"
               />
             </div>
           </div>
@@ -150,10 +155,7 @@ export function EditPublisherDialog({ publisherId, onOpenChange }: EditPublisher
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("networkUI.publishers.edit.cancel")}
           </Button>
-          <Button
-            onClick={onSubmit}
-            disabled={submitting || !name.trim() || !organization.trim()}
-          >
+          <Button onClick={onSubmit} disabled={submitting || !name.trim()}>
             {submitting ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.publishers.edit.saving")}

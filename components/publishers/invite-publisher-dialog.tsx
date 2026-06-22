@@ -33,7 +33,6 @@ export function InvitePublisherDialog({
   const add = usePublishersStore((s) => s.add);
 
   const [name, setName] = useState("");
-  const [organization, setOrganization] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [payoutRate, setPayoutRate] = useState(65);
@@ -41,7 +40,7 @@ export function InvitePublisherDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
-    setName(""); setOrganization(""); setContactName(""); setEmail("");
+    setName(""); setContactName(""); setEmail("");
     setPayoutRate(65); setDescription(""); setSubmitting(false);
   };
   const onClose = (next: boolean) => {
@@ -50,12 +49,14 @@ export function InvitePublisherDialog({
   };
 
   const onSubmit = async () => {
-    if (!name.trim() || !organization.trim()) return;
+    if (!name.trim()) return;
     setSubmitting(true);
     await new Promise((r) => setTimeout(r, 350));
+    // `organization` is read-only — backend fills it from the workspace
+    // context and echoes it via `organization_name` on the response.
     const created = await add({
       name: name.trim(),
-      organization: organization.trim(),
+      organization: "",
       contactName: contactName.trim() || undefined,
       email: email.trim() || undefined,
       description: description.trim() || undefined,
@@ -94,15 +95,9 @@ export function InvitePublisherDialog({
         </DialogHeader>
 
         <div className="space-y-3 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="ip-name">{t("networkUI.publishers.invite.publisherName")}</Label>
-              <Input id="ip-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("networkUI.publishers.invite.namePh")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ip-org">{t("networkUI.publishers.invite.organization")}</Label>
-              <Input id="ip-org" value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder={t("networkUI.publishers.invite.orgPh")} />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="ip-name">{t("networkUI.publishers.invite.publisherName")}</Label>
+            <Input id="ip-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("networkUI.publishers.invite.namePh")} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -147,7 +142,7 @@ export function InvitePublisherDialog({
           <Button variant="outline" onClick={() => onClose(false)}>
             {t("networkUI.publishers.invite.cancel")}
           </Button>
-          <Button onClick={onSubmit} disabled={submitting || !name.trim() || !organization.trim()}>
+          <Button onClick={onSubmit} disabled={submitting || !name.trim()}>
             {submitting ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("networkUI.publishers.invite.sending")}
