@@ -76,11 +76,64 @@ function wireToReport(w: SpamReportWire): SpamReport {
   };
 }
 
+/**
+ * Normalize a list response that may arrive in one of several conventions:
+ *   - `{ items, total, page, page_size }`  (our documented shape)
+ *   - `{ results, count, next, previous }` (Django REST Framework default)
+ *   - `{ data: [...] }`                    (alternative envelope)
+ *   - bare `[...]`                          (no envelope)
+ *
+ * If the shape is unknown but the payload is non-empty, log a dev-only
+ * warning so we can spot a backend rename quickly without trial-and-error.
+ */
+function extractList<T>(
+  raw: unknown,
+  endpoint: string,
+): { items: T[]; total: number; page: number; pageSize: number } {
+  if (Array.isArray(raw)) {
+    return { items: raw as T[], total: raw.length, page: 1, pageSize: raw.length };
+  }
+  if (raw && typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    const items =
+      (Array.isArray(o.items) && (o.items as T[])) ||
+      (Array.isArray(o.results) && (o.results as T[])) ||
+      (Array.isArray(o.data) && (o.data as T[])) ||
+      null;
+    if (items) {
+      return {
+        items,
+        total: typeof o.total === "number"
+          ? o.total
+          : typeof o.count === "number"
+            ? o.count
+            : items.length,
+        page: typeof o.page === "number" ? o.page : 1,
+        pageSize:
+          typeof o.pageSize === "number"
+            ? o.pageSize
+            : typeof o.pageSize === "string"
+              ? Number(o.pageSize)
+              : items.length,
+      };
+    }
+  }
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[spamService] ${endpoint} returned an unrecognized list shape:`,
+      raw,
+    );
+  }
+  return { items: [], total: 0, page: 1, pageSize: 0 };
+}
+
 export const spamService = {
   /* ─── Blacklist ──────────────────────────────────────────────────── */
   async listBlacklist(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<SpamEntry>> {
-    const res = await http.get<Paginated<SpamEntryWire>>("/api/spam/blacklist", { query });
-    return { ...res, items: res.items.map(wireToEntry) };
+    const raw = await http.get<unknown>("/api/spam/blacklist", { query });
+    const page = extractList<SpamEntryWire>(raw, "/api/spam/blacklist");
+    return { ...page, items: page.items.map(wireToEntry) };
   },
   async getBlacklistEntry(id: string): Promise<SpamEntry> {
     return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/blacklist/${id}`));
@@ -114,8 +167,9 @@ export const spamService = {
 
   /* ─── Whitelist ──────────────────────────────────────────────────── */
   async listWhitelist(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<SpamEntry>> {
-    const res = await http.get<Paginated<SpamEntryWire>>("/api/spam/whitelist", { query });
-    return { ...res, items: res.items.map(wireToEntry) };
+    const raw = await http.get<unknown>("/api/spam/whitelist", { query });
+    const page = extractList<SpamEntryWire>(raw, "/api/spam/whitelist");
+    return { ...page, items: page.items.map(wireToEntry) };
   },
   async getWhitelistEntry(id: string): Promise<SpamEntry> {
     return wireToEntry(await http.get<SpamEntryWire>(`/api/spam/whitelist/${id}`));
@@ -143,8 +197,9 @@ export const spamService = {
 
   /* ─── Spam reports & anonymous-block toggle ──────────────────────── */
   async listReports(query: { page?: number; pageSize?: number } = {}): Promise<Paginated<SpamReport>> {
-    const res = await http.get<Paginated<SpamReportWire>>("/api/spam/reports", { query });
-    return { ...res, items: res.items.map(wireToReport) };
+    const raw = await http.get<unknown>("/api/spam/reports", { query });
+    const page = extractList<SpamReportWire>(raw, "/api/spam/reports");
+    return { ...page, items: page.items.map(wireToReport) };
   },
 
   async checkNumber(number: string): Promise<{ isSpam: boolean; confidence?: number; reason?: string }> {
