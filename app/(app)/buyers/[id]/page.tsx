@@ -55,7 +55,10 @@ export default function BuyerDetailPage() {
   }
 
   return (
-    <>
+    // Max-width wrapper — matches the Campaign settings + Destination
+    // settings pages (max-w-[928px]) so the buyer settings column reads at
+    // a consistent width across detail pages.
+    <div className="mx-auto w-full max-w-[928px] space-y-6">
       <BuyerDetailHeader buyer={buyer} />
 
       <div className="space-y-4">
@@ -97,6 +100,6 @@ export default function BuyerDetailPage() {
         {tab === "caps" && <BuyerCapsTab buyer={buyer} />}
         {tab === "settings" && <BuyerSettingsTab buyer={buyer} />}
       </div>
-    </>
+    </div>
   );
 }
