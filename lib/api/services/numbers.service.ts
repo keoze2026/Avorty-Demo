@@ -48,6 +48,12 @@ interface NumberWire {
   renewalDate?: string | number;
   provisionedAt?: string | number;
   lastCallAt?: string | number;
+  /** Editable fields surfaced in the row edit dialog. Without these on the
+   *  wire shape, wireToNumber would silently drop them and the
+   *  response-reconcile pattern would revert every successful save. */
+  label?: string | null;
+  capEnabled?: boolean;
+  dailyCap?: string | number;
 }
 
 function normalizeNumberStatus(raw?: string): NumberStatus {
@@ -107,6 +113,12 @@ function wireToNumber(w: NumberWire): TrackingNumber {
     renewsAt: renewRaw !== undefined && renewRaw !== null ? toTs(renewRaw) : undefined,
     provisionedAt: toTs(w.provisionedAt),
     lastCallAt: w.lastCallAt !== undefined ? toTs(w.lastCallAt) : undefined,
+    // Round-trip the editable fields so a successful PATCH actually changes
+    // what the user sees. `label: null` from the backend clears the field.
+    label: w.label ?? undefined,
+    capEnabled: w.capEnabled,
+    dailyCap:
+      w.dailyCap !== undefined && w.dailyCap !== null ? toNum(w.dailyCap) : undefined,
   };
 }
 
@@ -169,7 +181,10 @@ export const numbersService = {
 
   async update(id: string, patch: Partial<TrackingNumber>): Promise<TrackingNumber> {
     const body: Record<string, unknown> = {};
-    if (patch.campaignId !== undefined) body.campaignId = patch.campaignId;
+    // Use `in` so an explicit `campaignId: undefined` (the detach signal from
+    // Campaign → Tracking Numbers) reaches the wire. `!== undefined` would
+    // silently drop it and the backend would keep the old campaign link.
+    if ("campaignId" in patch) body.campaignId = patch.campaignId ?? null;
     if (patch.status !== undefined) body.status = patch.status;
     if (patch.label !== undefined) body.label = patch.label;
     if (patch.allocatedCapacity !== undefined) body.allocatedCapacity = patch.allocatedCapacity;

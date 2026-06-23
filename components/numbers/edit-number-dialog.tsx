@@ -66,13 +66,18 @@ export function EditNumberDialog({ number, open, onOpenChange }: Props) {
     setSubmitting(true);
     const campaign =
       campaignId !== UNASSIGNED ? campaigns.find((c) => c.id === campaignId) : undefined;
-    const allocatedValue =
-      Number.isFinite(allocated) && allocated > 0 ? allocated : undefined;
+    // Pass the trimmed label as-is (even empty) so a clear becomes
+    // `label: ""` on the wire rather than `undefined` (which the service
+    // would silently drop, making the save look like a revert).
+    const labelValue = name.trim();
+    // Let 0 through — it's a valid "disabled" allocation. The previous
+    // `> 0` guard collapsed user intent to clear into `undefined`.
+    const allocatedValue = Number.isFinite(allocated) ? allocated : undefined;
     try {
       // Await the backend round-trip so a 4xx surfaces as a toast.error
       // and the dialog stays open instead of optimistically lying.
       await updateNumber(number.id, {
-        label: name.trim() || undefined,
+        label: labelValue,
         campaignId: campaign?.id,
         campaignName: campaign?.name,
         allocatedCapacity: allocatedValue,

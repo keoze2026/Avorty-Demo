@@ -239,7 +239,7 @@ export function TrackNumbersTable({
                     )}
                     {visibleColumns.has("name") && (
                       <TableCell className="text-left font-medium">
-                        {deriveName(n)}
+                        {n.label?.trim() || deriveName(n)}
                       </TableCell>
                     )}
                     {visibleColumns.has("country") && (
