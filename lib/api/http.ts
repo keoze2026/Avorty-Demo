@@ -59,7 +59,13 @@ async function performRefresh(): Promise<string | null> {
       body: JSON.stringify({ refresh }),
     });
     if (!res.ok) {
-      clearTokens();
+      // Only invalidate the session when the backend definitively rejects
+      // the refresh token (401/403/400). Transient failures — 5xx, 429,
+      // network blips — must NOT clear localStorage; otherwise a server
+      // burp or a momentary 429 on a page-refresh storm logs the user out.
+      if (res.status === 400 || res.status === 401 || res.status === 403) {
+        clearTokens();
+      }
       return null;
     }
     // Backend uses Simple JWT with refresh-token rotation: each refresh call
@@ -80,7 +86,9 @@ async function performRefresh(): Promise<string | null> {
     }
     return json.access;
   } catch {
-    clearTokens();
+    // Network error / parse error — tokens are likely still valid on the
+    // backend. Leave localStorage alone so the user can retry instead of
+    // being bounced to login on a flaky connection.
     return null;
   }
 }

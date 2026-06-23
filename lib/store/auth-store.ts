@@ -119,10 +119,23 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await authService.me();
           set({ user, isAuthenticated: true, hydrated: true, error: null });
-        } catch {
-          // Token rejected or network down — clear and treat as logged out.
-          clearTokens();
-          set({ user: null, isAuthenticated: false, hydrated: true });
+        } catch (e) {
+          // Only log the user out on a genuine auth failure. Transient
+          // failures (5xx, 429, network blips) leave the saved tokens
+          // alone so a refresh-storm or backend hiccup doesn't kick a
+          // signed-in user back to the login screen. If `performRefresh`
+          // already gave up and cleared the tokens, hasTokens() is now
+          // false and the UI flips to logged-out below.
+          const isAuthFailure =
+            e instanceof ApiError && (e.status === 401 || e.status === 403);
+          if (isAuthFailure || !hasTokens()) {
+            clearTokens();
+            set({ user: null, isAuthenticated: false, hydrated: true });
+          } else {
+            // Tokens still present, server probably had a hiccup — keep
+            // the user signed in and just mark as hydrated.
+            set({ hydrated: true });
+          }
         }
       },
 
