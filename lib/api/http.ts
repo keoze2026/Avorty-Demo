@@ -24,6 +24,7 @@ import {
   getAccessToken,
   getRefreshToken,
   setAccessToken,
+  setTokens,
 } from "./tokens";
 import type { HttpMethod, RequestOptions } from "./types";
 
@@ -61,12 +62,22 @@ async function performRefresh(): Promise<string | null> {
       clearTokens();
       return null;
     }
-    const json = (await res.json()) as { access?: string };
+    // Backend uses Simple JWT with refresh-token rotation: each refresh call
+    // returns a NEW refresh alongside the new access, and the OLD refresh is
+    // blacklisted. We MUST save the rotated refresh too, otherwise the next
+    // refresh attempt sends a blacklisted token and the user is logged out.
+    // If the backend ever runs without rotation, `refresh` will be absent and
+    // we just save the access alone — the branch below is no-op in that case.
+    const json = (await res.json()) as { access?: string; refresh?: string };
     if (typeof json.access !== "string") {
       clearTokens();
       return null;
     }
-    setAccessToken(json.access);
+    if (typeof json.refresh === "string" && json.refresh.length > 0) {
+      setTokens({ access: json.access, refresh: json.refresh });
+    } else {
+      setAccessToken(json.access);
+    }
     return json.access;
   } catch {
     clearTokens();
