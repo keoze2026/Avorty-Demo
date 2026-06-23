@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { Hash, Pencil, Plus, Unlink } from "lucide-react";
 import { toast } from "sonner";
 
+import { AttachTrackingNumberDialog } from "@/components/campaigns/settings/attach-tracking-number-dialog";
 import { TrackingNumberEditDialog } from "@/components/campaigns/settings/tracking-number-edit-dialog";
-import { ProvisionNumberDialog } from "@/components/numbers/provision-number-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,10 +38,10 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
   // The id of the tracking number currently being edited in the dialog.
   // `null` keeps the dialog closed.
   const [editingId, setEditingId] = useState<string | null>(null);
-  // Controls the "provision a new tracking number" dialog. Both Add buttons
-  // (top-right + empty-state) flip this open. The dialog is pre-locked to
-  // the current campaign so the user doesn't have to re-pick.
-  const [provisionOpen, setProvisionOpen] = useState(false);
+  // Controls the "Add tracking number" dialog. Two modes: pick from existing
+  // unassigned inventory, or buy a fresh one — both auto-attach to this
+  // campaign so the user never re-picks a campaign they're already editing.
+  const [attachOpen, setAttachOpen] = useState(false);
 
   const handleDetach = (id: string, label: string) => {
     // Detaching = clear the campaign link so the number drops out of this
@@ -64,7 +64,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
             {t("trafficUI.campaigns.settings.trackingNumbers.description")}
           </p>
         </div>
-        <Button size="sm" onClick={() => setProvisionOpen(true)}>
+        <Button size="sm" onClick={() => setAttachOpen(true)}>
           <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.trackingNumbers.add")}
         </Button>
       </div>
@@ -76,7 +76,7 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
           title={t("trafficUI.campaigns.settings.trackingNumbers.empty.title")}
           description={t("trafficUI.campaigns.settings.trackingNumbers.empty.description")}
           actions={
-            <Button size="sm" onClick={() => setProvisionOpen(true)}>
+            <Button size="sm" onClick={() => setAttachOpen(true)}>
               <Plus className="h-4 w-4" /> {t("trafficUI.campaigns.settings.trackingNumbers.addTracking")}
             </Button>
           }
@@ -162,12 +162,13 @@ export function TrackingNumbersSection({ campaignId }: { campaignId: string }) {
         onOpenChange={(open) => !open && setEditingId(null)}
       />
 
-      {/* Provision dialog — pre-locked to this campaign so the new number
-          immediately appears in the table above. */}
-      <ProvisionNumberDialog
-        open={provisionOpen}
-        onOpenChange={setProvisionOpen}
-        lockedCampaignId={campaignId}
+      {/* Two-mode picker — attach an already-bought number OR buy a fresh
+          one from the carrier. Both paths route the result to this campaign
+          so it shows up in the table above without a refresh. */}
+      <AttachTrackingNumberDialog
+        campaignId={campaignId}
+        open={attachOpen}
+        onOpenChange={setAttachOpen}
       />
     </section>
   );

@@ -49,12 +49,14 @@ export function EditNumberDialog({ number, open, onOpenChange }: Props) {
   const [status, setStatus] = useState<NumberStatus>("active");
   const [submitting, setSubmitting] = useState(false);
 
-  // Seed form whenever the dialog opens on a new row.
+  // Seed form whenever the dialog opens on a new row. "Allocated" maps to
+  // `allocatedCapacity` — that's what the table column reads via
+  // deriveAllocated, so we must read AND write the same field, not dailyCap.
   useEffect(() => {
     if (!number) return;
     setName(number.label ?? deriveName(number));
     setCampaignId(number.campaignId ?? UNASSIGNED);
-    setAllocated(number.dailyCap ?? deriveAllocated(number));
+    setAllocated(number.allocatedCapacity ?? deriveAllocated(number));
     setStatus(number.status);
   }, [number]);
 
@@ -62,22 +64,29 @@ export function EditNumberDialog({ number, open, onOpenChange }: Props) {
 
   const onSubmit = async () => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 350));
     const campaign =
       campaignId !== UNASSIGNED ? campaigns.find((c) => c.id === campaignId) : undefined;
-    updateNumber(number.id, {
-      label: name.trim() || undefined,
-      campaignId: campaign?.id,
-      campaignName: campaign?.name,
-      dailyCap: Number.isFinite(allocated) && allocated > 0 ? allocated : undefined,
-      capEnabled: Number.isFinite(allocated) && allocated > 0 ? true : number.capEnabled,
-      status,
-    });
-    setSubmitting(false);
-    toast.success(
-      t("trafficUI.numbers.track.editDialog.saved").replace("{number}", toE164(number.number)),
-    );
-    onOpenChange(false);
+    const allocatedValue =
+      Number.isFinite(allocated) && allocated > 0 ? allocated : undefined;
+    try {
+      // Await the backend round-trip so a 4xx surfaces as a toast.error
+      // and the dialog stays open instead of optimistically lying.
+      await updateNumber(number.id, {
+        label: name.trim() || undefined,
+        campaignId: campaign?.id,
+        campaignName: campaign?.name,
+        allocatedCapacity: allocatedValue,
+        status,
+      });
+      toast.success(
+        t("trafficUI.numbers.track.editDialog.saved").replace("{number}", toE164(number.number)),
+      );
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save number");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

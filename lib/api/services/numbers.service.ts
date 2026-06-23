@@ -171,6 +171,10 @@ export const numbersService = {
     const body: Record<string, unknown> = {};
     if (patch.campaignId !== undefined) body.campaignId = patch.campaignId;
     if (patch.status !== undefined) body.status = patch.status;
+    if (patch.label !== undefined) body.label = patch.label;
+    if (patch.allocatedCapacity !== undefined) body.allocatedCapacity = patch.allocatedCapacity;
+    if (patch.capEnabled !== undefined) body.capEnabled = patch.capEnabled;
+    if (patch.dailyCap !== undefined) body.dailyCap = patch.dailyCap;
     return wireToNumber(
       await http.patch<NumberWire>(`/api/numbers/${id}`, { body }),
     );
