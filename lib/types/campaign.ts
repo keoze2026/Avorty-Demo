@@ -41,6 +41,30 @@ export interface Campaign {
   revenueToday: number;
   conversionRate: number;
 
+  /* ─── Call audio + duplicate handling — round-tripped on the wire ─── */
+  /** Whether the campaign auto-records every call. */
+  recordingEnabled?: boolean;
+  /** Whether a pre-call greeting plays before the caller is routed. */
+  greetingEnabled?: boolean;
+  /** Greeting body — TTS or recorded audio URL the backend stores. */
+  greetingMessage?: string;
+  /** Whether the buyer hears a whisper before they pick up the call. */
+  whisperEnabled?: boolean;
+  /** Whisper script — short TTS message, e.g. "Health Insurance Tier 1". */
+  whisperMessage?: string;
+  /** Whether duplicate-call de-duplication is on. */
+  duplicateCallBlock?: boolean;
+  /** Duplicate-window in hours — only meaningful when duplicateCallBlock=true. */
+  duplicateCallBlockHours?: number;
+
+  /**
+   * Per-campaign advanced settings — a free-form JSON blob the backend
+   * round-trips verbatim. The frontend owns the schema (see
+   * `CampaignAdvancedSettings`), giving us 12 cards' worth of persistent
+   * configuration without a backend migration per field.
+   */
+  advancedSettings?: Record<string, unknown>;
+
   createdAt: number;
 }
 

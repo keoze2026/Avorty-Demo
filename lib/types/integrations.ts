@@ -23,6 +23,11 @@ export interface IntegrationApp {
 
 export type WebhookStatus = "active" | "paused" | "failing";
 
+export interface WebhookHeader {
+  key: string;
+  value: string;
+}
+
 export interface Webhook {
   id: string;
   name: string;
@@ -33,6 +38,10 @@ export interface Webhook {
   lastDeliveryAt?: number;
   /** Trailing 24h success ratio (0..1) */
   successRate24h: number;
+  /** HMAC-SHA256 signing secret. Returned by the backend on create + detail. */
+  secret?: string;
+  /** Custom HTTP headers forwarded on every delivery. */
+  headers?: WebhookHeader[];
 }
 
 export type DeliveryStatus = "delivered" | "retrying" | "failed";

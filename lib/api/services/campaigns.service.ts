@@ -67,6 +67,8 @@ interface CampaignWire extends CampaignListWire {
   greetingMessage?: string;
   whisperEnabled?: boolean;
   whisperMessage?: string;
+  /** Backend persists this verbatim as a JSON blob. Schema is FE-owned. */
+  advancedSettings?: Record<string, unknown>;
 }
 
 /* ─── Enum maps ───────────────────────────────────────────────────────── */
@@ -224,6 +226,18 @@ function detailWireToCampaign(w: CampaignWire): Campaign {
     dailyCap: w.cap?.maxCallsDaily ?? 0,
     monthlyCap: w.cap?.maxCallsMonthly ?? 0,
     schedule: schedulesFromWire(w.schedules),
+    // Audio + duplicate-handling fields — backend now persists these, so we
+    // round-trip them on every read.
+    recordingEnabled: w.recordingEnabled,
+    greetingEnabled: w.greetingEnabled,
+    greetingMessage: w.greetingMessage,
+    whisperEnabled: w.whisperEnabled,
+    whisperMessage: w.whisperMessage,
+    duplicateCallBlock: w.duplicateCallBlock,
+    duplicateCallBlockHours: w.duplicateCallBlockHours,
+    // Advanced-settings JSON blob — backend ships back what we sent.
+    // Schema lives in `CampaignAdvancedSettings`; we treat the wire as opaque.
+    advancedSettings: w.advancedSettings,
   };
 }
 
@@ -282,6 +296,18 @@ export const campaignsService = {
       };
     }
     if (patch.schedule !== undefined) body.schedules = schedulesToWire(patch.schedule);
+    // Call audio + duplicate handling — backend's PATCH allowlist now
+    // accepts these. Sending only the fields the caller actually patched
+    // keeps the request minimal and avoids accidentally clearing untouched
+    // fields with `undefined`.
+    if (patch.recordingEnabled !== undefined) body.recordingEnabled = patch.recordingEnabled;
+    if (patch.greetingEnabled !== undefined) body.greetingEnabled = patch.greetingEnabled;
+    if (patch.greetingMessage !== undefined) body.greetingMessage = patch.greetingMessage;
+    if (patch.whisperEnabled !== undefined) body.whisperEnabled = patch.whisperEnabled;
+    if (patch.whisperMessage !== undefined) body.whisperMessage = patch.whisperMessage;
+    if (patch.duplicateCallBlock !== undefined) body.duplicateCallBlock = patch.duplicateCallBlock;
+    if (patch.duplicateCallBlockHours !== undefined) body.duplicateCallBlockHours = patch.duplicateCallBlockHours;
+    if (patch.advancedSettings !== undefined) body.advancedSettings = patch.advancedSettings;
     const wire = await http.patch<CampaignWire>(`/api/campaigns/${id}`, { body });
     return detailWireToCampaign(wire);
   },

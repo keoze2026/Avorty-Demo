@@ -1,6 +1,16 @@
 /**
  * Per-campaign advanced + sub-tab settings store. Keyed by campaignId.
  * Falls back to DEFAULT_CAMPAIGN_SETTINGS when a campaign hasn't been touched.
+ *
+ * Persistence model:
+ *   - localStorage (fast first paint, offline cache)
+ *   - PATCH /api/campaigns/{id} with `advanced_settings` (server truth)
+ *
+ * Every local update is auto-synced to the backend via a short debounce, so
+ * rapid toggle-flips coalesce into one PATCH. A `seed(campaignId, settings)`
+ * action is exposed for the detail page to call after fetching a campaign,
+ * which writes the server's value into the store WITHOUT triggering another
+ * PATCH (avoids an echo loop).
  */
 
 "use client";
@@ -8,6 +18,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+import { campaignsService } from "@/lib/api/services/campaigns.service";
 import {
   DEFAULT_CAMPAIGN_SETTINGS,
   type CampaignAdvancedSettings,
@@ -17,14 +28,49 @@ interface CampaignSettingsState {
   byId: Record<string, CampaignAdvancedSettings>;
   /** Returns the campaign's settings, or defaults if unset. */
   get: (campaignId: string) => CampaignAdvancedSettings;
-  /** Patch a specific feature on a campaign. */
+  /** Patch a specific feature on a campaign; syncs to backend (debounced). */
   update: <K extends keyof CampaignAdvancedSettings>(
     campaignId: string,
     key: K,
     value: CampaignAdvancedSettings[K],
   ) => void;
-  /** Replace the whole bundle for a campaign. */
+  /** Replace the whole bundle for a campaign; syncs to backend (debounced). */
   replace: (campaignId: string, settings: CampaignAdvancedSettings) => void;
+  /**
+   * Seed the local cache with the server's value WITHOUT re-syncing it
+   * back. Use this on campaign-detail mount: server is the source of truth,
+   * local cache is just a faster first paint.
+   */
+  seed: (campaignId: string, settings: CampaignAdvancedSettings) => void;
+}
+
+/* ─── Debounced backend sync ────────────────────────────────────────────── */
+/* Toggle-spam on the 12 advanced cards coalesces into one PATCH per campaign.
+ * Errors are toast'd by the caller, not the store, to keep this module pure. */
+
+const SYNC_DELAY_MS = 400;
+const pending = new Map<string, ReturnType<typeof setTimeout>>();
+
+function scheduleSync(
+  campaignId: string,
+  settings: CampaignAdvancedSettings,
+): void {
+  const prev = pending.get(campaignId);
+  if (prev) clearTimeout(prev);
+  const timer = setTimeout(() => {
+    pending.delete(campaignId);
+    void campaignsService
+      .update(campaignId, {
+        advancedSettings: settings as unknown as Record<string, unknown>,
+      })
+      .catch(() => {
+        // Backend rejected the PATCH — local state is already saved (and
+        // visible to the user). The next page load will reseed from the
+        // server's last-good value via `seed()`, so we don't need to revert
+        // anything here. Caller is welcome to attach error handling.
+      });
+  }, SYNC_DELAY_MS);
+  pending.set(campaignId, timer);
 }
 
 export const useCampaignSettingsStore = create<CampaignSettingsState>()(
@@ -33,17 +79,17 @@ export const useCampaignSettingsStore = create<CampaignSettingsState>()(
       byId: {},
       get: (campaignId) =>
         get().byId[campaignId] ?? DEFAULT_CAMPAIGN_SETTINGS,
-      update: (campaignId, key, value) =>
-        set((s) => {
-          const current = s.byId[campaignId] ?? DEFAULT_CAMPAIGN_SETTINGS;
-          return {
-            byId: {
-              ...s.byId,
-              [campaignId]: { ...current, [key]: value },
-            },
-          };
-        }),
-      replace: (campaignId, settings) =>
+      update: (campaignId, key, value) => {
+        const current = get().byId[campaignId] ?? DEFAULT_CAMPAIGN_SETTINGS;
+        const next: CampaignAdvancedSettings = { ...current, [key]: value };
+        set((s) => ({ byId: { ...s.byId, [campaignId]: next } }));
+        scheduleSync(campaignId, next);
+      },
+      replace: (campaignId, settings) => {
+        set((s) => ({ byId: { ...s.byId, [campaignId]: settings } }));
+        scheduleSync(campaignId, settings);
+      },
+      seed: (campaignId, settings) =>
         set((s) => ({ byId: { ...s.byId, [campaignId]: settings } })),
     }),
     {

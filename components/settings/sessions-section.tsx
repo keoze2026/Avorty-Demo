@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { LogOut, Monitor, Smartphone } from "lucide-react";
 import { toast } from "sonner";
@@ -11,15 +10,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatRelativeTime } from "@/lib/format";
-import { MOCK_SESSIONS } from "@/lib/mock/settings";
+import { useWorkspaceMetaStore } from "@/lib/store/workspace-meta-store";
 
 export function SessionsSection() {
   const { t } = useTranslation();
-  const [sessions, setSessions] = useState(MOCK_SESSIONS);
+  const sessions = useWorkspaceMetaStore((s) => s.sessions);
+  const revokeSession = useWorkspaceMetaStore((s) => s.revokeSession);
 
-  const revoke = (id: string) => {
-    setSessions((ss) => ss.filter((s) => s.id !== id));
-    toast.success(t("settings.sessionsSection.sessionRevoked"));
+  const revoke = async (id: string) => {
+    try {
+      await revokeSession(id);
+      toast.success(t("settings.sessionsSection.sessionRevoked"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't revoke session");
+    }
+  };
+
+  const revokeAllOthers = async () => {
+    const others = sessions.filter((s) => !s.current);
+    if (others.length === 0) return;
+    try {
+      await Promise.all(others.map((s) => revokeSession(s.id)));
+      toast.success(t("settings.sessionsSection.allOthersRevoked"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't revoke sessions");
+    }
   };
 
   return (
@@ -81,10 +96,7 @@ export function SessionsSection() {
           variant="outline"
           size="sm"
           className="text-destructive"
-          onClick={() => {
-            setSessions((ss) => ss.filter((s) => s.current));
-            toast.success(t("settings.sessionsSection.allOthersRevoked"));
-          }}
+          onClick={revokeAllOthers}
         >
           {t("settings.sessionsSection.revokeAllOthers")}
         </Button>

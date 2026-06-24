@@ -15,6 +15,7 @@
  */
 
 import { http } from "@/lib/api/http";
+import type { Paginated } from "@/lib/api/types";
 import type { Member, MemberRole, MemberStatus } from "@/lib/types";
 
 /* ─── Frontend shapes ─────────────────────────────────────────────────── */
@@ -163,4 +164,64 @@ export const workspaceService = {
   async remove(userId: string): Promise<void> {
     await http.delete(`/api/accounts/workspace/members/${userId}`);
   },
+
+  /* ─── Activity log / sessions / role catalog ──────────────────────────── */
+  async listActivity(
+    query: { page?: number; pageSize?: number } = {},
+  ): Promise<Paginated<WorkspaceActivityWire>> {
+    const res = await http.get<Paginated<WorkspaceActivityWire>>(
+      "/api/accounts/workspace/activity",
+      { query },
+    );
+    return res;
+  },
+
+  async listSessions(): Promise<WorkspaceSessionWire[]> {
+    const res = await http.get<WorkspaceSessionWire[] | { items?: WorkspaceSessionWire[] }>(
+      "/api/accounts/workspace/sessions",
+    );
+    return Array.isArray(res) ? res : (res.items ?? []);
+  },
+
+  async revokeSession(sessionId: string): Promise<void> {
+    await http.delete(`/api/accounts/workspace/sessions/${sessionId}`);
+  },
+
+  async listRoles(): Promise<WorkspaceRoleWire[]> {
+    const res = await http.get<WorkspaceRoleWire[] | { items?: WorkspaceRoleWire[] }>(
+      "/api/accounts/roles",
+    );
+    return Array.isArray(res) ? res : (res.items ?? []);
+  },
 };
+
+/* ─── Wire shapes for the activity / sessions / roles endpoints ─────────── */
+
+export interface WorkspaceActivityWire {
+  id: string;
+  actorId: string;
+  actorName: string;
+  action: string;
+  targetType: string;
+  targetId?: string;
+  targetName?: string;
+  createdAt: string;
+}
+
+export interface WorkspaceSessionWire {
+  id: string;
+  userId: string;
+  userName: string;
+  ip: string;
+  location?: string;
+  userAgent: string;
+  lastActiveAt: string;
+  current: boolean;
+}
+
+export interface WorkspaceRoleWire {
+  id: string;
+  name: string;
+  description: string;
+  capabilities: string[];
+}

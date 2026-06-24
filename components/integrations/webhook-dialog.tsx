@@ -70,14 +70,20 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Seed defaults each time we open
+  // Seed defaults each time we open. Existing webhooks restore their saved
+  // secret + headers; brand-new ones get a fresh client-suggested secret so
+  // the user can copy it before saving (backend will auto-generate one
+  // server-side if we send an empty string, but providing one here keeps
+  // the "Copy secret" button useful even before the first save).
   useEffect(() => {
     if (!open) return;
     setName(initial?.name ?? "");
     setUrl(initial?.url ?? "");
-    setSecret(randomSecret());
+    setSecret(initial?.secret ?? randomSecret());
     setSelectedEvents(new Set(initial?.events ?? ["call.completed"]));
-    setHeaders([]);
+    setHeaders(
+      (initial?.headers ?? []).map((h) => ({ k: h.key, v: h.value })),
+    );
     setTesting(false);
     setSaving(false);
   }, [open, initial]);

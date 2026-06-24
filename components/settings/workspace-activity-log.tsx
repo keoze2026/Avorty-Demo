@@ -23,11 +23,11 @@ import {
 } from "@/components/ui/table";
 import { formatRelativeTime } from "@/lib/format";
 import {
-  MOCK_WORKSPACE_ACTIVITY,
   type ActivityCategory,
   type ActivityKind,
   type WorkspaceActivityEvent,
 } from "@/lib/mock/workspace-activity";
+import { useWorkspaceMetaStore } from "@/lib/store/workspace-meta-store";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -87,13 +87,9 @@ export function WorkspaceActivityLog() {
   const [pageSize, setPageSize] = React.useState(25);
   const [page, setPage] = React.useState(0);
 
-  // Activity log starts empty — the backend hasn't shipped a workspace
-  // events endpoint yet. Wire to `/api/accounts/activity` (which exists for
-  // the current user) or a new `/api/accounts/workspace/activity` once
-  // org-wide audit logs are available.
-  const events = React.useMemo<typeof MOCK_WORKSPACE_ACTIVITY>(() => [], []);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _mockUnused = MOCK_WORKSPACE_ACTIVITY;
+  // Live activity log from GET /api/accounts/workspace/activity, mapped to
+  // the FE event shape via the workspace-meta store on hydration.
+  const events = useWorkspaceMetaStore((s) => s.activity);
 
   React.useEffect(() => {
     setPage(0);

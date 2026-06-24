@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { ROLES_IN_ORDER } from "@/lib/mock/settings";
 import { ROUTES } from "@/lib/constants";
+import { useWorkspaceMetaStore } from "@/lib/store/workspace-meta-store";
 import {
   countEnabledPermissions,
   seedForRole,
@@ -48,7 +49,10 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
     return counts;
   }, [members]);
 
-  // Permission count per role derived from the same seed the Setup Role form uses.
+  // Permission count per role — prefer the backend's authoritative
+  // capabilities[] count when /api/accounts/roles has returned, otherwise
+  // fall back to the FE-side seed so the table never blanks out.
+  const backendRoles = useWorkspaceMetaStore((s) => s.roles);
   const permissionCounts = useMemo<Record<MemberRole, number>>(() => {
     const counts: Record<MemberRole, number> = {
       admin: 0,
@@ -58,11 +62,13 @@ export function WorkspaceRolesTable({ members }: WorkspaceRolesTableProps) {
       publisher: 0,
       viewer: 0,
     };
+    const beById = new Map(backendRoles.map((r) => [r.id, r]));
     for (const role of ROLES_IN_ORDER) {
-      counts[role] = countEnabledPermissions(seedForRole(role));
+      const be = beById.get(role);
+      counts[role] = be ? be.capabilities.length : countEnabledPermissions(seedForRole(role));
     }
     return counts;
-  }, []);
+  }, [backendRoles]);
 
   return (
     <Card className="overflow-hidden p-0">

@@ -54,6 +54,20 @@ interface NumberWire {
   label?: string | null;
   capEnabled?: boolean;
   dailyCap?: string | number;
+  monthlyCap?: string | number;
+  concurrencyEnabled?: boolean;
+  concurrencyCap?: string | number;
+  /* Publisher / payout fields */
+  publisherId?: string | null;
+  vendorEnabled?: boolean;
+  payoutPerCall?: string | number;
+  payoutType?: string;
+  payoutOn?: string;
+  dupeRevenue?: string;
+  dupeRevenueDays?: number;
+  /* Traffic source */
+  trafficSourceEnabled?: boolean;
+  trafficSourceId?: string | null;
 }
 
 function normalizeNumberStatus(raw?: string): NumberStatus {
@@ -119,7 +133,45 @@ function wireToNumber(w: NumberWire): TrackingNumber {
     capEnabled: w.capEnabled,
     dailyCap:
       w.dailyCap !== undefined && w.dailyCap !== null ? toNum(w.dailyCap) : undefined,
+    monthlyCap:
+      w.monthlyCap !== undefined && w.monthlyCap !== null ? toNum(w.monthlyCap) : undefined,
+    concurrencyEnabled: w.concurrencyEnabled,
+    concurrencyCap:
+      w.concurrencyCap !== undefined && w.concurrencyCap !== null
+        ? toNum(w.concurrencyCap)
+        : undefined,
+    publisherId: w.publisherId ?? undefined,
+    vendorEnabled: w.vendorEnabled,
+    payoutPerCall:
+      w.payoutPerCall !== undefined && w.payoutPerCall !== null
+        ? toNum(w.payoutPerCall)
+        : undefined,
+    payoutType: normalizePayoutType(w.payoutType),
+    payoutOn: normalizePayoutOn(w.payoutOn),
+    dupeRevenue: normalizeDupeRevenue(w.dupeRevenue),
+    dupeRevenueDays: w.dupeRevenueDays,
+    trafficSourceEnabled: w.trafficSourceEnabled,
+    trafficSourceId: w.trafficSourceId ?? undefined,
   };
+}
+
+function normalizePayoutType(raw: string | undefined): TrackingNumber["payoutType"] {
+  const s = (raw ?? "").toLowerCase();
+  return s === "percentage" ? "percentage" : s === "amount" ? "amount" : undefined;
+}
+
+function normalizePayoutOn(raw: string | undefined): TrackingNumber["payoutOn"] {
+  const s = (raw ?? "").toLowerCase();
+  if (s === "converted" || s === "connected" || s === "length") return s;
+  return undefined;
+}
+
+function normalizeDupeRevenue(raw: string | undefined): TrackingNumber["dupeRevenue"] {
+  const s = (raw ?? "").toLowerCase().replace(/-/g, "");
+  if (s === "disabled") return "disabled";
+  if (s === "enabled") return "enabled";
+  if (s === "timelimit" || s === "time_limit") return "timeLimit";
+  return undefined;
 }
 
 /* ─── DNI pool wire shapes ────────────────────────────────────────────── */
@@ -138,6 +190,20 @@ interface PoolWire {
   idleTimeSec?: number;
   autoBuy?: boolean;
   attachedNumberIds?: string[];
+  /* Detail-page editable fields — round-tripped now that the backend
+   * persists them on /api/dni/pools/{id}. */
+  replacementNumber?: string | null;
+  phoneNumberFormat?: string;
+  vendorEnabled?: boolean;
+  vendorId?: string | null;
+  trafficSourcesEnabled?: boolean;
+  trafficSources?: Array<{
+    id: string;
+    name: string;
+    integration: string;
+    events: number;
+    conversions: number;
+  }>;
 }
 
 function normalizeRotation(raw?: string): RotationStrategy {
@@ -145,6 +211,13 @@ function normalizeRotation(raw?: string): RotationStrategy {
   if (s === "weighted") return "weighted";
   if (s === "priority") return "priority";
   return "round-robin";
+}
+
+function normalizePhoneFormat(raw: string | undefined): NumberPool["phoneNumberFormat"] {
+  const s = (raw ?? "").toLowerCase();
+  if (s === "national") return "national";
+  if (s === "international") return "international";
+  return s === "e164" || s === "" ? (s === "" ? undefined : "E164") : undefined;
 }
 
 function wireToPool(w: PoolWire): NumberPool {
@@ -162,6 +235,13 @@ function wireToPool(w: PoolWire): NumberPool {
     idleTimeSec: w.idleTimeSec,
     autoBuy: w.autoBuy,
     attachedNumberIds: w.attachedNumberIds,
+    // Detail-page fields — round-tripped now that the backend persists them.
+    replacementNumber: w.replacementNumber ?? undefined,
+    phoneNumberFormat: normalizePhoneFormat(w.phoneNumberFormat),
+    vendorEnabled: w.vendorEnabled,
+    vendorId: w.vendorId ?? undefined,
+    trafficSourcesEnabled: w.trafficSourcesEnabled,
+    trafficSources: w.trafficSources,
   };
 }
 
@@ -187,9 +267,33 @@ export const numbersService = {
     if ("campaignId" in patch) body.campaignId = patch.campaignId ?? null;
     if (patch.status !== undefined) body.status = patch.status;
     if (patch.label !== undefined) body.label = patch.label;
+    // Cap fields.
     if (patch.allocatedCapacity !== undefined) body.allocatedCapacity = patch.allocatedCapacity;
     if (patch.capEnabled !== undefined) body.capEnabled = patch.capEnabled;
     if (patch.dailyCap !== undefined) body.dailyCap = patch.dailyCap;
+    if (patch.monthlyCap !== undefined) body.monthlyCap = patch.monthlyCap;
+    if (patch.concurrencyEnabled !== undefined) body.concurrencyEnabled = patch.concurrencyEnabled;
+    if (patch.concurrencyCap !== undefined) body.concurrencyCap = patch.concurrencyCap;
+    // Publisher / payout fields. `payoutType`, `payoutOn`, and `dupeRevenue`
+    // ship as snake_case on the wire — the http layer's camelToSnake handles
+    // the keys; the *values* are FE-side enum strings which the backend
+    // accepts as-is (per the dev's confirmation).
+    // `publisherId` uses `in` so passing `undefined` clears the FK; backend
+    // accepts null for "no publisher" on the foreign-key field.
+    if ("publisherId" in patch) body.publisherId = patch.publisherId ?? null;
+    if (patch.vendorEnabled !== undefined) body.vendorEnabled = patch.vendorEnabled;
+    if (patch.payoutPerCall !== undefined) body.payoutPerCall = patch.payoutPerCall;
+    if (patch.payoutType !== undefined) body.payoutType = patch.payoutType;
+    if (patch.payoutOn !== undefined) body.payoutOn = patch.payoutOn;
+    if (patch.dupeRevenue !== undefined) {
+      // FE camelCase `timeLimit` → wire snake_case `time_limit` so the
+      // backend enum matches. `disabled` / `enabled` are already snake-safe.
+      body.dupeRevenue = patch.dupeRevenue === "timeLimit" ? "time_limit" : patch.dupeRevenue;
+    }
+    if (patch.dupeRevenueDays !== undefined) body.dupeRevenueDays = patch.dupeRevenueDays;
+    // Traffic source.
+    if ("trafficSourceId" in patch) body.trafficSourceId = patch.trafficSourceId ?? null;
+    if (patch.trafficSourceEnabled !== undefined) body.trafficSourceEnabled = patch.trafficSourceEnabled;
     return wireToNumber(
       await http.patch<NumberWire>(`/api/numbers/${id}`, { body }),
     );

@@ -9,7 +9,9 @@ import { CampaignSettingsView } from "@/components/campaigns/settings/campaign-s
 import { EmptyState } from "@/components/shared/empty-state";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
 import { useTranslation } from "@/hooks/use-translation";
+import { useCampaignSettingsStore } from "@/lib/store/campaign-settings-store";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
+import type { CampaignAdvancedSettings } from "@/lib/types";
 
 export default function CampaignDetailPage() {
   const { t } = useTranslation();
@@ -18,6 +20,18 @@ export default function CampaignDetailPage() {
   const campaign = useCampaignsStore((s) => s.getById(params.id));
 
   useBreadcrumbOverride(campaign?.name);
+
+  // Seed the per-campaign advanced-settings store with whatever the
+  // backend last persisted, so the 12 advanced cards reflect server truth
+  // on every navigation (instead of just whatever was in localStorage).
+  const seedSettings = useCampaignSettingsStore((s) => s.seed);
+  useEffect(() => {
+    if (!campaign?.advancedSettings) return;
+    seedSettings(
+      campaign.id,
+      campaign.advancedSettings as unknown as CampaignAdvancedSettings,
+    );
+  }, [campaign?.id, campaign?.advancedSettings, seedSettings]);
 
   useEffect(() => {
     if (!campaign) {

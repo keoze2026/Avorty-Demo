@@ -82,23 +82,32 @@ export function WebhooksSection() {
     setEditorOpen(true);
   };
 
-  // `secret` and `headers` from the draft are not yet wired to the backend
-  // (no fields on the wire). They survive in the dialog for the visit but
-  // won't be persisted — covered by the backend ask list. Name + URL +
-  // events all round-trip correctly.
+  // The dialog stores headers as `{k, v}`; the backend / store expect
+  // `{key, value}`. Convert once at the boundary.
   const onSave = async (draft: WebhookDraft, originalId?: string) => {
+    const headers = draft.headers
+      .filter((h) => h.k.trim() && h.v.trim())
+      .map((h) => ({ key: h.k.trim(), value: h.v.trim() }));
     try {
       if (originalId) {
         await updateHook(originalId, {
           name: draft.name,
           url: draft.url,
           events: draft.events,
+          // Only send secret if the user actually changed it — preserves the
+          // existing one when they just tweak the URL/events.
+          ...(draft.secret ? { secret: draft.secret } : {}),
+          headers,
         });
       } else {
         await createHook({
           name: draft.name,
           url: draft.url,
           events: draft.events,
+          // Empty string → backend auto-generates. Non-empty → use what the
+          // user picked / our suggested value.
+          ...(draft.secret ? { secret: draft.secret } : {}),
+          headers,
         });
       }
     } catch (e) {

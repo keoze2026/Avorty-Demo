@@ -7,6 +7,11 @@ import type { Paginated } from "@/lib/api/types";
 
 export type WebhookStatus = "active" | "paused" | "failed";
 
+export interface WebhookHeader {
+  key: string;
+  value: string;
+}
+
 export interface Webhook {
   id: string;
   name: string;
@@ -17,6 +22,10 @@ export interface Webhook {
   timeoutSeconds: number;
   createdAt: number;
   updatedAt: number;
+  /** HMAC-SHA256 signing secret. Backend returns this on create + detail. */
+  secret?: string;
+  /** Custom HTTP headers forwarded on every delivery. */
+  headers?: WebhookHeader[];
 }
 
 export interface WebhookDelivery {
@@ -50,6 +59,10 @@ interface WebhookWire {
   timeoutSeconds: number;
   createdAt: string;
   updatedAt: string;
+  /** Backend ships this on POST + GET-by-id. List endpoint may omit it. */
+  secret?: string;
+  /** Custom HTTP headers — array of {key, value} pairs. */
+  headers?: WebhookHeader[];
 }
 
 interface PixelWire {
@@ -86,6 +99,8 @@ function wireToWebhook(w: WebhookWire): Webhook {
     timeoutSeconds: w.timeoutSeconds,
     createdAt: toTs(w.createdAt),
     updatedAt: toTs(w.updatedAt),
+    secret: w.secret,
+    headers: Array.isArray(w.headers) ? w.headers : undefined,
   };
 }
 
@@ -118,6 +133,9 @@ export const webhooksService = {
     events: string[];
     maxRetries?: number;
     timeoutSeconds?: number;
+    /** Optional — backend auto-generates a fresh secret when omitted. */
+    secret?: string;
+    headers?: WebhookHeader[];
   }): Promise<Webhook> {
     return wireToWebhook(await http.post<WebhookWire>("/api/webhooks/", { body: input }));
   },
@@ -132,6 +150,14 @@ export const webhooksService = {
 
   async test(id: string): Promise<unknown> {
     return http.post(`/api/webhooks/${id}/test`);
+  },
+
+  /** Mint a fresh signing secret for an existing webhook. The returned
+   *  `secret` is the only chance to capture the plaintext; subsequent GETs
+   *  return it only because the backend dev confirmed they include it on
+   *  the detail endpoint, but treat this response as the canonical reveal. */
+  async rotateSecret(id: string): Promise<{ secret: string }> {
+    return http.post<{ secret: string }>(`/api/webhooks/${id}/rotate-secret`);
   },
 
   async deliveries(id: string, query: { page?: number; pageSize?: number } = {}) {

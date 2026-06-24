@@ -28,6 +28,7 @@ import type {
   DeliveryStatus,
   Webhook,
   WebhookDelivery,
+  WebhookHeader,
   WebhookStatus,
 } from "@/lib/types";
 
@@ -49,10 +50,14 @@ interface WebhooksState {
     events: string[];
     maxRetries?: number;
     timeoutSeconds?: number;
+    secret?: string;
+    headers?: WebhookHeader[];
   }) => Promise<Webhook>;
   update: (id: string, patch: Partial<Webhook>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   sendTest: (id: string) => Promise<void>;
+  /** Mint a fresh signing secret. Returns the plaintext for one-time reveal. */
+  rotateSecret: (id: string) => Promise<string>;
 }
 
 /* ─── Wire ↔ FE mappers ─────────────────────────────────────────────────── */
@@ -110,6 +115,8 @@ function wireToWebhook(w: WireWebhook, deliveries: WebhookDelivery[]): Webhook {
     createdAt: w.createdAt,
     lastDeliveryAt: last?.at,
     successRate24h,
+    secret: w.secret,
+    headers: w.headers,
   };
 }
 
@@ -168,6 +175,8 @@ export const useWebhooksStore = create<WebhooksState>()((set, get) => ({
       if (patch.url !== undefined) body.url = patch.url;
       if (patch.events !== undefined) body.events = patch.events;
       if (patch.status !== undefined) body.status = statusToWire(patch.status);
+      if (patch.secret !== undefined) body.secret = patch.secret;
+      if (patch.headers !== undefined) body.headers = patch.headers;
       const fresh = await webhooksService.update(id, body as Partial<WireWebhook>);
       set((s) => ({
         webhooks: s.webhooks.map((x) =>
@@ -193,6 +202,14 @@ export const useWebhooksStore = create<WebhooksState>()((set, get) => ({
 
   sendTest: async (id) => {
     await webhooksService.test(id);
+  },
+
+  rotateSecret: async (id) => {
+    const { secret } = await webhooksService.rotateSecret(id);
+    set((s) => ({
+      webhooks: s.webhooks.map((x) => (x.id === id ? { ...x, secret } : x)),
+    }));
+    return secret;
   },
 }));
 

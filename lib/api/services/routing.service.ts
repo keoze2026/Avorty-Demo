@@ -39,6 +39,30 @@ export interface RoutingRule {
   destinations: RoutingDestination[];
 }
 
+export interface SimulateMatchedCondition {
+  conditionId: string;
+  matched: boolean;
+}
+
+export interface SimulateSelectedDestination {
+  id: string;
+  name: string;
+  buyerName: string;
+  weight: number;
+  priority: number;
+}
+
+export interface SimulateTraceStep {
+  step: string;
+  outcome: string;
+}
+
+export interface SimulateResult {
+  matchedConditions: SimulateMatchedCondition[];
+  selectedDestination?: SimulateSelectedDestination;
+  trace: SimulateTraceStep[];
+}
+
 interface RoutingRuleWire {
   id: string;
   name: string;
@@ -131,6 +155,21 @@ export const routingService = {
   ): Promise<RoutingDestination> {
     return http.post<RoutingDestination>(`/api/routing/rules/${ruleId}/destinations`, {
       body: destination,
+    });
+  },
+
+  /**
+   * Walk a hypothetical inbound call through the rule's graph and return
+   * which conditions matched, which destination would be picked, and a
+   * step-by-step trace. Powers the "Test caller" button on the routing
+   * detail page.
+   */
+  async simulate(
+    ruleId: string,
+    input: { callerNumber: string; callerState?: string; callerCountry?: string },
+  ): Promise<SimulateResult> {
+    return http.post<SimulateResult>(`/api/routing/rules/${ruleId}/simulate`, {
+      body: input,
     });
   },
 };

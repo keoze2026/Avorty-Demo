@@ -18,10 +18,12 @@ import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 import { useRoutingStore } from "@/lib/store/routing-store";
+import { useIntegrationsStore } from "@/lib/store/integrations-store";
 import { useNotificationsRulesStore } from "@/lib/store/notifications-rules-store";
 import { useTcpaShieldStore } from "@/lib/store/tcpa-shield-store";
 import { useVoipShieldStore } from "@/lib/store/voip-shield-store";
 import { useWebhooksStore } from "@/lib/store/webhooks-store";
+import { useWorkspaceMetaStore } from "@/lib/store/workspace-meta-store";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 export function StoreHydrator() {
@@ -53,6 +55,10 @@ export function StoreHydrator() {
     void useWebhooksStore.getState().fetch();
     // Notification rules (Settings → Notifications preferences matrix).
     void useNotificationsRulesStore.getState().fetch();
+    // Integrations marketplace catalog.
+    void useIntegrationsStore.getState().fetch();
+    // Workspace meta: activity log + sessions + role catalog.
+    void useWorkspaceMetaStore.getState().fetch();
   }, [isAuthed]);
 
   return null;

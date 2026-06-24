@@ -2,7 +2,6 @@
 
 import { Badge } from "@/components/ui/badge";
 import { AiBriefingHero } from "@/components/insights/ai-briefing-hero";
-import { AiChatPanel } from "@/components/insights/ai-chat-panel";
 import { AnomalyStream } from "@/components/insights/anomaly-stream";
 import { AutopilotCard } from "@/components/insights/autopilot-card";
 import { RecommendationDeck } from "@/components/insights/recommendation-deck";
@@ -31,12 +30,9 @@ export default function InsightsPage() {
 
       <RecommendationDeck />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <AnomalyStream />
-        <div className="lg:sticky lg:top-[5.5rem] lg:self-start">
-          <AiChatPanel />
-        </div>
-      </div>
+      {/* Chat panel removed pending a real AI chat backend. The anomaly
+          stream now uses the full row width. */}
+      <AnomalyStream />
 
       <AutopilotCard />
     </>

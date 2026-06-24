@@ -9,6 +9,7 @@ import { RoutingCanvas } from "@/components/routing/routing-canvas";
 import { RoutingInspector } from "@/components/routing/routing-inspector";
 import { RoutingPalette } from "@/components/routing/routing-palette";
 import { RoutingToolbar } from "@/components/routing/routing-toolbar";
+import { TestCallerDialog } from "@/components/routing/test-caller-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useBreadcrumbOverride } from "@/hooks/use-breadcrumb-override";
 import { useRoutingStore } from "@/lib/store/routing-store";
@@ -31,6 +32,7 @@ export default function RoutingEditorPage() {
   const [workingEdges, setWorkingEdges] = useState<RoutingEdge[]>(plan?.edges ?? []);
   const [selected, setSelected] = useState<RoutingNode | null>(null);
   const [saving, setSaving] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
   const initialSyncRef = useRef(false);
 
   // Track patches pushed into the canvas (inspector edits).
@@ -140,9 +142,13 @@ export default function RoutingEditorPage() {
   };
 
   const onTest = () => {
-    toast.info("Test caller — coming soon", {
-      description: "Will simulate an inbound call walking through your graph in real time.",
-    });
+    if (dirty) {
+      toast.warning("Save your changes first", {
+        description: "Simulation runs against the published rule, so unsaved edits won't be exercised.",
+      });
+      return;
+    }
+    setTestOpen(true);
   };
 
   return (
@@ -187,6 +193,13 @@ export default function RoutingEditorPage() {
           <RoutingInspector selected={selected} onPatch={onPatch} onDelete={onDeleteNode} />
         </div>
       </div>
+
+      <TestCallerDialog
+        open={testOpen}
+        onOpenChange={setTestOpen}
+        ruleId={plan.id}
+        ruleName={plan.name}
+      />
     </div>
   );
 }
