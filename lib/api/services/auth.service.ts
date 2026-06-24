@@ -284,10 +284,16 @@ export const authService = {
    * Upload a new profile avatar — multipart, backend at POST /api/accounts/me/avatar.
    * Returns the updated `User`. The browser sets the multipart boundary, so we
    * pass FormData with `rawBody: true` to skip JSON serialization.
+   *
+   * Field name: the previous version sent the file under `file`, which the
+   * backend's DRF view didn't recognize — it responded `400 "No file
+   * provided"`. The matching endpoint url is `/me/avatar` so the standard
+   * convention `avatar` is the right name. If the backend ever changes to
+   * another key (e.g. `image`, `upload`), this is the one place to update.
    */
   async uploadAvatar(file: File): Promise<User> {
     const form = new FormData();
-    form.append("file", file);
+    form.append("avatar", file);
     const wire = await http.post<UserOutWire>("/api/accounts/me/avatar", {
       body: form,
       rawBody: true,
