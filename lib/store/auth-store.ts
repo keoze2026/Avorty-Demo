@@ -26,7 +26,25 @@ interface AuthState {
   /** Last error message from an auth call, surfaced for form-level display. */
   error: string | null;
 
-  login: (email: string, password: string, role?: Role) => Promise<User>;
+  /** Pending MFA challenge — set by `login` when the backend signals that
+   *  a 6-digit code is needed. The login form reads this to switch to
+   *  the challenge step; `completeMfa(code)` finishes the flow. */
+  pendingMfa: { tempToken: string } | null;
+  /**
+   * Step 1 of sign-in. Returns the User on success or null when MFA is
+   * required (in which case `pendingMfa` is set and the caller should show
+   * the challenge UI). Throws on credential failure.
+   */
+  login: (email: string, password: string, role?: Role) => Promise<User | null>;
+  /** Step 2 of sign-in (only fires when `pendingMfa` is set). */
+  completeMfa: (code: string, role?: Role) => Promise<User>;
+  /** Drop a pending MFA challenge — used by the login form's "back" button. */
+  cancelMfa: () => void;
+  /** Persist a fresh TOTP secret + confirming code to the backend. On
+   *  success the user's `mfaEnabled` flips to true. */
+  enableMfa: (input: { secret: string; code: string }) => Promise<void>;
+  /** Tear down the user's MFA enrollment, gated on a current 6-digit code. */
+  disableMfa: (code: string) => Promise<void>;
   signup: (input: {
     name: string;
     email: string;
@@ -43,6 +61,11 @@ interface AuthState {
   setRole: (role: Role) => void;
   /** Replace the user's avatar locally (and patch it to /me when available). */
   setAvatar: (avatarUrl: string | null) => void;
+  /** Update name + phone via PATCH /api/accounts/me. Throws on failure. */
+  updateProfile: (patch: { name?: string; phone?: string }) => Promise<void>;
+  /** Multipart-upload a new avatar file. Returns the hosted URL the backend
+   *  saved; the auth-store's `user.avatarUrl` is updated to match. */
+  uploadAvatar: (file: File) => Promise<void>;
   _setHydrated: () => void;
 }
 
@@ -54,17 +77,25 @@ export const useAuthStore = create<AuthState>()(
       hydrated: false,
       pending: false,
       error: null,
+      pendingMfa: null,
 
       login: async (email, password, role) => {
-        set({ pending: true, error: null });
+        set({ pending: true, error: null, pendingMfa: null });
         try {
-          const partial = await authService.login({ email, password });
+          const result = await authService.login({ email, password });
+          // MFA challenge — surface the temp token so the UI can switch
+          // to the code-entry step. Tokens are not persisted yet; that
+          // happens after `completeMfa` succeeds.
+          if (result.mfaRequired) {
+            set({ pending: false, pendingMfa: { tempToken: result.tempToken } });
+            return null;
+          }
           // Fetch full profile (first/last name, phone, etc.) immediately.
           let user: User;
           try {
             user = await authService.me();
           } catch {
-            user = partial; // /me failed but tokens are valid — show the partial.
+            user = result.user; // /me failed but tokens are valid — show the partial.
           }
           // Optional role override — keeps the existing demo role-switch behaviour.
           if (role) user = { ...user, role };
@@ -80,6 +111,57 @@ export const useAuthStore = create<AuthState>()(
           set({ pending: false, error: friendly });
           throw e;
         }
+      },
+
+      completeMfa: async (code, role) => {
+        const pending = get().pendingMfa;
+        if (!pending) {
+          throw new Error("No MFA challenge in progress.");
+        }
+        set({ pending: true, error: null });
+        try {
+          const partial = await authService.verifyMfa({
+            tempToken: pending.tempToken,
+            code,
+          });
+          let user: User;
+          try {
+            user = await authService.me();
+          } catch {
+            user = partial;
+          }
+          if (role) user = { ...user, role };
+          set({
+            user,
+            isAuthenticated: true,
+            pending: false,
+            error: null,
+            pendingMfa: null,
+          });
+          return user;
+        } catch (e) {
+          set({ pending: false, error: messageFromError(e) });
+          throw e;
+        }
+      },
+
+      cancelMfa: () => set({ pendingMfa: null }),
+
+      enableMfa: async ({ secret, code }) => {
+        const user = await authService.setupMfa({ secret, code });
+        set((s) => ({
+          // Backend echoes the full user; merge what we already have so
+          // any locally-set fields (role override from login, optimistic
+          // avatar updates) survive.
+          user: s.user ? { ...s.user, ...user } : user,
+        }));
+      },
+
+      disableMfa: async (code) => {
+        const user = await authService.disableMfa({ code });
+        set((s) => ({
+          user: s.user ? { ...s.user, ...user } : user,
+        }));
       },
 
       signup: async ({ name, email, password, organization, phone }) => {
@@ -142,14 +224,34 @@ export const useAuthStore = create<AuthState>()(
       setRole: (role) => set((s) => (s.user ? { user: { ...s.user, role } } : s)),
 
       setAvatar: (avatarUrl) => {
+        // Optimistic local flip.
         set((s) =>
           s.user ? { user: { ...s.user, avatarUrl: avatarUrl ?? undefined } } : s,
         );
-        // Best-effort sync to the backend; ignore failures (purely cosmetic).
+        // Sync to backend regardless of value — passing `""` (or null) clears
+        // the avatar on the server, which the old "only sync when truthy"
+        // guard prevented. Errors are toasted by the caller, not this store.
         const current = get().user;
-        if (current && avatarUrl) {
-          void authService.updateProfile({ avatarUrl }).catch(() => undefined);
-        }
+        if (!current) return;
+        void authService
+          .updateProfile({ avatarUrl: avatarUrl ?? "" })
+          .catch(() => undefined);
+      },
+
+      updateProfile: async (patch) => {
+        // Only send fields the caller actually wants to change. Throws on
+        // failure so the caller can surface a toast.
+        const user = await authService.updateProfile(patch);
+        set({ user });
+      },
+
+      uploadAvatar: async (file) => {
+        // Multipart upload via POST /api/accounts/me/avatar. Backend stores
+        // the binary and returns the hosted URL; we replace the local user
+        // snapshot with whatever /me returns so the URL points to the
+        // server's canonical version (not a stale data: URL).
+        const user = await authService.uploadAvatar(file);
+        set({ user });
       },
 
       _setHydrated: () => set({ hydrated: true }),

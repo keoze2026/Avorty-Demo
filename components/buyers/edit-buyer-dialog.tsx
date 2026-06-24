@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Pencil } from "lucide-react";
+import { AlertTriangle, Loader2, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,7 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
   const { t } = useTranslation();
   const buyers = useBuyersStore((s) => s.buyers);
   const update = useBuyersStore((s) => s.update);
+  const updateCap = useBuyersStore((s) => s.updateCap);
 
   const buyer = buyerId ? buyers.find((b) => b.id === buyerId) : null;
 
@@ -56,22 +57,28 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
   const onSubmit = async () => {
     if (!buyer || !name.trim()) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 250));
-    // NOTE: `organization` is intentionally omitted from the patch — backend
-    // schema treats it as read-only (derived from workspace context, echoed
-    // via `organization_name` on responses). Sending it would 422.
-    update(buyer.id, {
-      name: name.trim(),
-      contactName: contactName.trim() || undefined,
-      email: email.trim() || undefined,
-      description: description.trim() || undefined,
-      bidAmount,
-      dailyCap,
-      monthlyCap: dailyCap * 25,
-    });
-    setSubmitting(false);
-    toast.success(t("networkUI.buyers.edit.updated").replace("{name}", name.trim()));
-    onOpenChange(false);
+    try {
+      // Main PATCH accepts name + description + payoutAmount. `contactName`
+      // and `email` are FE-only and flagged in the dialog banner.
+      await update(buyer.id, {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        bidAmount,
+      });
+      // Caps go through the dedicated cap endpoint.
+      if (dailyCap !== buyer.dailyCap) {
+        await updateCap(buyer.id, {
+          daily: dailyCap,
+          monthly: dailyCap * 25,
+        });
+      }
+      toast.success(t("networkUI.buyers.edit.updated").replace("{name}", name.trim()));
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save buyer");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -108,6 +115,16 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
                 className="cursor-not-allowed opacity-70"
               />
             </div>
+          </div>
+          {/* Honest framing — backend's PATCH doesn't accept contactName /
+              email yet. They render so the user can still see what they
+              entered, but they won't persist. */}
+          <div className="flex items-start gap-2 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2.5 py-1.5 text-[11px]">
+            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--warning)]" />
+            <span className="text-muted-foreground">
+              Contact name + email are FE-only — backend hasn't shipped these
+              fields yet, so changes here won't survive a refresh.
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">

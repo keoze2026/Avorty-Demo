@@ -1,49 +1,38 @@
 "use client";
 
 /**
- * Security store — persists the user's 2FA and PIN configuration.
+ * Security store — persists the user's PIN configuration.
  *
- *   2FA   - Google Authenticator (TOTP). User scans a QR once, then enters
- *           a 6-digit code on every login.
- *   PIN   - 4-digit code that gates historical reports (anything before
- *           today). Unlock is per-session — closing the tab re-locks.
+ *   PIN — 4-digit code that gates historical reports (anything before today).
+ *         Unlock is per-session — closing the tab re-locks. This is purely a
+ *         client-side screen-lock UX, not a server-enforced access control.
+ *
+ * Real two-factor authentication (TOTP) lives in `useAuthStore` now and is
+ * backed by `/api/accounts/mfa/*`. The legacy 2FA fields that used to live
+ * here were entirely client-side and got the user no real protection;
+ * they've been removed so the only "MFA" surface is the real one.
  *
  * Persistence model:
- *   - `twoFactorEnabled` + `twoFactorSecret` + `reportsPin` → localStorage
- *     (these are the user's saved settings; survive across sessions).
- *   - `twoFactorVerifiedAt` + `reportsPinUnlocked` → sessionStorage
- *     (the per-session locks; cleared when the tab closes).
+ *   - `reportsPin` → localStorage (the user's saved setting; survives reloads).
+ *   - `reportsPinUnlocked` → sessionStorage (the per-session lock; cleared
+ *     when the tab closes).
  */
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 interface SecuritySettings {
-  /** Whether the user has finished the Google Authenticator setup. */
-  twoFactorEnabled: boolean;
-  /** Base32-encoded TOTP secret. Captured at setup time. */
-  twoFactorSecret: string | null;
-  /** 4-digit PIN hash. Stored as plain digits in this mock — in production
-   *  this would be a server-side bcrypt with a salt. */
+  /** 4-digit PIN. Stored as plain digits in this mock — see the section
+   *  banner in Settings → Security for the honest framing. */
   reportsPin: string | null;
 }
 
 interface SecuritySessionState {
-  /** Timestamp (ms) when 2FA was last verified this session. Null = not yet
-   *  verified, so the login flow should show the challenge. */
-  twoFactorVerifiedAt: number | null;
   /** True once the user has entered the correct PIN this session. */
   reportsPinUnlocked: boolean;
 }
 
 interface SecurityActions {
-  /** Persist a freshly-scanned TOTP secret and flip enabled on. */
-  enable2FA: (secret: string) => void;
-  /** Wipe the TOTP secret + flip enabled off. */
-  disable2FA: () => void;
-  /** Mark the current session as having passed the 2FA challenge. */
-  setTwoFactorVerified: () => void;
-
   /** Set / change the 4-digit reports PIN. */
   setReportsPin: (pin: string) => void;
   /** Clear the saved reports PIN. */
@@ -59,39 +48,20 @@ type SecurityState = SecuritySettings & SecuritySessionState & SecurityActions;
 export const useSecurityStore = create<SecurityState>()(
   persist(
     (set) => ({
-      // Persisted settings
-      twoFactorEnabled: false,
-      twoFactorSecret: null,
       reportsPin: null,
-
-      // Session-only (cleared on each new tab)
-      twoFactorVerifiedAt: null,
       reportsPinUnlocked: false,
 
-      enable2FA: (secret) =>
-        set({ twoFactorEnabled: true, twoFactorSecret: secret }),
-      disable2FA: () =>
-        set({
-          twoFactorEnabled: false,
-          twoFactorSecret: null,
-          twoFactorVerifiedAt: null,
-        }),
-      setTwoFactorVerified: () => set({ twoFactorVerifiedAt: Date.now() }),
-
       setReportsPin: (pin) => set({ reportsPin: pin, reportsPinUnlocked: true }),
-      clearReportsPin: () =>
-        set({ reportsPin: null, reportsPinUnlocked: false }),
+      clearReportsPin: () => set({ reportsPin: null, reportsPinUnlocked: false }),
       unlockReports: () => set({ reportsPinUnlocked: true }),
       lockReports: () => set({ reportsPinUnlocked: false }),
     }),
     {
       name: "vortyx.security",
-      // Only persist the *settings* — the session locks live in memory and
-      // reset whenever the tab is closed.
+      // Only persist the *settings* — the session lock lives in memory and
+      // resets whenever the tab is closed.
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
-        twoFactorEnabled: s.twoFactorEnabled,
-        twoFactorSecret: s.twoFactorSecret,
         reportsPin: s.reportsPin,
       }),
     },

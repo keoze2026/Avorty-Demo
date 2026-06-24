@@ -28,6 +28,19 @@ interface LoginResponse {
   organizationId: string;
 }
 
+interface MfaChallengeResponse {
+  mfaRequired: true;
+  tempToken: string;
+}
+
+/** Discriminated union of what `POST /api/accounts/login` can return. The
+ *  backend ships either the standard login payload OR an MFA challenge. */
+type LoginOrChallenge = LoginResponse | MfaChallengeResponse;
+
+export type LoginResult =
+  | { mfaRequired: false; user: User }
+  | { mfaRequired: true; tempToken: string };
+
 interface UserOutWire {
   id: string;
   email: string;
@@ -43,6 +56,10 @@ interface UserOutWire {
   avatarUrl?: string;
   /** Some deployments expose the organization display name — optional. */
   organizationName?: string;
+}
+
+function isMfaChallenge(res: LoginOrChallenge): res is MfaChallengeResponse {
+  return (res as MfaChallengeResponse).mfaRequired === true;
 }
 
 /* ─── Mapper ──────────────────────────────────────────────────────────── */
@@ -67,6 +84,7 @@ function wireToUser(wire: UserOutWire): User {
     organization: wire.organizationName ?? wire.organizationId ?? "",
     phone: wire.phoneNumber,
     isSuperuser: wire.isSuperuser === true,
+    mfaEnabled: wire.mfaEnabled === true,
   };
 }
 
@@ -96,12 +114,43 @@ function splitName(full: string): { firstName: string; lastName: string } {
 
 export const authService = {
   /**
-   * Log in and persist tokens. Returns a partial `User` derived from the
-   * login response; callers should follow up with `me()` to fetch full profile.
+   * Log in. Returns either a partial `User` (when MFA isn't enabled) or an
+   * MFA challenge that the caller must complete by calling `verifyMfa` with
+   * the temp token + the user's 6-digit authenticator code.
+   *
+   * Callers in the happy (no-MFA) path should follow up with `me()` to
+   * hydrate the full profile.
    */
-  async login(input: LoginInput): Promise<User> {
-    const res = await http.post<LoginResponse>("/api/accounts/login", {
+  async login(input: LoginInput): Promise<LoginResult> {
+    const res = await http.post<LoginOrChallenge>("/api/accounts/login", {
       body: input,
+      anonymous: true,
+    });
+    if (isMfaChallenge(res)) {
+      return { mfaRequired: true, tempToken: res.tempToken };
+    }
+    setTokens({ access: res.access, refresh: res.refresh });
+    return {
+      mfaRequired: false,
+      user: {
+        id: res.userId,
+        email: res.email,
+        name: res.email.split("@")[0],
+        role: normalizeRole(res.role),
+        organization: res.organizationId,
+      },
+    };
+  },
+
+  /**
+   * Complete the MFA challenge with the 6-digit code the user typed into
+   * the login form. Backend at POST /api/accounts/verify-mfa returns the
+   * same payload shape as a successful login. On 200 we persist tokens
+   * and surface the partial user the same way `login` does.
+   */
+  async verifyMfa(input: { tempToken: string; code: string }): Promise<User> {
+    const res = await http.post<LoginResponse>("/api/accounts/verify-mfa", {
+      body: { tempToken: input.tempToken, token: input.code },
       anonymous: true,
     });
     setTokens({ access: res.access, refresh: res.refresh });
@@ -112,6 +161,32 @@ export const authService = {
       role: normalizeRole(res.role),
       organization: res.organizationId,
     };
+  },
+
+  /**
+   * Enroll the user in MFA. The frontend generates the TOTP secret
+   * client-side (so the QR can render without a backend round-trip) and
+   * the user confirms it by entering the 6-digit code from their
+   * authenticator app — that pair is sent here for the backend to verify
+   * and persist. On success, `mfa_enabled` flips to true on the user.
+   */
+  async setupMfa(input: { secret: string; code: string }): Promise<User> {
+    const wire = await http.post<UserOutWire>("/api/accounts/mfa/setup", {
+      body: { secret: input.secret, token: input.code },
+    });
+    return wireToUser(wire);
+  },
+
+  /**
+   * Disable MFA. Backend requires a current 6-digit code from the user's
+   * authenticator app to prove possession of the device before allowing
+   * disable. Returns the updated user (with `mfa_enabled: false`).
+   */
+  async disableMfa(input: { code: string }): Promise<User> {
+    const wire = await http.post<UserOutWire>("/api/accounts/mfa/disable", {
+      body: { token: input.code },
+    });
+    return wireToUser(wire);
   },
 
   /**
@@ -132,7 +207,16 @@ export const authService = {
       anonymous: true,
     });
     // Backend register returns the user but no tokens; log in to receive them.
-    const user = await this.login({ email: input.email, password: input.password });
+    // Fresh accounts can't have MFA configured yet, so the login should
+    // always return the success branch — but we narrow defensively just
+    // in case the backend ever changes that.
+    const result = await this.login({ email: input.email, password: input.password });
+    if (result.mfaRequired) {
+      throw new Error(
+        "Registration succeeded but the account already has MFA — unexpected. Please sign in directly.",
+      );
+    }
+    const user = result.user;
     // Patch phone onto /me if the user supplied one — non-fatal if it fails.
     if (input.phone) {
       try {

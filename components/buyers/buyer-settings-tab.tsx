@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, DollarSign, Eye, Gauge, Mail, UserSquare } from "lucide-react";
+import { AlertTriangle, Building2, DollarSign, Eye, Gauge, Mail, UserSquare } from "lucide-react";
 import { toast } from "sonner";
 
 import { ErrorLine, SaveBar } from "@/components/campaigns/campaign-settings-tab";
@@ -56,6 +56,7 @@ function fromBuyer(b: Buyer): FormState {
 export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
   const { t } = useTranslation();
   const update = useBuyersStore((s) => s.update);
+  const updateCap = useBuyersStore((s) => s.updateCap);
   const reporting = useBuyerReportingStore((s) => s.byBuyer[buyer.id]) ?? {
     incoming: true,
     connected: true,
@@ -88,23 +89,34 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
       return;
     }
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 350));
-    // NOTE: `organization` is intentionally omitted — backend schema makes
-    // it read-only (returned as `organization_name`, never accepted in a
-    // write body). The form still displays the value via a disabled input.
-    update(buyer.id, {
-      name: form.name.trim(),
-      contactName: form.contactName.trim() || undefined,
-      email: form.email.trim() || undefined,
-      description: form.description.trim() || undefined,
-      bidAmount: form.bidAmount,
-      payoutModel: form.payoutModel,
-      concurrencyCap: form.concurrencyCap,
-      dailyCap: form.dailyCap,
-      monthlyCap: form.monthlyCap,
-    });
-    setSubmitting(false);
-    toast.success(t("networkUI.buyers.settings.saved"));
+    try {
+      // Main fields the backend's PATCH /api/buyers/{id} actually accepts.
+      // `contactName`, `email`, `payoutModel` are FE-only — they're collected
+      // but won't persist server-side until backend support lands (see the
+      // Preview banner above the Contact card).
+      await update(buyer.id, {
+        name: form.name.trim(),
+        description: form.description.trim() || undefined,
+        bidAmount: form.bidAmount,
+      });
+      // Caps go through the dedicated cap endpoint — main PATCH ignores them.
+      if (
+        form.concurrencyCap !== baseline.concurrencyCap ||
+        form.dailyCap !== baseline.dailyCap ||
+        form.monthlyCap !== baseline.monthlyCap
+      ) {
+        await updateCap(buyer.id, {
+          daily: form.dailyCap,
+          monthly: form.monthlyCap,
+          concurrency: form.concurrencyCap,
+        });
+      }
+      toast.success(t("networkUI.buyers.settings.saved"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save buyer");
+    } finally {
+      setSubmitting(false);
+    }
   };
   const onDiscard = () => {
     setForm(baseline);
@@ -157,6 +169,26 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Honest framing — contactName, email, and payoutModel below are
+          FE-only fields the backend's PATCH /api/buyers/{id} doesn't accept
+          today. They're collected for forward-compatibility but won't
+          round-trip until backend support ships. */}
+      <div className="flex items-start gap-2.5 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 p-3 text-xs">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--warning)]" />
+        <div className="space-y-0.5">
+          <div className="font-semibold text-[color:var(--warning)]">
+            Contact name, email, and payout model don't yet persist
+          </div>
+          <p className="text-muted-foreground">
+            Backend PATCH only accepts <span className="font-mono">name</span>,{" "}
+            <span className="font-mono">description</span>, and{" "}
+            <span className="font-mono">payout_amount</span> today. The fields
+            below stay in the form until you reload; the rest of the form (name,
+            caps, bidding) saves correctly.
+          </p>
+        </div>
+      </div>
 
       {/* Contact */}
       <Card>
@@ -291,11 +323,19 @@ export function BuyerSettingsTab({ buyer }: { buyer: Buyer }) {
           <CardTitle className="flex items-center gap-2 text-base">
             <Eye className="h-4 w-4 text-accent" />
             {t("networkUI.buyers.settings.reportingTitle")}
+            <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[color:var(--warning)]">
+              <AlertTriangle className="h-2.5 w-2.5" /> Preview
+            </span>
           </CardTitle>
           <p className="text-xs text-muted-foreground">
             {t("networkUI.buyers.settings.reportingDesc")
               .replace("{visible}", String(visibleCount))
               .replace("{total}", String(REPORTING_COLUMNS.length))}
+          </p>
+          <p className="mt-1 text-[11px] text-[color:var(--warning)]">
+            Column visibility persists to this browser only — backend doesn't
+            yet expose per-buyer reporting allowlists. Changes won't sync to
+            the buyer's own dashboard view.
           </p>
         </CardHeader>
         <CardContent>

@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { friendlyErrorMessage } from "@/lib/api/errors";
+import { useWebhooksStore } from "@/lib/store/webhooks-store";
 import type { Webhook } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
@@ -62,6 +64,7 @@ function randomSecret() {
 
 export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
   const { t } = useTranslation();
+  const sendTest = useWebhooksStore((s) => s.sendTest);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [secret, setSecret] = useState("");
@@ -111,20 +114,37 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
       toast.error(t("toolsUI.integrations.webhooks.dialog.errorInvalid"));
       return;
     }
+    // The backend's /test endpoint fires against a SAVED webhook (it looks
+    // up the row by id and re-uses its URL + secret + headers). For brand-new
+    // webhooks that haven't been saved yet we tell the user explicitly
+    // instead of pretending to test against the typed URL.
+    if (!initial?.id) {
+      toast.message("Save first to send a test event", {
+        description: "The test runs against a saved webhook id. Save your changes, then click Test from the row's menu.",
+      });
+      return;
+    }
     setTesting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setTesting(false);
-    toast.success(t("toolsUI.integrations.webhooks.dialog.toastTestDelivered"), {
-      description: t("toolsUI.integrations.webhooks.dialog.toastTestDeliveredDesc")
-        .replace("{url}", url)
-        .replace("{ms}", String(80 + Math.floor(Math.random() * 80))),
-    });
+    try {
+      await sendTest(initial.id);
+      toast.success(t("toolsUI.integrations.webhooks.dialog.toastTestDelivered"), {
+        description: t("toolsUI.integrations.webhooks.dialog.toastTestDeliveredDesc")
+          .replace("{url}", url)
+          .replace("{ms}", "live"),
+      });
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Test delivery failed"));
+    } finally {
+      setTesting(false);
+    }
   };
 
   const onSubmit = async () => {
     if (!canSubmit) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
+    // Removed the cosmetic setTimeout(300) — the real save happens via the
+    // parent's onSave -> webhooksService.create/update which has its own
+    // round-trip latency. No need to fake an extra delay on top.
     onSave(
       {
         name: name.trim(),

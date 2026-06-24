@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/use-translation";
+import { friendlyErrorMessage } from "@/lib/api/errors";
+import { authService } from "@/lib/api/services/auth.service";
 
 export function ForgotPasswordForm() {
   const { t } = useTranslation();
@@ -18,11 +20,22 @@ export function ForgotPasswordForm() {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (pending) return;
+    const trimmed = email.trim();
+    if (!trimmed) return;
     setPending(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setPending(false);
-    setSent(true);
-    toast.success(t("authUI.forgot.toastSent"));
+    try {
+      // Real backend call — POST /api/accounts/password-reset/request.
+      // We always show "sent" on a 2xx (and even on most 4xx) because
+      // confirming whether an email exists is itself a security leak.
+      // Backend should also respond uniformly to avoid user enumeration.
+      await authService.requestPasswordReset(trimmed);
+      setSent(true);
+      toast.success(t("authUI.forgot.toastSent"));
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Couldn't send reset email"));
+    } finally {
+      setPending(false);
+    }
   };
 
   if (sent) {

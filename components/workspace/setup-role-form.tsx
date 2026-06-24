@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -69,8 +69,14 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
   };
 
   const onSave = () => {
-    toast.success(t("workspaceUI.setupRole.saved"));
-    router.push(ROUTES.workspace);
+    // The backend has no `POST /api/accounts/roles` endpoint — custom roles
+    // can't actually be created. The previous handler just toasted success
+    // and navigated, which silently dropped the user's permission picks.
+    // Surface this honestly instead of pretending it worked.
+    toast.message("Custom roles aren't shipped yet.", {
+      description:
+        "The role catalog at GET /api/accounts/roles is read-only. Creating new roles needs a backend POST endpoint we haven't requested yet.",
+    });
   };
 
   return (
@@ -89,6 +95,26 @@ export function SetupRoleForm({ roleId }: SetupRoleFormProps) {
       </CardHeader>
 
       <CardContent className="p-0">
+        {/* Honest framing — custom role creation has no backend yet. The
+            permission tree below is a preview of the future flow; the Save
+            button intentionally shows a "not shipped" message instead of
+            silently dropping the user's selection. */}
+        <div className="m-5 flex items-start gap-2.5 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 p-3 text-xs">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--warning)]" />
+          <div className="space-y-1">
+            <div className="font-semibold text-[color:var(--warning)]">
+              Preview — custom roles not yet shipped
+            </div>
+            <p className="text-muted-foreground">
+              The role catalog (admin / manager / agent / buyer / publisher /
+              viewer) is fetched from the backend at{" "}
+              <span className="font-mono">/api/accounts/roles</span>. Creating a
+              new role with custom permissions requires a backend endpoint
+              that doesn't exist yet. Use the existing roles in the meantime.
+            </p>
+          </div>
+        </div>
+
         <div className="divide-y divide-border">
           {PERMISSION_GROUPS.map((group) => {
             const groupState = state[group.id] ?? {};

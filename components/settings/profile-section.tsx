@@ -1,39 +1,74 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Camera, KeyRound, Mail, Shield, Trash2, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, KeyRound, Loader2, Mail, Shield, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/hooks/use-translation";
+import { friendlyErrorMessage } from "@/lib/api/errors";
+import { authService } from "@/lib/api/services/auth.service";
 import { useAuthStore } from "@/lib/store/auth-store";
 
-/** Largest avatar we'll keep in localStorage as a data URL. */
+/** Largest avatar the multipart endpoint will accept. Aligns with the
+ *  backend's 1.5 MB upload cap; bigger files get rejected client-side so
+ *  the user sees a friendlier message than a 413. */
 const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
 
 export function ProfileSection() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const setAvatar = useAuthStore((s) => s.setAvatar);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const uploadAvatar = useAuthStore((s) => s.uploadAvatar);
 
-  const [name, setName] = useState(user?.name ?? "Avery Quinn");
-  const [email, setEmail] = useState(user?.email ?? "avery@avortyx.io");
-  const [mfa, setMfa] = useState(true);
-  const [phone, setPhone] = useState("+14155550184");
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [saving, setSaving] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+
+  // Reseed local form state when the user snapshot arrives or changes
+  // (e.g. /me hydrates after first paint, or another tab updates profile).
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name);
+    setEmail(user.email);
+    setPhone(user.phone ?? "");
+  }, [user]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const onSave = () => {
-    toast.success(t("settings.profileSection.profileSaved"));
+  const onSave = async () => {
+    setSaving(true);
+    try {
+      // Email changes typically need a verification flow; the backend's
+      // PATCH /me only accepts name + phone today. Send only what's safe
+      // to round-trip and what actually differs from the saved snapshot.
+      const patch: { name?: string; phone?: string } = {};
+      const trimmedName = name.trim();
+      const trimmedPhone = phone.trim();
+      if (user && trimmedName !== user.name) patch.name = trimmedName;
+      if (user && trimmedPhone !== (user.phone ?? "")) patch.phone = trimmedPhone;
+      if (Object.keys(patch).length === 0) {
+        toast.info("No changes to save");
+        return;
+      }
+      await updateProfile(patch);
+      toast.success(t("settings.profileSection.profileSaved"));
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Couldn't save profile"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onPickAvatar = () => fileInputRef.current?.click();
 
-  const onAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     // Always reset so picking the same file twice still triggers change.
     if (e.target) e.target.value = "";
@@ -48,24 +83,33 @@ export function ProfileSection() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      if (typeof dataUrl !== "string") {
-        toast.error(t("settings.profileSection.couldNotReadImage"));
-        return;
-      }
-      setAvatar(dataUrl);
+    setAvatarBusy(true);
+    try {
+      // Multipart POST to /api/accounts/me/avatar — backend persists the
+      // binary and returns the hosted URL, which the auth store writes
+      // back into `user.avatarUrl` for us.
+      await uploadAvatar(file);
       toast.success(t("settings.profileSection.avatarUpdated"));
-    };
-    reader.onerror = () =>
-      toast.error(t("settings.profileSection.couldNotReadImage"));
-    reader.readAsDataURL(file);
+    } catch (err) {
+      toast.error(friendlyErrorMessage(err, "Couldn't upload avatar"));
+    } finally {
+      setAvatarBusy(false);
+    }
   };
 
   const onRemoveAvatar = () => {
     setAvatar(null);
     toast.success(t("settings.profileSection.avatarRemoved"));
+  };
+
+  const onSendResetLink = async () => {
+    if (!user?.email) return;
+    try {
+      await authService.requestPasswordReset(user.email);
+      toast.success(t("settings.profileSection.resetEmailSent"));
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Couldn't send reset email"));
+    }
   };
 
   const initials = name
@@ -124,8 +168,17 @@ export function ProfileSection() {
               {t("settings.profileSection.avatarHint")}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={onPickAvatar}>
-                <Camera className="h-3.5 w-3.5" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPickAvatar}
+                disabled={avatarBusy}
+              >
+                {avatarBusy ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Camera className="h-3.5 w-3.5" />
+                )}
                 {user?.avatarUrl
                   ? t("settings.profileSection.replace")
                   : t("settings.profileSection.upload")}
@@ -157,7 +210,16 @@ export function ProfileSection() {
               <Input id="prof-name" value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
             <Field id="prof-email" label={t("settings.profileSection.email")} icon={Mail}>
-              <Input id="prof-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              {/* Email changes require a separate verification flow on the
+                  backend; the PATCH /me endpoint only accepts name + phone
+                  today. Render as read-only so the user isn't misled. */}
+              <Input
+                id="prof-email"
+                type="email"
+                value={email}
+                readOnly
+                className="bg-secondary/40"
+              />
             </Field>
             <Field id="prof-phone" label={t("settings.profileSection.phone")} icon={Mail}>
               <Input id="prof-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -170,11 +232,26 @@ export function ProfileSection() {
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
-              onClick={() => toast.info(t("settings.profileSection.revertedChanges"))}
+              disabled={saving}
+              onClick={() => {
+                if (!user) return;
+                setName(user.name);
+                setPhone(user.phone ?? "");
+                toast.info(t("settings.profileSection.revertedChanges"));
+              }}
             >
               {t("settings.profileSection.cancel")}
             </Button>
-            <Button onClick={onSave}>{t("settings.profileSection.saveChanges")}</Button>
+            <Button onClick={onSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />{" "}
+                  {t("settings.profileSection.saveChanges")}
+                </>
+              ) : (
+                t("settings.profileSection.saveChanges")
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -193,32 +270,19 @@ export function ProfileSection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => toast.success(t("settings.profileSection.resetEmailSent"))}
+                onClick={onSendResetLink}
+                disabled={!user?.email}
               >
                 {t("settings.profileSection.sendResetLink")}
               </Button>
             }
           />
-          <Row
-            icon={Shield}
-            label={t("settings.profileSection.twoFactor")}
-            description={t("settings.profileSection.twoFactorAuth")}
-            action={
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={mfa}
-                  onCheckedChange={(v) => {
-                    setMfa(v);
-                    toast.success(
-                      v
-                        ? t("settings.securitySection.twoFactorEnabled")
-                        : t("settings.securitySection.twoFactorDisabled"),
-                    );
-                  }}
-                />
-              </div>
-            }
-          />
+          {/* The 2FA toggle that used to live here was a local-only switch
+              that didn't enforce anything. Real MFA enrollment now lives in
+              Settings → Security with the QR / setup / disable flow wired
+              to the backend's /api/accounts/mfa/* endpoints. We removed the
+              toggle to avoid showing two different controls for the same
+              state. */}
         </CardContent>
       </Card>
     </SectionShell>

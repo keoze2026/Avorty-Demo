@@ -24,6 +24,13 @@ interface BuyersState {
   getById: (id: string) => Buyer | undefined;
   add: (input: Omit<Buyer, "id" | "createdAt">) => Promise<Buyer>;
   update: (id: string, patch: Partial<Buyer>) => Promise<void>;
+  /** Persist daily/monthly/concurrency caps via the dedicated
+   *  `PATCH /api/buyers/{id}/cap` endpoint. Separate from `update` because
+   *  the main update body doesn't accept cap fields. */
+  updateCap: (
+    id: string,
+    cap: { daily?: number; monthly?: number; concurrency?: number },
+  ) => Promise<void>;
   remove: (id: string) => Promise<void>;
   setStatus: (id: string, status: BuyerStatus) => Promise<void>;
 }
@@ -76,6 +83,30 @@ export const useBuyersStore = create<BuyersState>()((set, get) => ({
     set((s) => ({ buyers: s.buyers.filter((b) => b.id !== id) }));
     try {
       await buyersService.remove(id);
+    } catch (e) {
+      set({ buyers: prev, error: messageFromError(e) });
+      throw e;
+    }
+  },
+
+  updateCap: async (id, cap) => {
+    const prev = get().buyers;
+    // Optimistic — flip the cap fields locally so the form responds before
+    // the round-trip completes.
+    set((s) => ({
+      buyers: s.buyers.map((b) =>
+        b.id === id
+          ? {
+              ...b,
+              ...(cap.daily !== undefined ? { dailyCap: cap.daily } : {}),
+              ...(cap.monthly !== undefined ? { monthlyCap: cap.monthly } : {}),
+              ...(cap.concurrency !== undefined ? { concurrencyCap: cap.concurrency } : {}),
+            }
+          : b,
+      ),
+    }));
+    try {
+      await buyersService.updateCap(id, cap);
     } catch (e) {
       set({ buyers: prev, error: messageFromError(e) });
       throw e;

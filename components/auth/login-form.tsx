@@ -9,15 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/use-translation";
+import { friendlyErrorMessage } from "@/lib/api/errors";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { useSecurityStore } from "@/lib/store/security-store";
-import { verifyTotpCode } from "@/lib/totp";
 import { ROUTES } from "@/lib/constants";
 
 /**
  * Two-step login (admin-only):
  *   1. Credentials  → email/password (always)
- *   2. 2FA challenge → 6-digit Authenticator code (only if user has 2FA enabled)
+ *   2. MFA challenge → 6-digit Authenticator code (only when backend says
+ *      mfa_required after step 1)
+ *
+ * MFA verification is now backend-driven: `useAuthStore.login` returns
+ * `null` when the backend signals MFA-required (with a temp_token persisted
+ * in the store). The form then collects the 6-digit code and calls
+ * `completeMfa(code)`, which hits POST /api/accounts/verify-mfa to get the
+ * real session tokens.
  *
  * Buyers and publishers do NOT sign in here — they get a role-scoped invite
  * link emailed to them and accept at /invite/[role]/[token]. Keeping the
@@ -29,12 +36,10 @@ export function LoginForm() {
   const params = useSearchParams();
   const { t } = useTranslation();
   const login = useAuthStore((s) => s.login);
-  const twoFactorEnabled = useSecurityStore((s) => s.twoFactorEnabled);
-  const twoFactorSecret = useSecurityStore((s) => s.twoFactorSecret);
-  const setTwoFactorVerified = useSecurityStore((s) => s.setTwoFactorVerified);
+  const completeMfa = useAuthStore((s) => s.completeMfa);
+  const cancelMfa = useAuthStore((s) => s.cancelMfa);
+  const pendingMfa = useAuthStore((s) => s.pendingMfa);
   const lockReports = useSecurityStore((s) => s.lockReports);
-
-  const [phase, setPhase] = useState<"credentials" | "2fa">("credentials");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +47,7 @@ export function LoginForm() {
   const [pending, setPending] = useState(false);
 
   const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   const finishLogin = () => {
     // Reports PIN re-locks at the start of every login session.
@@ -54,35 +60,42 @@ export function LoginForm() {
     if (pending) return;
     setPending(true);
     try {
-      await login(email, password, "admin");
-      if (twoFactorEnabled) {
-        // Don't redirect yet — show the 2FA step.
+      const user = await login(email, password, "admin");
+      if (!user) {
+        // MFA challenge — wait for the user to enter the 6-digit code. The
+        // store's `pendingMfa` is now set; the JSX below re-renders the
+        // challenge step.
         toast.success("Password accepted — enter your authenticator code");
-        setPhase("2fa");
         setCode("");
         return;
       }
       toast.success("Welcome back to Avortyx");
       finishLogin();
-    } catch {
-      toast.error("Sign in failed — try again");
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Sign in failed"));
     } finally {
       setPending(false);
     }
   };
 
-  const onTwoFactorSubmit = (e: FormEvent) => {
+  const onTwoFactorSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!verifyTotpCode(twoFactorSecret ?? "", code)) {
-      toast.error("Invalid code — check Google Authenticator and try again");
-      return;
+    if (code.length !== 6 || verifying) return;
+    setVerifying(true);
+    try {
+      await completeMfa(code, "admin");
+      toast.success("Welcome back to Avortyx");
+      finishLogin();
+    } catch (e) {
+      toast.error(
+        friendlyErrorMessage(e, "Invalid code — check Google Authenticator and try again"),
+      );
+    } finally {
+      setVerifying(false);
     }
-    setTwoFactorVerified();
-    toast.success("Welcome back to Avortyx");
-    finishLogin();
   };
 
-  if (phase === "2fa") {
+  if (pendingMfa) {
     return (
       <form onSubmit={onTwoFactorSubmit} className="space-y-5">
         <div className="flex items-center gap-3 rounded-lg border border-accent/30 bg-accent/8 p-3">
@@ -120,14 +133,25 @@ export function LoginForm() {
           </p>
         </div>
 
-        <Button type="submit" className="w-full" disabled={code.length !== 6}>
-          {t("login.twoFactor.verify")}
-          <ArrowRight className="h-4 w-4" />
+        <Button type="submit" className="w-full" disabled={code.length !== 6 || verifying}>
+          {verifying ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Verifying…
+            </>
+          ) : (
+            <>
+              {t("login.twoFactor.verify")}
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
 
         <button
           type="button"
-          onClick={() => setPhase("credentials")}
+          onClick={() => {
+            cancelMfa();
+            setCode("");
+          }}
           className="block w-full text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           {t("login.twoFactor.back")}
@@ -213,17 +237,10 @@ export function LoginForm() {
           </>
         ) : (
           <>
-            {twoFactorEnabled ? t("login.continue") : t("login.signIn")}{" "}
-            <ArrowRight className="h-4 w-4" />
+            {t("login.signIn")} <ArrowRight className="h-4 w-4" />
           </>
         )}
       </Button>
-      {twoFactorEnabled && (
-        <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-          <ShieldCheck className="h-3 w-3 text-accent" />
-          {t("login.twoFactor.enabled")}
-        </p>
-      )}
     </form>
   );
 }

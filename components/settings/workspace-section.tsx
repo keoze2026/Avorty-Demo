@@ -18,6 +18,10 @@ import { WorkspaceAccessRequestsTable } from "./workspace-access-requests-table"
 import { WorkspaceActivityLog } from "./workspace-activity-log";
 import { WorkspaceMembersTable } from "./workspace-members-table";
 import { WorkspaceRolesTable } from "./workspace-roles-table";
+import {
+  WorkspaceSupportRequestDialog,
+  type SupportTopic,
+} from "./workspace-support-request-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -70,6 +74,7 @@ export function WorkspaceSection() {
   const membersLoadedRef = React.useRef(false);
 
   const [tab, setTab] = React.useState<TabId>("general");
+  const [supportTopic, setSupportTopic] = React.useState<SupportTopic | null>(null);
 
   // Hydrate the workspace once.
   React.useEffect(() => {
@@ -225,9 +230,7 @@ export function WorkspaceSection() {
                 lockedLabel={t("workspaceUI.danger.lockedBadge")}
                 lockedHint={t("workspaceUI.danger.lockedHint")}
                 contactLabel={t("workspaceUI.danger.contactSupport")}
-                onContact={() =>
-                  toast.success(t("workspaceUI.danger.supportRequested"))
-                }
+                onContact={() => setSupportTopic("transfer-ownership")}
               />
               {/* Delete workspace — same lock for the same reason. Wiping a
                   panel out from under the owner needs explicit verification. */}
@@ -237,9 +240,7 @@ export function WorkspaceSection() {
                 lockedLabel={t("workspaceUI.danger.lockedBadge")}
                 lockedHint={t("workspaceUI.danger.lockedHint")}
                 contactLabel={t("workspaceUI.danger.contactSupport")}
-                onContact={() =>
-                  toast.success(t("workspaceUI.danger.supportRequested"))
-                }
+                onContact={() => setSupportTopic("delete-workspace")}
               />
             </CardContent>
           </Card>
@@ -259,6 +260,11 @@ export function WorkspaceSection() {
       {tab === "access-requests" && <WorkspaceAccessRequestsTable />}
 
       {tab === "activity" && <WorkspaceActivityLog />}
+
+      <WorkspaceSupportRequestDialog
+        topic={supportTopic}
+        onOpenChange={(open) => !open && setSupportTopic(null)}
+      />
     </div>
   );
 }

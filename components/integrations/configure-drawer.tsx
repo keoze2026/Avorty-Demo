@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import {
   Activity as ActivityIcon,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Copy,
   Loader2,
@@ -167,10 +168,12 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
 
   useEffect(() => {
     if (!app) return;
-    // Seed deterministic mock values for this app
-    const seed = app.id;
-    setToken(`vx_${seed}_••••••••••••••••${seed.slice(0, 4)}`);
-    setBaseUrl(`https://api.${seed.replace(/[^a-z0-9]/g, "")}.example/v2`);
+    // The previous version seeded fake `vx_${seed}_•••` token + fake base URL
+    // for every integration. Backend has no per-integration config endpoints
+    // today, so the inputs would have lied about saving. Now they start
+    // empty and are read-only until a real backend ships.
+    setToken("");
+    setBaseUrl("");
     setEvents(new Set(EVENTS.filter((e) => e.defaultOn).map((e) => e.key)));
     setScopes(new Set(SCOPES.filter((s) => s.defaultOn).map((s) => s.key)));
     setActive(true);
@@ -193,34 +196,18 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
     });
   };
 
+  // Test + Save are intentionally disabled until backend exposes per-
+  // integration config endpoints. Previously these used `setTimeout` to
+  // pretend success — actively misleading the user about persistence.
   const onTest = async () => {
-    setTesting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setTesting(false);
-    toast.success(t("toolsUI.integrations.configure.connection.toastHealthy"), {
-      description: t("toolsUI.integrations.configure.connection.toastHealthyDesc").replace(
-        "{ms}",
-        String(80 + Math.floor(Math.random() * 90)),
-      ),
+    toast.message("Per-integration config endpoints aren't shipped yet.", {
+      description: "Connect / Disconnect via the catalog already works. Detailed config will land once the backend ships the asks listed in BACKEND-ASKS.md.",
     });
   };
   const onSave = async () => {
-    if (!app) return;
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 350));
-    setSaving(false);
-    toast.success(t("toolsUI.integrations.configure.toastSaved").replace("{name}", app.name), {
-      description: t("toolsUI.integrations.configure.toastSavedDesc")
-        .replace("{events}", String(events.size))
-        .replace("{scopes}", String(scopes.size))
-        .replace(
-          "{status}",
-          active
-            ? t("toolsUI.integrations.configure.connection.active")
-            : t("toolsUI.integrations.configure.connection.paused"),
-        ),
+    toast.message("Per-integration config saves aren't shipped yet.", {
+      description: "Track progress in BACKEND-ASKS.md (Integrations group).",
     });
-    onOpenChange(false);
   };
 
   return (
@@ -273,6 +260,27 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6">
+                {/* Honest framing — the per-integration token, base URL,
+                    events selection, scopes, and activity log surfaces all
+                    depend on backend endpoints that aren't shipped yet.
+                    Connect / Disconnect work via the catalog already. */}
+                <div className="mb-4 flex items-start gap-2.5 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 p-3 text-xs">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--warning)]" />
+                  <div className="space-y-1">
+                    <div className="font-semibold text-[color:var(--warning)]">
+                      Preview — detailed config not yet wired
+                    </div>
+                    <p className="text-muted-foreground">
+                      Token, base URL, events, permissions, and the activity
+                      log on this drawer are a UI preview. Only{" "}
+                      <span className="font-medium">Disconnect</span> (in the
+                      footer) is wired to the backend. The catalog list +
+                      Connect/Disconnect flow already works at{" "}
+                      <span className="font-mono">/integrations</span>.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Connection */}
                 <TabsContent value="connection" className="m-0 space-y-4">
                   <Row label={t("toolsUI.integrations.configure.connection.statusLabel")} hint={t("toolsUI.integrations.configure.connection.statusHint")}>
@@ -299,7 +307,13 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                         variant="outline"
                         size="icon"
                         aria-label={t("toolsUI.integrations.configure.connection.rotateTokenAria")}
-                        onClick={() => toast.success(t("toolsUI.integrations.configure.connection.toastRotateQueued"))}
+                        onClick={() =>
+                          toast.message(
+                            "Token rotation requires per-integration config backend.",
+                          )
+                        }
+                        disabled
+                        title="Available when per-integration config endpoints ship."
                       >
                         <RefreshCw className="h-3 w-3" />
                       </Button>

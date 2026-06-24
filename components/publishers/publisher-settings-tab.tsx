@@ -17,6 +17,7 @@
 
 import * as React from "react";
 import {
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Filter,
@@ -97,6 +98,27 @@ export function PublisherSettingsTab({ publisher }: Props) {
 
   return (
     <Card className="space-y-6 p-6">
+      {/* Honest framing — the four sub-sections below (Members,
+          Permissions, Reporting visibility, Advanced cap toggle) currently
+          persist to localStorage only because the backend has no per-publisher
+          collaboration model. The UI is preserved as a preview of the
+          intended flow; backend asks for each capability are tracked in the
+          asks doc. */}
+      <div className="flex items-start gap-2.5 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 p-3 text-xs">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--warning)]" />
+        <div className="space-y-1">
+          <div className="font-semibold text-[color:var(--warning)]">
+            Preview — these settings save to this browser only
+          </div>
+          <p className="text-muted-foreground">
+            Member invites, permissions, reporting visibility, and the cap
+            toggle don't yet round-trip to the server. Other parts of the
+            publisher record (payout rate, status, campaign assignments) are
+            wired correctly via Network → Publishers → list/detail.
+          </p>
+        </div>
+      </div>
+
       <HeaderRow
         title={publisher.name}
         timezone={timezone}

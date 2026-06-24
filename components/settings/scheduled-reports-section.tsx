@@ -10,12 +10,11 @@
 
 import * as React from "react";
 import {
+  AlertTriangle,
   Calendar,
   Clock,
   Globe2,
-  Loader2,
   Mail,
-  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -64,6 +63,8 @@ export function ScheduledReportsSection() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const report = useScheduledReportsStore((s) => s.report);
+  const hydrate = useScheduledReportsStore((s) => s.hydrate);
+  const hydrated = useScheduledReportsStore((s) => s.hydrated);
   const setEnabled = useScheduledReportsStore((s) => s.setEnabled);
   const setRecipient = useScheduledReportsStore((s) => s.setRecipient);
   const setTime = useScheduledReportsStore((s) => s.setTime);
@@ -72,13 +73,19 @@ export function ScheduledReportsSection() {
   const setFormat = useScheduledReportsStore((s) => s.setFormat);
   const toggleSection = useScheduledReportsStore((s) => s.toggleSection);
 
-  // Default the recipient field to the signed-in user's email the first time
-  // the section renders with an empty recipient.
+  // Hydrate the schedule from the backend once on mount. Subsequent edits
+  // round-trip via the store's debounced sync.
   React.useEffect(() => {
-    if (!report.recipient && user?.email) setRecipient(user.email);
-  }, [report.recipient, user?.email, setRecipient]);
+    void hydrate();
+  }, [hydrate]);
 
-  const [sendingTest, setSendingTest] = React.useState(false);
+  // Default the recipient field to the signed-in user's email the first time
+  // the section renders with an empty recipient AFTER hydration (so we don't
+  // overwrite a server-stored recipient).
+  React.useEffect(() => {
+    if (!hydrated) return;
+    if (!report.recipient && user?.email) void setRecipient(user.email);
+  }, [hydrated, report.recipient, user?.email, setRecipient]);
 
   const time12 = to12h(report.hour);
   const recipient = report.recipient || user?.email || "";
@@ -86,29 +93,6 @@ export function ScheduledReportsSection() {
   const emailValid = /^\S+@\S+\.\S+$/.test(recipient);
   const dayValid = report.days.length > 0;
   const sectionValid = report.sections.length > 0;
-
-  const sendTest = async () => {
-    if (!emailValid) {
-      toast.error(t("settings.scheduledReports.validationEmail"));
-      return;
-    }
-    if (!dayValid) {
-      toast.error(t("settings.scheduledReports.validationDays"));
-      return;
-    }
-    if (!sectionValid) {
-      toast.error(t("settings.scheduledReports.validationSections"));
-      return;
-    }
-    setSendingTest(true);
-    // Simulate the upstream Mailgun / Postmark hop so the user sees the
-    // loading state. ~700ms feels like a real send.
-    await new Promise((r) => setTimeout(r, 700));
-    setSendingTest(false);
-    toast.success(
-      t("settings.scheduledReports.testSent").replace("{email}", recipient),
-    );
-  };
 
   return (
     <SectionShell
@@ -347,7 +331,12 @@ export function ScheduledReportsSection() {
               )}
             </div>
 
-            {/* Footer — test send + last-sent meta */}
+            {/* Footer — last-sent meta. The "Send test now" button was
+                removed in favor of honest framing — the backend doesn't
+                expose an on-demand trigger endpoint yet, and the previous
+                button simulated success with a fake setTimeout. When the
+                backend adds POST /api/analytics/reports/{id}/run-now we'll
+                bring the button back. */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
               <div className="text-[11px] text-muted-foreground">
                 {report.lastSentAt
@@ -357,25 +346,10 @@ export function ScheduledReportsSection() {
                     )
                   : t("settings.scheduledReports.neverSent")}
               </div>
-              <Button
-                onClick={sendTest}
-                disabled={
-                  sendingTest || !emailValid || !dayValid || !sectionValid
-                }
-                size="sm"
-              >
-                {sendingTest ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    {t("settings.scheduledReports.sendingTest")}
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-3.5 w-3.5" />
-                    {t("settings.scheduledReports.sendTestNow")}
-                  </>
-                )}
-              </Button>
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-[11px] text-muted-foreground">
+                <AlertTriangle className="h-3 w-3 text-[color:var(--warning)]" />
+                Send-now trigger coming once backend exposes the run-now endpoint.
+              </span>
             </div>
           </div>
         </CardContent>
