@@ -127,4 +127,13 @@ export const scheduledReportsService = {
   async activate(id: string): Promise<void> {
     await http.post(`/api/analytics/reports/${id}/activate/`);
   },
+
+  /** Trigger an immediate run of the scheduled report against the saved
+   *  recipients. Rate-limited server-side to once per minute per report;
+   *  the dev confirms a 429 if the user spams the button. */
+  async runNow(id: string): Promise<{ ok: boolean; queuedAt?: string }> {
+    return http.post<{ ok: boolean; queuedAt?: string }>(
+      `/api/analytics/reports/${id}/run-now/`,
+    );
+  },
 };

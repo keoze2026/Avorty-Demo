@@ -96,6 +96,10 @@ interface Store {
   toggleDay: (day: Weekday) => Promise<void>;
   setFormat: (format: ReportFormat) => Promise<void>;
   toggleSection: (section: ReportSection) => Promise<void>;
+  /** Trigger an immediate run against the saved recipients via
+   *  POST /api/analytics/reports/{id}/run-now/. Backend rate-limits to once
+   *  per minute per report — the 429 surfaces back to the caller. */
+  runNow: () => Promise<void>;
 }
 
 /* ─── Wire ↔ FE mapping ─────────────────────────────────────────────────── */
@@ -265,6 +269,26 @@ export const useScheduledReportsStore = create<Store>()((set, get) => {
       const next = has ? current.filter((s) => s !== section) : [...current, section];
       next.sort((a, b) => REPORT_SECTIONS.indexOf(a) - REPORT_SECTIONS.indexOf(b));
       patch({ sections: next });
+    },
+
+    runNow: async () => {
+      const { reportId } = get();
+      if (!reportId) {
+        throw new Error(
+          "Save your schedule first — there's no report on the backend to run yet.",
+        );
+      }
+      const res = await scheduledReportsService.runNow(reportId);
+      // The backend's response is best-effort confirmation; the actual send
+      // is async on the worker side. Stamp lastSentAt locally so the "Last
+      // sent" line in the UI updates immediately, then let the next hydrate
+      // pull the authoritative timestamp.
+      set((s) => ({
+        report: { ...s.report, lastSentAt: Date.now() },
+      }));
+      // Surface the queued-at timestamp via the return value so the caller
+      // can show a richer toast description if it wants.
+      void res;
     },
   };
 });

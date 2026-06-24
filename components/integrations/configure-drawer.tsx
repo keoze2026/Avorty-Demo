@@ -12,12 +12,11 @@
  * Footer carries a destructive Disconnect alongside Save.
  */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity as ActivityIcon,
   AlertCircle,
-  AlertTriangle,
   CheckCircle2,
   Copy,
   Loader2,
@@ -43,6 +42,11 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { friendlyErrorMessage } from "@/lib/api/errors";
+import {
+  integrationsService,
+  type IntegrationActivityEntry,
+} from "@/lib/api/services/integrations.service";
 import { formatRelativeTime } from "@/lib/format";
 import type { IntegrationApp } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
@@ -87,65 +91,6 @@ const SCOPES: Array<ScopeDef & { labelKey: string; descriptionKey: string }> = [
   { key: "members.read", label: "Read members", labelKey: "toolsUI.integrations.configure.scopeDefs.membersRead", description: "", descriptionKey: "toolsUI.integrations.configure.scopeDefs.membersReadHint", defaultOn: false },
 ];
 
-interface ActivityEntry {
-  id: string;
-  kind: "sync" | "auth" | "delivery";
-  label: string;
-  detail: string;
-  status: "ok" | "warn" | "fail";
-  at: number;
-}
-
-function activityFor(
-  app: IntegrationApp,
-  t: (k: string) => string,
-): ActivityEntry[] {
-  const now = Date.now();
-  const min = 60_000;
-  return [
-    {
-      id: "a_1",
-      kind: "sync",
-      label: t("toolsUI.integrations.configure.activity.outboundSync"),
-      detail: t("toolsUI.integrations.configure.activity.outboundDetail").replace("{name}", app.name),
-      status: "ok",
-      at: now - min * 2,
-    },
-    {
-      id: "a_2",
-      kind: "delivery",
-      label: "call.completed",
-      detail: "200 · 84ms",
-      status: "ok",
-      at: now - min * 8,
-    },
-    {
-      id: "a_3",
-      kind: "auth",
-      label: t("toolsUI.integrations.configure.activity.tokenRefresh"),
-      detail: t("toolsUI.integrations.configure.activity.tokenRefreshDetail"),
-      status: "ok",
-      at: now - min * 64,
-    },
-    {
-      id: "a_4",
-      kind: "delivery",
-      label: "buyer.capped",
-      detail: "502 · retried successfully",
-      status: "warn",
-      at: now - min * 152,
-    },
-    {
-      id: "a_5",
-      kind: "sync",
-      label: t("toolsUI.integrations.configure.activity.inboundSync"),
-      detail: t("toolsUI.integrations.configure.activity.inboundDetail"),
-      status: "ok",
-      at: now - min * 220,
-    },
-  ];
-}
-
 const STATUS_ICON = { ok: CheckCircle2, warn: AlertCircle, fail: AlertCircle } as const;
 const STATUS_TONE = {
   ok: "text-[color:var(--success)] bg-[color:var(--success)]/12",
@@ -157,7 +102,8 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
   const { t } = useTranslation();
   const open = !!app;
 
-  // Local form state — reset each time we open with a new app
+  // Local form state — hydrated from /api/integrations/{id}/config when the
+  // drawer opens for an app.
   const [token, setToken] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [events, setEvents] = useState<Set<string>>(new Set());
@@ -165,21 +111,56 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
   const [active, setActive] = useState(true);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [rotating, setRotating] = useState(false);
+  const [activity, setActivity] = useState<IntegrationActivityEntry[]>([]);
+  const [hydrating, setHydrating] = useState(false);
 
   useEffect(() => {
     if (!app) return;
-    // The previous version seeded fake `vx_${seed}_•••` token + fake base URL
-    // for every integration. Backend has no per-integration config endpoints
-    // today, so the inputs would have lied about saving. Now they start
-    // empty and are read-only until a real backend ships.
-    setToken("");
-    setBaseUrl("");
-    setEvents(new Set(EVENTS.filter((e) => e.defaultOn).map((e) => e.key)));
-    setScopes(new Set(SCOPES.filter((s) => s.defaultOn).map((s) => s.key)));
-    setActive(true);
+    let cancelled = false;
+    setHydrating(true);
+    void (async () => {
+      try {
+        const [cfg, log] = await Promise.all([
+          integrationsService.getConfig(app.id),
+          integrationsService.activity(app.id, { page: 1, pageSize: 25 }).catch(() => []),
+        ]);
+        if (cancelled) return;
+        setToken(cfg.token ?? "");
+        setBaseUrl(cfg.baseUrl ?? "");
+        // Hydrate selected events/scopes from server when present; fall back
+        // to the catalog defaults so a freshly-connected integration shows
+        // a sensible starting state.
+        setEvents(
+          new Set(cfg.events.length > 0
+            ? cfg.events
+            : EVENTS.filter((e) => e.defaultOn).map((e) => e.key)),
+        );
+        setScopes(
+          new Set(cfg.scopes.length > 0
+            ? cfg.scopes
+            : SCOPES.filter((s) => s.defaultOn).map((s) => s.key)),
+        );
+        setActive(cfg.status === "active");
+        setActivity(log);
+      } catch {
+        // Endpoint may not be wired for every integration yet — leave the
+        // form blank rather than lying with seed data.
+        if (cancelled) return;
+        setToken("");
+        setBaseUrl("");
+        setEvents(new Set(EVENTS.filter((e) => e.defaultOn).map((e) => e.key)));
+        setScopes(new Set(SCOPES.filter((s) => s.defaultOn).map((s) => s.key)));
+        setActive(true);
+        setActivity([]);
+      } finally {
+        if (!cancelled) setHydrating(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [app]);
-
-  const activity = useMemo(() => (app ? activityFor(app, t) : []), [app, t]);
 
   const toggleEvent = (k: string) =>
     setEvents((curr) => {
@@ -196,18 +177,74 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
     });
   };
 
-  // Test + Save are intentionally disabled until backend exposes per-
-  // integration config endpoints. Previously these used `setTimeout` to
-  // pretend success — actively misleading the user about persistence.
   const onTest = async () => {
-    toast.message("Per-integration config endpoints aren't shipped yet.", {
-      description: "Connect / Disconnect via the catalog already works. Detailed config will land once the backend ships the asks listed in BACKEND-ASKS.md.",
-    });
+    if (!app) return;
+    setTesting(true);
+    try {
+      const res = await integrationsService.testConnection(app.id);
+      if (res.ok) {
+        toast.success(t("toolsUI.integrations.configure.connection.toastHealthy"), {
+          description: t("toolsUI.integrations.configure.connection.toastHealthyDesc").replace(
+            "{ms}",
+            String(res.latencyMs ?? "—"),
+          ),
+        });
+      } else {
+        toast.error(res.error ?? "Connection test failed");
+      }
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Connection test failed"));
+    } finally {
+      setTesting(false);
+    }
   };
+
   const onSave = async () => {
-    toast.message("Per-integration config saves aren't shipped yet.", {
-      description: "Track progress in BACKEND-ASKS.md (Integrations group).",
-    });
+    if (!app) return;
+    setSaving(true);
+    try {
+      const required = SCOPES.filter((s) => s.required).map((s) => s.key);
+      // Force-include required scopes so a UI quirk can't accidentally drop them.
+      const scopeArr = Array.from(new Set([...required, ...Array.from(scopes)]));
+      await integrationsService.updateConfig(app.id, {
+        baseUrl: baseUrl.trim() || undefined,
+        events: Array.from(events),
+        scopes: scopeArr,
+        status: active ? "active" : "paused",
+      });
+      toast.success(t("toolsUI.integrations.configure.toastSaved").replace("{name}", app.name), {
+        description: t("toolsUI.integrations.configure.toastSavedDesc")
+          .replace("{events}", String(events.size))
+          .replace("{scopes}", String(scopeArr.length))
+          .replace(
+            "{status}",
+            active
+              ? t("toolsUI.integrations.configure.connection.active")
+              : t("toolsUI.integrations.configure.connection.paused"),
+          ),
+      });
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Couldn't save integration config"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onRotate = async () => {
+    if (!app) return;
+    setRotating(true);
+    try {
+      const { token: fresh } = await integrationsService.rotateToken(app.id);
+      setToken(fresh);
+      toast.success(t("toolsUI.integrations.configure.connection.toastRotateQueued"), {
+        description: "Old token revoked; the new one is shown above — copy it now.",
+      });
+    } catch (e) {
+      toast.error(friendlyErrorMessage(e, "Couldn't rotate token"));
+    } finally {
+      setRotating(false);
+    }
   };
 
   return (
@@ -260,26 +297,12 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6">
-                {/* Honest framing — the per-integration token, base URL,
-                    events selection, scopes, and activity log surfaces all
-                    depend on backend endpoints that aren't shipped yet.
-                    Connect / Disconnect work via the catalog already. */}
-                <div className="mb-4 flex items-start gap-2.5 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 p-3 text-xs">
-                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--warning)]" />
-                  <div className="space-y-1">
-                    <div className="font-semibold text-[color:var(--warning)]">
-                      Preview — detailed config not yet wired
-                    </div>
-                    <p className="text-muted-foreground">
-                      Token, base URL, events, permissions, and the activity
-                      log on this drawer are a UI preview. Only{" "}
-                      <span className="font-medium">Disconnect</span> (in the
-                      footer) is wired to the backend. The catalog list +
-                      Connect/Disconnect flow already works at{" "}
-                      <span className="font-mono">/integrations</span>.
-                    </p>
+                {hydrating && (
+                  <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Loading saved configuration…
                   </div>
-                </div>
+                )}
 
                 {/* Connection */}
                 <TabsContent value="connection" className="m-0 space-y-4">
@@ -307,15 +330,14 @@ export function ConfigureDrawer({ app, onOpenChange, onDisconnect }: Props) {
                         variant="outline"
                         size="icon"
                         aria-label={t("toolsUI.integrations.configure.connection.rotateTokenAria")}
-                        onClick={() =>
-                          toast.message(
-                            "Token rotation requires per-integration config backend.",
-                          )
-                        }
-                        disabled
-                        title="Available when per-integration config endpoints ship."
+                        onClick={onRotate}
+                        disabled={rotating}
                       >
-                        <RefreshCw className="h-3 w-3" />
+                        {rotating ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
                       </Button>
                     </div>
                   </Row>

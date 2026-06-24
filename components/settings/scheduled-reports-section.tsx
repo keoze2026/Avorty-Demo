@@ -10,11 +10,12 @@
 
 import * as React from "react";
 import {
-  AlertTriangle,
   Calendar,
   Clock,
   Globe2,
+  Loader2,
   Mail,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,6 +64,7 @@ export function ScheduledReportsSection() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const report = useScheduledReportsStore((s) => s.report);
+  const reportId = useScheduledReportsStore((s) => s.reportId);
   const hydrate = useScheduledReportsStore((s) => s.hydrate);
   const hydrated = useScheduledReportsStore((s) => s.hydrated);
   const setEnabled = useScheduledReportsStore((s) => s.setEnabled);
@@ -72,6 +74,8 @@ export function ScheduledReportsSection() {
   const toggleDay = useScheduledReportsStore((s) => s.toggleDay);
   const setFormat = useScheduledReportsStore((s) => s.setFormat);
   const toggleSection = useScheduledReportsStore((s) => s.toggleSection);
+  const runNow = useScheduledReportsStore((s) => s.runNow);
+  const [sending, setSending] = React.useState(false);
 
   // Hydrate the schedule from the backend once on mount. Subsequent edits
   // round-trip via the store's debounced sync.
@@ -93,6 +97,26 @@ export function ScheduledReportsSection() {
   const emailValid = /^\S+@\S+\.\S+$/.test(recipient);
   const dayValid = report.days.length > 0;
   const sectionValid = report.sections.length > 0;
+
+  const onSendNow = async () => {
+    if (!emailValid) {
+      toast.error(t("settings.scheduledReports.validationEmail"));
+      return;
+    }
+    setSending(true);
+    try {
+      await runNow();
+      toast.success(
+        t("settings.scheduledReports.testSent").replace("{email}", recipient),
+      );
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Couldn't trigger the report",
+      );
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <SectionShell
@@ -331,12 +355,11 @@ export function ScheduledReportsSection() {
               )}
             </div>
 
-            {/* Footer — last-sent meta. The "Send test now" button was
-                removed in favor of honest framing — the backend doesn't
-                expose an on-demand trigger endpoint yet, and the previous
-                button simulated success with a fake setTimeout. When the
-                backend adds POST /api/analytics/reports/{id}/run-now we'll
-                bring the button back. */}
+            {/* Footer — last-sent meta + Send-now button (POST .../run-now).
+                Disabled until the schedule has been saved to the backend
+                (`reportId` exists) so we don't try to run a report that
+                hasn't been created yet. Rate-limited to once-per-minute
+                server-side; a 429 surfaces back through the toast. */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
               <div className="text-[11px] text-muted-foreground">
                 {report.lastSentAt
@@ -346,10 +369,30 @@ export function ScheduledReportsSection() {
                     )
                   : t("settings.scheduledReports.neverSent")}
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/40 px-2 py-1 text-[11px] text-muted-foreground">
-                <AlertTriangle className="h-3 w-3 text-[color:var(--warning)]" />
-                Send-now trigger coming once backend exposes the run-now endpoint.
-              </span>
+              <Button
+                size="sm"
+                onClick={onSendNow}
+                disabled={
+                  sending || !reportId || !emailValid || !dayValid || !sectionValid
+                }
+                title={
+                  !reportId
+                    ? "Save the schedule first by enabling + entering a recipient"
+                    : undefined
+                }
+              >
+                {sending ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    {t("settings.scheduledReports.sendingTest")}
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-3.5 w-3.5" />
+                    {t("settings.scheduledReports.sendTestNow")}
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </CardContent>

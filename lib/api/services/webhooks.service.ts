@@ -152,6 +152,30 @@ export const webhooksService = {
     return http.post(`/api/webhooks/${id}/test`);
   },
 
+  /** Test an unsaved webhook configuration. Backend opens a one-off
+   *  delivery to `url` using the supplied `secret` + `headers` (if any) and
+   *  returns the result so the user can verify their endpoint accepts the
+   *  request before committing. Used by the webhook dialog's Test button
+   *  when no `id` exists yet. */
+  async testUrl(input: {
+    url: string;
+    secret?: string;
+    headers?: WebhookHeader[];
+    event?: string;
+  }): Promise<{
+    ok: boolean;
+    latencyMs?: number;
+    statusCode?: number;
+    error?: string;
+  }> {
+    return http.post<{
+      ok: boolean;
+      latencyMs?: number;
+      statusCode?: number;
+      error?: string;
+    }>("/api/webhooks/test-url", { body: input });
+  },
+
   /** Mint a fresh signing secret for an existing webhook. The returned
    *  `secret` is the only chance to capture the plaintext; subsequent GETs
    *  return it only because the backend dev confirmed they include it on

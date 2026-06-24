@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { friendlyErrorMessage } from "@/lib/api/errors";
+import { webhooksService } from "@/lib/api/services/webhooks.service";
 import { useWebhooksStore } from "@/lib/store/webhooks-store";
 import type { Webhook } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
@@ -114,24 +115,42 @@ export function WebhookDialog({ open, onOpenChange, initial, onSave }: Props) {
       toast.error(t("toolsUI.integrations.webhooks.dialog.errorInvalid"));
       return;
     }
-    // The backend's /test endpoint fires against a SAVED webhook (it looks
-    // up the row by id and re-uses its URL + secret + headers). For brand-new
-    // webhooks that haven't been saved yet we tell the user explicitly
-    // instead of pretending to test against the typed URL.
-    if (!initial?.id) {
-      toast.message("Save first to send a test event", {
-        description: "The test runs against a saved webhook id. Save your changes, then click Test from the row's menu.",
-      });
-      return;
-    }
     setTesting(true);
     try {
-      await sendTest(initial.id);
-      toast.success(t("toolsUI.integrations.webhooks.dialog.toastTestDelivered"), {
-        description: t("toolsUI.integrations.webhooks.dialog.toastTestDeliveredDesc")
-          .replace("{url}", url)
-          .replace("{ms}", "live"),
-      });
+      if (initial?.id) {
+        // Editing an existing row — exercise the saved configuration.
+        await sendTest(initial.id);
+        toast.success(t("toolsUI.integrations.webhooks.dialog.toastTestDelivered"), {
+          description: t("toolsUI.integrations.webhooks.dialog.toastTestDeliveredDesc")
+            .replace("{url}", url)
+            .replace("{ms}", "live"),
+        });
+      } else {
+        // Creating — test the in-form values directly via the dedicated
+        // test-before-save endpoint (`POST /api/webhooks/test-url`).
+        const headersToSend = headers
+          .filter((h) => h.k.trim() && h.v.trim())
+          .map((h) => ({ key: h.k.trim(), value: h.v.trim() }));
+        const res = await webhooksService.testUrl({
+          url: url.trim(),
+          secret: secret || undefined,
+          headers: headersToSend.length > 0 ? headersToSend : undefined,
+          event: "call.completed",
+        });
+        if (res.ok) {
+          toast.success(t("toolsUI.integrations.webhooks.dialog.toastTestDelivered"), {
+            description: t("toolsUI.integrations.webhooks.dialog.toastTestDeliveredDesc")
+              .replace("{url}", url)
+              .replace("{ms}", String(res.latencyMs ?? "—")),
+          });
+        } else {
+          toast.error(
+            res.error
+              ? `Test failed (${res.statusCode ?? "?"}): ${res.error}`
+              : `Test failed with status ${res.statusCode ?? "?"}`,
+          );
+        }
+      }
     } catch (e) {
       toast.error(friendlyErrorMessage(e, "Test delivery failed"));
     } finally {

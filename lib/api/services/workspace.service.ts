@@ -193,6 +193,36 @@ export const workspaceService = {
     );
     return Array.isArray(res) ? res : (res.items ?? []);
   },
+
+  /* ─── Custom workspace roles (new endpoints) ─────────────────────────── */
+
+  async listWorkspaceRoles(): Promise<WorkspaceRoleWire[]> {
+    const res = await http.get<WorkspaceRoleWire[] | { items?: WorkspaceRoleWire[] }>(
+      "/api/accounts/workspace/roles",
+    );
+    return Array.isArray(res) ? res : (res.items ?? []);
+  },
+
+  async createWorkspaceRole(input: {
+    name: string;
+    description: string;
+    capabilities: string[];
+  }): Promise<WorkspaceRoleWire> {
+    return http.post<WorkspaceRoleWire>("/api/accounts/workspace/roles", { body: input });
+  },
+
+  async updateWorkspaceRole(
+    id: string,
+    patch: { name?: string; description?: string; capabilities?: string[] },
+  ): Promise<WorkspaceRoleWire> {
+    return http.patch<WorkspaceRoleWire>(`/api/accounts/workspace/roles/${id}`, {
+      body: patch,
+    });
+  },
+
+  async deleteWorkspaceRole(id: string): Promise<void> {
+    await http.delete(`/api/accounts/workspace/roles/${id}`);
+  },
 };
 
 /* ─── Wire shapes for the activity / sessions / roles endpoints ─────────── */
@@ -224,4 +254,8 @@ export interface WorkspaceRoleWire {
   name: string;
   description: string;
   capabilities: string[];
+  /** True for the six default roles (admin / manager / agent / buyer /
+   *  publisher / viewer). Built-ins are read-only — editing or deleting
+   *  them is disallowed by the backend. */
+  isBuiltin?: boolean;
 }

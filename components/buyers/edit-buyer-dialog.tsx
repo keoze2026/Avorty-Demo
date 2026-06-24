@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -58,12 +58,15 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
     if (!buyer || !name.trim()) return;
     setSubmitting(true);
     try {
-      // Main PATCH accepts name + description + payoutAmount. `contactName`
-      // and `email` are FE-only and flagged in the dialog banner.
+      // Backend's PATCH now accepts contact name + contact email (wire
+      // field `contact_email`, FE-side `email`) alongside name + description
+      // + payoutAmount.
       await update(buyer.id, {
         name: name.trim(),
         description: description.trim() || undefined,
         bidAmount,
+        contactName: contactName.trim() || undefined,
+        email: email.trim() || undefined,
       });
       // Caps go through the dedicated cap endpoint.
       if (dailyCap !== buyer.dailyCap) {
@@ -115,16 +118,6 @@ export function EditBuyerDialog({ buyerId, onOpenChange }: EditBuyerDialogProps)
                 className="cursor-not-allowed opacity-70"
               />
             </div>
-          </div>
-          {/* Honest framing — backend's PATCH doesn't accept contactName /
-              email yet. They render so the user can still see what they
-              entered, but they won't persist. */}
-          <div className="flex items-start gap-2 rounded-md border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2.5 py-1.5 text-[11px]">
-            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-[color:var(--warning)]" />
-            <span className="text-muted-foreground">
-              Contact name + email are FE-only — backend hasn't shipped these
-              fields yet, so changes here won't survive a refresh.
-            </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">

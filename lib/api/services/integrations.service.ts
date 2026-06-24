@@ -80,6 +80,104 @@ function extractItems(raw: unknown): IntegrationWire[] {
 
 /* ─── Public service ──────────────────────────────────────────────────── */
 
+/* ─── Per-integration config ─────────────────────────────────────────────
+ * Backend ships these shapes per the latest ask. Token is masked on read;
+ * rotate returns a one-time-reveal plaintext. The activity log is its own
+ * paginated endpoint mirroring the webhook delivery log. */
+
+export type IntegrationStatus = "active" | "paused";
+
+export interface IntegrationConfig {
+  token: string | null;
+  baseUrl: string | null;
+  events: string[];
+  scopes: string[];
+  status: IntegrationStatus;
+}
+
+export interface IntegrationConfigPatch {
+  token?: string;
+  baseUrl?: string;
+  events?: string[];
+  scopes?: string[];
+  status?: IntegrationStatus;
+}
+
+export interface IntegrationActivityEntry {
+  id: string;
+  kind: "sync" | "auth" | "delivery";
+  label: string;
+  detail: string;
+  status: "ok" | "warn" | "fail";
+  at: number;
+}
+
+interface IntegrationActivityWire {
+  id: string;
+  kind: string;
+  label: string;
+  detail: string;
+  status: string;
+  at?: string | number;
+  createdAt?: string | number;
+}
+
+interface IntegrationConfigWire {
+  token: string | null;
+  baseUrl: string | null;
+  events?: string[];
+  scopes?: string[];
+  status?: string;
+}
+
+function normalizeStatus(raw: string | undefined): IntegrationStatus {
+  return raw?.toLowerCase() === "paused" ? "paused" : "active";
+}
+
+function normalizeActivityStatus(raw: string): IntegrationActivityEntry["status"] {
+  const s = raw.toLowerCase();
+  if (s === "warn" || s === "warning") return "warn";
+  if (s === "fail" || s === "failed" || s === "error") return "fail";
+  return "ok";
+}
+
+function normalizeActivityKind(raw: string): IntegrationActivityEntry["kind"] {
+  const s = raw.toLowerCase();
+  if (s === "auth") return "auth";
+  if (s === "delivery") return "delivery";
+  return "sync";
+}
+
+function toMs(v: string | number | undefined): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const t = Date.parse(v);
+    return Number.isFinite(t) ? t : Date.now();
+  }
+  return Date.now();
+}
+
+function wireToActivity(w: IntegrationActivityWire): IntegrationActivityEntry {
+  return {
+    id: w.id,
+    kind: normalizeActivityKind(w.kind),
+    label: w.label,
+    detail: w.detail,
+    status: normalizeActivityStatus(w.status),
+    at: toMs(w.at ?? w.createdAt),
+  };
+}
+
+function wireToConfig(w: IntegrationConfigWire): IntegrationConfig {
+  return {
+    token: w.token,
+    baseUrl: w.baseUrl,
+    events: Array.isArray(w.events) ? w.events : [],
+    scopes: Array.isArray(w.scopes) ? w.scopes : [],
+    status: normalizeStatus(w.status),
+  };
+}
+
 export const integrationsService = {
   async list(): Promise<IntegrationApp[]> {
     const raw = await http.get<unknown>("/api/integrations/");
@@ -98,5 +196,45 @@ export const integrationsService = {
 
   async disconnect(id: string): Promise<void> {
     await http.delete(`/api/integrations/${id}/disconnect`);
+  },
+
+  async getConfig(id: string): Promise<IntegrationConfig> {
+    return wireToConfig(
+      await http.get<IntegrationConfigWire>(`/api/integrations/${id}/config`),
+    );
+  },
+
+  async updateConfig(id: string, patch: IntegrationConfigPatch): Promise<IntegrationConfig> {
+    return wireToConfig(
+      await http.put<IntegrationConfigWire>(`/api/integrations/${id}/config`, {
+        body: patch,
+      }),
+    );
+  },
+
+  async testConnection(
+    id: string,
+  ): Promise<{ ok: boolean; latencyMs?: number; error?: string }> {
+    return http.post<{ ok: boolean; latencyMs?: number; error?: string }>(
+      `/api/integrations/${id}/test`,
+    );
+  },
+
+  /** Mint a fresh API token for this integration. Returns the plaintext
+   *  exactly once — subsequent GETs only return the masked prefix. */
+  async rotateToken(id: string): Promise<{ token: string }> {
+    return http.post<{ token: string }>(`/api/integrations/${id}/rotate-token`);
+  },
+
+  async activity(
+    id: string,
+    query: { page?: number; pageSize?: number } = {},
+  ): Promise<IntegrationActivityEntry[]> {
+    const raw = await http.get<{ items?: IntegrationActivityWire[] } | IntegrationActivityWire[]>(
+      `/api/integrations/${id}/activity`,
+      { query },
+    );
+    const items = Array.isArray(raw) ? raw : (raw.items ?? []);
+    return items.map(wireToActivity);
   },
 };

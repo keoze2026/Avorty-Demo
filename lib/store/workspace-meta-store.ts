@@ -38,6 +38,10 @@ export interface WorkspaceRole {
   name: string;
   description: string;
   capabilities: string[];
+  /** Backend `is_builtin` — true for the six baked-in roles (admin /
+   *  manager / agent / buyer / publisher / viewer). Built-ins are
+   *  read-only on the workspace-roles endpoint. */
+  isBuiltin: boolean;
 }
 
 interface WorkspaceMetaState {
@@ -153,6 +157,14 @@ function wireToRole(w: WorkspaceRoleWire): WorkspaceRole {
     name: w.name,
     description: w.description,
     capabilities: Array.isArray(w.capabilities) ? w.capabilities : [],
+    // Heuristic fallback for older deployments that don't ship the flag —
+    // anything whose id matches a baked-in slug is a built-in.
+    isBuiltin:
+      typeof w.isBuiltin === "boolean"
+        ? w.isBuiltin
+        : ["admin", "manager", "agent", "buyer", "publisher", "viewer"].includes(
+            w.id,
+          ),
   };
 }
 
@@ -172,7 +184,11 @@ export const useWorkspaceMetaStore = create<WorkspaceMetaState>()((set, get) => 
       const [activityPage, sessionsRes, rolesRes] = await Promise.all([
         workspaceService.listActivity({ page: 1, pageSize: 100 }).catch(() => null),
         workspaceService.listSessions().catch(() => [] as WorkspaceSessionWire[]),
-        workspaceService.listRoles().catch(() => [] as WorkspaceRoleWire[]),
+        // Workspace-roles endpoint returns built-in + custom roles; fall back
+        // to the legacy catalog-only endpoint for older deployments.
+        workspaceService
+          .listWorkspaceRoles()
+          .catch(() => workspaceService.listRoles().catch(() => [] as WorkspaceRoleWire[])),
       ]);
       set({
         activity: (activityPage?.items ?? []).map(wireToActivity),
