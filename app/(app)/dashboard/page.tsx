@@ -21,14 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useCallsStore } from "@/lib/store/calls-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 const ALL_DEST = "all";
-
-// Buyer lookup for nicer destination-dropdown labels.
-const BUYER_BY_ID = new Map(MOCK_BUYERS.map((b) => [b.id, b]));
 
 export default function DashboardPage() {
   const { t } = useTranslation();
@@ -37,6 +34,9 @@ export default function DashboardPage() {
   // chart components still aggregate client-side off this list, so we pull a
   // generous slice (200 by default; tune via fetchRecent) at app mount.
   const recentCalls = useCallsStore((s) => s.recent);
+  // Buyers (live) — for the destination-dropdown label "buyer name" column.
+  const buyers = useBuyersStore((s) => s.buyers);
+  const buyerById = useMemo(() => new Map(buyers.map((b) => [b.id, b])), [buyers]);
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
 
@@ -84,7 +84,7 @@ export default function DashboardPage() {
               <SelectContent align="end" className="max-h-80">
                 <SelectItem value={ALL_DEST}>{t("dashboard.allDestinations")}</SelectItem>
                 {destinations.map((d) => {
-                  const buyer = BUYER_BY_ID.get(d.buyerId);
+                  const buyer = buyerById.get(d.buyerId);
                   const calls = callsTodayByTfn.get(d.tfn) ?? 0;
                   return (
                     <SelectItem key={d.id} value={d.tfn}>
@@ -190,7 +190,10 @@ function buildDestinationExportRows(
     }
   }
 
-  const buyerById = new Map(MOCK_BUYERS.map((b) => [b.id, b]));
+  // Buyers are pulled non-hook from the store since this runs at click time.
+  const buyerById = new Map(
+    useBuyersStore.getState().buyers.map((b) => [b.id, b]),
+  );
 
   return destinations
     .filter((d) => !filter || d.tfn === filter)

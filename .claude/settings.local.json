@@ -3,7 +3,9 @@
     "allow": [
       "PowerShell(node node_modules/next/dist/bin/next build 2>&1)",
       "Bash(node node_modules/next/dist/bin/next build)",
-      "Bash(pnpm exec *)"
+      "Bash(pnpm exec *)",
+      "Bash(xargs grep -l \"coming soon\\\\|not implemented\\\\|todo\\\\|phase\" -i)",
+      "Bash(wait bwnjtlwp8 *)"
     ]
   }
 }

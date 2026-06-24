@@ -1,51 +1,97 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Bell, Mail, MessageSquare, Smartphone } from "lucide-react";
+import { toast } from "sonner";
 
 import { SectionShell } from "./profile-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/hooks/use-translation";
-import { MOCK_NOTIFICATIONS } from "@/lib/mock/settings";
+import { useAuthStore } from "@/lib/store/auth-store";
+import {
+  type NotificationChannel,
+  useNotificationsRulesStore,
+} from "@/lib/store/notifications-rules-store";
 
-/** Maps the mock event keys to their workspaceUI translation paths. */
-const EVENT_KEYS: Record<string, { label: string; desc: string }> = {
-  "call.completed": {
-    label: "workspaceUI.notifications.events.callCompleted",
-    desc: "workspaceUI.notifications.events.callCompletedDesc",
+/** Canonical event catalog the settings UI surfaces. The backend accepts any
+ *  event string; this list is what the user can toggle via this screen. */
+const EVENT_CATALOG: Array<{
+  key: string;
+  fallbackLabel: string;
+  fallbackDesc: string;
+  labelKey: string;
+  descKey: string;
+}> = [
+  {
+    key: "call.completed",
+    fallbackLabel: "Call completed",
+    fallbackDesc: "When a call settles and pays out.",
+    labelKey: "workspaceUI.notifications.events.callCompleted",
+    descKey: "workspaceUI.notifications.events.callCompletedDesc",
   },
-  "buyer.capped": {
-    label: "workspaceUI.notifications.events.buyerCapped",
-    desc: "workspaceUI.notifications.events.buyerCappedDesc",
+  {
+    key: "buyer.capped",
+    fallbackLabel: "Buyer reached cap",
+    fallbackDesc: "When a buyer hits their daily / monthly cap.",
+    labelKey: "workspaceUI.notifications.events.buyerCapped",
+    descKey: "workspaceUI.notifications.events.buyerCappedDesc",
   },
-  "publisher.spike": {
-    label: "workspaceUI.notifications.events.publisherSpike",
-    desc: "workspaceUI.notifications.events.publisherSpikeDesc",
+  {
+    key: "publisher.spike",
+    fallbackLabel: "Publisher traffic spike",
+    fallbackDesc: "Volume up >50% vs trailing 24h average.",
+    labelKey: "workspaceUI.notifications.events.publisherSpike",
+    descKey: "workspaceUI.notifications.events.publisherSpikeDesc",
   },
-  "webhook.failing": {
-    label: "workspaceUI.notifications.events.webhookFailing",
-    desc: "workspaceUI.notifications.events.webhookFailingDesc",
+  {
+    key: "webhook.failing",
+    fallbackLabel: "Webhook failing",
+    fallbackDesc: "5+ consecutive delivery failures.",
+    labelKey: "workspaceUI.notifications.events.webhookFailing",
+    descKey: "workspaceUI.notifications.events.webhookFailingDesc",
   },
-  "billing.invoice": {
-    label: "workspaceUI.notifications.events.billingInvoice",
-    desc: "workspaceUI.notifications.events.billingInvoiceDesc",
+  {
+    key: "billing.invoice",
+    fallbackLabel: "Invoice ready",
+    fallbackDesc: "Monthly invoice or receipt.",
+    labelKey: "workspaceUI.notifications.events.billingInvoice",
+    descKey: "workspaceUI.notifications.events.billingInvoiceDesc",
   },
-  "ai.recommendation": {
-    label: "workspaceUI.notifications.events.aiRecommendation",
-    desc: "workspaceUI.notifications.events.aiRecommendationDesc",
+  {
+    key: "ai.recommendation",
+    fallbackLabel: "AI recommendation",
+    fallbackDesc: "New optimization suggestion.",
+    labelKey: "workspaceUI.notifications.events.aiRecommendation",
+    descKey: "workspaceUI.notifications.events.aiRecommendationDesc",
   },
-};
+];
 
 export function NotificationsSection() {
   const { t } = useTranslation();
-  const [prefs, setPrefs] = useState(MOCK_NOTIFICATIONS);
+  const rules = useNotificationsRulesStore((s) => s.rules);
+  const setEnabled = useNotificationsRulesStore((s) => s.setEnabled);
+  const userEmail = useAuthStore((s) => s.user?.email ?? "");
 
-  const toggle = (key: string, channel: "email" | "inApp" | "sms") => {
-    setPrefs((ps) =>
-      ps.map((p) => (p.key === key ? { ...p, [channel]: !p[channel] } : p)),
-    );
+  // Subscribing to `rules` re-renders the section whenever any toggle flips
+  // (locally or via another tab). We compute isActive per render from the
+  // current rules array — cheap, since there are at most a few dozen rules.
+  const isOn = (event: string, channel: NotificationChannel) => {
+    const rule = rules.find((r) => r.event === event && r.channel === channel);
+    return !!rule && rule.isActive;
+  };
+
+  const toggle = async (event: string, channel: NotificationChannel) => {
+    if (!userEmail) {
+      toast.error("Sign-in required to update notification preferences.");
+      return;
+    }
+    const next = !isOn(event, channel);
+    try {
+      await setEnabled(event, channel, next, userEmail);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save preference");
+    }
   };
 
   return (
@@ -63,10 +109,15 @@ export function NotificationsSection() {
         </div>
 
         <CardContent className="divide-y divide-border/60 p-0">
-          {prefs.map((p, i) => {
-            const keys = EVENT_KEYS[p.key];
-            const label = keys ? t(keys.label) : p.label;
-            const description = keys ? t(keys.desc) : p.description;
+          {EVENT_CATALOG.map((p, i) => {
+            // Use the translated label if it resolves to something other than
+            // the key itself (i.e. the key exists in the locale file); fall
+            // back to the canonical English label so adding a new event
+            // doesn't require an i18n PR before it renders.
+            const labelT = t(p.labelKey);
+            const descT = t(p.descKey);
+            const label = labelT === p.labelKey ? p.fallbackLabel : labelT;
+            const description = descT === p.descKey ? p.fallbackDesc : descT;
             return (
               <motion.div
                 key={p.key}
@@ -82,9 +133,9 @@ export function NotificationsSection() {
                   </div>
                   <div className="mt-0.5 text-[11px] text-muted-foreground">{description}</div>
                 </div>
-                <Cell label={t("workspaceUI.notifications.columnInApp")} icon={MessageSquare} on={p.inApp} onToggle={() => toggle(p.key, "inApp")} />
-                <Cell label={t("workspaceUI.notifications.columnEmail")} icon={Mail} on={p.email} onToggle={() => toggle(p.key, "email")} />
-                <Cell label={t("workspaceUI.notifications.columnSms")} icon={Smartphone} on={p.sms} onToggle={() => toggle(p.key, "sms")} />
+                <Cell label={t("workspaceUI.notifications.columnInApp")} icon={MessageSquare} on={isOn(p.key, "in_app")} onToggle={() => toggle(p.key, "in_app")} />
+                <Cell label={t("workspaceUI.notifications.columnEmail")} icon={Mail} on={isOn(p.key, "email")} onToggle={() => toggle(p.key, "email")} />
+                <Cell label={t("workspaceUI.notifications.columnSms")} icon={Smartphone} on={isOn(p.key, "sms")} onToggle={() => toggle(p.key, "sms")} />
               </motion.div>
             );
           })}

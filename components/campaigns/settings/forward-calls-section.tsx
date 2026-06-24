@@ -36,7 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { formatCurrency, toE164 } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -117,9 +117,11 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
 
   const allDestinations = useDestinationsStore((s) => s.destinations);
   const setEnabled = useDestinationsStore((s) => s.setEnabled);
+  const buyers = useBuyersStore((s) => s.buyers);
+  const buyerById = useMemo(() => new Map(buyers.map((b) => [b.id, b])), [buyers]);
 
   // Show every active destination — a real router pick is determined by the
-  // campaignâ†”buyerâ†”destination chain; for this UI we list all enabled ones
+  // campaign↔buyer↔destination chain; for this UI we list all enabled ones
   // so the user can reorder them by priority/weight.
   const destinations = useMemo(
     () => (allDestinations ?? []).filter((d) => d.enabled),
@@ -155,9 +157,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
   const editingDest = editingId
     ? destinations.find((d) => d.id === editingId) ?? null
     : null;
-  const editingBuyer = editingDest
-    ? MOCK_BUYERS.find((b) => b.id === editingDest.buyerId)
-    : undefined;
+  const editingBuyer = editingDest ? buyerById.get(editingDest.buyerId) : undefined;
 
   const openEdit = (id: string) => setEditingId(id);
   const closeEdit = () => setEditingId(null);
@@ -262,7 +262,7 @@ export function ForwardCallsSection({ campaignId }: ForwardCallsSectionProps) {
                 // Preserve the absolute row index for the default-priority
                 // suggestion so paging doesn't reset the column to 1 on page 2.
                 const i = pageStart + localIndex;
-                const buyer = MOCK_BUYERS.find((b) => b.id === d.buyerId);
+                const buyer = buyerById.get(d.buyerId);
                 return (
                   <TableRow key={d.id}>
                     <TableCell className="pl-6">

@@ -18,8 +18,10 @@ import { useDestinationsStore } from "@/lib/store/destinations-store";
 import { useNumbersStore } from "@/lib/store/numbers-store";
 import { usePublishersStore } from "@/lib/store/publishers-store";
 import { useRoutingStore } from "@/lib/store/routing-store";
+import { useNotificationsRulesStore } from "@/lib/store/notifications-rules-store";
 import { useTcpaShieldStore } from "@/lib/store/tcpa-shield-store";
 import { useVoipShieldStore } from "@/lib/store/voip-shield-store";
+import { useWebhooksStore } from "@/lib/store/webhooks-store";
 import { useAuthStore } from "@/lib/store/auth-store";
 
 export function StoreHydrator() {
@@ -47,6 +49,10 @@ export function StoreHydrator() {
     void useTcpaShieldStore.getState().fetch();
     // Routing plans (visual graphs ↔ flat backend rules via routing-bridge).
     void useRoutingStore.getState().fetch();
+    // Webhooks (Integrations → Webhooks section).
+    void useWebhooksStore.getState().fetch();
+    // Notification rules (Settings → Notifications preferences matrix).
+    void useNotificationsRulesStore.getState().fetch();
   }, [isAuthed]);
 
   return null;

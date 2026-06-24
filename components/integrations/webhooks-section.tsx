@@ -4,9 +4,13 @@
  * Webhook endpoints + their last-24h delivery log.
  * Each webhook gets its own card with the URL, event list, status, success rate,
  * and a peek at recent deliveries.
+ *
+ * Backed by `useWebhooksStore` (which calls /api/webhooks/*). The store hydrates
+ * on app boot via StoreHydrator; this component is read-only on hydration and
+ * goes through the store for every create/edit/delete/test action.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, History, Loader2, MoreVertical, Plug2, Plus, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -23,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatPercent, formatRelativeTime } from "@/lib/format";
-import { MOCK_DELIVERIES, MOCK_WEBHOOKS } from "@/lib/mock/integrations";
+import { useWebhooksStore } from "@/lib/store/webhooks-store";
 import type { Webhook, WebhookStatus } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
@@ -42,14 +46,31 @@ const STATUS_LABEL_KEYS: Record<WebhookStatus, string> = {
 
 export function WebhooksSection() {
   const { t } = useTranslation();
-  const [hooks, setHooks] = useState<Webhook[]>(MOCK_WEBHOOKS);
+  const hooks = useWebhooksStore((s) => s.webhooks);
+  const createHook = useWebhooksStore((s) => s.create);
+  const updateHook = useWebhooksStore((s) => s.update);
+  const removeHook = useWebhooksStore((s) => s.remove);
+  const sendTest = useWebhooksStore((s) => s.sendTest);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Webhook | null>(null);
   const [deliveriesFor, setDeliveriesFor] = useState<Webhook | null>(null);
 
-  const remove = (id: string) => {
-    setHooks((h) => h.filter((x) => x.id !== id));
-    toast.success(t("toolsUI.integrations.webhooks.toastRemoved"));
+  const remove = async (id: string) => {
+    try {
+      await removeHook(id);
+      toast.success(t("toolsUI.integrations.webhooks.toastRemoved"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't remove webhook");
+    }
+  };
+
+  const onSendTest = async (id: string) => {
+    try {
+      await sendTest(id);
+      toast.success(t("toolsUI.integrations.webhooks.toastTestSent"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Test delivery failed");
+    }
   };
 
   const openCreate = () => {
@@ -61,30 +82,27 @@ export function WebhooksSection() {
     setEditorOpen(true);
   };
 
-  const onSave = (draft: WebhookDraft, originalId?: string) => {
-    if (originalId) {
-      setHooks((hs) =>
-        hs.map((h) =>
-          h.id === originalId
-            ? { ...h, name: draft.name, url: draft.url, events: draft.events, status: "active" as const }
-            : h,
-        ),
-      );
-    } else {
-      const id = `wh_${Math.random().toString(36).slice(2, 8)}`;
-      setHooks((hs) => [
-        {
-          id,
+  // `secret` and `headers` from the draft are not yet wired to the backend
+  // (no fields on the wire). They survive in the dialog for the visit but
+  // won't be persisted — covered by the backend ask list. Name + URL +
+  // events all round-trip correctly.
+  const onSave = async (draft: WebhookDraft, originalId?: string) => {
+    try {
+      if (originalId) {
+        await updateHook(originalId, {
           name: draft.name,
           url: draft.url,
           events: draft.events,
-          status: "active",
-          createdAt: Date.now(),
-          lastDeliveryAt: undefined,
-          successRate24h: 1,
-        },
-        ...hs,
-      ]);
+        });
+      } else {
+        await createHook({
+          name: draft.name,
+          url: draft.url,
+          events: draft.events,
+        });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save webhook");
     }
   };
 
@@ -149,7 +167,7 @@ export function WebhooksSection() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => toast.success(t("toolsUI.integrations.webhooks.toastTestSent"))}>
+                      <DropdownMenuItem onSelect={() => onSendTest(h.id)}>
                         {t("toolsUI.integrations.webhooks.sendTest")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => setDeliveriesFor(h)}>
@@ -229,8 +247,13 @@ const DELIVERY_ICON = {
 
 function DeliveryLog() {
   const { t } = useTranslation();
-  const deliveries = MOCK_DELIVERIES.slice(0, 14);
-  const hooksById = new Map(MOCK_WEBHOOKS.map((h) => [h.id, h]));
+  const allDeliveries = useWebhooksStore((s) => s.deliveries);
+  const allHooks = useWebhooksStore((s) => s.webhooks);
+  const deliveries = useMemo(() => allDeliveries.slice(0, 14), [allDeliveries]);
+  const hooksById = useMemo(
+    () => new Map(allHooks.map((h) => [h.id, h])),
+    [allHooks],
+  );
 
   return (
     <Card className="mt-3">

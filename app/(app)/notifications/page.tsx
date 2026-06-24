@@ -8,7 +8,13 @@ import { NotificationRow } from "@/components/app-shell/notification-row";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MOCK_NOTIFICATIONS, type NotificationItem } from "@/lib/mock/notifications";
+import type { NotificationItem } from "@/lib/mock/notifications";
+import {
+  anomalyToNotification,
+  recommendationToNotification,
+} from "@/lib/notifications/mappers";
+import { useAiInsightsStore } from "@/lib/store/ai-insights-store";
+import { useNotificationsReadStore } from "@/lib/store/notifications-read-store";
 import { cn } from "@/lib/utils";
 
 type TabId = "all" | "critical" | "insights" | "read";
@@ -22,7 +28,26 @@ const TABS: Array<{ id: TabId; label: string }> = [
 
 export default function NotificationsPage() {
   const [tab, setTab] = useState<TabId>("all");
-  const [items, setItems] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+
+  // Live data — anomalies (alerts) + recommendations (insights) from the AI
+  // store, hydrated once on app boot by StoreHydrator. The backend has no
+  // dedicated alert-feed endpoint; we synthesize one from these two sources.
+  const anomalies = useAiInsightsStore((s) => s.anomalies);
+  const recommendations = useAiInsightsStore((s) => s.recommendations);
+
+  // Read-state is purely client-side (backend rows have no per-user read
+  // flag). Persisted to localStorage so flips survive refresh and stay in
+  // sync with the topbar dropdown.
+  const readIds = useNotificationsReadStore((s) => s.readIds);
+  const markAllReadStore = useNotificationsReadStore((s) => s.markAllRead);
+
+  const items: NotificationItem[] = useMemo(() => {
+    const merged: NotificationItem[] = [
+      ...anomalies.map(anomalyToNotification),
+      ...recommendations.map(recommendationToNotification),
+    ];
+    return merged.map((n) => ({ ...n, read: !!readIds[n.id] }));
+  }, [anomalies, recommendations, readIds]);
 
   const unread = useMemo(() => items.filter((n) => !n.read).length, [items]);
 
@@ -48,7 +73,7 @@ export default function NotificationsPage() {
   );
 
   const markAllRead = () => {
-    setItems((arr) => arr.map((n) => ({ ...n, read: true })));
+    markAllReadStore(items.map((n) => n.id));
     toast.success("All notifications marked as read");
   };
 

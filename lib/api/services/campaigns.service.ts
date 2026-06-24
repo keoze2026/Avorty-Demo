@@ -316,9 +316,4 @@ export const campaignsService = {
     });
   },
 
-  async updateSchedules(id: string, schedule: Campaign["schedule"]): Promise<void> {
-    await http.put(`/api/campaigns/${id}/schedules`, {
-      body: { schedules: schedulesToWire(schedule) },
-    });
-  },
 };

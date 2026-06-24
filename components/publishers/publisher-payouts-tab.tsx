@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, FileDown, Loader2, Receipt } from "lucide-react";
 
@@ -28,8 +29,15 @@ const STATUS_BADGE: Record<PayoutStatus, { variant: React.ComponentProps<typeof 
 
 export function PublisherPayoutsTab({ publisherId }: { publisherId: string }) {
   const { t } = useTranslation();
+  const fetchPayouts = usePublishersStore((s) => s.fetchPayouts);
   const payouts = usePublishersStore((s) => s.payoutsFor(publisherId));
   const publisher = usePublishersStore((s) => s.getById(publisherId));
+
+  // Lazy-load payouts the first time this tab opens for a given publisher.
+  // The store caches by id, so revisiting is instant.
+  useEffect(() => {
+    void fetchPayouts(publisherId);
+  }, [publisherId, fetchPayouts]);
 
   if (!publisher) return null;
 

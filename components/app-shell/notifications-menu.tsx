@@ -14,42 +14,14 @@ import {
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useAiInsightsStore } from "@/lib/store/ai-insights-store";
+import { useNotificationsReadStore } from "@/lib/store/notifications-read-store";
 import {
   ALERT_KIND_DOT,
   type AlertKind,
   type NotificationItem,
 } from "@/lib/mock/notifications";
-import { formatRelativeTime } from "@/lib/format";
-import type { Anomaly } from "@/lib/types";
+import { anomalyToNotification } from "@/lib/notifications/mappers";
 import { cn } from "@/lib/utils";
-
-/** Map an AI anomaly to the dropdown's NotificationItem shape so the UI
- *  doesn't have to change. Severity comes from the anomaly itself; alertKind
- *  is derived from the metric name. */
-function anomalyToNotification(a: Anomaly): NotificationItem {
-  const sev: NotificationItem["severity"] =
-    a.severity === "critical" ? "critical" : a.severity === "warning" ? "warn" : "insight";
-  const metric = (a.delta.metric ?? "").toLowerCase();
-  const alertKind: AlertKind =
-    metric.includes("miss") || metric.includes("no-answer")
-      ? "missed"
-      : metric.includes("cap")
-        ? "cap-over"
-        : metric.includes("aht") || metric.includes("duration")
-          ? "low-aht"
-          : "other";
-  return {
-    id: a.id,
-    severity: sev,
-    alertKind,
-    title: a.title,
-    body: a.body,
-    time: formatRelativeTime(a.detectedAt),
-    delta: a.delta.pct,
-    read: false,
-    source: a.scope.name,
-  };
-}
 
 type TabId = "all" | "critical" | "insights";
 type AlertFilter = "all" | AlertKind;
@@ -63,16 +35,18 @@ export function NotificationsMenu() {
   // Sub-filter for the Alerts tab — split alerts by missed / cap / AHT.
   const [alertFilter, setAlertFilter] = React.useState<AlertFilter>("all");
   // Live anomalies from /api/ai/anomalies become the topbar dropdown's source.
-  // Each anomaly is mapped to the NotificationItem shape the rest of this
-  // component already consumes — read-state is tracked locally since the
-  // anomalies endpoint doesn't have per-row read tracking yet.
+  // Each anomaly is mapped to the NotificationItem shape via the shared
+  // mappers module (same code path as the /notifications page). Read-state
+  // lives in a tiny persisted store so flips survive refresh and stay in
+  // sync between the dropdown and the full page.
   const anomalies = useAiInsightsStore((s) => s.anomalies);
-  const [readIds, setReadIds] = React.useState<Set<string>>(() => new Set());
+  const readIds = useNotificationsReadStore((s) => s.readIds);
+  const markAllReadStore = useNotificationsReadStore((s) => s.markAllRead);
   const items: NotificationItem[] = React.useMemo(
     () =>
       anomalies.map((a) => ({
         ...anomalyToNotification(a),
-        read: readIds.has(a.id),
+        read: !!readIds[a.id],
       })),
     [anomalies, readIds],
   );
@@ -137,7 +111,7 @@ export function NotificationsMenu() {
     })
     .slice(0, POPUP_LIMIT);
 
-  const markAllRead = () => setReadIds(new Set(anomalies.map((a) => a.id)));
+  const markAllRead = () => markAllReadStore(anomalies.map((a) => a.id));
 
   return (
     <DropdownMenu>

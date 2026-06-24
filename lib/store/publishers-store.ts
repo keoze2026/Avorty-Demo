@@ -1,26 +1,32 @@
 /**
  * Publishers store — backed by /api/publishers/*.
- * Mirrors the buyers + campaigns store pattern. Payout history stays
- * client-side until a /api/publishers/{id}/payouts endpoint is added.
+ *
+ * Mirrors the buyers + campaigns store pattern. Payout history is fetched
+ * per-publisher on demand (lazy, on detail-tab mount) and cached under
+ * `payoutsByPublisher[id]` so revisiting the tab is instant. The list/CRUD
+ * endpoints hydrate at app boot via StoreHydrator.
  */
 
 "use client";
 
 import { create } from "zustand";
 
-import { publishersService } from "@/lib/api/services/publishers.service";
-import { MOCK_PAYOUTS } from "@/lib/mock/publishers";
-import type { PayoutRecord, Publisher, PublisherStatus } from "@/lib/types";
+import {
+  publishersService,
+  type PayoutWire,
+} from "@/lib/api/services/publishers.service";
+import type { PayoutRecord, PayoutStatus, Publisher, PublisherStatus } from "@/lib/types";
 
 interface PublishersState {
   publishers: Publisher[];
-  /** Payout history is not yet exposed by the backend — kept as demo data. */
-  payouts: PayoutRecord[];
+  /** Per-publisher payout cache. Empty until `fetchPayouts(id)` resolves. */
+  payoutsByPublisher: Record<string, PayoutRecord[]>;
   loading: boolean;
   error: string | null;
   hydrated: boolean;
 
   fetch: () => Promise<void>;
+  fetchPayouts: (publisherId: string) => Promise<void>;
   getById: (id: string) => Publisher | undefined;
   payoutsFor: (publisherId: string) => PayoutRecord[];
   add: (input: Omit<Publisher, "id" | "createdAt">) => Promise<Publisher>;
@@ -29,9 +35,55 @@ interface PublishersState {
   setStatus: (id: string, status: PublisherStatus) => Promise<void>;
 }
 
+/* ─── Wire ↔ FE payout mapping ─────────────────────────────────────────── */
+
+function toNum(v: string | number | undefined, fallback = 0): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  return fallback;
+}
+
+function toTs(v: string | null | undefined): number | undefined {
+  if (!v) return undefined;
+  const t = Date.parse(v);
+  return Number.isFinite(t) ? t : undefined;
+}
+
+function normalizeStatus(raw: string | undefined): PayoutStatus {
+  const s = (raw ?? "").toLowerCase();
+  if (s === "paid" || s === "pending" || s === "processing" || s === "failed") return s;
+  return "pending";
+}
+
+function wireToPayout(w: PayoutWire, publisherId: string, idx: number): PayoutRecord {
+  const period =
+    w.period && w.period.trim()
+      ? w.period
+      : w.periodStart && w.periodEnd
+        ? `${w.periodStart} → ${w.periodEnd}`
+        : "—";
+  return {
+    // Synthesize a stable id when the backend omits one so React keys
+    // don't collide across the rendered list.
+    id: w.id ?? `${publisherId}:${idx}`,
+    publisherId,
+    amount: toNum(w.amount),
+    callsCount: w.callsCount ?? 0,
+    status: normalizeStatus(w.status),
+    period,
+    paidAt: toTs(w.paidAt),
+    scheduledFor: toTs(w.scheduledFor) ?? toTs(w.createdAt) ?? Date.now(),
+  };
+}
+
+/* ─── Store ─────────────────────────────────────────────────────────────── */
+
 export const usePublishersStore = create<PublishersState>()((set, get) => ({
   publishers: [],
-  payouts: MOCK_PAYOUTS,
+  payoutsByPublisher: {},
   loading: false,
   error: null,
   hydrated: false,
@@ -46,12 +98,24 @@ export const usePublishersStore = create<PublishersState>()((set, get) => ({
     }
   },
 
+  fetchPayouts: async (publisherId) => {
+    try {
+      const rows = await publishersService.payouts(publisherId);
+      const mapped = rows.map((w, i) => wireToPayout(w, publisherId, i));
+      set((s) => ({
+        payoutsByPublisher: { ...s.payoutsByPublisher, [publisherId]: mapped },
+      }));
+    } catch (e) {
+      set({ error: messageFromError(e) });
+    }
+  },
+
   getById: (id) => get().publishers.find((p) => p.id === id),
 
   payoutsFor: (publisherId) =>
-    get()
-      .payouts.filter((r) => r.publisherId === publisherId)
-      .sort((a, b) => b.scheduledFor - a.scheduledFor),
+    (get().payoutsByPublisher[publisherId] ?? []).slice().sort(
+      (a, b) => b.scheduledFor - a.scheduledFor,
+    ),
 
   add: async (input) => {
     const created = await publishersService.create(input);
