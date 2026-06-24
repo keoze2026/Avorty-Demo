@@ -18,18 +18,13 @@ import { motion } from "framer-motion";
 import {
   ArrowDownToLine,
   CheckCircle2,
-  ChevronRight,
-  Plus,
-  RefreshCw,
   Send,
-  Settings2,
   Wallet,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { MOCK_CAPITALIST_ACCOUNT } from "@/lib/mock/billing";
@@ -100,27 +95,12 @@ export function PaymentIntegrationsCard() {
       t("toolsUI.billing.integrations.toast.payout").replace("{currency}", currency),
     );
 
-  const onSync = () =>
-    toast.success(t("toolsUI.billing.integrations.toast.synced"));
-
-  const onAddProvider = () =>
-    toast.info(t("toolsUI.billing.integrations.toast.addProvider"));
-
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
+      <CardHeader className="pb-2">
         <CardTitle className="text-base">
           {t("toolsUI.billing.integrations.title")}
         </CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSync}
-          aria-label={t("toolsUI.billing.integrations.syncAria")}
-        >
-          <RefreshCw className="h-3 w-3" />
-          {t("toolsUI.billing.integrations.sync")}
-        </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -253,28 +233,6 @@ export function PaymentIntegrationsCard() {
         </div>
         )}
 
-        {/* ─── Provider footer — manage + add another ──────────────── */}
-        <div className="flex items-center justify-between border-t border-border/40 pt-3">
-          <button
-            type="button"
-            onClick={onAddProvider}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t("toolsUI.billing.integrations.addProvider")}
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              toast.info(t("toolsUI.billing.integrations.toast.manage"))
-            }
-            className="inline-flex items-center gap-1 text-xs font-medium text-accent transition-colors hover:underline"
-          >
-            <Settings2 className="h-3.5 w-3.5" />
-            {t("toolsUI.billing.integrations.manage")}
-            <ChevronRight className="h-3 w-3" />
-          </button>
-        </div>
       </CardContent>
     </Card>
   );

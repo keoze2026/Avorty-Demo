@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/format";
 import { billingService, type Invoice } from "@/lib/api/services/billing.service";
+import { dateStamped, downloadRows, type ExportColumn } from "@/lib/export";
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { InvoiceStatus } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 
@@ -79,9 +81,30 @@ export function InvoicesTable() {
           <FileText className="h-4 w-4 text-accent" />
           {t("toolsUI.billing.invoices.title")}
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={() => toast.success(t("toolsUI.billing.invoices.toastExported"))}>
-          <Download className="h-3 w-3" /> {t("toolsUI.billing.invoices.exportAll")}
-        </Button>
+        <ExportMenu
+          onExport={async (format) => {
+            try {
+              // Pull a large page so the export reflects every invoice the
+              // backend will hand back, not just the page currently rendered.
+              const all = await billingService.invoices({ page: 1, pageSize: 1000 });
+              const rows = all.items;
+              downloadRows(
+                format,
+                INVOICE_EXPORT_COLUMNS,
+                rows,
+                dateStamped("vortyx-invoices"),
+                "Invoices",
+              );
+              toast.success(t("toolsUI.billing.invoices.toastExported"));
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Export failed");
+            }
+          }}
+        >
+          <Button variant="outline" size="sm">
+            <Download className="h-3 w-3" /> {t("toolsUI.billing.invoices.exportAll")}
+          </Button>
+        </ExportMenu>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
@@ -157,3 +180,14 @@ export function InvoicesTable() {
     </Card>
   );
 }
+
+const INVOICE_EXPORT_COLUMNS: ExportColumn<Invoice>[] = [
+  { label: "Invoice", value: (r) => r.invoiceNumber },
+  { label: "Period start", value: (r) => r.periodStart },
+  { label: "Period end", value: (r) => r.periodEnd },
+  { label: "Calls", value: (r) => r.totalCalls },
+  { label: "Revenue", value: (r) => Number(r.totalRevenue.toFixed(2)) },
+  { label: "Payout", value: (r) => Number(r.totalPayout.toFixed(2)) },
+  { label: "Amount", value: (r) => Number(r.totalAmount.toFixed(2)) },
+  { label: "Status", value: (r) => r.status ?? "open" },
+];

@@ -1,15 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, MapPin, Phone, PhoneIncoming, PhoneMissed, XCircle } from "lucide-react";
 
 import { CallWaveform } from "@/components/live/call-waveform";
 import { Badge } from "@/components/ui/badge";
-import { useNow } from "@/hooks/use-mock-socket";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatTimer, toE164 } from "@/lib/format";
 import type { Call, CallStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+function useNow(intervalMs: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
 
 const STATUS_META: Record<
   CallStatus,

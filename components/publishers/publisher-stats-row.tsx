@@ -5,7 +5,6 @@ import { DollarSign, Hash, PhoneCall, Receipt, TrendingUp } from "lucide-react";
 import { KpiTile } from "@/components/dashboard/kpi-tile";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatCompact, formatCurrency, formatPercent } from "@/lib/format";
-import { makeSparkline } from "@/lib/mock/timeseries";
 import type { Publisher } from "@/lib/types";
 
 export function PublisherStatsRow({ publisher }: { publisher: Publisher }) {
@@ -18,7 +17,6 @@ export function PublisherStatsRow({ publisher }: { publisher: Publisher }) {
         value={publisher.callsToday}
         formatValue={(v) => formatCompact(Math.round(v))}
         accent="cyan"
-        sparkline={makeSparkline(31, 8, 40, 25)}
       />
       <KpiTile
         label={t("networkUI.publishers.stats.revenueToday")}
@@ -26,7 +24,6 @@ export function PublisherStatsRow({ publisher }: { publisher: Publisher }) {
         value={publisher.revenueToday}
         formatValue={(v) => formatCurrency(v)}
         accent="emerald"
-        sparkline={makeSparkline(32, 8, 60, 20)}
       />
       <KpiTile
         label={t("networkUI.publishers.stats.conversion")}
@@ -34,7 +31,6 @@ export function PublisherStatsRow({ publisher }: { publisher: Publisher }) {
         value={publisher.conversionRate * 100}
         formatValue={(v) => formatPercent(v, 0)}
         accent="violet"
-        sparkline={makeSparkline(33, 8, 55, 14)}
       />
       <KpiTile
         label={t("networkUI.publishers.stats.numbers")}

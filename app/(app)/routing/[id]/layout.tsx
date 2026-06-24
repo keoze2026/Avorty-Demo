@@ -1,17 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { MOCK_PLANS } from "@/lib/mock/routing";
-
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const plan = MOCK_PLANS.find((p) => p.id === id);
-  return { title: plan ? `${plan.name} — Routing` : "Routing editor" };
-}
+export const metadata: Metadata = { title: "Routing editor" };
 
 /**
  * The routing editor breaks out of the (app) layout's `max-w-7xl` constraint

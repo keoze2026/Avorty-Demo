@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "@/hooks/use-translation";
-import { MOCK_BUYERS } from "@/lib/mock/buyers";
+import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import type { RoutingNode, RoutingNodeData, RoutingNodeKind, Weekday } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -386,6 +386,7 @@ function CapForm({ data, onPatch }: FormProps) {
 function BuyerForm({ data, onPatch }: FormProps) {
   const { t } = useTranslation();
   const cfg = data.buyer!;
+  const buyers = useBuyersStore((s) => s.buyers);
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
@@ -394,7 +395,7 @@ function BuyerForm({ data, onPatch }: FormProps) {
           value={cfg.buyerId || "none"}
           onValueChange={(v) => {
             if (v === "none") return onPatch({ buyer: { ...cfg, buyerId: "", buyerName: "" } });
-            const b = MOCK_BUYERS.find((x) => x.id === v);
+            const b = buyers.find((x) => x.id === v);
             onPatch({ buyer: { ...cfg, buyerId: v, buyerName: b?.name ?? "" } });
           }}
         >
@@ -403,7 +404,7 @@ function BuyerForm({ data, onPatch }: FormProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">{t("trafficUI.routing.inspector.forms.buyerNone")}</SelectItem>
-            {MOCK_BUYERS.map((b) => (
+            {buyers.map((b) => (
               <SelectItem key={b.id} value={b.id}>
                 {b.name}
               </SelectItem>
