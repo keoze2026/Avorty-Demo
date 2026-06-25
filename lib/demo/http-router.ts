@@ -780,6 +780,175 @@ route("PATCH", "/api/ai/autopilot/config/", (req) => {
 
 route("GET", "/api/dni/pools", () => ({ items: [], total: 0 }));
 
+/* ─── Billing (out of demo scope, but shape-sensitive) ──────────────── */
+
+const NOW = Date.now();
+const DAY = 24 * 60 * 60 * 1000;
+
+route("GET", "/api/billing/account", () => ({
+  id: "acct_demo",
+  balance: "1284.50",
+  credit_limit: "5000.00",
+  low_balance_threshold: "100.00",
+  auto_recharge: true,
+  auto_recharge_amount: "250.00",
+  auto_recharge_threshold: "100.00",
+  currency: "USD",
+  status: "active",
+  plan_tier: "Pro",
+  plan_monthly_cost: "299.00",
+  plan_calls_included: 25_000,
+  plan_overage_rate_per_call: "0.012",
+  plan_renews_at: new Date(NOW + 18 * DAY).toISOString(),
+}));
+
+route("PATCH", "/api/billing/account", (req) => {
+  const patch = camelKeyPatch(req.body);
+  return {
+    id: "acct_demo",
+    balance: "1284.50",
+    credit_limit: "5000.00",
+    low_balance_threshold: String(patch.low_balance_threshold ?? "100.00"),
+    auto_recharge: patch.auto_recharge ?? true,
+    auto_recharge_amount: String(patch.auto_recharge_amount ?? "250.00"),
+    auto_recharge_threshold: String(patch.auto_recharge_threshold ?? "100.00"),
+    currency: "USD",
+    status: "active",
+    plan_tier: "Pro",
+  };
+});
+
+route("GET", "/api/billing/payment-methods", () => [
+  {
+    id: "pm_demo_1",
+    type: "card",
+    brand: "Visa",
+    last4: "4242",
+    expiry_month: 12,
+    expiry_year: 2028,
+    is_default: true,
+  },
+]);
+
+route("POST", "/api/billing/payment-methods", () => ({
+  id: demoId("pm"),
+  type: "card",
+  brand: "Visa",
+  last4: "4242",
+  expiry_month: 12,
+  expiry_year: 2028,
+  is_default: false,
+}));
+
+route("DELETE", "/api/billing/payment-methods/{id}", () => ({ ok: true }));
+
+route("GET", "/api/billing/expenses", () => ({
+  total: 14_840.5,
+  categories: [
+    { key: "voice", label: "Voice minutes", amount: 8_220.4 },
+    { key: "recording", label: "Recording storage", amount: 1_148.6 },
+    { key: "tracking", label: "Tracking numbers", amount: 2_204.0 },
+    { key: "rtb", label: "RTB transactions", amount: 1_842.5 },
+    { key: "addons", label: "Add-ons", amount: 1_225.0 },
+  ],
+  range_start: new Date(NOW - 30 * DAY).toISOString(),
+  range_end: new Date(NOW).toISOString(),
+}));
+
+route("GET", "/api/billing/invoices", (req) => {
+  const inv = [
+    { id: "inv_001", invoice_number: "AVX-2026-0006", period_start: new Date(NOW - 30 * DAY).toISOString(), period_end: new Date(NOW).toISOString(), total_calls: 24_120, total_revenue: "84210.40", total_payout: "52340.80", total_amount: "14840.50", status: "open" },
+    { id: "inv_002", invoice_number: "AVX-2026-0005", period_start: new Date(NOW - 60 * DAY).toISOString(), period_end: new Date(NOW - 30 * DAY).toISOString(), total_calls: 22_810, total_revenue: "79420.10", total_payout: "49860.40", total_amount: "13720.20", status: "paid" },
+    { id: "inv_003", invoice_number: "AVX-2026-0004", period_start: new Date(NOW - 90 * DAY).toISOString(), period_end: new Date(NOW - 60 * DAY).toISOString(), total_calls: 19_440, total_revenue: "68240.00", total_payout: "42190.30", total_amount: "11820.00", status: "paid" },
+    { id: "inv_004", invoice_number: "AVX-2026-0003", period_start: new Date(NOW - 120 * DAY).toISOString(), period_end: new Date(NOW - 90 * DAY).toISOString(), total_calls: 18_220, total_revenue: "62110.80", total_payout: "38950.20", total_amount: "10440.50", status: "paid" },
+  ];
+  return paged(inv, req.query);
+});
+
+route("GET", "/api/billing/transactions", (req) => {
+  const tx = [
+    { id: "tx_001", transaction_type: "deposit", amount: "500.00", balance_before: "784.50", balance_after: "1284.50", description: "Card deposit — Visa ••4242", reference_id: "pi_demo_1", call_sid: "", created_at: new Date(NOW - 2 * DAY).toISOString() },
+    { id: "tx_002", transaction_type: "call_charge", amount: "-12.40", balance_before: "796.90", balance_after: "784.50", description: "Call charge — Medicare Open Enrollment", reference_id: "", call_sid: "CA_demo_42", created_at: new Date(NOW - 3 * DAY).toISOString() },
+    { id: "tx_003", transaction_type: "deposit", amount: "250.00", balance_before: "546.90", balance_after: "796.90", description: "Auto-recharge", reference_id: "pi_demo_2", call_sid: "", created_at: new Date(NOW - 6 * DAY).toISOString() },
+  ];
+  return paged(tx, req.query);
+});
+
+route("POST", "/api/billing/deposit", () => ({
+  client_secret: "demo_secret_xxx",
+  payment_intent_id: "pi_demo_new",
+  status: "succeeded",
+}));
+route("POST", "/api/billing/deposit/confirm", () => ({ ok: true, status: "succeeded" }));
+route("POST", "/api/billing/deposit/capitalist", () => ({ ok: true, redirect_url: "https://demo.local/cap" }));
+route("POST", "/api/billing/deposit/coingate", () => ({ ok: true, redirect_url: "https://demo.local/coin" }));
+
+/* ─── Other out-of-scope endpoints that need a specific shape ────────── */
+
+// White Label — `/api/white-label/` is a single config object, not a list.
+route("GET", "/api/white-label/", () => ({
+  id: "wl_demo",
+  company_name: "Avortyx",
+  logo_url: "",
+  favicon_url: "",
+  support_email: "support@avortyx.com",
+  support_phone: "+1 (555) 014-9088",
+  website_url: "https://avortyx.com",
+  primary_color: "#5266E0",
+  secondary_color: "#818CF8",
+  domains: [],
+}));
+route("GET", "/api/white-label/config", () => ({
+  company_name: "Avortyx",
+  primary_color: "#5266E0",
+  secondary_color: "#818CF8",
+}));
+route("GET", "/api/white-label/domains", () => []);
+
+// Referrals — stats is an object; root is paginated (default fallback works).
+route("GET", "/api/referrals/stats", () => ({
+  total_invited: 14,
+  total_signed_up: 6,
+  total_earned: 480,
+  pending_payout: 120,
+  conversion_rate: 0.43,
+}));
+
+// KYC — single config object.
+route("GET", "/api/kyc/", () => ({
+  status: "verified",
+  documents: [],
+  company_status: "verified",
+}));
+route("GET", "/api/kyc/company/", () => ({
+  legal_name: "Avortyx Demo LLC",
+  status: "verified",
+  documents: [],
+}));
+
+// Workspace activity / sessions / roles — paginated/array shapes.
+route("GET", "/api/accounts/workspace/activity", () => ({ items: [], total: 0, page: 1, page_size: 25 }));
+route("GET", "/api/accounts/workspace/sessions", () => []);
+route("GET", "/api/accounts/workspace/roles", () => []);
+route("GET", "/api/accounts/workspace/members", () => []);
+route("GET", "/api/accounts/roles", () => []);
+route("GET", "/api/accounts/access-requests/", () => ({ items: [], total: 0 }));
+route("GET", "/api/accounts/api-keys/", () => []);
+
+// Notifications — both list endpoints.
+route("GET", "/api/notifications/logs", (req) => paged([], req.query));
+route("GET", "/api/notifications/rules", () => []);
+
+// Integrations — list endpoint.
+route("GET", "/api/integrations/", () => []);
+
+// Support chat — returns a session-id object.
+route("POST", "/api/support/chat", () => ({ session_id: demoId("chat"), status: "open" }));
+
+// Webhooks — list endpoints.
+route("GET", "/api/webhooks/", () => []);
+route("GET", "/api/webhooks/pixels/", () => []);
+
 /* ─── Helpers ───────────────────────────────────────────────────────── */
 
 function notFound(detail: string): ApiError {
