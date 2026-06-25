@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CreditCard, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { CreditCard, LogOut, RotateCcw, Settings, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +17,8 @@ import {
 import { useTranslation } from "@/hooks/use-translation";
 import { ROUTES } from "@/lib/constants";
 import { useAuthStore } from "@/lib/store/auth-store";
+import { isDemoMode } from "@/lib/demo/flag";
+import { resetDemoStorage } from "@/lib/demo/persist";
 
 function initials(name: string) {
   return name
@@ -39,6 +41,16 @@ export function UserMenu() {
     logout();
     toast.success(t("userMenu.signedOut"));
     router.push(ROUTES.login);
+  };
+
+  const onResetDemo = () => {
+    resetDemoStorage();
+    toast.success("Demo data reset. Reloading…");
+    // Hard reload so every Zustand store rehydrates from fresh fixtures
+    // and the auth store falls back to logged-out.
+    setTimeout(() => {
+      if (typeof window !== "undefined") window.location.assign(ROUTES.login);
+    }, 350);
   };
 
   return (
@@ -77,6 +89,14 @@ export function UserMenu() {
         <DropdownMenuItem onSelect={() => router.push(ROUTES.settings)}>
           <Settings className="h-4 w-4" /> {t("userMenu.settings")}
         </DropdownMenuItem>
+        {isDemoMode() && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={onResetDemo}>
+              <RotateCcw className="h-4 w-4" /> Reset demo data
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onLogout} className="text-destructive focus:text-destructive">
           <LogOut className="h-4 w-4" /> {t("userMenu.signOut")}

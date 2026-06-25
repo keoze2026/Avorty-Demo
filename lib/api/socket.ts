@@ -25,6 +25,8 @@
 import { snakeToCamel } from "./case";
 import { WS_BASE_URL } from "./env";
 import { getAccessToken } from "./tokens";
+import { isDemoMode } from "../demo/flag";
+import { createDemoSocket } from "../demo/socket-driver";
 
 /** Canonical event types confirmed by the backend dev. */
 export const CALL_EVENT_TYPES = [
@@ -77,6 +79,9 @@ export interface CallSocket {
 }
 
 export function createCallSocket(): CallSocket {
+  // Demo mode — return a fake socket that emits canned events.
+  if (isDemoMode()) return createDemoSocket();
+
   const listeners = new Map<CallEventType, Set<Listener>>();
   const anyListeners = new Set<(e: CallEvent) => void>();
   const state: SocketState = {

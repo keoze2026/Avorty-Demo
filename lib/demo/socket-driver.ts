@@ -1,0 +1,280 @@
+/**
+ * Fake CallSocket for demo mode.
+ *
+ * Implements the same `CallSocket` interface the real socket exposes, but
+ * never opens a network connection. Instead it ticks on an interval and
+ * emits canned events to any subscribers, so the Live Monitor radar and
+ * the Marketplace bid tape look alive.
+ *
+ * Removal: delete this file + the `if (isDemoMode()) return createDemoSocket();`
+ * branch at the top of `lib/api/socket.ts`.
+ */
+
+import type { CallEvent, CallEventType, CallSocket } from "../api/socket";
+import { snakeToCamel } from "../api/case";
+import { generateLiveCalls } from "./fixtures/calls";
+import { seedAuctions, bidsForAuction } from "./fixtures/auctions";
+import { makeRng, pick, intRange, range } from "./rng";
+
+type Listener<T = unknown> = (data: T) => void;
+
+const CAMPAIGNS = [
+  "Medicare Open Enrollment 2026",
+  "Auto Insurance — High Intent",
+  "Solar — Homeowner 700+ FICO",
+  "Roofing Storm Damage",
+  "Mass Tort Intake — Talc",
+  "Debt Relief Consultation",
+];
+const BUYERS = [
+  { id: "b_apex", name: "Apex Insurance Group" },
+  { id: "b_solar_united", name: "Solar United" },
+  { id: "b_pinnacle_legal", name: "Pinnacle Legal Partners" },
+  { id: "b_meridian_auto", name: "Meridian Auto Insurance" },
+  { id: "b_hearthside", name: "Hearthside Roofing Network" },
+];
+const PUBLISHERS = [
+  { id: "p_redline", name: "Redline Media Group" },
+  { id: "p_blueprint", name: "Blueprint Lead Network" },
+  { id: "p_apex_dial", name: "Apex Dialer Partners" },
+];
+const AREA_CODES = ["212", "415", "713", "404", "305", "303", "617", "773", "206", "619", "512"];
+const STATES = ["TX", "CA", "FL", "NY", "PA", "OH", "IL", "GA", "NC", "MI"];
+
+let counter = 0;
+function nextCallId(): string {
+  counter += 1;
+  return `live_${counter.toString(36)}_${Date.now().toString(36)}`;
+}
+
+function makePhone(rng: () => number): string {
+  const ac = pick(AREA_CODES, rng);
+  const tail = String(intRange(rng, 1_000_000, 9_999_999));
+  return `+1${ac}${tail}`;
+}
+
+interface InFlight {
+  id: string;
+  startedAt: number;
+  campaign: string;
+  buyer: { id: string; name: string };
+  publisher: { id: string; name: string };
+  caller: string;
+  state: string;
+  destination: string;
+  status: "ringing" | "in-progress";
+  ttl: number;
+}
+
+export function createDemoSocket(): CallSocket {
+  const listeners = new Map<CallEventType, Set<Listener>>();
+  const anyListeners = new Set<(e: CallEvent) => void>();
+  let tick: ReturnType<typeof setInterval> | null = null;
+  let opened = false;
+  const inFlight: InFlight[] = [];
+
+  // Marketplace auctions kept in memory so the bid stream stays coherent.
+  const auctions = seedAuctions().filter((a) => a.status === "open").slice(0, 6);
+
+  const emit = (type: CallEventType, data: unknown) => {
+    // Match the dispatch path of the real socket — wrap in {type, data} and
+    // run through snakeToCamel exactly like real WS frames.
+    const camelData = snakeToCamel(data);
+    const set = listeners.get(type);
+    if (set) for (const l of set) l(camelData);
+    const event: CallEvent = { type, data: camelData };
+    for (const l of anyListeners) l(event);
+  };
+
+  const seedInFlight = () => {
+    const live = generateLiveCalls(4);
+    for (const c of live) {
+      inFlight.push({
+        id: c.id,
+        startedAt: Date.parse(c.created_at),
+        campaign: c.campaign_name,
+        buyer: { id: c.buyer_id, name: c.buyer_name },
+        publisher: { id: c.publisher_id, name: c.publisher_name },
+        caller: c.caller_number,
+        state: c.caller_state,
+        destination: c.destination_number,
+        status: c.status as InFlight["status"],
+        ttl: intRange(makeRng(c.id.length), 30, 180),
+      });
+    }
+  };
+
+  const startCall = (rng: () => number) => {
+    const camp = pick(CAMPAIGNS, rng);
+    const buyer = pick(BUYERS, rng);
+    const publisher = pick(PUBLISHERS, rng);
+    const id = nextCallId();
+    const call: InFlight = {
+      id,
+      startedAt: Date.now(),
+      campaign: camp,
+      buyer,
+      publisher,
+      caller: makePhone(rng),
+      state: pick(STATES, rng),
+      destination: `+1800${String(intRange(rng, 5_550_000, 5_559_999))}`,
+      status: "ringing",
+      ttl: intRange(rng, 30, 240),
+    };
+    inFlight.push(call);
+    emit("call.created", liveWire(call));
+  };
+
+  const liveWire = (c: InFlight) => ({
+    id: c.id,
+    caller_number: c.caller,
+    destination_number: c.destination,
+    status: c.status,
+    duration: Math.floor((Date.now() - c.startedAt) / 1000),
+    caller_area_code: c.caller.slice(2, 5),
+    caller_state: c.state,
+    caller_country: "US",
+    campaign_id: "c_" + c.campaign.slice(0, 6).toLowerCase(),
+    campaign_name: c.campaign,
+    buyer_id: c.buyer.id,
+    buyer_name: c.buyer.name,
+    publisher_id: c.publisher.id,
+    publisher_name: c.publisher.name,
+    revenue: "0.00",
+    buyer_payout: "0.00",
+    publisher_payout: "0.00",
+    recording_url: "",
+    created_at: new Date(c.startedAt).toISOString(),
+    tags: [] as string[],
+    notes: "",
+  });
+
+  const settleCall = (c: InFlight, rng: () => number) => {
+    const converted = rng() < 0.62;
+    const revenue = converted ? Math.round(range(rng, 35, 320) * 100) / 100 : 0;
+    emit("call.ended", {
+      ...liveWire(c),
+      status: converted ? "completed" : (rng() < 0.5 ? "missed" : "rejected"),
+      duration: Math.floor((Date.now() - c.startedAt) / 1000),
+      revenue: revenue.toFixed(2),
+      buyer_payout: revenue.toFixed(2),
+      publisher_payout: Math.round(revenue * 0.6 * 100 / 100).toFixed(2),
+    });
+  };
+
+  const placeBid = (rng: () => number) => {
+    const auction = pick(auctions, rng);
+    if (!auction) return;
+    const buyer = pick(BUYERS, rng);
+    const current = auction.winning_bid ?? auction.bid_floor;
+    const step = Math.round(range(rng, 0.5, 4.5) * 100) / 100;
+    const next = Math.round((current + step) * 100) / 100;
+    auction.winning_bid = next;
+    auction.winning_buyer_id = buyer.id;
+    auction.winning_buyer_name = buyer.name;
+    emit("rtb.bid_placed", {
+      id: `bid_${Date.now().toString(36)}`,
+      auction_id: auction.id,
+      buyer_id: buyer.id,
+      buyer_name: buyer.name,
+      amount: next,
+      is_winning: true,
+      created_at: Date.now(),
+    });
+  };
+
+  const newAuction = (rng: () => number) => {
+    const camp = pick(CAMPAIGNS, rng);
+    const floor = Math.round(range(rng, 12, 70) * 100) / 100;
+    const a = {
+      id: `auction_${Date.now().toString(36)}`,
+      campaign_id: "c_" + camp.slice(0, 6).toLowerCase(),
+      campaign_name: camp,
+      caller_number: makePhone(rng),
+      status: "open" as const,
+      bid_floor: floor,
+      winning_bid: undefined,
+      winning_buyer_id: undefined,
+      winning_buyer_name: undefined,
+      created_at: Date.now(),
+    };
+    auctions.push(a);
+    if (auctions.length > 12) {
+      const removed = auctions.shift();
+      if (removed) {
+        emit("rtb.auction_settled", { ...removed, status: "settled", settled_at: Date.now() });
+      }
+    }
+    emit("rtb.auction_created", a);
+  };
+
+  const runTick = () => {
+    const rng = Math.random;
+    const now = Date.now();
+    // Promote ringing → in-progress after 4s
+    for (const c of inFlight) {
+      if (c.status === "ringing" && now - c.startedAt > 4_000) {
+        c.status = "in-progress";
+        emit("call.connected", liveWire(c));
+      }
+    }
+    // Settle calls past their TTL
+    for (let i = inFlight.length - 1; i >= 0; i--) {
+      const c = inFlight[i];
+      if (now - c.startedAt >= c.ttl * 1000) {
+        settleCall(c, rng);
+        inFlight.splice(i, 1);
+      }
+    }
+    // Start a fresh call ~70% of ticks (keeps the radar populated)
+    if (Math.random() < 0.7) startCall(rng);
+    // Place a couple of bids per tick
+    placeBid(rng);
+    if (Math.random() < 0.35) placeBid(rng);
+    // Occasionally rotate auctions
+    if (Math.random() < 0.18) newAuction(rng);
+  };
+
+  return {
+    connect() {
+      if (opened) return;
+      opened = true;
+      seedInFlight();
+      // First tick after a short delay so subscribers attach.
+      setTimeout(() => {
+        runTick();
+        tick = setInterval(runTick, 3_200);
+      }, 600);
+    },
+    disconnect() {
+      opened = false;
+      if (tick) {
+        clearInterval(tick);
+        tick = null;
+      }
+    },
+    on<T>(type: CallEventType, listener: (data: T) => void) {
+      let s = listeners.get(type);
+      if (!s) {
+        s = new Set();
+        listeners.set(type, s);
+      }
+      s.add(listener as Listener);
+      return () => {
+        const ss = listeners.get(type);
+        if (!ss) return;
+        ss.delete(listener as Listener);
+        if (ss.size === 0) listeners.delete(type);
+      };
+    },
+    onAny(listener) {
+      anyListeners.add(listener);
+      return () => {
+        anyListeners.delete(listener);
+      };
+    },
+    isConnected() {
+      return opened;
+    },
+  };
+}

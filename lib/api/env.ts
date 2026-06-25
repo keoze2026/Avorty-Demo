@@ -13,6 +13,12 @@
 
 function validate(name: string, raw: string | undefined): string {
   if (typeof raw !== "string" || raw.length === 0) {
+    // Demo mode bypass — real http/ws calls are intercepted before the URL
+    // is used, so the variable isn't required for the build to run.
+    const isDemo =
+      process.env.NEXT_PUBLIC_DEMO_MODE === "true" ||
+      process.env.NEXT_PUBLIC_DEMO_MODE === "1";
+    if (isDemo) return "https://demo.local";
     if (process.env.NODE_ENV === "production") {
       // In production we don't want to crash the whole app — but we do want
       // a visible console warning that something is wrong.

@@ -27,6 +27,8 @@ import {
   setTokens,
 } from "./tokens";
 import type { HttpMethod, RequestOptions } from "./types";
+import { isDemoMode } from "../demo/flag";
+import { handleDemoRequest } from "../demo/http-router";
 
 const REFRESH_PATH = "/api/accounts/refresh";
 
@@ -154,6 +156,29 @@ async function doRequest<T>({
   options = {},
   alreadyRetried = false,
 }: DoRequestArgs): Promise<T> {
+  // Demo mode — route every request through the in-memory mock router and
+  // never touch the network. The router returns snake_case wire shapes;
+  // we still run them through `snakeToCamel` below to mirror the real path.
+  if (isDemoMode()) {
+    const stringQuery: Record<string, string> = {};
+    if (options.query) {
+      for (const [k, v] of Object.entries(options.query)) {
+        if (v === null || v === undefined) continue;
+        const snake = k.replace(/([A-Z])/g, (_, c: string) => "_" + c.toLowerCase());
+        stringQuery[snake] = String(v);
+      }
+    }
+    const raw = await handleDemoRequest<unknown>({
+      method,
+      path,
+      query: stringQuery,
+      body: options.body,
+      anonymous: !!options.anonymous,
+    });
+    if (options.rawResponse) return raw as T;
+    return snakeToCamel(raw) as T;
+  }
+
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.headers) Object.assign(headers, options.headers);
 

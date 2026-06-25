@@ -4,6 +4,7 @@ import * as React from "react";
 import { MotionConfig } from "framer-motion";
 
 import { AccentProvider } from "./accent-provider";
+import { DemoModeGuard } from "./demo-mode-guard";
 import { LocaleProvider } from "./locale-provider";
 import { ThemeProvider } from "./theme-provider";
 import { QueryProvider } from "./query-provider";
@@ -20,17 +21,19 @@ import { Toaster } from "@/components/ui/sonner";
  */
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-      <QueryProvider>
-        <TooltipProvider delayDuration={150}>
-          <MotionConfig reducedMotion="user">
-            <AccentProvider />
-            <LocaleProvider />
-            {children}
-            <Toaster richColors closeButton />
-          </MotionConfig>
-        </TooltipProvider>
-      </QueryProvider>
-    </ThemeProvider>
+    <DemoModeGuard>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <QueryProvider>
+          <TooltipProvider delayDuration={150}>
+            <MotionConfig reducedMotion="user">
+              <AccentProvider />
+              <LocaleProvider />
+              {children}
+              <Toaster richColors closeButton />
+            </MotionConfig>
+          </TooltipProvider>
+        </QueryProvider>
+      </ThemeProvider>
+    </DemoModeGuard>
   );
 }
