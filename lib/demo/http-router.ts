@@ -38,7 +38,7 @@ import {
   seedBlockedNumbers,
 } from "./fixtures/entities";
 import {
-  generateCalls,
+  getDemoCalls,
   generateLiveCalls,
   dashboardSnapshot,
   type DemoCallWire,
@@ -673,14 +673,32 @@ route("GET", "/api/spam/reports", () => ({ items: [], total: 0 }));
 /* ─── Calls + Analytics ────────────────────────────────────────────── */
 
 route("GET", "/api/analytics/calls", (req) => {
-  const all = readTable<DemoCallWire>("calls", () => generateCalls(800));
+  // Dashboards and report aggregates ask for big windows (pageSize ≥ 100)
+  // so they can client-side bucket the data into charts. For those, return
+  // the entire corpus so the donut totals + hourly distribution look full.
+  // For the Call Log table's normal paging (pageSize ≤ 50), respect paging
+  // so the pagination UI stays coherent.
+  const all = getDemoCalls();
+  const pageSize = Number(req.query.page_size ?? req.query.pageSize ?? "25") || 25;
+  if (pageSize >= 100) {
+    return { items: all, total: all.length, page: 1, page_size: all.length };
+  }
+  return paged(all, req.query);
+});
+
+route("GET", "/api/routing/calls", (req) => {
+  const all = getDemoCalls();
+  const pageSize = Number(req.query.page_size ?? req.query.pageSize ?? "25") || 25;
+  if (pageSize >= 100) {
+    return { items: all, total: all.length, page: 1, page_size: all.length };
+  }
   return paged(all, req.query);
 });
 
 route("GET", "/api/analytics/dashboard", () => dashboardSnapshot());
 
-route("GET", "/api/analytics/live", () => ({ items: generateLiveCalls() }));
-route("GET", "/api/routing/calls/live", () => ({ items: generateLiveCalls() }));
+route("GET", "/api/analytics/live", () => generateLiveCalls());
+route("GET", "/api/routing/calls/live", () => generateLiveCalls());
 
 route("GET", "/api/analytics/campaigns", () => ({
   items: readTable("campaigns", seedCampaigns).map((c: Record<string, unknown>) => ({
@@ -787,12 +805,12 @@ const DAY = 24 * 60 * 60 * 1000;
 
 route("GET", "/api/billing/account", () => ({
   id: "acct_demo",
-  balance: "1284.50",
-  credit_limit: "5000.00",
-  low_balance_threshold: "100.00",
+  balance: "48720.40",
+  credit_limit: "50000.00",
+  low_balance_threshold: "500.00",
   auto_recharge: true,
-  auto_recharge_amount: "250.00",
-  auto_recharge_threshold: "100.00",
+  auto_recharge_amount: "5000.00",
+  auto_recharge_threshold: "500.00",
   currency: "USD",
   status: "active",
   plan_tier: "Pro",
