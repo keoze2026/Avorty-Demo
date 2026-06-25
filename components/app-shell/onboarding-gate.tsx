@@ -18,6 +18,8 @@
  */
 
 import { useEffect } from "react";
+
+import { isDemoMode } from "@/lib/demo/flag";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, CreditCard, Loader2, LogOut, ScanFace, ShieldCheck } from "lucide-react";
@@ -58,9 +60,11 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
 
   // Fetch once on mount (only when the user is authenticated AND not a
   // privileged user — privileged users skip the gate so the fetch is wasted).
+  // Exception: in demo mode we want the topbar wallet to show the seeded
+  // balance even for the demo admin, so we always trigger the fetch.
   useEffect(() => {
     if (!isAuthed) return;
-    if (isPrivileged) return;
+    if (isPrivileged && !isDemoMode()) return;
     if (hydrated) return;
     void refresh();
   }, [isAuthed, isPrivileged, hydrated, refresh]);
