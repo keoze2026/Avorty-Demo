@@ -24,6 +24,44 @@ import {
   type CampaignAdvancedSettings,
 } from "@/lib/types";
 
+/**
+ * Merge a partial settings blob (e.g. a fresh campaign whose backend
+ * `advanced_settings` is `{}` or missing several sub-keys) onto the full
+ * defaults so every leaf the UI reads is defined. Without this, accessing
+ * `settings.callQueue.enabled` on a `{}` payload throws — which is exactly
+ * what we saw after toggling Active on a brand-new campaign.
+ *
+ * The merge is one level deep: every top-level setting is a flat object or
+ * an array, never nested objects of objects. Arrays are taken whole from
+ * the incoming blob if present (we don't merge array contents).
+ */
+function withDefaults(
+  partial: Partial<CampaignAdvancedSettings> | null | undefined,
+): CampaignAdvancedSettings {
+  if (!partial || typeof partial !== "object") return DEFAULT_CAMPAIGN_SETTINGS;
+  const out = { ...DEFAULT_CAMPAIGN_SETTINGS };
+  for (const key of Object.keys(DEFAULT_CAMPAIGN_SETTINGS) as Array<
+    keyof CampaignAdvancedSettings
+  >) {
+    const incoming = partial[key];
+    if (incoming === undefined || incoming === null) continue;
+    const fallback = DEFAULT_CAMPAIGN_SETTINGS[key];
+    if (Array.isArray(fallback)) {
+      // Array fields (enrichmentUrls, access) — take whole or fall back.
+      out[key] = (Array.isArray(incoming) ? incoming : fallback) as never;
+    } else if (typeof fallback === "object" && fallback !== null) {
+      // Object field — defensively spread defaults under the incoming partial.
+      out[key] = {
+        ...(fallback as object),
+        ...(typeof incoming === "object" ? (incoming as object) : {}),
+      } as never;
+    } else {
+      out[key] = incoming as never;
+    }
+  }
+  return out;
+}
+
 interface CampaignSettingsState {
   byId: Record<string, CampaignAdvancedSettings>;
   /** Returns the campaign's settings, or defaults if unset. */
@@ -77,20 +115,22 @@ export const useCampaignSettingsStore = create<CampaignSettingsState>()(
   persist(
     (set, get) => ({
       byId: {},
-      get: (campaignId) =>
-        get().byId[campaignId] ?? DEFAULT_CAMPAIGN_SETTINGS,
+      get: (campaignId) => withDefaults(get().byId[campaignId]),
       update: (campaignId, key, value) => {
-        const current = get().byId[campaignId] ?? DEFAULT_CAMPAIGN_SETTINGS;
+        const current = withDefaults(get().byId[campaignId]);
         const next: CampaignAdvancedSettings = { ...current, [key]: value };
         set((s) => ({ byId: { ...s.byId, [campaignId]: next } }));
         scheduleSync(campaignId, next);
       },
       replace: (campaignId, settings) => {
-        set((s) => ({ byId: { ...s.byId, [campaignId]: settings } }));
-        scheduleSync(campaignId, settings);
+        const merged = withDefaults(settings);
+        set((s) => ({ byId: { ...s.byId, [campaignId]: merged } }));
+        scheduleSync(campaignId, merged);
       },
       seed: (campaignId, settings) =>
-        set((s) => ({ byId: { ...s.byId, [campaignId]: settings } })),
+        set((s) => ({
+          byId: { ...s.byId, [campaignId]: withDefaults(settings) },
+        })),
     }),
     {
       name: "vortyx.campaign-settings",
