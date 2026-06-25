@@ -54,15 +54,26 @@ const PUBLISHER_REFS = [
 ];
 
 /**
- * Probability a call lands at hour h (0-23). Strong business-hours bell —
- * trough overnight, climbing through morning, peak at 14–16h (3–4pm),
- * sharp taper into evening. Sums to ~1.0.
+ * Probability a call lands at hour h (0-23).
+ *
+ * Per client direction: only 7 visible bars in the dashboard hourly chart,
+ * peak at the 3rd bar (1pm), then gradually decreasing through the 7th bar
+ * (5pm). Hours outside 11am–5pm are zeroed so the chart paints a clean
+ * seven-bar arc rather than a noisy 24-hour spread.
+ *
+ *   bar 1 (11am):  5%   ← rising
+ *   bar 2 (12pm): 18%   ← rising
+ *   bar 3 ( 1pm): 30%   ← PEAK
+ *   bar 4 ( 2pm): 22%   ← decreasing
+ *   bar 5 ( 3pm): 14%
+ *   bar 6 ( 4pm):  7%
+ *   bar 7 ( 5pm):  4%
  */
 const HOUR_WEIGHTS = [
-  0.002, 0.002, 0.001, 0.001, 0.001, 0.003, // 0–5 overnight
-  0.006, 0.014, 0.028, 0.045, 0.060, 0.080, // 6–11 morning ramp
-  0.095, 0.115, 0.135, 0.140, 0.125, 0.090, // 12–17 peak
-  0.060, 0.040, 0.025, 0.014, 0.008, 0.005, // 18–23 evening fade
+  0,    0,    0,    0,    0,    0,    // 0–5
+  0,    0,    0,    0,    0,    0.05, // 6–11   bar 1
+  0.18, 0.30, 0.22, 0.14, 0.07, 0.04, // 12–17  bars 2–7 (peak at index 13)
+  0,    0,    0,    0,    0,    0,    // 18–23
 ];
 
 function pickHour(rng: () => number): number {
@@ -133,10 +144,12 @@ interface CorpusOptions {
 }
 
 const DEFAULT_OPTS: CorpusOptions = {
-  todayCount: 3_000,
+  todayCount: 7_000,
   pastDays: 13,
   pastDailyAvg: 220,
-  convertRate: 0.66,
+  // 86% converted → ~1,000 "not connected" with a 7K corpus today, matching
+  // the client's headline ratio (7K total / 1K not connected).
+  convertRate: 0.86,
 };
 
 let CACHE: DemoCallWire[] | null = null;
@@ -238,7 +251,7 @@ function todaysCalls(): DemoCallWire[] {
 
 /* ─── Live (in-flight) call snapshot ──────────────────────────────────── */
 
-export function generateLiveCalls(count = 14): DemoCallWire[] {
+export function generateLiveCalls(count = 5): DemoCallWire[] {
   const rng = makeRng(7_777);
   const rows: DemoCallWire[] = [];
   const liveStatuses = ["ringing", "in-progress", "in-progress", "in-progress"];
@@ -284,7 +297,7 @@ export function dashboardSnapshot() {
   const totalToday = today.length;
   const completed = today.filter((c) => c.status === "completed").length;
   const dropped = totalToday - completed;
-  const liveCount = 14;
+  const liveCount = 5;
   const totalRevenue = today.reduce((s, c) => s + Number(c.revenue || 0), 0);
   const totalPayout = today.reduce((s, c) => s + Number(c.publisher_payout || 0), 0);
   const totalProfit = totalRevenue - totalPayout;

@@ -6,7 +6,8 @@
       "Bash(pnpm exec *)",
       "Bash(xargs grep -l \"coming soon\\\\|not implemented\\\\|todo\\\\|phase\" -i)",
       "Bash(wait bwnjtlwp8 *)",
-      "Bash(pnpm tsc *)"
+      "Bash(pnpm tsc *)",
+      "Bash(NEXT_PUBLIC_DEMO_MODE=true pnpm next build)"
     ]
   }
 }
