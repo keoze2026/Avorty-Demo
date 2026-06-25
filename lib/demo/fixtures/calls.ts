@@ -163,17 +163,18 @@ export function getDemoCalls(): DemoCallWire[] {
 function buildCorpus(opts: CorpusOptions): DemoCallWire[] {
   const rng = makeRng(202_606_26);
   const start = startOfToday();
-  const now = Date.now();
   const out: DemoCallWire[] = [];
 
   // ─── Today ───────────────────────────────────────────────────────────
+  // We intentionally allow timestamps anywhere in today's 24h window —
+  // including hours that haven't happened yet in wall-clock time. This is a
+  // marketing demo: the dashboard should always look like a full active
+  // business day, regardless of when the demo is opened.
   for (let i = 0; i < opts.todayCount; i++) {
     const hour = pickHour(rng);
     const minute = intRange(rng, 0, 59);
     const second = intRange(rng, 0, 59);
     const ts = start + hour * HOUR + minute * 60_000 + second * 1000;
-    // Don't generate future-dated calls — clamp to "now minus a tiny bit"
-    if (ts > now) continue;
     out.push(makeCall(`today_${i.toString(36)}`, ts, rng, opts.convertRate));
   }
 
