@@ -11,6 +11,7 @@
  */
 
 import { makeRng, pick, intRange, range, chance } from "../rng";
+import { currentBucket, bucketInt, bucketRange } from "../bucket";
 
 const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;
@@ -54,35 +55,51 @@ const PUBLISHER_REFS = [
 ];
 
 /**
- * Probability a call lands at hour h (0-23).
+ * Per-bucket hourly distribution.
  *
- * Per client direction: only 7 visible bars in the dashboard hourly chart,
- * peak at the 3rd bar (1pm), then gradually decreasing through the 7th bar
- * (5pm). Hours outside 11am–5pm are zeroed so the chart paints a clean
- * seven-bar arc rather than a noisy 24-hour spread.
+ * The chart shape rotates every 2h. Four parameters define each bucket's
+ * distribution; together they produce a wide range of believable
+ * day-shapes:
  *
- *   bar 1 (11am):  5%   ← rising
- *   bar 2 (12pm): 18%   ← rising
- *   bar 3 ( 1pm): 30%   ← PEAK
- *   bar 4 ( 2pm): 22%   ← decreasing
- *   bar 5 ( 3pm): 14%
- *   bar 6 ( 4pm):  7%
- *   bar 7 ( 5pm):  4%
+ *   center      — hour of the peak (10am–5pm)
+ *   leftWidth   — hours of ramp-up before the peak (2–5)
+ *   rightWidth  — hours of fade-down after the peak (2–6)
+ *   sharpness   — 1.3 flat plateau … 3.5 sharp peak
+ *
+ * Each hour's weight is `cos(πx/2)^sharpness` where x is the normalized
+ * distance from center. Hours outside `[center-leftWidth, center+rightWidth]`
+ * are zeroed so we get a clean compact arc, not a noisy 24-hour spread.
  */
-const HOUR_WEIGHTS = [
-  0,    0,    0,    0,    0,    0,    // 0–5
-  0,    0,    0,    0,    0,    0.05, // 6–11   bar 1
-  0.18, 0.30, 0.22, 0.14, 0.07, 0.04, // 12–17  bars 2–7 (peak at index 13)
-  0,    0,    0,    0,    0,    0,    // 18–23
-];
+function bucketHourWeights(): number[] {
+  const center = bucketRange(31, 10, 17);
+  const leftWidth = bucketRange(33, 2, 5);
+  const rightWidth = bucketRange(35, 2, 6);
+  const sharpness = bucketRange(37, 1.3, 3.5);
 
-function pickHour(rng: () => number): number {
+  const weights = new Array(24).fill(0);
+  let sum = 0;
+  for (let h = 0; h < 24; h++) {
+    const dist = h - center;
+    const width = dist < 0 ? leftWidth : rightWidth;
+    if (Math.abs(dist) > width) continue;
+    const x = Math.abs(dist) / width;
+    const w = Math.pow(Math.cos((x * Math.PI) / 2), sharpness);
+    weights[h] = w;
+    sum += w;
+  }
+  // Normalize so weights sum to 1.0 (pickHour expects this).
+  return sum > 0 ? weights.map((w) => w / sum) : weights;
+}
+
+function pickHour(rng: () => number, weights: number[]): number {
   let r = rng();
   for (let h = 0; h < 24; h++) {
-    r -= HOUR_WEIGHTS[h];
+    r -= weights[h];
     if (r <= 0) return h;
   }
-  return 15;
+  // Fallback — return the bucket's peak hour rather than a hardcoded 15.
+  for (let h = 0; h < 24; h++) if (weights[h] > 0) return h;
+  return 13;
 }
 
 function pickCampaign(rng: () => number) {
@@ -143,27 +160,45 @@ interface CorpusOptions {
   convertRate: number;
 }
 
-const DEFAULT_OPTS: CorpusOptions = {
-  todayCount: 7_000,
-  pastDays: 13,
-  pastDailyAvg: 220,
-  // 86% converted → ~1,000 "not connected" with a 7K corpus today, matching
-  // the client's headline ratio (7K total / 1K not connected).
-  convertRate: 0.86,
-};
+/**
+ * Per-bucket options. Each bucket gets its own headline volume, convert
+ * rate, and past-day average so the dashboard reads as a different kind of
+ * day every 2 hours — some buckets are quiet (3K, 65% convert), some are
+ * peak performance (12K, 92% convert).
+ */
+function optsForCurrentBucket(): CorpusOptions {
+  return {
+    todayCount: bucketInt(7, 3_000, 12_000),
+    pastDays: 13,
+    // Past-day average lives in a similar order of magnitude as today so
+    // the 14-day chart doesn't have today as a single skyscraper bar.
+    pastDailyAvg: bucketInt(13, 400, 900),
+    convertRate: bucketRange(11, 0.65, 0.92),
+  };
+}
 
 let CACHE: DemoCallWire[] | null = null;
+let CACHE_BUCKET = -1;
 
 export function getDemoCalls(): DemoCallWire[] {
-  if (CACHE) return CACHE;
-  CACHE = buildCorpus(DEFAULT_OPTS);
+  const bucket = currentBucket();
+  if (CACHE && CACHE_BUCKET === bucket) return CACHE;
+  CACHE = buildCorpus(optsForCurrentBucket());
+  CACHE_BUCKET = bucket;
   return CACHE;
 }
 
 function buildCorpus(opts: CorpusOptions): DemoCallWire[] {
-  const rng = makeRng(202_606_26);
+  // Seed is tied to the current bucket — same bucket gets the same call
+  // contents (campaign winners, buyer mix, caller numbers), the next
+  // bucket reshuffles.
+  const rng = makeRng(202_606_26 + currentBucket() * 31);
   const start = startOfToday();
   const out: DemoCallWire[] = [];
+
+  // Build today's hour distribution once per bucket; reuse it for past
+  // days so the day-shape stays coherent across the 14-day view.
+  const weights = bucketHourWeights();
 
   // ─── Today ───────────────────────────────────────────────────────────
   // We intentionally allow timestamps anywhere in today's 24h window —
@@ -171,7 +206,7 @@ function buildCorpus(opts: CorpusOptions): DemoCallWire[] {
   // marketing demo: the dashboard should always look like a full active
   // business day, regardless of when the demo is opened.
   for (let i = 0; i < opts.todayCount; i++) {
-    const hour = pickHour(rng);
+    const hour = pickHour(rng, weights);
     const minute = intRange(rng, 0, 59);
     const second = intRange(rng, 0, 59);
     const ts = start + hour * HOUR + minute * 60_000 + second * 1000;
@@ -181,10 +216,10 @@ function buildCorpus(opts: CorpusOptions): DemoCallWire[] {
   // ─── Past N days ─────────────────────────────────────────────────────
   for (let dayOffset = 1; dayOffset <= opts.pastDays; dayOffset++) {
     // Slight day-to-day variation so the 14-day chart has shape.
-    const dayCount = Math.round(opts.pastDailyAvg * range(rng, 0.75, 1.25));
+    const dayCount = Math.round(opts.pastDailyAvg * range(rng, 0.7, 1.3));
     const dayStart = start - dayOffset * DAY;
     for (let i = 0; i < dayCount; i++) {
-      const hour = pickHour(rng);
+      const hour = pickHour(rng, weights);
       const minute = intRange(rng, 0, 59);
       const second = intRange(rng, 0, 59);
       const ts = dayStart + hour * HOUR + minute * 60_000 + second * 1000;
@@ -252,7 +287,13 @@ function todaysCalls(): DemoCallWire[] {
 
 /* ─── Live (in-flight) call snapshot ──────────────────────────────────── */
 
-export function generateLiveCalls(count = 5): DemoCallWire[] {
+/** Number of in-flight calls "right now" — varies per bucket so the topbar
+ *  LIVE pill changes across the day. */
+export function liveCallsCount(): number {
+  return bucketInt(3, 3, 25);
+}
+
+export function generateLiveCalls(count = liveCallsCount()): DemoCallWire[] {
   const rng = makeRng(7_777);
   const rows: DemoCallWire[] = [];
   const liveStatuses = ["ringing", "in-progress", "in-progress", "in-progress"];
@@ -298,7 +339,7 @@ export function dashboardSnapshot() {
   const totalToday = today.length;
   const completed = today.filter((c) => c.status === "completed").length;
   const dropped = totalToday - completed;
-  const liveCount = 5;
+  const liveCount = liveCallsCount();
   const totalRevenue = today.reduce((s, c) => s + Number(c.revenue || 0), 0);
   const totalPayout = today.reduce((s, c) => s + Number(c.publisher_payout || 0), 0);
   const totalProfit = totalRevenue - totalPayout;

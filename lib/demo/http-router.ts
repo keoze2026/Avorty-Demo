@@ -43,6 +43,7 @@ import {
   dashboardSnapshot,
   type DemoCallWire,
 } from "./fixtures/calls";
+import { bucketRange } from "./bucket";
 import {
   seedAuctions,
   bidsForAuction,
@@ -820,8 +821,10 @@ const DAY = 24 * 60 * 60 * 1000;
 
 route("GET", "/api/billing/account", () => ({
   id: "acct_demo",
-  balance: "48720.40",
-  credit_limit: "50000.00",
+  // Balance drifts $20K–$80K across buckets so the wallet pill in the
+  // topbar reads like an active operator account, not a fixed default.
+  balance: bucketRange(101, 20_000, 80_000).toFixed(2),
+  credit_limit: "75000.00",
   low_balance_threshold: "500.00",
   auto_recharge: true,
   auto_recharge_amount: "5000.00",
