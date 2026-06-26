@@ -24,6 +24,27 @@ const RSS_SOURCES: Array<{ name: string; url: string }> = [
   { name: "Decrypt", url: "https://decrypt.co/feed" },
 ];
 
+/** Hard cap on every upstream call. Without this, a slow RSS source can
+ *  hang the build (60s static-gen timeout) or stall a real visitor's
+ *  request indefinitely. 5s is generous for HTTP; faster than build-time
+ *  pressure but slower than a typical healthy fetch. */
+const UPSTREAM_TIMEOUT_MS = 5_000;
+
+/** fetch() with a hard AbortController deadline. Throws on timeout. */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit & { next?: { revalidate?: number } },
+  timeoutMs = UPSTREAM_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 interface CryptoCompareItem {
   id: string;
   guid: string;
@@ -81,7 +102,7 @@ async function fetchCryptoCompare(
   revalidateSec: number,
 ): Promise<NewsItem[]> {
   try {
-    const res = await fetch(CRYPTOCOMPARE_ENDPOINT, {
+    const res = await fetchWithTimeout(CRYPTOCOMPARE_ENDPOINT, {
       next: { revalidate: revalidateSec },
       headers: { Accept: "application/json" },
     });
@@ -106,7 +127,7 @@ async function fetchRss(
   revalidateSec: number,
 ): Promise<NewsItem[]> {
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       next: { revalidate: revalidateSec },
       headers: {
         Accept: "application/rss+xml, application/xml, text/xml",

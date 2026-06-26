@@ -18,6 +18,24 @@ import type { TokenEntry } from "./mock/tokens";
 
 const ENDPOINT = "https://api.coingecko.com/api/v3/coins/markets";
 
+/** Hard cap on the upstream call. Without this, a slow CoinGecko response
+ *  can hang `next build` until the 60s static-generation timeout fires. */
+const UPSTREAM_TIMEOUT_MS = 5_000;
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit & { next?: { revalidate?: number } },
+  timeoutMs = UPSTREAM_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export type TokensSource = "live" | "fallback";
 
 export interface TokensResult {
@@ -64,7 +82,7 @@ export async function fetchTopTokens(
     `${ENDPOINT}?vs_currency=usd&order=market_cap_desc&per_page=${perPage}` +
     `&page=${page}&sparkline=true&price_change_percentage=1h,24h,7d`;
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       next: { revalidate: revalidateSec },
       headers: { Accept: "application/json" },
     });
