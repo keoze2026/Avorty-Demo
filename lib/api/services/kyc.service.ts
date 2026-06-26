@@ -1,10 +1,13 @@
 /**
  * KYC service — /api/kyc/*.
  *
- *   GET  /api/kyc/                  — current submission for the org
- *   POST /api/kyc/                  — submit individual KYC
- *   POST /api/kyc/company/          — submit company KYC
- *   POST /api/kyc/documents/upload  — multipart upload, returns { url }
+ *   GET  /api/kyc/                   — current submission for the org;
+ *                                       404 when the org has not submitted yet
+ *   POST /api/kyc/                   — submit individual KYC
+ *   POST /api/kyc/company/           — submit company KYC
+ *   POST /api/kyc/documents/upload/  — multipart upload, fields `document`
+ *                                       (file) + `document_type` (string),
+ *                                       returns { url }
  *
  * The submission endpoints take pre-uploaded document URLs (`governmentIdUrl`,
  * `businessRegistrationDocUrl`). The frontend uploads files via the document
@@ -12,7 +15,7 @@
  * form payload.
  */
 
-import { http } from "@/lib/api/http";
+import { ApiError, http } from "@/lib/api/http";
 
 export type KycStatus = "draft" | "submitted" | "approved" | "rejected" | "expired";
 export type KycType = "individual" | "company";
@@ -122,13 +125,15 @@ function wireToSubmission(w: KycWire): KycSubmission {
 }
 
 export const kycService = {
-  /** Fetch the current org's KYC submission (404 → returns null). */
+  /** Fetch the current org's KYC submission. Returns `null` when the org
+   *  has not submitted yet (backend returns 404 for that case — expected,
+   *  not an error). The caller should show an empty form when null. */
   async get(): Promise<KycSubmission | null> {
     try {
       const wire = await http.get<KycWire>("/api/kyc/");
       return wireToSubmission(wire);
     } catch (e) {
-      if (e instanceof Error && /404/.test(e.message)) return null;
+      if (e instanceof ApiError && e.status === 404) return null;
       throw e;
     }
   },
@@ -151,12 +156,24 @@ export const kycService = {
    * returns the resolved URL the caller passes into `submitIndividual`
    * or `submitCompany` as the `governmentIdUrl` / `businessRegistrationDocUrl`
    * field.
+   *
+   * Fields sent (per backend contract, June 2026):
+   *   `document`      — the file, name preserved
+   *   `document_type` — "government_id" | "business_registration"
+   *
+   * The trailing slash on the URL is intentional and required — Django's
+   * APPEND_SLASH would otherwise redirect the POST to a 405-rejecting
+   * variant of the endpoint.
    */
-  async uploadDocument(file: File): Promise<{ url: string }> {
+  async uploadDocument(
+    file: File,
+    documentType: KycDocumentType,
+  ): Promise<{ url: string }> {
     const form = new FormData();
-    form.append("file", file);
+    form.append("document", file);
+    form.append("document_type", documentType);
     const res = await http.post<{ url?: string; documentUrl?: string }>(
-      "/api/kyc/documents/upload",
+      "/api/kyc/documents/upload/",
       { body: form, rawBody: true },
     );
     const url = res.url ?? res.documentUrl ?? "";
@@ -164,3 +181,5 @@ export const kycService = {
     return { url };
   },
 };
+
+export type KycDocumentType = "government_id" | "business_registration";

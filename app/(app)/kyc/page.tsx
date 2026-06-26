@@ -35,6 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   kycService,
+  type KycDocumentType,
   type KycSubmission,
 } from "@/lib/api/services/kyc.service";
 import { useOnboardingStore } from "@/lib/store/onboarding-store";
@@ -384,6 +385,7 @@ export default function KycPage() {
 
             <DocumentUploader
               accept="image/*,application/pdf"
+              documentType={mode === "individual" ? "government_id" : "business_registration"}
               uploaded={mode === "individual" ? governmentId : businessRegistrationDoc}
               onUploaded={(doc) =>
                 mode === "individual" ? setGovernmentId(doc) : setBusinessRegistrationDoc(doc)
@@ -490,11 +492,13 @@ function Field({
 
 function DocumentUploader({
   accept,
+  documentType,
   uploaded,
   onUploaded,
   onClear,
 }: {
   accept: string;
+  documentType: KycDocumentType;
   uploaded: UploadedDoc | null;
   onUploaded: (doc: UploadedDoc) => void;
   onClear: () => void;
@@ -505,7 +509,7 @@ function DocumentUploader({
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
-      const { url } = await kycService.uploadDocument(file);
+      const { url } = await kycService.uploadDocument(file, documentType);
       onUploaded({ fileName: file.name, url });
       toast.success(`${file.name} uploaded.`);
     } catch (e) {

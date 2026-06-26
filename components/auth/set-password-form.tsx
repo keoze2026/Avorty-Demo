@@ -3,7 +3,8 @@
 /**
  * Set-password form — lands here from the one-time link the backend emails
  * after an admin approves an access request. Consumes the `?token=…` query
- * param, asks the user for a password, and POSTs to /api/accounts/set-password/.
+ * param, asks the user for a password, and POSTs to
+ * /api/accounts/access-requests/set-password/.
  *
  * On success the endpoint returns login-shape tokens; we persist them, kick
  * the auth store to re-bootstrap (so /me hydrates the full profile), and

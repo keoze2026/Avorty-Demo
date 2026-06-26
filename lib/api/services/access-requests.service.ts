@@ -6,7 +6,7 @@
  *   GET    /api/accounts/access-requests/            — admin only, ?status=pending
  *   POST   /api/accounts/access-requests/{id}/approve/   body: { role?: string }
  *   POST   /api/accounts/access-requests/{id}/reject/    body: { reason?: string }
- *   POST   /api/accounts/set-password/               — anonymous, body: { token, password }
+ *   POST   /api/accounts/access-requests/set-password/  — anonymous, body: { token, password }
  *
  * Flow: prospect fills in the contact form → admin reviews + approves →
  * backend creates the user (no password), sends an email with a one-time
@@ -151,9 +151,9 @@ export const accessRequestsService = {
   /** Public — consume the setup token + set the user's password. Returns
    *  login-shape tokens so the caller can sign the user in immediately. */
   async setPassword(input: { token: string; password: string }): Promise<SetPasswordResponse> {
-    return http.post<SetPasswordResponse>("/api/accounts/set-password/", {
-      body: input,
-      anonymous: true,
-    });
+    return http.post<SetPasswordResponse>(
+      "/api/accounts/access-requests/set-password/",
+      { body: input, anonymous: true },
+    );
   },
 };
