@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,6 +10,7 @@ import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
 import { VerticalDonut } from "@/components/dashboard/vertical-donut";
 import { HourlyDistribution } from "@/components/reports/hourly-distribution";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { ExportMenu } from "@/components/shared/export-menu";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,18 @@ import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 const ALL_DEST = "all";
 
+function startOfDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function endOfDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
 export default function DashboardPage() {
   const { t } = useTranslation();
   const destinations = useDestinationsStore((s) => s.destinations);
@@ -39,8 +53,17 @@ export default function DashboardPage() {
   const buyerById = useMemo(() => new Map(buyers.map((b) => [b.id, b])), [buyers]);
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
+  // Date-range filter — same shape and default as the Reports page so the
+  // two surfaces feel consistent. Default = today only; the picker offers
+  // presets (Yesterday, Last 7, Last 14, This/Last month) for quick jumps.
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const today = new Date();
+    return { from: today, to: today };
+  });
 
-  // Calls-today count per destination TFN — recomputed when recent calls change.
+  // Calls-today count per destination TFN — used inside the destination
+  // dropdown's secondary label so the operator can see at a glance which
+  // TFNs are hot today. Independent of the chosen date range above.
   const callsTodayByTfn = useMemo(() => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -52,11 +75,21 @@ export default function DashboardPage() {
     return map;
   }, [recentCalls]);
 
+  // Apply the date-range filter first, then the destination filter, then
+  // hand the result to the charts. Mirrors the Reports page exactly.
+  const dateFilteredCalls = useMemo(() => {
+    const start = dateRange?.from ? startOfDay(dateRange.from).getTime() : -Infinity;
+    const end = dateRange?.from
+      ? endOfDay(dateRange.to ?? dateRange.from).getTime()
+      : Infinity;
+    return recentCalls.filter((c) => c.startedAt >= start && c.startedAt <= end);
+  }, [recentCalls, dateRange]);
+
   // When a destination is selected, scope everything to just its calls.
   const scopedCalls = useMemo(() => {
-    if (allSelected) return recentCalls;
-    return recentCalls.filter((c) => c.destinationNumber === destinationTfn);
-  }, [destinationTfn, allSelected, recentCalls]);
+    if (allSelected) return dateFilteredCalls;
+    return dateFilteredCalls.filter((c) => c.destinationNumber === destinationTfn);
+  }, [destinationTfn, allSelected, dateFilteredCalls]);
 
   const onExport = (format: ExportFormat) => {
     const rows = buildDestinationExportRows(
@@ -102,6 +135,7 @@ export default function DashboardPage() {
                 })}
               </SelectContent>
             </Select>
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
             <ExportMenu onExport={onExport}>
               <Button variant="outline" size="sm">
                 <Download className="h-4 w-4" /> {t("common.export")}
