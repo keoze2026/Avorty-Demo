@@ -9,6 +9,8 @@ import { DashboardActivityCard } from "@/components/dashboard/dashboard-activity
 import { DashboardKpiStrip } from "@/components/dashboard/dashboard-kpi-strip";
 import { DashboardPerformanceGauges } from "@/components/dashboard/dashboard-performance-gauges";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
+import { HeroRevenueCard } from "@/components/dashboard/hero-revenue-card";
+import { LivePulsePanel } from "@/components/dashboard/live-pulse-panel";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { SystemOverviewStrip } from "@/components/dashboard/system-overview-strip";
 import { TopBuyersBars } from "@/components/dashboard/top-buyers-bars";
@@ -161,62 +163,85 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Row 1 — Hero KPI strip. Six executive-scorecard tiles that
-          summarize today's pulse at a glance. Every tile carries a
-          sparkline so internal heights match — no "tall vs short" drift
-          across the row. */}
+      {/*
+        Bento-grid composition — 12-column base. Tiles span varying col +
+        row counts so the page reads as an editorial composition rather
+        than identical rows. Heights match within each row band thanks to
+        `items-stretch` + `h-full` on the cards.
+      */}
+
+      {/* ─── Band 1 ── Hero composition ──────────────────────────────
+          Featured revenue card (8 cols) + Live pulse panel (4 cols),
+          same height, paired as a visual anchor for the page. */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <HeroRevenueCard calls={scopedCalls} totalRevenue={kpis?.totalRevenue} />
+        </div>
+        <div className="lg:col-span-4">
+          <LivePulsePanel
+            liveCalls={kpis?.liveCalls ?? 0}
+            calls={scopedCalls}
+          />
+        </div>
+      </div>
+
+      {/* ─── Band 2 ── KPI ribbon ────────────────────────────────────
+          Six color-themed tiles, each with its own accent identity
+          (indigo / emerald / violet / orange / rose / amber). Per-tile
+          color shifts give the strip visual variety while the uniform
+          structure keeps it readable. */}
       <DashboardKpiStrip
         calls={scopedCalls}
         kpis={kpis ?? null}
         activeCampaigns={activeCampaigns}
       />
 
-      {/* Row 2 — Platform health strip. Six entity counters (campaigns,
-          numbers, buyers, publishers, destinations, routing) in one
-          full-width card. This is the "comprehensive overview" line —
-          one row that answers "what's wired up right now?" without
-          forcing the operator to scroll through detail pages. */}
+      {/* ─── Band 3 ── Platform overview ─────────────────────────────
+          Six entity counters in one full-width strip. Answers
+          "what's wired up right now?" — the comprehensive view. */}
       <SystemOverviewStrip />
 
-      {/* Row 3 — Performance gauges (left, 3 cols) + Today's activity
-          feed (right, 2 cols). `items-stretch` + h-full inside both
-          cards forces the gauges card to grow to match the activity
-          feed's height (or vice versa), eliminating the height drift
-          you saw before. */}
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <DashboardPerformanceGauges calls={scopedCalls} liveCalls={kpis?.liveCalls} />
-        </div>
-        <div className="lg:col-span-2">
-          <DashboardActivityCard calls={scopedCalls} buyers={buyers} />
-        </div>
-      </div>
-
-      {/* Row 4 — Hourly CALLS chart (primary) + donut on the right.
-          Uses the same composed-chart component as the Reports page so
-          the two surfaces share an identical visual language. */}
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* ─── Band 4 ── Asymmetric mid-section ────────────────────────
+          Hourly chart (7 cols) + Donut (5 cols, narrower). The widths
+          break out of the standard 8/4 split so the rhythm shifts
+          downward through the page. */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-7">
           <HourlyDistribution calls={scopedCalls} />
         </div>
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="lg:col-span-5">
           <VerticalDonut calls={scopedCalls} />
         </div>
       </div>
 
-      {/* Row 5 — Two leaderboards side by side: Top Campaigns + Top
-          Buyers, both rendered as horizontal-bar charts so they share
-          the exact same visual vocabulary. Same chart library, same
-          header chrome, same range selector. */}
+      {/* ─── Band 5 ── Performance + Activity ────────────────────────
+          Gauges (7 cols, the more visual half) + Activity feed
+          (5 cols). Both height-locked via `items-stretch`. */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <DashboardPerformanceGauges
+            calls={scopedCalls}
+            liveCalls={kpis?.liveCalls}
+          />
+        </div>
+        <div className="lg:col-span-5">
+          <DashboardActivityCard calls={scopedCalls} buyers={buyers} />
+        </div>
+      </div>
+
+      {/* ─── Band 6 ── Twin leaderboards ─────────────────────────────
+          Top Campaigns + Top Buyers, both horizontal bar charts —
+          identical visual vocabulary, paired at 50/50. */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
         <TopCampaignsBars calls={scopedCalls} />
         <TopBuyersBars calls={scopedCalls} buyers={buyers} />
       </div>
 
-      {/* Row 6 — Revenue trend full-width so the line has room to read. */}
+      {/* ─── Band 7 ── Revenue trend (full width) ────────────────────
+          The line chart needs room to breathe; gets a row of its own. */}
       <RevenueChart calls={scopedCalls} />
 
-      {/* Row 7 — Destinations table (each TFN with its own CC and Cap) */}
+      {/* ─── Band 8 ── Destinations detail table ──────────────────── */}
       <DestinationSummaryTable
         destinationFilter={allSelected ? undefined : destinationTfn}
       />

@@ -113,8 +113,9 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
   const convRate = calls.length > 0 ? completedToday / calls.length : (kpis?.conversionRate ?? 0);
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-6">
       <KpiTile
+        accent="indigo"
         label="Total calls today"
         value={kpis?.callsToday ?? calls.length}
         formatValue={(v) => formatNumber(Math.round(v))}
@@ -123,6 +124,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         sparkline={callsSpark}
       />
       <KpiTile
+        accent="emerald"
         label="Revenue today"
         value={kpis?.totalRevenue ?? calls.reduce((s, c) => s + c.revenue, 0)}
         formatValue={(v) => formatCurrency(v)}
@@ -131,6 +133,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         sparkline={revenueSpark}
       />
       <KpiTile
+        accent="violet"
         label="Conversion rate"
         value={convRate * 100}
         formatValue={(v) => formatPercent(v, 1)}
@@ -138,6 +141,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         sparkline={conversionSpark}
       />
       <KpiTile
+        accent="orange"
         label="Avg payout / converted"
         value={avgPayout}
         formatValue={(v) => formatCurrency(v, true)}
@@ -145,6 +149,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         sparkline={payoutSpark}
       />
       <KpiTile
+        accent="rose"
         label="Live calls"
         value={kpis?.liveCalls ?? 0}
         formatValue={(v) => formatNumber(Math.round(v))}
@@ -152,6 +157,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         sparkline={liveSpark}
       />
       <KpiTile
+        accent="amber"
         label="Active campaigns"
         value={activeCampaigns}
         formatValue={(v) => formatNumber(Math.round(v))}
