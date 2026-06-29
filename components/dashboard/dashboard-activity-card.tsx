@@ -216,7 +216,7 @@ export function DashboardActivityCard({ calls, buyers }: DashboardActivityCardPr
             No notable activity yet today.
           </div>
         ) : (
-          <ul className="flex flex-1 flex-col gap-2">
+          <ul className="flex flex-1 flex-col gap-2 overflow-y-auto">
             {events.map((e, i) => {
               const tone = TONE_CLASSES[e.tone];
               const Icon = e.icon;

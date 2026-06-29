@@ -67,6 +67,23 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
     [calls],
   );
   const liveSpark = useMemo(() => sparklineFromCalls(calls, (c) => (c.status === "in-progress" || c.status === "ringing" ? 1 : 0)), [calls]);
+  // Avg-payout sparkline — running 1h-window mean. Keeps every tile the
+  // same height; without this the avg-payout tile would render shorter
+  // than its neighbors and break the strip alignment.
+  const payoutSpark = useMemo(() => sparklineFromCalls(calls, (c) => c.status === "completed" ? c.payout : 0), [calls]);
+  // Campaign sparkline — count of distinct active campaigns per hour-of-
+  // call. Falls back to a flat line when no calls have campaign data so
+  // the tile still renders.
+  const campaignsSpark = useMemo(() => {
+    const start = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+    const buckets: Array<Set<string>> = Array.from({ length: 24 }, () => new Set<string>());
+    for (const c of calls) {
+      if (c.startedAt < start) continue;
+      const h = new Date(c.startedAt).getHours();
+      if (c.campaignId) buckets[h].add(c.campaignId);
+    }
+    return buckets.map((b, i) => ({ i, v: b.size }));
+  }, [calls]);
 
   // Derive avg payout per converted call from the cached calls slice. Falls
   // back to 0 when no calls completed yet to keep the tile readable.
@@ -125,7 +142,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         value={avgPayout}
         formatValue={(v) => formatCurrency(v, true)}
         icon={Activity}
-        foot={`${formatCompact(convertedCalls.length)} converted`}
+        sparkline={payoutSpark}
       />
       <KpiTile
         label="Live calls"
@@ -139,6 +156,7 @@ export function DashboardKpiStrip({ calls, kpis, activeCampaigns }: DashboardKpi
         value={activeCampaigns}
         formatValue={(v) => formatNumber(Math.round(v))}
         icon={Megaphone}
+        sparkline={campaignsSpark}
       />
     </div>
   );

@@ -10,7 +10,8 @@ import { DashboardKpiStrip } from "@/components/dashboard/dashboard-kpi-strip";
 import { DashboardPerformanceGauges } from "@/components/dashboard/dashboard-performance-gauges";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
-import { TopBuyersLeaderboard } from "@/components/dashboard/top-buyers-leaderboard";
+import { SystemOverviewStrip } from "@/components/dashboard/system-overview-strip";
+import { TopBuyersBars } from "@/components/dashboard/top-buyers-bars";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
 import { VerticalDonut } from "@/components/dashboard/vertical-donut";
 import { HourlyDistribution } from "@/components/reports/hourly-distribution";
@@ -161,21 +162,28 @@ export default function DashboardPage() {
       />
 
       {/* Row 1 — Hero KPI strip. Six executive-scorecard tiles that
-          summarize today's pulse at a glance: total calls, revenue,
-          conversion, avg payout, live, and active campaigns. Sparklines
-          + delta chips give direction without needing a second look. */}
+          summarize today's pulse at a glance. Every tile carries a
+          sparkline so internal heights match — no "tall vs short" drift
+          across the row. */}
       <DashboardKpiStrip
         calls={scopedCalls}
         kpis={kpis ?? null}
         activeCampaigns={activeCampaigns}
       />
 
-      {/* Row 2 — Performance gauges (left) + Today's activity feed (right).
-          Gauges show four critical percentages with green/amber/red
-          health semantics; the activity card surfaces noteworthy events
-          (top sale, trending campaign, buyer near cap) so the operator
-          knows what to look at next. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+      {/* Row 2 — Platform health strip. Six entity counters (campaigns,
+          numbers, buyers, publishers, destinations, routing) in one
+          full-width card. This is the "comprehensive overview" line —
+          one row that answers "what's wired up right now?" without
+          forcing the operator to scroll through detail pages. */}
+      <SystemOverviewStrip />
+
+      {/* Row 3 — Performance gauges (left, 3 cols) + Today's activity
+          feed (right, 2 cols). `items-stretch` + h-full inside both
+          cards forces the gauges card to grow to match the activity
+          feed's height (or vice versa), eliminating the height drift
+          you saw before. */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <DashboardPerformanceGauges calls={scopedCalls} liveCalls={kpis?.liveCalls} />
         </div>
@@ -184,10 +192,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Row 3 — Hourly CALLS chart (primary) + donut on the right.
+      {/* Row 4 — Hourly CALLS chart (primary) + donut on the right.
           Uses the same composed-chart component as the Reports page so
           the two surfaces share an identical visual language. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <HourlyDistribution calls={scopedCalls} />
         </div>
@@ -196,20 +204,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Row 4 — Two leaderboards side by side: campaigns ranked by
-          connected calls, buyers ranked by revenue. Color-coded
-          performance cells on the buyer rows give an at-a-glance read
-          on accept/convert/pace health. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Row 5 — Two leaderboards side by side: Top Campaigns + Top
+          Buyers, both rendered as horizontal-bar charts so they share
+          the exact same visual vocabulary. Same chart library, same
+          header chrome, same range selector. */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
         <TopCampaignsBars calls={scopedCalls} />
-        <TopBuyersLeaderboard calls={scopedCalls} buyers={buyers} />
+        <TopBuyersBars calls={scopedCalls} buyers={buyers} />
       </div>
 
-      {/* Row 5 — Revenue trend full-width so the line has room to read.
-          Same data as the KPI strip's revenue sparkline, just zoomed in. */}
+      {/* Row 6 — Revenue trend full-width so the line has room to read. */}
       <RevenueChart calls={scopedCalls} />
 
-      {/* Row 6 — Destinations table (each TFN with its own CC and Cap) */}
+      {/* Row 7 — Destinations table (each TFN with its own CC and Cap) */}
       <DestinationSummaryTable
         destinationFilter={allSelected ? undefined : destinationTfn}
       />

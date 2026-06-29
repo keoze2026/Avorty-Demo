@@ -134,15 +134,15 @@ export function DashboardPerformanceGauges({ calls, liveCalls }: DashboardPerfor
   }, [calls, liveCalls]);
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="mb-3 flex items-baseline justify-between">
+    <Card className="flex h-full flex-col">
+      <CardContent className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex items-baseline justify-between">
           <h3 className="text-sm font-semibold">Performance</h3>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
             Live health
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid flex-1 grid-cols-2 place-items-center gap-3 sm:grid-cols-4">
           {gauges.map((g, i) => (
             <Gauge
               key={g.key}
