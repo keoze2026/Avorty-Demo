@@ -154,14 +154,22 @@ export function CampaignsTable({
               const m = makeMetrics(c);
               const isActive = c.status === "active";
               const isPaused = c.status === "paused";
-              // A campaign is "incomplete" when it has no tracking number
-              // attached OR no buyers (and therefore no destinations) wired
-              // up — both are required before any call can be routed. Live
-              // numbers count comes from the numbers store; buyersCount is
-              // already maintained on the Campaign record.
+              // A campaign is "incomplete" only when no tracking number is
+              // attached at all — that's the one hard requirement before a
+              // call can land. Buyers are wired up via routing rules (not
+              // the campaign's `buyersCount` field), so a campaign whose
+              // routing rule points at a buyer can legitimately have
+              // buyersCount === 0 and still be fully routable.
+              //
+              // We OR the backend-supplied `c.numbersCount` with the local
+              // numbers-store count: that way a campaign whose number was
+              // just attached doesn't briefly read "Incomplete" while the
+              // numbers store catches up. The backend has no completeness
+              // signal of its own (confirmed by backend dev), so this
+              // badge is computed entirely client-side.
               const liveNumbers = numbersByCampaign.get(c.id) ?? 0;
-              const isIncomplete =
-                c.status !== "archived" && (liveNumbers === 0 || c.buyersCount === 0);
+              const hasNumber = (c.numbersCount ?? 0) > 0 || liveNumbers > 0;
+              const isIncomplete = c.status !== "archived" && !hasNumber;
               const progressState: ProgressState = isIncomplete
                 ? "incomplete"
                 : isPaused

@@ -22,7 +22,13 @@ import type {
 interface NumberWire {
   id: string;
   number: string;
+  /** Backend may surface the line kind under either `type` (legacy) or
+   *  `number_type` (current — `toll_free` / `local` / `international`).
+   *  After the case adapter `number_type` arrives as `numberType`. We
+   *  accept both and prefer `numberType`. Reading only `type` made every
+   *  number from the new backend default to "local" in the UI. */
   type?: string;
+  numberType?: string;
   status?: string;
   campaignId?: string;
   campaignName?: string;
@@ -108,7 +114,7 @@ function wireToNumber(w: NumberWire): TrackingNumber {
   return {
     id: w.id,
     number: w.number,
-    type: normalizeNumberType(w.type),
+    type: normalizeNumberType(w.numberType ?? w.type),
     status: normalizeNumberStatus(w.status),
     campaignId: w.campaignId,
     campaignName: w.campaignName,
