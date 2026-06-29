@@ -6,7 +6,7 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 
 import { DashboardActivityCard } from "@/components/dashboard/dashboard-activity-card";
-import { DashboardKpiStrip } from "@/components/dashboard/dashboard-kpi-strip";
+import { DashboardMetricsBoard } from "@/components/dashboard/dashboard-metrics-board";
 import { DashboardPerformanceGauges } from "@/components/dashboard/dashboard-performance-gauges";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
 import { HeroRevenueCard } from "@/components/dashboard/hero-revenue-card";
@@ -185,12 +185,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Band 2 ── KPI ribbon ────────────────────────────────────
-          Six color-themed tiles, each with its own accent identity
-          (indigo / emerald / violet / orange / rose / amber). Per-tile
-          color shifts give the strip visual variety while the uniform
-          structure keeps it readable. */}
-      <DashboardKpiStrip
+      {/* ─── Band 2 ── Metrics board ─────────────────────────────────
+          A unified data-table layout that replaces the six-tile KPI
+          strip. Each row carries: status dot, icon, label, current
+          value, 24h sparkline, change delta, and a "vs peak" progress
+          bar. Reads as a Bloomberg-style metrics panel rather than
+          isolated tiles — one composition, dense by design. */}
+      <DashboardMetricsBoard
         calls={scopedCalls}
         kpis={kpis ?? null}
         activeCampaigns={activeCampaigns}
