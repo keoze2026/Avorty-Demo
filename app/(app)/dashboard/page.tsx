@@ -6,11 +6,8 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 
 import { DashboardActivityCard } from "@/components/dashboard/dashboard-activity-card";
-import { DashboardMetricsBoard } from "@/components/dashboard/dashboard-metrics-board";
 import { DashboardPerformanceGauges } from "@/components/dashboard/dashboard-performance-gauges";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
-import { HeroRevenueCard } from "@/components/dashboard/hero-revenue-card";
-import { LivePulsePanel } from "@/components/dashboard/live-pulse-panel";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { SystemOverviewStrip } from "@/components/dashboard/system-overview-strip";
 import { TopBuyersBars } from "@/components/dashboard/top-buyers-bars";
@@ -32,7 +29,6 @@ import {
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useCallsStore } from "@/lib/store/calls-store";
-import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 const ALL_DEST = "all";
@@ -61,14 +57,6 @@ export default function DashboardPage() {
   // the top-buyers leaderboard, and the activity feed.
   const buyers = useBuyersStore((s) => s.buyers);
   const buyerById = useMemo(() => new Map(buyers.map((b) => [b.id, b])), [buyers]);
-  // Campaigns — used for the "active campaigns" KPI tile and downstream
-  // leaderboards. Subscribing here means the count stays live as campaigns
-  // are toggled on/off elsewhere in the app.
-  const campaigns = useCampaignsStore((s) => s.campaigns);
-  const activeCampaigns = useMemo(
-    () => campaigns.filter((c) => c.status === "active").length,
-    [campaigns],
-  );
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
   // Date-range filter — same shape and default as the Reports page so the
@@ -170,42 +158,13 @@ export default function DashboardPage() {
         `items-stretch` + `h-full` on the cards.
       */}
 
-      {/* ─── Band 1 ── Hero composition ──────────────────────────────
-          Featured revenue card (8 cols) + Live pulse panel (4 cols),
-          same height, paired as a visual anchor for the page. */}
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-          <HeroRevenueCard calls={scopedCalls} totalRevenue={kpis?.totalRevenue} />
-        </div>
-        <div className="lg:col-span-4">
-          <LivePulsePanel
-            liveCalls={kpis?.liveCalls ?? 0}
-            calls={scopedCalls}
-          />
-        </div>
-      </div>
-
-      {/* ─── Band 2 ── Metrics board ─────────────────────────────────
-          A unified data-table layout that replaces the six-tile KPI
-          strip. Each row carries: status dot, icon, label, current
-          value, 24h sparkline, change delta, and a "vs peak" progress
-          bar. Reads as a Bloomberg-style metrics panel rather than
-          isolated tiles — one composition, dense by design. */}
-      <DashboardMetricsBoard
-        calls={scopedCalls}
-        kpis={kpis ?? null}
-        activeCampaigns={activeCampaigns}
-      />
-
-      {/* ─── Band 3 ── Platform overview ─────────────────────────────
+      {/* ─── Band 1 ── Platform overview ─────────────────────────────
           Six entity counters in one full-width strip. Answers
           "what's wired up right now?" — the comprehensive view. */}
       <SystemOverviewStrip />
 
-      {/* ─── Band 4 ── Asymmetric mid-section ────────────────────────
-          Hourly chart (7 cols) + Donut (5 cols, narrower). The widths
-          break out of the standard 8/4 split so the rhythm shifts
-          downward through the page. */}
+      {/* ─── Band 2 ── Asymmetric mid-section ────────────────────────
+          Hourly chart (7 cols) + Donut (5 cols, narrower). */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <HourlyDistribution calls={scopedCalls} />
@@ -215,7 +174,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Band 5 ── Performance + Activity ────────────────────────
+      {/* ─── Band 3 ── Performance + Activity ────────────────────────
           Gauges (7 cols, the more visual half) + Activity feed
           (5 cols). Both height-locked via `items-stretch`. */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
@@ -230,7 +189,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Band 6 ── Twin leaderboards ─────────────────────────────
+      {/* ─── Band 4 ── Twin leaderboards ─────────────────────────────
           Top Campaigns + Top Buyers, both horizontal bar charts —
           identical visual vocabulary, paired at 50/50. */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
@@ -238,11 +197,11 @@ export default function DashboardPage() {
         <TopBuyersBars calls={scopedCalls} buyers={buyers} />
       </div>
 
-      {/* ─── Band 7 ── Revenue trend (full width) ────────────────────
+      {/* ─── Band 5 ── Revenue trend (full width) ────────────────────
           The line chart needs room to breathe; gets a row of its own. */}
       <RevenueChart calls={scopedCalls} />
 
-      {/* ─── Band 8 ── Destinations detail table ──────────────────── */}
+      {/* ─── Band 6 ── Destinations detail table ──────────────────── */}
       <DestinationSummaryTable
         destinationFilter={allSelected ? undefined : destinationTfn}
       />
