@@ -13,10 +13,12 @@
  * below keeps the page reading alive without spinning the network.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Coffee,
   Headphones,
   PhoneCall,
@@ -27,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -43,6 +46,8 @@ import {
 } from "@/lib/api/services/dialer.service";
 import { formatNumber, formatTimer, toE164 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 100;
 
 const POLL_INTERVAL_MS = 3_500;
 
@@ -200,6 +205,8 @@ function AgentsTable({
 }: {
   agents: DialerSnapshot["agents"];
 }) {
+  const [page, setPage] = useState(0);
+
   // Order: on-call first (most relevant), then free, then wrap_up, then break.
   // Within each status, alphabetical so the list reads predictably.
   const STATUS_ORDER: Record<AgentStatus, number> = {
@@ -208,11 +215,22 @@ function AgentsTable({
     wrap_up: 2,
     break: 3,
   };
-  const sorted = [...agents].sort((a, b) => {
-    const so = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
-    if (so !== 0) return so;
-    return a.name.localeCompare(b.name);
-  });
+  const sorted = useMemo(() => {
+    return [...agents].sort((a, b) => {
+      const so = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+      if (so !== 0) return so;
+      return a.name.localeCompare(b.name);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents]);
+
+  // 100 agents per page — keeps the table dense without exploding the page
+  // height. Reset to page 0 when the roster swaps (e.g. bucket rollover).
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const start = safePage * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, sorted.length);
+  const pageAgents = sorted.slice(start, end);
 
   return (
     <Card className="overflow-hidden p-0">
@@ -220,7 +238,10 @@ function AgentsTable({
         <div>
           <h3 className="text-sm font-semibold">Online agents</h3>
           <p className="text-[11px] text-muted-foreground">
-            {formatNumber(agents.length)} active · sorted by status
+            {formatNumber(agents.length)} active · sorted by status · showing{" "}
+            <span className="font-mono tabular-nums text-foreground">
+              {sorted.length === 0 ? 0 : start + 1}–{end}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
@@ -237,9 +258,9 @@ function AgentsTable({
         </div>
       </div>
 
-      <div className="max-h-[640px] overflow-y-auto">
+      <div>
         <Table className="min-w-[820px]">
-          <TableHeader className="sticky top-0 z-10 bg-card">
+          <TableHeader className="bg-card">
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-[28%]">Agent</TableHead>
               <TableHead>Status</TableHead>
@@ -251,7 +272,7 @@ function AgentsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sorted.map((a) => {
+            {pageAgents.map((a) => {
               const tone = STATUS_TONE[a.status];
               return (
                 <TableRow key={a.id}>
@@ -305,6 +326,37 @@ function AgentsTable({
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-secondary/20 px-4 py-2.5">
+          <div className="text-[11px] text-muted-foreground">
+            Page <span className="font-mono tabular-nums text-foreground">{safePage + 1}</span> of{" "}
+            <span className="font-mono tabular-nums text-foreground">{totalPages}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={safePage === 0}
+              className="h-7 px-2"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={safePage >= totalPages - 1}
+              className="h-7 px-2"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

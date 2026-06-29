@@ -17,6 +17,7 @@
 
 import { makeRng, pick, intRange, range } from "../rng";
 import { currentBucket, bucketInt, bucketRange } from "../bucket";
+import { liveCallsCount, todaysCalls } from "./calls";
 
 /* ─── Name pools ───────────────────────────────────────────────────────── */
 
@@ -214,7 +215,7 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
   const rng = makeRng(currentBucket() * 911 + tick);
 
   let onCall = 0, free = 0, wrapUp = 0, breakCount = 0;
-  let callsToday = 0, salesToday = 0, missedToday = 0;
+  let perAgentSales = 0, perAgentMissed = 0;
 
   const out: DemoAgentWire[] = roster.agents.map((a) => {
     const status = pickStatus(rng);
@@ -223,9 +224,8 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
     else if (status === "wrap_up") wrapUp++;
     else breakCount++;
 
-    callsToday += a.callsToday;
-    salesToday += a.salesToday;
-    missedToday += a.missedToday;
+    perAgentSales += a.salesToday;
+    perAgentMissed += a.missedToday;
 
     const wire: DemoAgentWire = {
       id: a.id,
@@ -248,17 +248,32 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
     return wire;
   });
 
+  // Headline numbers MUST match the topbar / dashboard — those read from
+  // the same call corpus. The agent table's per-agent stats keep their own
+  // distribution; only the "Calls running live", "Total calls so far",
+  // "Missed calls", and "Sales" KPIs sync to the corpus so the operator
+  // sees the same totals on every surface.
+  const today = todaysCalls();
+  const callsTotal = today.length;
+  const callsLive = liveCallsCount();
+  const missedFromCorpus = today.filter((c) => c.status !== "completed").length;
+  const salesFromCorpus = today.filter((c) => c.status === "completed").length;
+
   return {
     agents_online: roster.agents.length,
     agents_on_call: onCall,
     agents_free: free,
     agents_wrap_up: wrapUp,
     agents_break: breakCount,
-    calls_live: onCall,
-    calls_missed: missedToday,
-    calls_total: callsToday,
-    sales: salesToday,
+    calls_live: callsLive,
+    calls_missed: missedFromCorpus,
+    calls_total: callsTotal,
+    sales: salesFromCorpus,
+    // Per-agent rollups kept for any UI that wants them (currently unused
+    // by the headline tiles).
+    _per_agent_sales: perAgentSales,
+    _per_agent_missed: perAgentMissed,
     agents: out,
     generated_at: Date.now(),
-  };
+  } as DemoDialerSnapshotWire;
 }

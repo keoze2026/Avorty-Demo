@@ -280,7 +280,7 @@ function makeCall(
 
 /* ─── Today-only filter helper for the live KPI snapshot ──────────────── */
 
-function todaysCalls(): DemoCallWire[] {
+export function todaysCalls(): DemoCallWire[] {
   const start = startOfToday();
   return getDemoCalls().filter((c) => Date.parse(c.created_at) >= start);
 }
