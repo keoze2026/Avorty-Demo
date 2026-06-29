@@ -56,6 +56,7 @@ import {
   seedAnomalies,
   seedAutopilotConfig,
 } from "./fixtures/ai";
+import { dialerSnapshot } from "./fixtures/agents";
 
 /* ─── Internal request shape (already-camelCased body, original path) ── */
 
@@ -813,6 +814,15 @@ route("PATCH", "/api/ai/autopilot/config/", (req) => {
 /* ─── DNI pools ─────────────────────────────────────────────────────── */
 
 route("GET", "/api/dni/pools", () => ({ items: [], total: 0 }));
+
+/* ─── Live Dialer (demo-only) ──────────────────────────────────────────
+ * Agent-centric floor view — 6 KPI tiles + a roster table of up to 250
+ * online agents. Avortyx doesn't model agents itself, so this surface
+ * exists in the demo only. The snapshot mixes bucket-stable identity
+ * (names, daily totals) with a per-4-second jitter on the status mix so
+ * the page reads alive when an operator is watching.
+ */
+route("GET", "/api/dialer/snapshot", () => dialerSnapshot());
 
 /* ─── Billing (out of demo scope, but shape-sensitive) ──────────────── */
 
