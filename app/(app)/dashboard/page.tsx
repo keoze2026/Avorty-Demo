@@ -5,8 +5,12 @@ import type { DateRange } from "react-day-picker";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
+import { DashboardActivityCard } from "@/components/dashboard/dashboard-activity-card";
+import { DashboardKpiStrip } from "@/components/dashboard/dashboard-kpi-strip";
+import { DashboardPerformanceGauges } from "@/components/dashboard/dashboard-performance-gauges";
 import { DestinationSummaryTable } from "@/components/dashboard/destination-summary-table";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
+import { TopBuyersLeaderboard } from "@/components/dashboard/top-buyers-leaderboard";
 import { TopCampaignsBars } from "@/components/dashboard/top-campaigns-bars";
 import { VerticalDonut } from "@/components/dashboard/vertical-donut";
 import { HourlyDistribution } from "@/components/reports/hourly-distribution";
@@ -25,6 +29,7 @@ import {
 import { dateStamped, downloadRows, type ExportColumn, type ExportFormat } from "@/lib/export";
 import { useBuyersStore } from "@/lib/store/buyers-store";
 import { useCallsStore } from "@/lib/store/calls-store";
+import { useCampaignsStore } from "@/lib/store/campaigns-store";
 import { useDestinationsStore } from "@/lib/store/destinations-store";
 
 const ALL_DEST = "all";
@@ -48,9 +53,19 @@ export default function DashboardPage() {
   // chart components still aggregate client-side off this list, so we pull a
   // generous slice (200 by default; tune via fetchRecent) at app mount.
   const recentCalls = useCallsStore((s) => s.recent);
-  // Buyers (live) — for the destination-dropdown label "buyer name" column.
+  const kpis = useCallsStore((s) => s.kpis);
+  // Buyers (live) — for the destination-dropdown label "buyer name" column,
+  // the top-buyers leaderboard, and the activity feed.
   const buyers = useBuyersStore((s) => s.buyers);
   const buyerById = useMemo(() => new Map(buyers.map((b) => [b.id, b])), [buyers]);
+  // Campaigns — used for the "active campaigns" KPI tile and downstream
+  // leaderboards. Subscribing here means the count stays live as campaigns
+  // are toggled on/off elsewhere in the app.
+  const campaigns = useCampaignsStore((s) => s.campaigns);
+  const activeCampaigns = useMemo(
+    () => campaigns.filter((c) => c.status === "active").length,
+    [campaigns],
+  );
   const [destinationTfn, setDestinationTfn] = useState<string>(ALL_DEST);
   const allSelected = destinationTfn === ALL_DEST;
   // Date-range filter — same shape and default as the Reports page so the
@@ -145,9 +160,33 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Row 1 — Hourly CALLS chart (primary) + donut on the right.
-          Uses the same composed-chart component as the Reports page so the
-          two surfaces share an identical visual language. */}
+      {/* Row 1 — Hero KPI strip. Six executive-scorecard tiles that
+          summarize today's pulse at a glance: total calls, revenue,
+          conversion, avg payout, live, and active campaigns. Sparklines
+          + delta chips give direction without needing a second look. */}
+      <DashboardKpiStrip
+        calls={scopedCalls}
+        kpis={kpis ?? null}
+        activeCampaigns={activeCampaigns}
+      />
+
+      {/* Row 2 — Performance gauges (left) + Today's activity feed (right).
+          Gauges show four critical percentages with green/amber/red
+          health semantics; the activity card surfaces noteworthy events
+          (top sale, trending campaign, buyer near cap) so the operator
+          knows what to look at next. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <DashboardPerformanceGauges calls={scopedCalls} liveCalls={kpis?.liveCalls} />
+        </div>
+        <div className="lg:col-span-2">
+          <DashboardActivityCard calls={scopedCalls} buyers={buyers} />
+        </div>
+      </div>
+
+      {/* Row 3 — Hourly CALLS chart (primary) + donut on the right.
+          Uses the same composed-chart component as the Reports page so
+          the two surfaces share an identical visual language. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <HourlyDistribution calls={scopedCalls} />
@@ -157,13 +196,20 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Row 2 — Top campaigns + Revenue trend (secondary) */}
+      {/* Row 4 — Two leaderboards side by side: campaigns ranked by
+          connected calls, buyers ranked by revenue. Color-coded
+          performance cells on the buyer rows give an at-a-glance read
+          on accept/convert/pace health. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TopCampaignsBars calls={scopedCalls} />
-        <RevenueChart calls={scopedCalls} />
+        <TopBuyersLeaderboard calls={scopedCalls} buyers={buyers} />
       </div>
 
-      {/* Row 3 — Destinations table (each TFN with its own CC and Cap) */}
+      {/* Row 5 — Revenue trend full-width so the line has room to read.
+          Same data as the KPI strip's revenue sparkline, just zoomed in. */}
+      <RevenueChart calls={scopedCalls} />
+
+      {/* Row 6 — Destinations table (each TFN with its own CC and Cap) */}
       <DestinationSummaryTable
         destinationFilter={allSelected ? undefined : destinationTfn}
       />
