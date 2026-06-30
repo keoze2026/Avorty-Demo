@@ -168,7 +168,9 @@ function buildRoster(bucket: number): Roster {
     if (!name) name = `${pick(FIRST_NAMES, rng)} ${pick(LAST_NAMES, rng)}`;
     used.add(name);
     const callsToday = intRange(rng, 8, 96);
-    const salesToday = Math.floor(callsToday * range(rng, 0.18, 0.42));
+    // Per client spec: sales = 10% of connected. Per-agent the band sits
+    // 8–12% so the column reads varied without drifting far from 10%.
+    const salesToday = Math.floor(callsToday * range(rng, 0.08, 0.12));
     const missedToday = Math.floor(callsToday * range(rng, 0.04, 0.14));
     agents.push({
       id: `agent_${bucket}_${i.toString(36)}`,
@@ -274,8 +276,11 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
   // sees the same totals on every surface.
   const today = todaysCalls();
   const callsTotal = today.length;
-  const missedFromCorpus = today.filter((c) => c.status !== "completed").length;
-  const salesFromCorpus = today.filter((c) => c.status === "completed").length;
+  const connectedFromCorpus = today.filter((c) => c.status === "completed").length;
+  const missedFromCorpus = today.length - connectedFromCorpus;
+  // Per client spec: sales = 10% of connected (completed) calls. Drops
+  // the old "sales = every completed call" conflation.
+  const salesFromCorpus = Math.round(connectedFromCorpus * 0.10);
 
   return {
     agents_online: roster.agents.length,
@@ -283,10 +288,10 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
     agents_free: free,
     agents_wrap_up: wrapUp,
     agents_break: breakCount,
-    calls_live: onCall,         // header KPI now mirrors the legend
+    calls_live: onCall,         // header KPI mirrors the legend
     calls_missed: missedFromCorpus,
     calls_total: callsTotal,
-    sales: salesFromCorpus,
+    sales: salesFromCorpus,     // 10% of connected
     _per_agent_sales: perAgentSales,
     _per_agent_missed: perAgentMissed,
     agents: out,

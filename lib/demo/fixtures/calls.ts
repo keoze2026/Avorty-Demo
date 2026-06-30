@@ -167,18 +167,20 @@ interface CorpusOptions {
 }
 
 /**
- * Per-bucket options. Per client spec:
- *   - todayCount capped at 6,000 (max calls/day) with a tight 5.5K–6K
- *     band per bucket so the headline stays in the operator's target.
- *   - pastDailyAvg slightly lower so the 14-day chart shows today as
- *     "a strong day" without skyscrapering against the past.
+ * Per-bucket options. Per client spec (revised):
+ *   - todayCount averages 2K with a 2.5K hard cap (1.8K–2.5K range).
+ *   - pastDailyAvg scaled down to stay coherent with today's smaller
+ *     volume — past days hover around 1K so the 14-day chart still
+ *     shows "today is a busy day" without past days skyscrapering.
  *   - convertRate keeps its 65–92% band for "not connected" variety.
+ *     The 10%-of-connected sales conversion is applied downstream
+ *     (dashboardSnapshot + dialerSnapshot), not at corpus generation.
  */
 function optsForCurrentBucket(): CorpusOptions {
   return {
-    todayCount: bucketInt(7, 5_500, 6_000),
+    todayCount: bucketInt(7, 1_800, 2_500),
     pastDays: 13,
-    pastDailyAvg: bucketInt(13, 800, 2_000),
+    pastDailyAvg: bucketInt(13, 600, 1_400),
     convertRate: bucketRange(11, 0.65, 0.92),
   };
 }
@@ -298,12 +300,11 @@ export function todaysCalls(): DemoCallWire[] {
 /* ─── Live (in-flight) call snapshot ──────────────────────────────────── */
 
 /** Number of in-flight calls "right now" — varies per bucket so the topbar
- *  LIVE pill changes across the day. Per client spec the concurrent
- *  ceiling is 250, but it shouldn't sit there all the time — the band
- *  spans 80–250 so most buckets land in the middle and only the busiest
- *  buckets press against the ceiling. */
+ *  LIVE pill changes across the day. Per client spec the target is ~200
+ *  concurrent with a 150–250 band so the headline reads close to 200
+ *  most of the time but still has the natural up-and-down across buckets. */
 export function liveCallsCount(): number {
-  return bucketInt(3, 80, 250);
+  return bucketInt(3, 150, 250);
 }
 
 export function generateLiveCalls(count = liveCallsCount()): DemoCallWire[] {
@@ -353,6 +354,10 @@ export function dashboardSnapshot() {
   const completed = today.filter((c) => c.status === "completed").length;
   const dropped = totalToday - completed;
   const liveCount = liveCallsCount();
+  // Per client spec: sales = 10% of connected (completed) calls. This is
+  // distinct from "completed" / "converted" — a connected call is one
+  // that picked up; a sale is a connected call that actually closed.
+  const totalSales = Math.round(completed * 0.10);
   const totalRevenue = today.reduce((s, c) => s + Number(c.revenue || 0), 0);
   const totalPayout = today.reduce((s, c) => s + Number(c.publisher_payout || 0), 0);
   const totalProfit = totalRevenue - totalPayout;
@@ -377,5 +382,6 @@ export function dashboardSnapshot() {
     total_missed: today.filter((c) => c.status === "missed").length,
     total_rejected: today.filter((c) => c.status === "rejected").length,
     not_connected: dropped,
+    total_sales: totalSales,
   };
 }
