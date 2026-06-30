@@ -158,12 +158,7 @@ export default function DashboardPage() {
         `items-stretch` + `h-full` on the cards.
       */}
 
-      {/* ─── Band 1 ── Platform overview ─────────────────────────────
-          Six entity counters in one full-width strip. Answers
-          "what's wired up right now?" — the comprehensive view. */}
-      <SystemOverviewStrip />
-
-      {/* ─── Band 2 ── Asymmetric mid-section ────────────────────────
+      {/* ─── Band 1 ── Asymmetric mid-section ────────────────────────
           Hourly chart (7 cols) + Donut (5 cols, narrower). */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
         <div className="lg:col-span-7">
@@ -174,7 +169,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Band 3 ── Performance + Activity ────────────────────────
+      {/* ─── Band 2 ── Performance + Activity ────────────────────────
           Gauges (7 cols, the more visual half) + Activity feed
           (5 cols). Both height-locked via `items-stretch`. */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12">
@@ -189,7 +184,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Band 4 ── Twin leaderboards ─────────────────────────────
+      {/* ─── Band 3 ── Twin leaderboards ─────────────────────────────
           Top Campaigns + Top Buyers, both horizontal bar charts —
           identical visual vocabulary, paired at 50/50. */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
@@ -197,9 +192,16 @@ export default function DashboardPage() {
         <TopBuyersBars calls={scopedCalls} buyers={buyers} />
       </div>
 
-      {/* ─── Band 5 ── Revenue trend (full width) ────────────────────
+      {/* ─── Band 4 ── Revenue trend (full width) ────────────────────
           The line chart needs room to breathe; gets a row of its own. */}
       <RevenueChart calls={scopedCalls} />
+
+      {/* ─── Band 5 ── Platform overview ─────────────────────────────
+          Six entity counters (campaigns / numbers / buyers / publishers
+          / destinations / routing) sitting just above the destinations
+          table — together they form the page's bottom "operational
+          health" section. */}
+      <SystemOverviewStrip />
 
       {/* ─── Band 6 ── Destinations detail table ──────────────────── */}
       <DestinationSummaryTable

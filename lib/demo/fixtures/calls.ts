@@ -57,28 +57,34 @@ const PUBLISHER_REFS = [
 /**
  * Per-bucket hourly distribution.
  *
- * The chart shape rotates every 2h. Four parameters define each bucket's
- * distribution; together they produce a wide range of believable
- * day-shapes:
+ * Per client spec: calls only happen during the 8am–5pm EST business
+ * window. Distribution is a bell curve over hours 8–16 (9 active buckets,
+ * 5pm = closed) with the peak centered in the late morning / early
+ * afternoon — varies slightly per 2h bucket so the chart shape still
+ * shifts across the day.
  *
- *   center      — hour of the peak (10am–5pm)
- *   leftWidth   — hours of ramp-up before the peak (2–5)
- *   rightWidth  — hours of fade-down after the peak (2–6)
- *   sharpness   — 1.3 flat plateau … 3.5 sharp peak
- *
- * Each hour's weight is `cos(πx/2)^sharpness` where x is the normalized
- * distance from center. Hours outside `[center-leftWidth, center+rightWidth]`
- * are zeroed so we get a clean compact arc, not a noisy 24-hour spread.
+ * Peak weight is constrained so that even at the daily cap of 6K calls,
+ * no single hour exceeds the 1K calls-per-hour ceiling. With 6K total
+ * and a peak weight of ~0.16, the busiest hour lands at ~960 calls —
+ * comfortably under the 1K cap.
  */
 function bucketHourWeights(): number[] {
-  const center = bucketRange(31, 10, 17);
-  const leftWidth = bucketRange(33, 2, 5);
-  const rightWidth = bucketRange(35, 2, 6);
-  const sharpness = bucketRange(37, 1.3, 3.5);
+  // Peak shifts within the 10am–1pm band depending on bucket.
+  const center = bucketRange(31, 10, 13);
+  // Tighter window — calls only ramp 2–4h before/after the peak so the
+  // bell stays inside the 8am–4pm active window.
+  const leftWidth = bucketRange(33, 2.5, 4);
+  const rightWidth = bucketRange(35, 2.5, 4);
+  // Moderate sharpness so the peak hour doesn't dominate.
+  const sharpness = bucketRange(37, 1.6, 2.6);
 
   const weights = new Array(24).fill(0);
   let sum = 0;
-  for (let h = 0; h < 24; h++) {
+  // Active window — calls only happen 8am (index 8) through 4pm (index 16).
+  // 5pm (index 17) is the closing hour, so no new calls start then.
+  const ACTIVE_MIN = 8;
+  const ACTIVE_MAX = 16;
+  for (let h = ACTIVE_MIN; h <= ACTIVE_MAX; h++) {
     const dist = h - center;
     const width = dist < 0 ? leftWidth : rightWidth;
     if (Math.abs(dist) > width) continue;
@@ -161,18 +167,18 @@ interface CorpusOptions {
 }
 
 /**
- * Per-bucket options. Each bucket gets its own headline volume, convert
- * rate, and past-day average so the dashboard reads as a different kind of
- * day every 2 hours — some buckets are quiet (3K, 65% convert), some are
- * peak performance (12K, 92% convert).
+ * Per-bucket options. Per client spec:
+ *   - todayCount capped at 6,000 (max calls/day) with a tight 5.5K–6K
+ *     band per bucket so the headline stays in the operator's target.
+ *   - pastDailyAvg slightly lower so the 14-day chart shows today as
+ *     "a strong day" without skyscrapering against the past.
+ *   - convertRate keeps its 65–92% band for "not connected" variety.
  */
 function optsForCurrentBucket(): CorpusOptions {
   return {
-    todayCount: bucketInt(7, 3_000, 12_000),
+    todayCount: bucketInt(7, 5_500, 6_000),
     pastDays: 13,
-    // Past-day average lives in a similar order of magnitude as today so
-    // the 14-day chart doesn't have today as a single skyscraper bar.
-    pastDailyAvg: bucketInt(13, 400, 900),
+    pastDailyAvg: bucketInt(13, 800, 2_000),
     convertRate: bucketRange(11, 0.65, 0.92),
   };
 }
@@ -245,8 +251,12 @@ function makeCall(
   const publisher = pick(PUBLISHER_REFS, rng);
   const isConverted = chance(rng, convertRate);
   const status: string = isConverted ? "completed" : pick(LIVE_FAILURE_STATUSES, rng);
+  // Per client spec: average handle time must be 15+ minutes. Range
+  // 15–25 min for completed calls gives a ~20 min average comfortably
+  // above the floor. Missed / rejected stay short because they didn't
+  // connect to an agent.
   const duration = isConverted
-    ? intRange(rng, 90, 720)
+    ? intRange(rng, 900, 1_500)
     : status === "missed"
       ? intRange(rng, 5, 35)
       : intRange(rng, 1, 12);
@@ -288,9 +298,12 @@ export function todaysCalls(): DemoCallWire[] {
 /* ─── Live (in-flight) call snapshot ──────────────────────────────────── */
 
 /** Number of in-flight calls "right now" — varies per bucket so the topbar
- *  LIVE pill changes across the day. */
+ *  LIVE pill changes across the day. Per client spec the concurrent
+ *  ceiling is 250, but it shouldn't sit there all the time — the band
+ *  spans 80–250 so most buckets land in the middle and only the busiest
+ *  buckets press against the ceiling. */
 export function liveCallsCount(): number {
-  return bucketInt(3, 3, 25);
+  return bucketInt(3, 80, 250);
 }
 
 export function generateLiveCalls(count = liveCallsCount()): DemoCallWire[] {
