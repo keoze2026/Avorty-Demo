@@ -61,20 +61,12 @@ const LAST_NAMES = [
 
 export type DemoAgentStatus = "on_call" | "free" | "wrap_up" | "break";
 
-const STATUS_MIX: Array<{ status: DemoAgentStatus; weight: number }> = [
-  { status: "on_call", weight: 0.32 }, // ~third on a call
-  { status: "free",    weight: 0.55 }, // bulk available
-  { status: "wrap_up", weight: 0.09 }, // post-call notes
-  { status: "break",   weight: 0.04 }, // short break / lunch
-];
-
-function pickStatus(rng: () => number): DemoAgentStatus {
-  let r = rng();
-  for (const s of STATUS_MIX) {
-    r -= s.weight;
-    if (r <= 0) return s.status;
-  }
-  return "free";
+/** Stable string hash — used to randomize agent ordering deterministically
+ *  per snapshot tick. */
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
 }
 
 const CAMPAIGN_NAMES = [
@@ -208,17 +200,44 @@ function currentRoster(): Roster {
  */
 export function dialerSnapshot(): DemoDialerSnapshotWire {
   const roster = currentRoster();
-  // Within-session RNG — bucket-stable seed XOR'd with a 4-second tick so
-  // successive snapshots within ~4s look identical, but every 4s the
-  // status mix shifts slightly. Feels alive without spinning.
+  // Within-session jitter — bucket-stable seed XOR'd with a 4-second tick
+  // so successive snapshots within ~4s look identical, but every 4s the
+  // status assignment rotates slightly. Feels alive without spinning.
   const tick = Math.floor(Date.now() / 4_000);
   const rng = makeRng(currentBucket() * 911 + tick);
+
+  // ─── Status quotas ──────────────────────────────────────────────────
+  // The number of agents in `on_call` MUST equal `liveCallsCount()` so the
+  // legend, the KPI tile, and the topbar pill all report the same value.
+  // Wrap-up and break carve out small shares of the remaining agents;
+  // everyone else is free.
+  const totalAgents = roster.agents.length;
+  const targetOnCall = Math.min(liveCallsCount(), totalAgents);
+  const remaining = totalAgents - targetOnCall;
+  const targetWrapUp = Math.round(remaining * 0.10);
+  const targetBreak = Math.round(remaining * 0.04);
+
+  // Deterministic shuffle — agents with the lowest hash key land in the
+  // "on_call" bucket. The hash blends agent id with the tick so the
+  // assignment rotates every 4s.
+  const ordered = [...roster.agents].sort(
+    (a, b) => (hashStr(a.id) ^ tick) - (hashStr(b.id) ^ tick),
+  );
+  const statusByAgent = new Map<string, DemoAgentStatus>();
+  for (let i = 0; i < ordered.length; i++) {
+    let status: DemoAgentStatus;
+    if (i < targetOnCall) status = "on_call";
+    else if (i < targetOnCall + targetWrapUp) status = "wrap_up";
+    else if (i < targetOnCall + targetWrapUp + targetBreak) status = "break";
+    else status = "free";
+    statusByAgent.set(ordered[i].id, status);
+  }
 
   let onCall = 0, free = 0, wrapUp = 0, breakCount = 0;
   let perAgentSales = 0, perAgentMissed = 0;
 
   const out: DemoAgentWire[] = roster.agents.map((a) => {
-    const status = pickStatus(rng);
+    const status = statusByAgent.get(a.id) ?? "free";
     if (status === "on_call") onCall++;
     else if (status === "free") free++;
     else if (status === "wrap_up") wrapUp++;
@@ -255,22 +274,19 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
   // sees the same totals on every surface.
   const today = todaysCalls();
   const callsTotal = today.length;
-  const callsLive = liveCallsCount();
   const missedFromCorpus = today.filter((c) => c.status !== "completed").length;
   const salesFromCorpus = today.filter((c) => c.status === "completed").length;
 
   return {
     agents_online: roster.agents.length,
-    agents_on_call: onCall,
+    agents_on_call: onCall,     // === targetOnCall === liveCallsCount()
     agents_free: free,
     agents_wrap_up: wrapUp,
     agents_break: breakCount,
-    calls_live: callsLive,
+    calls_live: onCall,         // header KPI now mirrors the legend
     calls_missed: missedFromCorpus,
     calls_total: callsTotal,
     sales: salesFromCorpus,
-    // Per-agent rollups kept for any UI that wants them (currently unused
-    // by the headline tiles).
     _per_agent_sales: perAgentSales,
     _per_agent_missed: perAgentMissed,
     agents: out,
