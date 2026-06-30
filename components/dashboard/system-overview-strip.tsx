@@ -125,22 +125,6 @@ export function SystemOverviewStrip() {
 function SystemCell({ cell }: { cell: Cell }) {
   const Icon = cell.icon;
   const pct = cell.total > 0 ? Math.min(100, (cell.active / cell.total) * 100) : 0;
-  const tone =
-    cell.total === 0
-      ? "muted"
-      : pct >= 70
-        ? "good"
-        : pct >= 40
-          ? "neutral"
-          : "warn";
-  const barClass =
-    tone === "good"
-      ? "bg-[color:var(--success)]"
-      : tone === "warn"
-        ? "bg-[color:var(--warning)]"
-        : tone === "neutral"
-          ? "bg-accent"
-          : "bg-muted-foreground/30";
 
   return (
     <Link
@@ -163,9 +147,15 @@ function SystemCell({ cell }: { cell: Cell }) {
           / {formatNumber(cell.total)}
         </span>
       </div>
+      {/* Single accent for every cell — health semantics are intentionally
+       *  dropped so the strip reads as one unified theme-coloured row
+       *  rather than a green/amber/blue traffic-light. */}
       <div className="h-1 w-full overflow-hidden rounded-full bg-secondary/40">
         <div
-          className={cn("h-full rounded-full transition-all duration-700", barClass)}
+          className={cn(
+            "h-full rounded-full bg-accent transition-all duration-700",
+            cell.total === 0 && "bg-muted-foreground/30",
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>
