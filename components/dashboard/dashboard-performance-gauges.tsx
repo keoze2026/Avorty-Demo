@@ -37,30 +37,15 @@ interface GaugeDef {
   detail?: string;
 }
 
-const THRESH = {
-  good: 70,
-  warn: 50,
-};
-
-function toneFor(pct: number): { stroke: string; text: string; bg: string } {
-  if (pct >= THRESH.good) {
-    return {
-      stroke: "var(--success)",
-      text: "text-[color:var(--success)]",
-      bg: "bg-[color:var(--success)]/10",
-    };
-  }
-  if (pct >= THRESH.warn) {
-    return {
-      stroke: "var(--warning)",
-      text: "text-[color:var(--warning)]",
-      bg: "bg-[color:var(--warning)]/10",
-    };
-  }
+/** Single accent for every gauge — health semantics are intentionally
+ *  dropped so the strip reads as one unified theme-coloured panel rather
+ *  than a green/amber/red traffic-light. The `pct` argument is kept on
+ *  the signature so call sites don't have to change. */
+function toneFor(_pct: number): { stroke: string; text: string; bg: string } {
   return {
-    stroke: "var(--destructive)",
-    text: "text-destructive",
-    bg: "bg-destructive/10",
+    stroke: "var(--accent)",
+    text: "text-accent",
+    bg: "bg-accent/10",
   };
 }
 
