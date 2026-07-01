@@ -19,6 +19,31 @@ import { makeRng, pick, intRange, range } from "../rng";
 import { currentBucket, bucketInt, bucketRange } from "../bucket";
 import { liveCallsCount, todaysCalls } from "./calls";
 
+/** Return {hour, minute} in America/New_York — used to detect the
+ *  end-of-day wind-down window (after 3:45 PM EST) where most of the
+ *  free pool flips to Break. */
+function currentESTHourMinute(): { hour: number; minute: number } {
+  try {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const parts = fmt.formatToParts(new Date());
+    const h = parts.find((p) => p.type === "hour")?.value ?? "12";
+    const m = parts.find((p) => p.type === "minute")?.value ?? "0";
+    const hi = parseInt(h, 10);
+    const mi = parseInt(m, 10);
+    return {
+      hour: Number.isFinite(hi) ? (hi === 24 ? 0 : hi) : 12,
+      minute: Number.isFinite(mi) ? mi : 0,
+    };
+  } catch {
+    return { hour: 12, minute: 0 };
+  }
+}
+
 /* ─── Name pools ───────────────────────────────────────────────────────── */
 
 const FIRST_NAMES = [
@@ -219,17 +244,32 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
   //
   // The number of agents in `on_call` MUST equal `liveCallsCount()` so
   // the legend, the KPI tile, and the topbar pill all report the same
-  // value. Calls-under-dispose ("wrap_up" internally) and break carve
-  // out small shares (6% + 2%) of the remaining agents so free lands
-  // around 92% of the non-on-call pool — matching the client's target
-  // of Free ≈ 100 with 210 online and 102 live. Free is computed as
-  // the residual so the four counts sum EXACTLY to totalAgents; no
-  // rounding drift.
+  // value. Free is computed as the residual so the four counts sum
+  // EXACTLY to totalAgents; no rounding drift.
+  //
+  // Wind-down mode (after 3:45 PM EST): most of the free pool flips to
+  // Break as the day ends. Only 10–15 agents remain free (buffer). This
+  // matches the client's operational rhythm — outbound shifts wrap up
+  // and agents clock off gradually into break time.
   const totalAgents = roster.agents.length;
   const targetOnCall = Math.min(liveCallsCount(), totalAgents);
   const remaining = totalAgents - targetOnCall;
-  const targetWrapUp = Math.round(remaining * 0.06);
-  const targetBreak = Math.round(remaining * 0.02);
+
+  const { hour: estHour, minute: estMinute } = currentESTHourMinute();
+  const IS_WINDDOWN = estHour * 60 + estMinute >= 15 * 60 + 45; // ≥ 3:45 PM EST
+
+  let targetWrapUp: number;
+  let targetBreak: number;
+  if (IS_WINDDOWN) {
+    // Only 10–15 agents stay free as a buffer, rest go on break.
+    targetWrapUp = Math.min(2, remaining);
+    const desiredFree = Math.min(intRange(rng, 10, 15), Math.max(0, remaining - targetWrapUp));
+    targetBreak = Math.max(0, remaining - targetWrapUp - desiredFree);
+  } else {
+    // Normal split: wrap_up 6%, break 2%, free 92% of remaining.
+    targetWrapUp = Math.round(remaining * 0.06);
+    targetBreak = Math.round(remaining * 0.02);
+  }
 
   // Deterministic shuffle — agents with the lowest hash key land in the
   // "on_call" bucket. The hash blends agent id with the tick so the
