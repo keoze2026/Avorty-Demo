@@ -57,43 +57,44 @@ const PUBLISHER_REFS = [
 /**
  * Per-bucket hourly distribution.
  *
- * Per client spec: calls happen from 8am to 5pm EST — a 10-hour window
- * spanning indices 8 (8am) through 17 (5pm inclusive).
+ * Per client spec: fixed per-hour call deltas that build to a specific
+ * cumulative curve reaching ~6,500 calls by 5pm EST. Not a bell curve —
+ * the client wrote out the exact totals per hour:
  *
- * Peak-per-hour cap: at the busiest bucket (6.5K daily), the peak hour
- * must stay ≤ 900 calls. That constrains the max peak weight to about
- * 0.138 (900 / 6500). To hit that, the bell is intentionally broadened
- * (wider left/right widths, flatter sharpness) so no single hour
- * dominates. Center still varies per bucket so the chart shape shifts.
+ *   8–9am    300  · 9–10am   700  · 10–11am   900  (cumulative)
+ *   11–12pm 1900  · 12–1pm  2400  · 1–2pm    3000
+ *   2–3pm   4500  · 3–4pm   5500  · 4–5pm    6500
+ *
+ * That gives hourly deltas of 300, 400, 200, 1000, 500, 600, 1500,
+ * 1000, 1000 — a distinctive shape with the biggest single-hour burst
+ * at 2–3pm EST. Each weight below is `delta / 6500` so the shape
+ * scales cleanly if the daily total drifts slightly across buckets.
+ *
+ * A small ±3% jitter is layered per bucket so successive days aren't
+ * stamped-identical, but the overall curve shape stays intact.
  */
 function bucketHourWeights(): number[] {
-  // Peak shifts within the late-morning / early-afternoon band.
-  const center = bucketRange(31, 10.5, 13.5);
-  // Broad ramps on both sides so the bell doesn't spike — critical for
-  // keeping peak ≤ 900 calls at the 6.5K daily cap.
-  const leftWidth = bucketRange(33, 3.5, 5.5);
-  const rightWidth = bucketRange(35, 3.5, 5.5);
-  // Flatter sharpness (1.2–1.8) trades a "peaked" bell for a smoother
-  // arc that spreads volume across more hours.
-  const sharpness = bucketRange(37, 1.2, 1.8);
-
+  const BASE: Record<number, number> = {
+    8:  300 / 6500,   // 0.0462
+    9:  400 / 6500,   // 0.0615
+    10: 200 / 6500,   // 0.0308
+    11: 1000 / 6500,  // 0.1538
+    12: 500 / 6500,   // 0.0769
+    13: 600 / 6500,   // 0.0923
+    14: 1500 / 6500,  // 0.2308  ← client's peak hour
+    15: 1000 / 6500,  // 0.1538
+    16: 1000 / 6500,  // 0.1538
+  };
   const weights = new Array(24).fill(0);
   let sum = 0;
-  // Active window — 8am (index 8) through 5pm (index 17) inclusive.
-  // Per client: "total until 5pm EST" so calls continue during the 5pm
-  // hour and stop by 6pm.
-  const ACTIVE_MIN = 8;
-  const ACTIVE_MAX = 17;
-  for (let h = ACTIVE_MIN; h <= ACTIVE_MAX; h++) {
-    const dist = h - center;
-    const width = dist < 0 ? leftWidth : rightWidth;
-    if (Math.abs(dist) > width) continue;
-    const x = Math.abs(dist) / width;
-    const w = Math.pow(Math.cos((x * Math.PI) / 2), sharpness);
+  for (let h = 8; h <= 16; h++) {
+    // ±3% per-bucket jitter — each hour gets its own salt so the whole
+    // curve wobbles slightly instead of shifting in lockstep.
+    const jitter = 1 + (bucketRange(40 + h, -0.03, 0.03));
+    const w = BASE[h] * jitter;
     weights[h] = w;
     sum += w;
   }
-  // Normalize so weights sum to 1.0 (pickHour expects this).
   return sum > 0 ? weights.map((w) => w / sum) : weights;
 }
 
@@ -167,21 +168,19 @@ interface CorpusOptions {
 }
 
 /**
- * Per-bucket options. Per client spec (revised 3rd pass):
- *   - todayCount ranges wide: 1.8K–6.5K, with 6.5K being the hard cap
- *     ("5.2K converted rest missed" at max = 80% connect rate).
- *   - pastDailyAvg lives in the middle of that range so the 14-day
- *     chart shows sensible day-to-day variation.
- *   - convertRate tightened to ~80% (76–84% band) so the connected:
- *     missed ratio reads close to the client's 5.2K / 1.3K target on
- *     a full-volume day. The 10%-of-connected sales rule is applied
- *     downstream in the snapshot functions.
+ * Per-bucket options. Per client spec (4th pass):
+ *   - todayCount lands close to 6,500 (the client's end-of-day cumulative
+ *     target). Tight ±3% band per bucket so the daily headline reads
+ *     around 6.5K while still varying enough to feel "alive".
+ *   - pastDailyAvg roughly matches so the 14-day chart doesn't look off.
+ *   - convertRate ~80% so ~5,200 of 6,500 connect and ~1,300 miss —
+ *     matching the client's earlier "5.2K converted rest missed" line.
  */
 function optsForCurrentBucket(): CorpusOptions {
   return {
-    todayCount: bucketInt(7, 1_800, 6_500),
+    todayCount: bucketInt(7, 6_300, 6_700),
     pastDays: 13,
-    pastDailyAvg: bucketInt(13, 1_500, 4_500),
+    pastDailyAvg: bucketInt(13, 4_500, 6_000),
     convertRate: bucketRange(11, 0.76, 0.84),
   };
 }
@@ -320,29 +319,35 @@ function currentESTHour(): number {
   }
 }
 
-/** Number of in-flight calls "right now" — swings by EST hour so the
- *  topbar LIVE pill matches the client's operational rhythm:
+/** Number of in-flight calls "right now" — per-hour targets from the
+ *  client's operational spec. Each hour has its own concurrent-call
+ *  band; the roster in agents.ts is sized above the peak (260 max) so
+ *  "Agents free" is never zero.
  *
- *    11am–2pm EST  →  230–250   (peak)
- *    8am–5pm EST   →  100–180   (business hours around the peak)
- *    other hours   →   10–60    (off-shift trickle)
+ *    8am    50   ·  9am    90   ·  10am   150
+ *    11am   230–260  ·  12pm   230–260  ·  1pm   190–210
+ *    2pm    ~210   ·  3pm    ~230   ·  4pm    ~130
+ *    other  10–40 (off-shift trickle)
  *
- *  Within each band the exact value still varies per 2h bucket so the
- *  chart shape rotation stays alive. The roster in agents.ts is sized
- *  to always be strictly above the peak ceiling so "Agents free" is
- *  never zero. */
+ *  Small ±5% jitter is layered inside each band so successive polls
+ *  within an hour don't return identical numbers. */
 export function liveCallsCount(): number {
   const hour = currentESTHour();
-  if (hour >= 11 && hour < 15) {
-    // 11:00–14:59 EST → peak
-    return bucketInt(3, 230, 250);
-  }
-  if (hour >= 8 && hour < 18) {
-    // 8–10 EST + 15–17 EST → business hours around the peak
-    return bucketInt(3, 100, 180);
-  }
-  // Outside 8am–6pm EST → off-shift trickle
-  return bucketInt(3, 10, 60);
+  const HOURLY_LIVE: Record<number, [number, number]> = {
+    8: [42, 58],
+    9: [80, 100],
+    10: [140, 160],
+    11: [230, 260],
+    12: [230, 260],
+    13: [190, 210],
+    14: [200, 220],
+    15: [220, 240],
+    16: [120, 140],
+  };
+  const band = HOURLY_LIVE[hour];
+  if (band) return bucketInt(3, band[0], band[1]);
+  // Outside 8am–4:59pm EST → off-shift trickle
+  return bucketInt(3, 10, 40);
 }
 
 export function generateLiveCalls(count = liveCallsCount()): DemoCallWire[] {
