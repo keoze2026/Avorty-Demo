@@ -167,21 +167,22 @@ interface CorpusOptions {
 }
 
 /**
- * Per-bucket options. Per client spec (revised):
- *   - todayCount averages 2K with a 2.5K hard cap (1.8K–2.5K range).
- *   - pastDailyAvg scaled down to stay coherent with today's smaller
- *     volume — past days hover around 1K so the 14-day chart still
- *     shows "today is a busy day" without past days skyscrapering.
- *   - convertRate keeps its 65–92% band for "not connected" variety.
- *     The 10%-of-connected sales conversion is applied downstream
- *     (dashboardSnapshot + dialerSnapshot), not at corpus generation.
+ * Per-bucket options. Per client spec (revised 3rd pass):
+ *   - todayCount ranges wide: 1.8K–6.5K, with 6.5K being the hard cap
+ *     ("5.2K converted rest missed" at max = 80% connect rate).
+ *   - pastDailyAvg lives in the middle of that range so the 14-day
+ *     chart shows sensible day-to-day variation.
+ *   - convertRate tightened to ~80% (76–84% band) so the connected:
+ *     missed ratio reads close to the client's 5.2K / 1.3K target on
+ *     a full-volume day. The 10%-of-connected sales rule is applied
+ *     downstream in the snapshot functions.
  */
 function optsForCurrentBucket(): CorpusOptions {
   return {
-    todayCount: bucketInt(7, 1_800, 2_500),
+    todayCount: bucketInt(7, 1_800, 6_500),
     pastDays: 13,
-    pastDailyAvg: bucketInt(13, 600, 1_400),
-    convertRate: bucketRange(11, 0.65, 0.92),
+    pastDailyAvg: bucketInt(13, 1_500, 4_500),
+    convertRate: bucketRange(11, 0.76, 0.84),
   };
 }
 
