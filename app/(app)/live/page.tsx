@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, Headphones, Radio } from "lucide-react";
+import { CalendarDays, Clock, Headphones, Radio } from "lucide-react";
 
 import { LiveControls } from "@/components/live/live-controls";
 import { LiveDialerView } from "@/components/live/live-dialer-view";
@@ -35,6 +35,26 @@ export default function LivePage() {
     );
   }, [locale]);
 
+  // Live wall-clock — ticks once per second so the page reads as
+  // genuinely "streaming right now". Same SSR/hydration guard as the
+  // date chip: format only after mount so the initial paint stays
+  // deterministic.
+  const [timeLabel, setTimeLabel] = useState("");
+  useEffect(() => {
+    const render = () => {
+      setTimeLabel(
+        new Date().toLocaleTimeString(locale, {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      );
+    };
+    render();
+    const id = window.setInterval(render, 1000);
+    return () => window.clearInterval(id);
+  }, [locale]);
+
   // Featured = longest-running in-flight call, falls back to most recent settled.
   const featured =
     inFlight.length > 0
@@ -54,6 +74,14 @@ export default function LivePage() {
             >
               <CalendarDays className="h-3 w-3 text-accent" />
               {todayLabel || "—"}
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-0.5 font-mono text-[11px] font-medium tabular-nums text-muted-foreground"
+              suppressHydrationWarning
+              aria-label="Current time"
+            >
+              <Clock className="h-3 w-3 text-accent" />
+              {timeLabel || "—"}
             </span>
             <LiveBadge label={paused ? t("liveUI.badge.paused") : t("liveUI.badge.streaming")} />
             {tab === "calls" && (

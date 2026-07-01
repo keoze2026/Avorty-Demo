@@ -301,11 +301,14 @@ export function todaysCalls(): DemoCallWire[] {
 /* ─── Live (in-flight) call snapshot ──────────────────────────────────── */
 
 /** Number of in-flight calls "right now" — varies per bucket so the topbar
- *  LIVE pill changes across the day. Per client spec the target is ~200
- *  concurrent with a 150–250 band so the headline reads close to 200
- *  most of the time but still has the natural up-and-down across buckets. */
+ *  LIVE pill changes across the day.
+ *
+ *  Capped at 180 so it stays strictly below the roster minimum (200 agents)
+ *  used by the dialer — otherwise every agent ends up on call and the
+ *  "Agents free" tile reads 0. Average lands around 140, with the busiest
+ *  buckets pressing 180. */
 export function liveCallsCount(): number {
-  return bucketInt(3, 150, 250);
+  return bucketInt(3, 100, 180);
 }
 
 export function generateLiveCalls(count = liveCallsCount()): DemoCallWire[] {
