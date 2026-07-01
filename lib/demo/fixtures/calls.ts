@@ -300,15 +300,49 @@ export function todaysCalls(): DemoCallWire[] {
 
 /* ─── Live (in-flight) call snapshot ──────────────────────────────────── */
 
-/** Number of in-flight calls "right now" — varies per bucket so the topbar
- *  LIVE pill changes across the day.
+/** Return the current hour (0–23) in America/New_York, honoring EDT/EST
+ *  as appropriate. Used to swing `liveCallsCount()` between peak, business,
+ *  and off-hours bands. */
+function currentESTHour(): number {
+  try {
+    const s = new Date().toLocaleString("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "America/New_York",
+    });
+    // toLocaleString with hour12:false returns "0"–"23" (Node) or "24"
+    // for midnight in some engines — clamp defensively.
+    const h = parseInt(s, 10);
+    if (!Number.isFinite(h)) return 12;
+    return h === 24 ? 0 : h;
+  } catch {
+    return 12;
+  }
+}
+
+/** Number of in-flight calls "right now" — swings by EST hour so the
+ *  topbar LIVE pill matches the client's operational rhythm:
  *
- *  Capped at 180 so it stays strictly below the roster minimum (200 agents)
- *  used by the dialer — otherwise every agent ends up on call and the
- *  "Agents free" tile reads 0. Average lands around 140, with the busiest
- *  buckets pressing 180. */
+ *    11am–2pm EST  →  230–250   (peak)
+ *    8am–5pm EST   →  100–180   (business hours around the peak)
+ *    other hours   →   10–60    (off-shift trickle)
+ *
+ *  Within each band the exact value still varies per 2h bucket so the
+ *  chart shape rotation stays alive. The roster in agents.ts is sized
+ *  to always be strictly above the peak ceiling so "Agents free" is
+ *  never zero. */
 export function liveCallsCount(): number {
-  return bucketInt(3, 100, 180);
+  const hour = currentESTHour();
+  if (hour >= 11 && hour < 15) {
+    // 11:00–14:59 EST → peak
+    return bucketInt(3, 230, 250);
+  }
+  if (hour >= 8 && hour < 18) {
+    // 8–10 EST + 15–17 EST → business hours around the peak
+    return bucketInt(3, 100, 180);
+  }
+  // Outside 8am–6pm EST → off-shift trickle
+  return bucketInt(3, 10, 60);
 }
 
 export function generateLiveCalls(count = liveCallsCount()): DemoCallWire[] {

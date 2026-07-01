@@ -78,9 +78,12 @@ export default function LivePage() {
     const render = () => {
       setTimeLabel(
         new Date().toLocaleTimeString(locale, {
-          hour: "2-digit",
+          hour: "numeric",
           minute: "2-digit",
           second: "2-digit",
+          // Force 12-hour with AM/PM regardless of locale (Japanese
+          // default would otherwise be 24-hour — "13:57:09" not "1:57 PM").
+          hour12: true,
           timeZone: timezone,
         }),
       );

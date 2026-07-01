@@ -154,8 +154,11 @@ function initials(name: string): string {
 
 function buildRoster(bucket: number): Roster {
   const rng = makeRng(bucket * 73 + 41);
-  // 200–250 online agents — client picked the larger end of the spec.
-  const count = bucketInt(51, 200, 250);
+  // Roster is sized to always sit strictly above the peak `liveCallsCount()`
+  // ceiling (250 at 11am–2pm EST) so there are always free agents to
+  // distribute after the on_call quota is filled. 270–300 gives us a
+  // 20–50 agent headroom during peak.
+  const count = bucketInt(51, 270, 300);
   const used = new Set<string>();
   const agents: Roster["agents"] = [];
   for (let i = 0; i < count; i++) {
