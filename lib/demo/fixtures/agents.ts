@@ -209,15 +209,24 @@ export function dialerSnapshot(): DemoDialerSnapshotWire {
   const rng = makeRng(currentBucket() * 911 + tick);
 
   // ─── Status quotas ──────────────────────────────────────────────────
-  // The number of agents in `on_call` MUST equal `liveCallsCount()` so the
-  // legend, the KPI tile, and the topbar pill all report the same value.
-  // Wrap-up and break carve out small shares of the remaining agents;
-  // everyone else is free.
+  // Per client spec, all four categories must sum EXACTLY to the online
+  // agent count so the KPI tiles reconcile without visible mismatch:
+  //
+  //   agents_online = on_call + free + calls_under_dispose + break
+  //
+  // The number of agents in `on_call` MUST equal `liveCallsCount()` so
+  // the legend, the KPI tile, and the topbar pill all report the same
+  // value. Calls-under-dispose ("wrap_up" internally) and break carve
+  // out small shares (6% + 2%) of the remaining agents so free lands
+  // around 92% of the non-on-call pool — matching the client's target
+  // of Free ≈ 100 with 210 online and 102 live. Free is computed as
+  // the residual so the four counts sum EXACTLY to totalAgents; no
+  // rounding drift.
   const totalAgents = roster.agents.length;
   const targetOnCall = Math.min(liveCallsCount(), totalAgents);
   const remaining = totalAgents - targetOnCall;
-  const targetWrapUp = Math.round(remaining * 0.10);
-  const targetBreak = Math.round(remaining * 0.04);
+  const targetWrapUp = Math.round(remaining * 0.06);
+  const targetBreak = Math.round(remaining * 0.02);
 
   // Deterministic shuffle — agents with the lowest hash key land in the
   // "on_call" bucket. The hash blends agent id with the tick so the

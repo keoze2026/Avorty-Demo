@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Coffee,
+  FileText,
   Headphones,
   PhoneCall,
   PhoneMissed,
@@ -105,18 +106,25 @@ interface KpiValues {
   agentsOnline: number;
   callsLive: number;
   agentsFree: number;
+  callsUnderDispose: number;
+  agentsBreak: number;
   callsMissed: number;
   callsTotal: number;
   sales: number;
 }
 
+// Order matters — the row reads left-to-right as: total pool, then the
+// agent-status breakdown (Live + Free + Calls Under Dispose + Break sums
+// to Agents Online, no drift), then the call-activity block.
 const KPIS: KpiDef[] = [
-  { key: "agentsOnline", label: "Agents online",        icon: Users,      tone: "accent" },
-  { key: "callsLive",    label: "Calls running live",   icon: PhoneCall,  tone: "success" },
-  { key: "agentsFree",   label: "Agents free",          icon: Headphones, tone: "muted" },
-  { key: "callsMissed",  label: "Missed calls",         icon: PhoneMissed, tone: "destructive" },
-  { key: "callsTotal",   label: "Total calls so far",   icon: Sparkles,   tone: "violet" },
-  { key: "sales",        label: "Sales",                icon: CheckCircle2, tone: "success" },
+  { key: "agentsOnline",       label: "Agents online",        icon: Users,        tone: "accent" },
+  { key: "callsLive",          label: "Calls running live",   icon: PhoneCall,    tone: "success" },
+  { key: "agentsFree",         label: "Agents free",          icon: Headphones,   tone: "muted" },
+  { key: "callsUnderDispose",  label: "Calls under dispose",  icon: FileText,     tone: "warning" },
+  { key: "agentsBreak",        label: "Break",                icon: Coffee,       tone: "muted" },
+  { key: "callsMissed",        label: "Missed calls",         icon: PhoneMissed,  tone: "destructive" },
+  { key: "callsTotal",         label: "Total calls so far",   icon: Sparkles,     tone: "violet" },
+  { key: "sales",              label: "Sales",                icon: CheckCircle2, tone: "success" },
 ];
 
 const TONE: Record<KpiDef["tone"], { bg: string; text: string; tile: string }> = {
@@ -133,13 +141,15 @@ function KpiRow({ snap, loading }: { snap: DialerSnapshot | null; loading: boole
     agentsOnline: snap?.agentsOnline ?? 0,
     callsLive: snap?.callsLive ?? 0,
     agentsFree: snap?.agentsFree ?? 0,
+    callsUnderDispose: snap?.agentsWrapUp ?? 0,
+    agentsBreak: snap?.agentsBreak ?? 0,
     callsMissed: snap?.callsMissed ?? 0,
     callsTotal: snap?.callsTotal ?? 0,
     sales: snap?.sales ?? 0,
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
       {KPIS.map((k, i) => {
         const Icon = k.icon;
         const tone = TONE[k.tone];
@@ -189,7 +199,10 @@ const STATUS_TONE: Record<AgentStatus, { label: string; className: string; dot: 
     dot: "bg-accent",
   },
   wrap_up: {
-    label: "Wrap up",
+    // Client-facing label: "Calls under dispose" (agent is finishing the
+    // wrap-up work after a completed call). Internal status value stays
+    // `wrap_up` so downstream code that filters by status doesn't churn.
+    label: "Calls under dispose",
     className: "border-[color:var(--warning)]/40 bg-[color:var(--warning)]/12 text-[color:var(--warning)]",
     dot: "bg-[color:var(--warning)]",
   },
