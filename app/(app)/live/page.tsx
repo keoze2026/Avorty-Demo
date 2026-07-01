@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, Clock, Headphones, Radio } from "lucide-react";
+import { CalendarDays, ChevronDown, Clock, Globe, Headphones, Radio } from "lucide-react";
 
 import { LiveControls } from "@/components/live/live-controls";
 import { LiveDialerView } from "@/components/live/live-dialer-view";
@@ -11,9 +11,20 @@ import { RoutingPath } from "@/components/live/routing-path";
 import { SessionMeter } from "@/components/live/session-meter";
 import { LiveBadge } from "@/components/shared/live-badge";
 import { PageHeader } from "@/components/shared/page-header";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLiveSocket } from "@/hooks/use-live-socket";
 import { useTranslation } from "@/hooks/use-translation";
+import { TIMEZONES, TIMEZONE_BY_IANA } from "@/lib/timezones";
+import { cn } from "@/lib/utils";
+
+const TIMEZONE_STORAGE_KEY = "avortyx.live.timezone";
+const DEFAULT_TIMEZONE = "America/New_York"; // EST — per client's operational default
 
 export default function LivePage() {
   const { t, locale } = useTranslation();
@@ -21,8 +32,31 @@ export default function LivePage() {
   const [tab, setTab] = useState<"calls" | "dialer">("calls");
   const { inFlight, history, totals } = useLiveSocket({ paused });
 
-  // Today's date chip — defer formatting to after mount so SSR and the
-  // first client paint don't disagree about the locale string.
+  // User-selectable timezone for the date + clock chips. Defaults to EST
+  // per the client's operational default, persisted in localStorage so
+  // the choice survives reloads. Deferred read after mount so SSR and
+  // the first client paint don't disagree.
+  const [timezone, setTimezone] = useState<string>(DEFAULT_TIMEZONE);
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(TIMEZONE_STORAGE_KEY);
+      if (stored && TIMEZONE_BY_IANA[stored]) setTimezone(stored);
+    } catch {
+      // localStorage unavailable — keep the default.
+    }
+  }, []);
+  const onTimezoneChange = (iana: string) => {
+    setTimezone(iana);
+    try {
+      window.localStorage.setItem(TIMEZONE_STORAGE_KEY, iana);
+    } catch {
+      // Storage quota / private mode — ignore.
+    }
+  };
+  const timezoneLabel = TIMEZONE_BY_IANA[timezone]?.label ?? timezone;
+
+  // Today's date chip — rendered in the selected timezone (not the user's
+  // PC local time). Deferred to after mount for SSR safety.
   const [todayLabel, setTodayLabel] = useState("");
   useEffect(() => {
     setTodayLabel(
@@ -31,14 +65,14 @@ export default function LivePage() {
         month: "short",
         day: "numeric",
         year: "numeric",
+        timeZone: timezone,
       }),
     );
-  }, [locale]);
+  }, [locale, timezone]);
 
-  // Live wall-clock — ticks once per second so the page reads as
-  // genuinely "streaming right now". Same SSR/hydration guard as the
-  // date chip: format only after mount so the initial paint stays
-  // deterministic.
+  // Live wall-clock in the selected timezone — ticks once per second so
+  // the page reads as genuinely "streaming right now" for whatever
+  // timezone the operator selects.
   const [timeLabel, setTimeLabel] = useState("");
   useEffect(() => {
     const render = () => {
@@ -47,13 +81,14 @@ export default function LivePage() {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
+          timeZone: timezone,
         }),
       );
     };
     render();
     const id = window.setInterval(render, 1000);
     return () => window.clearInterval(id);
-  }, [locale]);
+  }, [locale, timezone]);
 
   // Featured = longest-running in-flight call, falls back to most recent settled.
   const featured =
@@ -83,6 +118,33 @@ export default function LivePage() {
               <Clock className="h-3 w-3 text-accent" />
               {timeLabel || "—"}
             </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Select timezone"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors",
+                    "hover:bg-secondary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  )}
+                >
+                  <Globe className="h-3 w-3 text-accent" />
+                  <span className="max-w-[16rem] truncate">{timezoneLabel}</span>
+                  <ChevronDown className="h-3 w-3 opacity-60" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="max-h-80 w-80 overflow-y-auto">
+                {TIMEZONES.map((tz) => (
+                  <DropdownMenuItem
+                    key={tz.iana}
+                    onSelect={() => onTimezoneChange(tz.iana)}
+                    className={cn(timezone === tz.iana && "text-accent")}
+                  >
+                    {tz.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <LiveBadge label={paused ? t("liveUI.badge.paused") : t("liveUI.badge.streaming")} />
             {tab === "calls" && (
               <LiveControls paused={paused} onTogglePause={() => setPaused((p) => !p)} />

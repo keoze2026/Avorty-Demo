@@ -57,33 +57,33 @@ const PUBLISHER_REFS = [
 /**
  * Per-bucket hourly distribution.
  *
- * Per client spec: calls only happen during the 8am–5pm EST business
- * window. Distribution is a bell curve over hours 8–16 (9 active buckets,
- * 5pm = closed) with the peak centered in the late morning / early
- * afternoon — varies slightly per 2h bucket so the chart shape still
- * shifts across the day.
+ * Per client spec: calls happen from 8am to 5pm EST — a 10-hour window
+ * spanning indices 8 (8am) through 17 (5pm inclusive).
  *
- * Peak weight is constrained so that even at the daily cap of 6K calls,
- * no single hour exceeds the 1K calls-per-hour ceiling. With 6K total
- * and a peak weight of ~0.16, the busiest hour lands at ~960 calls —
- * comfortably under the 1K cap.
+ * Peak-per-hour cap: at the busiest bucket (6.5K daily), the peak hour
+ * must stay ≤ 900 calls. That constrains the max peak weight to about
+ * 0.138 (900 / 6500). To hit that, the bell is intentionally broadened
+ * (wider left/right widths, flatter sharpness) so no single hour
+ * dominates. Center still varies per bucket so the chart shape shifts.
  */
 function bucketHourWeights(): number[] {
-  // Peak shifts within the 10am–1pm band depending on bucket.
-  const center = bucketRange(31, 10, 13);
-  // Tighter window — calls only ramp 2–4h before/after the peak so the
-  // bell stays inside the 8am–4pm active window.
-  const leftWidth = bucketRange(33, 2.5, 4);
-  const rightWidth = bucketRange(35, 2.5, 4);
-  // Moderate sharpness so the peak hour doesn't dominate.
-  const sharpness = bucketRange(37, 1.6, 2.6);
+  // Peak shifts within the late-morning / early-afternoon band.
+  const center = bucketRange(31, 10.5, 13.5);
+  // Broad ramps on both sides so the bell doesn't spike — critical for
+  // keeping peak ≤ 900 calls at the 6.5K daily cap.
+  const leftWidth = bucketRange(33, 3.5, 5.5);
+  const rightWidth = bucketRange(35, 3.5, 5.5);
+  // Flatter sharpness (1.2–1.8) trades a "peaked" bell for a smoother
+  // arc that spreads volume across more hours.
+  const sharpness = bucketRange(37, 1.2, 1.8);
 
   const weights = new Array(24).fill(0);
   let sum = 0;
-  // Active window — calls only happen 8am (index 8) through 4pm (index 16).
-  // 5pm (index 17) is the closing hour, so no new calls start then.
+  // Active window — 8am (index 8) through 5pm (index 17) inclusive.
+  // Per client: "total until 5pm EST" so calls continue during the 5pm
+  // hour and stop by 6pm.
   const ACTIVE_MIN = 8;
-  const ACTIVE_MAX = 16;
+  const ACTIVE_MAX = 17;
   for (let h = ACTIVE_MIN; h <= ACTIVE_MAX; h++) {
     const dist = h - center;
     const width = dist < 0 ? leftWidth : rightWidth;
